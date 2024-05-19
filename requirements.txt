@@ -1,0 +1,7 @@
+matplotlib
+kivy==2.3.0
+kivy-garden
+kivy_garden.matplotlib
+kivyMD==1.2.0
+numpy
+

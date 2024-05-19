@@ -1,0 +1,46 @@
+#:import SlideTransition kivy.uix.screenmanager.SlideTransition
+#:import RiseInTransition kivy.uix.screenmanager.RiseInTransition
+
+<AppScreenManager>
+    UI_landing:
+
+<UI_landing>:
+    
+    name: "UI_landing"
+    view: view
+    on_enter:
+        app.root.transition = SlideTransition(direction="left")
+    MDBoxLayout:
+        md_bg_color: 0,0,0,1
+        #background_color: 0,0,0,1
+        orientation: 'vertical'
+        BoxLayout:
+            size: (64, 64)
+            size_hint: (1, 0.4)
+            orientation: 'vertical'
+            Label:
+                size_hint_y: None
+                font_size: 80
+                text: "FitnessTracker"
+            BoxLayout:
+                size_hint_y: None
+                Label:
+                    size_hint_y: None
+                    text: "Letztes Training\nGestern"
+                Label:
+                    size_hint_y: None
+                    text: "Heute\nPPL Max"
+                    color: 1, 1, 0, 1
+                    halign: "left"
+            BoxLayout:
+                Button:
+                    size_hint_y: None
+                    text: "Starten"
+                    on_release:
+                        app.root.current = "UI_exesetup"
+                Label:
+                    size_hint_y: None
+                    text: "00:10:12"
+        
+        ScrollView:
+            id: view
