@@ -27,30 +27,31 @@ class FitnessTracker extends StatelessWidget {
         appBar: AppBar(
           title: const Text(title),
         ),
-        body: ListView.builder(
-          itemCount: items.length,
-          // Provide a builder function. This is where the magic happens.
-          itemBuilder: (context, index) {
-            final item = items[index];
-            return ListTile(
-              leading: CircleAvatar(
-                radius: 17.5,
-                backgroundColor: Colors.cyan,
-                child: const Icon(
-                  Icons.timer_outlined,
-                  color: Colors.white,
-                ),
-              ),
-              title: item.buildTitle(context),
-              subtitle: 
-                    Row(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: [
-              item.buildSubtitle(context),
-              Text(" 10 reps")
-              ])
-            );
-          },
+        body: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.max,
+          children: <Widget>[
+          const Text("ASD"),
+          new Expanded(
+              child: ListView.builder(
+              itemCount: items.length,
+              // Provide a builder function. This is where the magic happens.
+              itemBuilder: (context, index) {
+                final item = items[index];
+                return ListTile(
+                  leading: CircleAvatar(radius: 17.5,backgroundColor: Colors.cyan,child: const Icon(Icons.timer_outlined, color: Colors.white,),),
+                  title: item.buildTitle(context),
+                  subtitle: 
+                        Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                  item.buildSubtitle(context),
+                  Text(" 10 reps")
+                  ])
+                );
+              })
+            )
+            ]
         ),
       ),
     );
