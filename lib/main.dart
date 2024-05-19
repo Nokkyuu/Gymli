@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'dart:math';
+import 'package:fl_chart/fl_chart.dart';
 
 void main() {
   runApp(
@@ -20,6 +22,7 @@ class FitnessTracker extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const title = 'Fitness Tracker';
+    final points = [(10, 1), (20, 1)];
 
     return MaterialApp(
       title: title,
@@ -61,6 +64,17 @@ class FitnessTracker extends StatelessWidget {
                   ])
                 );
               })
+            ),
+            new Expanded(
+              child: LineChart(
+                LineChartData(
+                  lineBarsData: [
+                    LineChartBarData(
+                    spots: const [ FlSpot(0, 5), FlSpot(1, 10), FlSpot(2, 8), FlSpot(3, 11), FlSpot(4, 12)]
+                  ),
+                ],
+              )
+            )
             )
             ]
         ),
