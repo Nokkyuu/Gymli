@@ -31,7 +31,18 @@ class FitnessTracker extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           mainAxisSize: MainAxisSize.max,
           children: <Widget>[
-          const Text("ASD"),
+            Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          mainAxisSize: MainAxisSize.max,
+          children: <Widget>[
+          TextButton(
+            style: ButtonStyle(
+            ),
+            onPressed: () { },
+            child: Text('Training Stoppen'),
+          ),
+          const Text("Dauer 00:41:32 ")
+          ]),
           new Expanded(
               child: ListView.builder(
               itemCount: items.length,
