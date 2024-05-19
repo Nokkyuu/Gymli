@@ -1,2 +1,3 @@
-# YAFA-FF
-Futter Fork of YAFA
+# yafa
+
+A new Flutter project.
