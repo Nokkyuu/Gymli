@@ -1,0 +1,75 @@
+import 'package:flutter/material.dart';
+
+void main() {
+  runApp(
+    FitnessTracker(),
+  );
+}
+
+class FitnessTracker extends StatelessWidget {
+  static List<ListItem> items = [
+          ExerciseItem('Deadlift', '15 kg'),
+          ExerciseItem('Benchpress', '12 kg'),
+          ExerciseItem('Pullup', '50 kg'),
+          ExerciseItem('Squat', '1 kg'),
+          ExerciseItem('Biceps Curl', '15 s'),
+        ];
+
+  const FitnessTracker({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    const title = 'Fitness Tracker';
+
+    return MaterialApp(
+      title: title,
+      home: Scaffold(
+        appBar: AppBar(
+          title: const Text(title),
+        ),
+        body: ListView.builder(
+          itemCount: items.length,
+          // Provide a builder function. This is where the magic happens.
+          itemBuilder: (context, index) {
+            final item = items[index];
+            return ListTile(
+              leading: CircleAvatar(
+                radius: 17.5,
+                backgroundColor: Colors.cyan,
+                child: const Icon(
+                  Icons.timer_outlined,
+                  color: Colors.white,
+                ),
+              ),
+              title: item.buildTitle(context),
+              subtitle: 
+                    Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+              item.buildSubtitle(context),
+              Text(" 10 reps")
+              ])
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+/// The base class for the different types of items the list can contain.
+abstract class ListItem {
+  Widget buildTitle(BuildContext context);
+  Widget buildSubtitle(BuildContext context);
+}
+class ExerciseItem implements ListItem {
+  final String exerciseName;
+  final String meta;
+
+  ExerciseItem(this.exerciseName, this.meta);
+  @override
+  Widget buildTitle(BuildContext context) => Text(exerciseName);
+
+  @override
+  Widget buildSubtitle(BuildContext context) => Text(meta);
+}
