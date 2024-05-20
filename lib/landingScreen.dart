@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:yafa_app/exerciseScreen.dart';
 
 
 class LandingScreen extends StatelessWidget {
@@ -23,6 +24,7 @@ class LandingScreen extends StatelessWidget {
       home: Scaffold(
         appBar: AppBar(
           title: const Text(title),
+          centerTitle: true,
         ),
         body: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -55,7 +57,13 @@ class LandingScreen extends StatelessWidget {
                   children: [
                   item.buildSubtitle(context),
                   Text(" 12847 reps")
-                  ])
+                  ]),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => ExerciseScreen()),
+                    );
+                  }
                 );
               })
             )

@@ -6,6 +6,7 @@ import 'package:yafa_app/landingScreen.dart';
 
 void main() {
   runApp(
-    ExerciseScreen(),
+    // ExerciseScreen(),
+    LandingScreen()
   );
 }
