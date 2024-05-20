@@ -29,13 +29,39 @@ class _ExerciseSetupScreenState extends State<ExerciseSetupScreen> {
             Icons.arrow_back_ios,
             color: Colors.black54,
           ),),
-          title: const Text(title),
+          title: const SizedBox(
+                width: 300,
+                child: TextField(
+                      textAlign: TextAlign.center,
+                      //TODO: Fonz Size
+                      obscureText: false,
+                      decoration: InputDecoration(
+                        border: UnderlineInputBorder(),
+                        labelText: 'GiveMeName',
+                        //alignLabelWithHint: true
+                      ),
+                    ),
+              ), 
         ),
         body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.start,
             mainAxisSize: MainAxisSize.max,
             children: [
+              // SizedBox(height: boxSpace),
+              // const SizedBox(
+              //   width: 250,
+              //   child: TextField(
+              //         textAlign: TextAlign.left,
+              //         //TODO: Fonz Size
+              //         obscureText: false,
+              //         decoration: InputDecoration(
+              //           border: UnderlineInputBorder(),
+              //           labelText: 'GiveMeName',
+              //         ),
+              //       ),
+              // ),
+              SizedBox(height: boxSpace),
               SegmentedButton<ExerciseDevice>(
                 segments: const <ButtonSegment<ExerciseDevice>>[
                   ButtonSegment<ExerciseDevice>(
@@ -73,8 +99,8 @@ class _ExerciseSetupScreenState extends State<ExerciseSetupScreen> {
                 value: minRep,
                 min: 1,
                 max: 20,
-                divisions: 20,
-                label: minRep.round().toString(),
+                divisions: 19,
+                label: minRep.toString(),
                 onChanged: (double value) {
                   setState(() {
                   minRep = value;
@@ -87,8 +113,8 @@ class _ExerciseSetupScreenState extends State<ExerciseSetupScreen> {
                 value: repRange,
                 min: 1,
                 max: 20,
-                divisions: 20,
-                label: repRange.round().toString(),
+                divisions: 19,
+                label: repRange.toString(),
                 onChanged: (double value) {
                   setState(() {
                   repRange = value;
@@ -101,18 +127,38 @@ class _ExerciseSetupScreenState extends State<ExerciseSetupScreen> {
                 value: weightInc,
                 min: 1,
                 max: 10,
-                divisions: 20,
-                label: weightInc.round().toString(),
+                divisions: 18,
+                label: weightInc.toString(),
                 onChanged: (double value) {
                   setState(() {
                   weightInc = value;
                   });
                 },
               ),
+              
               SizedBox(height: boxSpace),
               IconButton(
-                icon: const Icon(Icons.check),
+                icon: const Icon(Icons.accessibility_new),
                 iconSize: 50,
+                tooltip: 'muscles',
+                onPressed: () {
+              showModalBottomSheet<dynamic>(
+                isScrollControlled: true,
+                context: context,
+                sheetAnimationStyle: AnimationStyle(
+                      duration: const Duration(milliseconds: 300),
+                      reverseDuration: const Duration(milliseconds: 300),
+                    ),
+                builder: (BuildContext context) {
+                  return BottomSheet();
+                },
+              );
+            },
+          ),
+          SizedBox(height: boxSpace),
+              IconButton(
+                icon: const Icon(Icons.check),
+                iconSize: 40,
                 tooltip: 'Confirm',
                 onPressed: () {
                   setState(() {
@@ -127,6 +173,33 @@ class _ExerciseSetupScreenState extends State<ExerciseSetupScreen> {
         )
       )
     );       
+  }
+}
+
+class BottomSheet extends StatelessWidget {
+  const BottomSheet({
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox.expand(
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            
+            //const Text('Bottom sheet'),
+            ElevatedButton(
+              child: const Text('Close'),
+              onPressed: () => Navigator.pop(context),
+            ),
+            Image.network('images/MuscleTemp.jpeg'),
+          ],
+        ),
+      ),
+    );
   }
 }
 
@@ -151,6 +224,24 @@ class HeadCard extends StatelessWidget {
         padding: const EdgeInsets.all(10.0),
         child: Text(headline, 
         style: style,
+        ),
+      ),
+    );
+  }
+}
+
+class ObscuredTextFieldSample extends StatelessWidget {
+  const ObscuredTextFieldSample({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const SizedBox(
+      width: 250,
+      child: TextField(
+        obscureText: true,
+        decoration: InputDecoration(
+          border: OutlineInputBorder(),
+          labelText: 'GiveMeName',
         ),
       ),
     );
