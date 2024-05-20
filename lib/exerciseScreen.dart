@@ -81,7 +81,9 @@ class ExerciseScreen extends StatelessWidget {
               ],
               selected: <ExerciseType>{ExerciseType.warmup},
             ),
-            Row(
+            Padding(
+              padding: const EdgeInsets.only(left: 50, right: 50),
+              child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               mainAxisSize: MainAxisSize.max,
               children: <Widget>[
@@ -92,7 +94,10 @@ class ExerciseScreen extends StatelessWidget {
                   ),
                 )
             ]),
-            Row(
+            ),
+            Padding(
+              padding: const EdgeInsets.only(left: 50, right: 50, bottom: 10),
+              child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               mainAxisSize: MainAxisSize.max,
               children: <Widget>[
@@ -113,8 +118,11 @@ class ExerciseScreen extends StatelessWidget {
                   onPressed: () { },
                   child: const Text('Submit'),
                 ),
-            ]),
-            ]
+              ])
+            ),
+          Padding(
+            padding: const EdgeInsets.only(bottom: 50)
+          ),]
           //               Row(
           // mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           // mainAxisSize: MainAxisSize.max,
@@ -127,6 +135,7 @@ class ExerciseScreen extends StatelessWidget {
           // ),
           // const Text("Dauer 00:41:32 ")
           // ]),
+
         ),
       ),
     );

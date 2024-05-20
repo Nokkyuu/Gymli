@@ -5,8 +5,8 @@ import 'package:yafa_app/exerciseScreen.dart';
 import 'package:yafa_app/landingScreen.dart';
 
 void main() {
-  runApp(
-    // ExerciseScreen(),
-    LandingScreen()
-  );
+  runApp(const MaterialApp(
+      title: 'Navigation Basics',
+      home: LandingScreen(),
+    ));
 }
