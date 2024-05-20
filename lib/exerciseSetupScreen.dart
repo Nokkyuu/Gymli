@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 
 enum ExerciseDevice { free, machine, cable, body }
@@ -188,7 +190,7 @@ class BottomSheet extends StatelessWidget {
               child: const Text('Close'),
               onPressed: () => Navigator.pop(context),
             ),
-            Image.network('images/MuscleTemp.jpeg'),
+            const Image(image: AssetImage('images/MuscleTemp.jpeg')),
           ],
         ),
       ),
