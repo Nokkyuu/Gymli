@@ -15,6 +15,7 @@ build/
 develop-eggs/
 dist/
 ios/
+android/
 downloads/
 eggs/
 .eggs/

@@ -1,14 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 
+enum ExerciseType { warmup, work, dropset }
 
 class ExerciseScreen extends StatelessWidget {
   static List<ListItem> items = [
-          ExerciseItem('Deadlift', '15 kg'),
-          ExerciseItem('Benchpress', '12 kg'),
+          ExerciseItem('10 kg for 6 Reps', '11:42:21', Icons.local_fire_department),
+          ExerciseItem('15 kg for 10 Reps', '11:45:43', Icons.rowing),
+          ExerciseItem('15 kg for 10 Reps', '11:48:02', Icons.rowing),
+          ExerciseItem('15 kg for 10 Reps', '11:41:55', Icons.rowing),
         ];
 
   const ExerciseScreen({super.key});
+  
 
   @override
   Widget build(BuildContext context) {
@@ -16,6 +20,7 @@ class ExerciseScreen extends StatelessWidget {
     final points = [(10, 1), (20, 1)];
     TextEditingController _weightController = TextEditingController(text: '15');
     TextEditingController _repetitionController = TextEditingController(text: '10');
+    TextEditingController _dateInputController = TextEditingController(text: '20.05.2024 11:42');
 
 
     return MaterialApp(
@@ -48,25 +53,44 @@ class ExerciseScreen extends StatelessWidget {
               itemBuilder: (context, index) {
                 final item = items[index];
                 return ListTile(
-                  leading: CircleAvatar(radius: 17.5,backgroundColor: Colors.cyan,child: const Icon(Icons.timer_outlined, color: Colors.white,),),
+                  // leading: CircleAvatar(radius: 17.5,backgroundColor: Colors.cyan,child: const Icon(Icons.local_fire_department, color: Colors.white,),),
+                  leading: item.buildIcon(context),
                   title: item.buildTitle(context),
                   subtitle: 
-                        Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                  item.buildSubtitle(context),
-                  Text(" 12847 reps")
-                  ])
+                      item.buildSubtitle(context)
                 );
               })
             ),
-            const Row(
+            SegmentedButton<ExerciseType>(
+              segments: const <ButtonSegment<ExerciseType>>[
+                ButtonSegment<ExerciseType>(
+                    value: ExerciseType.warmup,
+                    label: Text('Warmup'),
+                    icon: Icon(Icons.local_fire_department)
+                    ),
+                ButtonSegment<ExerciseType>(
+                    value: ExerciseType.work,
+                    label: Text('Work'),
+                    icon: Icon(Icons.rowing)
+                    ),
+                ButtonSegment<ExerciseType>(
+                    value: ExerciseType.dropset,
+                    label: Text('Dropset'),
+                    icon: Icon(Icons.south_east)
+                    ),
+              ],
+              selected: <ExerciseType>{ExerciseType.warmup},
+            ),
+            Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               mainAxisSize: MainAxisSize.max,
               children: <Widget>[
-                const Text("20.Mai 11:23"),
-                const Text("Kg "),
-                const Text("Reps")
+                Expanded(
+                  child: TextField(
+                    controller: _dateInputController,
+                    decoration: const InputDecoration(border: OutlineInputBorder()),
+                  ),
+                )
             ]),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -87,7 +111,7 @@ class ExerciseScreen extends StatelessWidget {
                 TextButton(
                   style: ButtonStyle(),
                   onPressed: () { },
-                  child: Text('Submit'),
+                  child: const Text('Submit'),
                 ),
             ]),
             ]
@@ -113,16 +137,19 @@ class ExerciseScreen extends StatelessWidget {
 abstract class ListItem {
   Widget buildTitle(BuildContext context);
   Widget buildSubtitle(BuildContext context);
+  Widget buildIcon(BuildContext context);
 }
 // add new button?
 class ExerciseItem implements ListItem {
   final String exerciseName;
   final String meta;
+  final IconData workIcon;
 
-  ExerciseItem(this.exerciseName, this.meta);
+  ExerciseItem(this.exerciseName, this.meta, this.workIcon);
   @override
   Widget buildTitle(BuildContext context) => Text(exerciseName);
-
   @override
   Widget buildSubtitle(BuildContext context) => Text(meta);
+  @override
+  Widget buildIcon(BuildContext context) => CircleAvatar(radius: 17.5,backgroundColor: Colors.cyan,child: Icon(workIcon, color: Colors.white,),);
 }
