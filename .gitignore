@@ -8,7 +8,7 @@ __pycache__/
 
 ## Dart / Flutter
 .dart_tool
-
+.idea/
 # Distribution / packaging
 .Python
 build/

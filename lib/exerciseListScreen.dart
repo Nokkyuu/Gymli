@@ -23,7 +23,7 @@ class ExerciseListScreen extends StatelessWidget {
       home: Scaffold(
         appBar: AppBar(
           leading: InkWell( onTap: () {Navigator.pop(context); },
-          child: Icon(
+          child: const Icon(
             Icons.arrow_back_ios,
             color: Colors.black54,
           ),),
@@ -33,7 +33,7 @@ class ExerciseListScreen extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           mainAxisSize: MainAxisSize.max,
           children: <Widget>[
-          new Expanded(
+          Expanded(
               child: ListView.builder(
               itemCount: items.length,
               // Provide a builder function. This is where the magic happens.
