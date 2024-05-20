@@ -60,12 +60,14 @@ class FitnessTracker extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [
                   item.buildSubtitle(context),
-                  Text(" 10 reps")
+                  Text(" 12847 reps")
                   ])
                 );
               })
             ),
-            new Expanded(
+            SizedBox(
+              width: 500, 
+              height: 130,
               child: LineChart(
                 LineChartData(
                   lineBarsData: [
