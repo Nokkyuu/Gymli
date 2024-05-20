@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:yafa_app/exerciseListScreen.dart';
 import 'package:fl_chart/fl_chart.dart';
-
 enum ExerciseType { warmup, work, dropset }
 
 class ExerciseScreen extends StatelessWidget {
@@ -27,6 +27,11 @@ class ExerciseScreen extends StatelessWidget {
       title: title,
       home: Scaffold(
         appBar: AppBar(
+          leading: InkWell( onTap: () {Navigator.pop(context); },
+          child: Icon(
+            Icons.arrow_back_ios,
+            color: Colors.black54,
+          ),),
           title: const Text(title),
         ),
         body: Column(
@@ -57,9 +62,13 @@ class ExerciseScreen extends StatelessWidget {
                   leading: item.buildIcon(context),
                   title: item.buildTitle(context),
                   subtitle: 
-                      item.buildSubtitle(context)
+                      item.buildSubtitle(context),
+                  onTap: () {
+                    Navigator.push(context, MaterialPageRoute(builder: (context) => ExerciseListScreen()),);
+                  }
                 );
-              })
+              }),
+              
             ),
             SegmentedButton<ExerciseType>(
               segments: const <ButtonSegment<ExerciseType>>[
@@ -105,12 +114,14 @@ class ExerciseScreen extends StatelessWidget {
                   child: TextField(
                     controller: _weightController,
                     decoration: const InputDecoration(border: OutlineInputBorder(), suffixText: 'kg',),
+                    keyboardType: TextInputType.number,
                   ),
                 ),
                 Expanded(
                   child: TextField(
                     controller: _repetitionController,
                     decoration: const InputDecoration(border: OutlineInputBorder(), suffixText: 'reps',),
+                    keyboardType: TextInputType.number
                   ),
                 ),
                 TextButton(

@@ -59,10 +59,7 @@ class LandingScreen extends StatelessWidget {
                   Text(" 12847 reps")
                   ]),
                   onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => ExerciseScreen()),
-                    );
+                    Navigator.push(context, MaterialPageRoute(builder: (context) => ExerciseScreen()),);
                   }
                 );
               })
