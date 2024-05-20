@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:fl_chart/fl_chart.dart';
+//import 'package:fl_chart/fl_chart.dart';
 import 'package:yafa_app/exerciseScreen.dart';
-
+import 'package:yafa_app/exerciseSetupScreen.dart';
 
 class LandingScreen extends StatelessWidget {
   static List<ListItem> items = [
@@ -34,6 +34,13 @@ class LandingScreen extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           mainAxisSize: MainAxisSize.max,
           children: <Widget>[
+          TextButton(
+            style: ButtonStyle(
+            ),
+            onPressed: () {
+              Navigator.push(context, MaterialPageRoute(builder: (context) => ExerciseSetupScreen()));},
+            child: Text('New Exercise'),
+          ),
           TextButton(
             style: ButtonStyle(
             ),
