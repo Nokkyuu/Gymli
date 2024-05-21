@@ -35,38 +35,38 @@ class LandingScreen extends StatelessWidget {
           mainAxisSize: MainAxisSize.max,
           children: <Widget>[
           TextButton(
-            style: ButtonStyle(
+            style: const ButtonStyle(
             ),
             onPressed: () {
-              Navigator.push(context, MaterialPageRoute(builder: (context) => ExerciseSetupScreen()));},
-            child: Text('New Exercise'),
+              Navigator.push(context, MaterialPageRoute(builder: (context) => const ExerciseSetupScreen()));},
+            child: const Text('New Exercise'),
           ),
           TextButton(
-            style: ButtonStyle(
+            style: const ButtonStyle(
             ),
             onPressed: () { },
-            child: Text('Training Stoppen'),
+            child: const Text('Training Stoppen'),
           ),
           const Text("Dauer 00:41:32 ")
           ]),
-          new Expanded(
+          Expanded(
               child: ListView.builder(
               itemCount: items.length,
               // Provide a builder function. This is where the magic happens.
               itemBuilder: (context, index) {
                 final item = items[index];
                 return ListTile(
-                  leading: CircleAvatar(radius: 17.5,backgroundColor: Colors.cyan,child: const Icon(Icons.timer_outlined, color: Colors.white,),),
+                  leading: const CircleAvatar(radius: 17.5,backgroundColor: Colors.cyan,child: Icon(Icons.timer_outlined, color: Colors.white,),),
                   title: item.buildTitle(context),
                   subtitle: 
                         Row(
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [
                   item.buildSubtitle(context),
-                  Text(" 12847 reps")
+                  const Text(" 12847 reps")
                   ]),
                   onTap: () {
-                    Navigator.push(context, MaterialPageRoute(builder: (context) => ExerciseScreen()),);
+                    Navigator.push(context, MaterialPageRoute(builder: (context) => const ExerciseScreen()),);
                   }
                 );
               })

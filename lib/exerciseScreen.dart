@@ -18,9 +18,9 @@ class ExerciseScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     const title = 'Exercise';
     final points = [(10, 1), (20, 1)];
-    TextEditingController _weightController = TextEditingController(text: '15');
-    TextEditingController _repetitionController = TextEditingController(text: '10');
-    TextEditingController _dateInputController = TextEditingController(text: '20.05.2024 11:42');
+    TextEditingController weightController = TextEditingController(text: '15');
+    TextEditingController repetitionController = TextEditingController(text: '10');
+    TextEditingController dateInputController = TextEditingController(text: '20.05.2024 11:42');
 
 
     return MaterialApp(
@@ -28,7 +28,7 @@ class ExerciseScreen extends StatelessWidget {
       home: Scaffold(
         appBar: AppBar(
           leading: InkWell( onTap: () {Navigator.pop(context); },
-          child: Icon(
+          child: const Icon(
             Icons.arrow_back_ios,
             color: Colors.black54,
           ),),
@@ -51,7 +51,7 @@ class ExerciseScreen extends StatelessWidget {
               )
             )
             ),
-          new Expanded(
+          Expanded(
               child: ListView.builder(
               itemCount: items.length,
               // Provide a builder function. This is where the magic happens.
@@ -64,7 +64,7 @@ class ExerciseScreen extends StatelessWidget {
                   subtitle: 
                       item.buildSubtitle(context),
                   onTap: () {
-                    Navigator.push(context, MaterialPageRoute(builder: (context) => ExerciseListScreen()),);
+                    Navigator.push(context, MaterialPageRoute(builder: (context) => const ExerciseListScreen()),);
                   }
                 );
               }),
@@ -88,7 +88,7 @@ class ExerciseScreen extends StatelessWidget {
                     icon: Icon(Icons.south_east)
                     ),
               ],
-              selected: <ExerciseType>{ExerciseType.warmup},
+              selected: const <ExerciseType>{ExerciseType.warmup},
             ),
             Padding(
               padding: const EdgeInsets.only(left: 50, right: 50),
@@ -98,7 +98,7 @@ class ExerciseScreen extends StatelessWidget {
               children: <Widget>[
                 Expanded(
                   child: TextField(
-                    controller: _dateInputController,
+                    controller: dateInputController,
                     decoration: const InputDecoration(border: OutlineInputBorder()),
                   ),
                 )
@@ -112,27 +112,27 @@ class ExerciseScreen extends StatelessWidget {
               children: <Widget>[
                 Expanded(
                   child: TextField(
-                    controller: _weightController,
+                    controller: weightController,
                     decoration: const InputDecoration(border: OutlineInputBorder(), suffixText: 'kg',),
                     keyboardType: TextInputType.number,
                   ),
                 ),
                 Expanded(
                   child: TextField(
-                    controller: _repetitionController,
+                    controller: repetitionController,
                     decoration: const InputDecoration(border: OutlineInputBorder(), suffixText: 'reps',),
                     keyboardType: TextInputType.number
                   ),
                 ),
                 TextButton(
-                  style: ButtonStyle(),
+                  style: const ButtonStyle(),
                   onPressed: () { },
                   child: const Text('Submit'),
                 ),
               ])
             ),
-          Padding(
-            padding: const EdgeInsets.only(bottom: 50)
+          const Padding(
+            padding: EdgeInsets.only(bottom: 50)
           ),]
           //               Row(
           // mainAxisAlignment: MainAxisAlignment.spaceEvenly,
