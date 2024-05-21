@@ -75,40 +75,6 @@ class _WorkoutSetupScreenState extends State<WorkoutSetupScreen> {
                 children: [
                   Column(
                     children: [
-                      SizedBox(height: 20),
-                      DropdownMenu<ExerciseList>(
-                        initialSelection: ExerciseList.Benchpress,
-                        controller: exerciseController,
-                        requestFocusOnTap: true,
-                        label: const Text('Exercises'),
-                        onSelected: (ExerciseList? name) {
-                          setState(() {
-                            selectedExercise = name;
-                          });
-                        },
-                        dropdownMenuEntries: ExerciseList.values
-                            .map<DropdownMenuEntry<ExerciseList>>(
-                                (ExerciseList name) {
-                          return DropdownMenuEntry<ExerciseList>(
-                            value: name,
-                            label: name.exerciseName,
-                            //enabled: color.label != 'Grey',
-                            //style: MenuItemButton.styleFrom(
-                            //  foregroundColor: color.color,
-                            //),
-                          );
-                        }).toList(),
-                      ),
-                      SizedBox(height: 20),
-                      TextButton.icon(
-                        icon: const Icon(Icons.add),
-                        label: const Text("Add Exercise") ,
-                        onPressed:  () => print("Added")
-                      ),
-                    ],
-                  ),
-                  Column(
-                    children: [
                       Text('Warm Ups: $warmUpS'),
                       NumberPicker(
                         value: warmUpS,
@@ -142,6 +108,42 @@ class _WorkoutSetupScreenState extends State<WorkoutSetupScreen> {
                   ),
                 ],
               ),
+              SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  
+                  DropdownMenu<ExerciseList>(
+                    initialSelection: ExerciseList.Benchpress,
+                    controller: exerciseController,
+                    requestFocusOnTap: true,
+                    label: const Text('Exercises'),
+                    onSelected: (ExerciseList? name) {
+                      setState(() {
+                        selectedExercise = name;
+                      });
+                    },
+                    dropdownMenuEntries: ExerciseList.values
+                        .map<DropdownMenuEntry<ExerciseList>>(
+                            (ExerciseList name) {
+                      return DropdownMenuEntry<ExerciseList>(
+                        value: name,
+                        label: name.exerciseName,
+                        //enabled: color.label != 'Grey',
+                        //style: MenuItemButton.styleFrom(
+                        //  foregroundColor: color.color,
+                        //),
+                      );
+                    }).toList(),
+                  ),
+                  
+                  TextButton.icon(
+                    icon: const Icon(Icons.add),
+                    label: const Text("Add Exercise") ,
+                    onPressed:  () => print("Added")
+                  ),
+
+                ],),
               Divider(),
               Expanded(
               child: ListView.builder(
