@@ -169,3 +169,5 @@ cython_debug/
 .dart_tool/package_config_subset
 .dart_tool/package_config.json
 .vscode/launch.json
+.flutter-plugins
+.flutter-plugins-dependencies
