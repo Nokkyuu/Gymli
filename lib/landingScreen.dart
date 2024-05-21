@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 //import 'package:fl_chart/fl_chart.dart';
 import 'package:yafa_app/exerciseScreen.dart';
 import 'package:yafa_app/exerciseSetupScreen.dart';
+import 'package:yafa_app/workoutSetupScreen.dart';
 
 class LandingScreen extends StatelessWidget {
   static List<ListItem> items = [
@@ -44,8 +45,9 @@ class LandingScreen extends StatelessWidget {
           TextButton(
             style: const ButtonStyle(
             ),
-            onPressed: () { },
-            child: const Text('Training Stoppen'),
+            onPressed: () { 
+              Navigator.push(context, MaterialPageRoute(builder: (context) => const WorkoutSetupScreen()));},
+            child: const Text('New Workout'),
           ),
           const Text("Dauer 00:41:32 ")
           ]),

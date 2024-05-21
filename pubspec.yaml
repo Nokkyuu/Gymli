@@ -10,6 +10,7 @@ dependencies:
   fl_chart: ^0.68.0
   flutter:
     sdk: flutter
+  numberpicker: ^2.1.2
 
 dev_dependencies:
   flutter_test:
