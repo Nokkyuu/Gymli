@@ -3,8 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:yafa_app/exerciseScreen.dart';
 import 'package:yafa_app/exerciseSetupScreen.dart';
 import 'package:yafa_app/workoutSetupScreen.dart';
+import 'package:hive/hive.dart';
+import 'package:yafa_app/DataModels.dart';
 
-class LandingScreen extends StatelessWidget {
+class LandingScreen extends StatefulWidget {
+  LandingScreen({Key? key}) : super(key: key);
+  _LandingScreen createState() => _LandingScreen();
+}
+class _LandingScreen extends State<LandingScreen> {
   static List<ListItem> items = [
           ExerciseItem('Deadlift', '15 kg'),
           ExerciseItem('Benchpress', '12 kg'),
@@ -13,12 +19,18 @@ class LandingScreen extends StatelessWidget {
           ExerciseItem('Biceps Curl', '15 s'),
         ];
 
-  const LandingScreen({super.key});
+  var taskBox = Hive.openBox<Exercise>('Exercises');
+
+   @override
+  void initState() {
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
     const title = 'Fitness Tracker';
     final points = [(10, 1), (20, 1)];
+    List exercises = taskBox.values.toList();
 
     return MaterialApp(
       title: title,
@@ -56,7 +68,9 @@ class LandingScreen extends StatelessWidget {
               itemCount: items.length,
               // Provide a builder function. This is where the magic happens.
               itemBuilder: (context, index) {
-                final item = items[index];
+                // final item = items[index];
+                Exercise exercise = exercises[index];
+                ExerciseItem item = ExerciseItem(exercise.name, "a");
                 return ListTile(
                   leading: const CircleAvatar(radius: 17.5,backgroundColor: Colors.cyan,child: Icon(Icons.timer_outlined, color: Colors.white,),),
                   title: item.buildTitle(context),
