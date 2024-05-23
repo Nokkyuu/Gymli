@@ -7,6 +7,7 @@ import 'package:yafa_app/DataModels.dart';
 import 'package:yafa_app/DataBase.dart';
 import 'package:hive/hive.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class LandingScreen extends StatelessWidget {
   @override
@@ -16,6 +17,7 @@ class LandingScreen extends StatelessWidget {
 
     return MaterialApp(
       title: title,
+      theme: Theme.of(context),
       home: Scaffold(
         appBar: AppBar(
           title: const Text(title),
@@ -108,6 +110,7 @@ class ExerciseItem implements ListItem {
 void main() async {
   // final box = await Hive.openBox<Exercise>('Exercises');
   runApp(MaterialApp(
+    
       title: 'Navigation Basics',
       // home: ExerciseListScreen(),
       home: LandingScreen(),

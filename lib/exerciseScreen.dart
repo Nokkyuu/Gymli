@@ -87,6 +87,7 @@ class _ExerciseScreen extends State<ExerciseScreen> {
     graphData = getTrainingScores(widget.exerciseName);
 
     return MaterialApp(
+      theme: Theme.of(context),
       title: title,
       home: Scaffold(
         appBar: AppBar(

@@ -49,6 +49,7 @@ class _ExerciseSetupScreenState extends State<ExerciseSetupScreen> {
   Widget build(BuildContext context) {
     const title = 'New Exercise';
     return MaterialApp(
+      theme: Theme.of(context),
         title: title,
         home: Scaffold(
             appBar: AppBar(

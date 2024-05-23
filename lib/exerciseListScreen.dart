@@ -20,6 +20,7 @@ class ExerciseListScreen extends StatelessWidget {
     const title = 'ExercliseList';
     return MaterialApp(
       title: title,
+      theme: Theme.of(context),
       home: Scaffold(
         appBar: AppBar(
           leading: InkWell( onTap: () {Navigator.pop(context); },

@@ -37,6 +37,7 @@ class _WorkoutSetupScreenState extends State<WorkoutSetupScreen> {
     const title = 'Workout Editor';
 
     return MaterialApp(
+      theme: Theme.of(context),
       title: title,
       home: Scaffold(
           appBar: AppBar(
