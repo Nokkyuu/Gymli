@@ -15,7 +15,7 @@ class ExerciseSetupScreen extends StatefulWidget {
 void add_exercise(String exerciseName, ExerciseDevice chosenDevice, int minRep, int repRange, double weightInc, List<int> muscleGroups) async {
   final box = await Hive.openBox<Exercise>('Exercises');
   int exerciseType = chosenDevice.index;
-  String muscleGroupString = ""; // muscleGroups -> vielleicht besser Liste?
+  List<String> muscleGroupStrings = [""]; // muscleGroups -> vielleicht besser Liste?
   var boxmap = box.values.toList();
   List<String> exerciseList = [];
   for (var e in boxmap) {
@@ -27,9 +27,9 @@ void add_exercise(String exerciseName, ExerciseDevice chosenDevice, int minRep, 
   // log(a);
 
   if (!exerciseList.contains(exerciseName)) {
-    box.add(Exercise(name: exerciseName, type: exerciseType, muscleGroups: muscleGroupString, defaultRepBase: minRep, defaultRepMax: repRange, defaultIncrement: weightInc));
+    box.add(Exercise(name: exerciseName, type: exerciseType, muscleGroups: muscleGroupStrings, defaultRepBase: minRep, defaultRepMax: repRange, defaultIncrement: weightInc));
   } else {
-    box.putAt(exerciseList.indexOf(exerciseName), Exercise(name: exerciseName, type: exerciseType, muscleGroups: muscleGroupString, defaultRepBase: minRep, defaultRepMax: repRange, defaultIncrement: weightInc));
+    box.putAt(exerciseList.indexOf(exerciseName), Exercise(name: exerciseName, type: exerciseType, muscleGroups: muscleGroupStrings, defaultRepBase: minRep, defaultRepMax: repRange, defaultIncrement: weightInc));
 
   }
 
@@ -191,6 +191,7 @@ class _ExerciseSetupScreenState extends State<ExerciseSetupScreen> {
                     onPressed: () {
                       add_exercise(exerciseTitleController.text, chosenDevice, minRep.toInt(), repRange.toInt(), weightInc, muscleGroups);
                       setState(() {});
+                      Navigator.pop(context);
                     },
                   ),
                 ],
