@@ -26,26 +26,24 @@ class Exercise extends HiveObject {
 
 @HiveType(typeId: 2)
 class TrainingSet extends HiveObject {
-  TrainingSet ({required this.id, required this.exercise, required this.date, required this.weight, required this.repetitions, required this.setType, required this.baseReps, required this.maxReps, required this.increment, required this.machineName});
+  TrainingSet ({required this.exercise, required this.date, required this.weight, required this.repetitions, required this.setType, required this.baseReps, required this.maxReps, required this.increment, required this.machineName});
   @HiveField(0)
-  int id = 0;
-  @HiveField(1)
   String exercise = "";
-  @HiveField(2)
+  @HiveField(1)
   DateTime date = DateTime.now();
-  @HiveField(3)
+  @HiveField(2)
   double weight = 0.0;
-  @HiveField(4)
+  @HiveField(3)
   int repetitions = 0;
-  @HiveField(5)
+  @HiveField(4)
   int setType = 0;
-  @HiveField(6)
+  @HiveField(5)
   int baseReps = 0;
-  @HiveField(7)
+  @HiveField(6)
   int maxReps = 0;
-  @HiveField(8)
+  @HiveField(7)
   double increment = 0.0;
-  @HiveField(9)
+  @HiveField(8)
   String machineName = "";
 }
 

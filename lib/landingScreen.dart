@@ -70,7 +70,7 @@ class LandingScreen extends StatelessWidget {
                             Text("$repBase/$repMax with $increment kg")
                         ]),
                         onTap: () {
-                          Navigator.push(context, MaterialPageRoute(builder: (context) => const ExerciseScreen()),);
+                          Navigator.push(context, MaterialPageRoute(builder: (context) => ExerciseScreen(currentData!.name)));
                         }
                       );
                     });

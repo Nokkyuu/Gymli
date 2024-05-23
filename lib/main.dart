@@ -9,8 +9,10 @@ import 'package:hive/hive.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:yafa_app/DataModels.dart';
 
-Future<int> populate() async {
+
+Future<int> populateExercises() async {
   final box = await Hive.openBox<Exercise>('Exercises');
+  final box2 = await Hive.openBox<TrainingSet>('TrainingSets');
   if (box.isEmpty) {
     box.clear();
     box.add(Exercise(name: "Benchpress", type: 0, muscleGroups: ["Pectoralis major", "Front Deltoids", "Triceps"], defaultRepBase: 8, defaultRepMax: 12, defaultIncrement: 5.0));
@@ -29,12 +31,13 @@ Future<int> populate() async {
 void main() async {
   await Hive.initFlutter();
   Hive.registerAdapter(ExerciseAdapter());
+  Hive.registerAdapter(TrainingSetAdapter());
 
   // await populate();
   
   runApp(
     FutureBuilder(
-      future: populate(),
+      future: populateExercises(),
       builder: (_,snap){
         if(snap.hasData){
           //here you can use the MyService singleton and its members
