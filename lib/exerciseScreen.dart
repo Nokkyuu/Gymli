@@ -10,10 +10,11 @@ enum ExerciseType { warmup, work, dropset }
 
 final workIcons = [Icons.local_fire_department, Icons.rowing, Icons.south_east];
 
-void addSet(double weight, int repetitions, int setType) async {
+void addSet(String exercise, double weight, int repetitions, int setType, String when) async {
   var box = Hive.box<TrainingSet>('TrainingSets');
+  var theDate = DateTime.parse(when);
   // TrainingSet ({required this.id, required this.exercise, required this.date, required this.weight, required this.repetitions, required this.setType, required this.baseReps, required this.maxReps, required this.increment, required this.machineName});
-  box.add(TrainingSet(exercise: "Benchpress", date: DateTime.now(), setType: setType, weight:weight, repetitions: repetitions, baseReps: 8, maxReps: 12, increment: 5.0, machineName: ""));
+  box.add(TrainingSet(exercise: exercise, date: theDate, setType: setType, weight:weight, repetitions: repetitions, baseReps: 8, maxReps: 12, increment: 5.0, machineName: ""));
 }
 
 class ExerciseScreen extends StatefulWidget {
@@ -42,7 +43,7 @@ class _ExerciseScreen extends State<ExerciseScreen> {
 
     TextEditingController weightController = TextEditingController(text: '15');
     TextEditingController repetitionController = TextEditingController(text: '10');
-    TextEditingController dateInputController = TextEditingController(text: '20.05.2024 11:42');
+    TextEditingController dateInputController = TextEditingController(text: DateTime.now().toString());
 
 
     return MaterialApp(
@@ -78,6 +79,8 @@ class _ExerciseScreen extends State<ExerciseScreen> {
                 valueListenable: Hive.box<TrainingSet>('TrainingSets').listenable(),
                 builder: (context, Box<TrainingSet> box, _) {
                   var items = box.values.where((item) => item.exercise == widget.exerciseName).toList();
+                  var today = DateTime.now();
+                  items = items.where((item) => item.date.day == today.day && item.date.month == today.month && item.date.year == today.year).toList();
                   if (!items.isEmpty) {
                     // fetch all the right exercises
                     return ListView.builder(
@@ -160,7 +163,7 @@ class _ExerciseScreen extends State<ExerciseScreen> {
                 TextButton(
                   style: const ButtonStyle(),
                   onPressed: () { 
-                    addSet(double.parse(weightController.text), int.parse(repetitionController.text), _selected.first.index);
+                    addSet(widget.exerciseName, double.parse(weightController.text), int.parse(repetitionController.text), _selected.first.index, dateInputController.text);
                   },
                   child: const Text('Submit'),
                 ),
