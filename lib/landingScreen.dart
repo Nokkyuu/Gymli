@@ -3,24 +3,23 @@ import 'package:flutter/material.dart';
 import 'package:yafa_app/exerciseScreen.dart';
 import 'package:yafa_app/exerciseSetupScreen.dart';
 import 'package:yafa_app/workoutSetupScreen.dart';
-import 'package:hive/hive.dart';
 import 'package:yafa_app/DataModels.dart';
 import 'package:yafa_app/DataBase.dart';
-import 'dart:developer';
-
-class LandingScreen extends StatefulWidget {
-  LandingScreen({Key? key}) : super(key: key);
-  _LandingScreen createState() => _LandingScreen();
-}
-class _LandingScreen extends State<LandingScreen> {
+import 'package:hive/hive.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+// class LandingScreen extends StatefulWidget {
+//   LandingScreen({Key? key}) : super(key: key);
+//   _LandingScreen createState() => _LandingScreen();
+// }
+class LandingScreen extends StatelessWidget {
   // _LandingScreen({super.key});
-  static List<ListItem> items = [
-          ExerciseItem('Deadlift', '15 kg'),
-          ExerciseItem('Benchpress', '12 kg'),
-          ExerciseItem('Pullup', '50 kg'),
-          ExerciseItem('Squat', '1 kg'),
-          ExerciseItem('Biceps Curl', '15 s'),
-        ];
+  // static List<ListItem> items = [
+  //         ExerciseItem('Deadlift', '15 kg'),
+  //         ExerciseItem('Benchpress', '12 kg'),
+  //         ExerciseItem('Pullup', '50 kg'),
+  //         ExerciseItem('Squat', '1 kg'),
+  //         ExerciseItem('Biceps Curl', '15 s'),
+  //       ];
   // final Box<Exercise> = Hive.box<Exercise>('Exercise');
 
   // DbHelper dbHelper = DbHelper();
@@ -31,11 +30,11 @@ class _LandingScreen extends State<LandingScreen> {
   //   final taskBox = Hive.box<Exercise>('Exercises');
   //   final exercises = taskBox.toList();
   // }
-   @override
-  void initState() {
-    super.initState();
-    // final box = Hive.box('Exercise');
-  }
+  //  @override
+  // void initState() {
+  //   super.initState();
+  //   // final box = Hive.box('Exercise');
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -75,21 +74,17 @@ class _LandingScreen extends State<LandingScreen> {
           const Text("Dauer 00:41:32 ")
           ]),
           Expanded(
-              child: FutureBuilder(
-                future: Hive.openBox<Exercise>('Exercises'),
-                builder: (context, snapshot) {
-                  if (snapshot.hasData) {
+              child: ValueListenableBuilder(
+                valueListenable: Hive.box<Exercise>('Exercises').listenable(),
+                builder: (context, Box<Exercise> box, _) {
+                  if (!box.values.isEmpty) {
                     return ListView.builder(
-                      itemCount: snapshot.data!.length,
-                      // Provide a builder function. This is where the magic happens.
+                      itemCount: box.values.length,
                       itemBuilder: (context, index) {
-                      // final item = items[index];
-                      // Exercise exercise = taskBox[index];
-                      // ExerciseItem item = ExerciseItem(exercise.name, "a");
-                        Exercise currentData = snapshot.data!.values.toList()[index];
+                        final currentData = box.getAt(index);
                         return ListTile(
                           leading: const CircleAvatar(radius: 17.5,backgroundColor: Colors.cyan,child: Icon(Icons.timer_outlined, color: Colors.white,),),
-                          title: Text(currentData.name),
+                          title: Text(currentData!.name),
                           subtitle: 
                                 Row(
                           mainAxisAlignment: MainAxisAlignment.start,
@@ -133,15 +128,12 @@ class ExerciseItem implements ListItem {
   Widget buildSubtitle(BuildContext context) => Text(meta);
 }
 
-void asd() async {
-  final box = await Hive.openBox('Exercise');
-}
-void main() {
+void main() async {
   // final taskBox = await Hive.openBox<Exercise>('Exercises');
   // add(taskBox);
   // taskBox.close();
   // get(taskBox);
-  asd();
+  final box = await Hive.openBox<Exercise>('Exercises');
   runApp(MaterialApp(
       title: 'Navigation Basics',
       // home: ExerciseListScreen(),

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:hive/hive.dart';
+part 'DataModels.g.dart';
 
 @HiveType(typeId: 1)
 class Exercise extends HiveObject {
@@ -28,32 +29,5 @@ class Exercise extends HiveObject {
   @HiveField(6)
   double defaultIncrement = 1.0;
 
-  // Exercise.fromJson(Map<String, dynamic> json) {
-  //   if (json != null) {
-  //     id = json['id'];
-  //     name = json['name'];
-  //     type = json['type'];
-  //     muscleGroups = json['muscleGroups'];
-  //     defaultRepBase = json['defaultRepBase'];
-  //     defaultRepMax = json['defaultRepMax'];
-  //     defaultIncrement = json['defaultIncrement'];
-  //   } else {
-  //     print('in else profile from json');
-  //   }
-  // }
-
-  // Map<String, dynamic> toJson() {
-  //   final Map<String, dynamic> data = new Map<String, dynamic>();
-  //   data['name'] = this.name;
-  //   data['language'] = this.lang;
-  //   data['emailId'] = this.emailId;
-  //   data['mobileNumber'] = this.mobileNumber;
-  //   data['district'] = this.district;
-  //   data['state'] = this.state;
-  //   data['city'] = this.city;
-  //   data['pinCode'] = this.pinCode;
-  //   data['profilePic'] = this.profilePic;
-  //   return data;
-  // }
 }
 
