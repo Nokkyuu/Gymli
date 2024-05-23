@@ -3,22 +3,16 @@ import 'package:flutter/material.dart';
 import 'package:yafa_app/exerciseScreen.dart';
 import 'package:yafa_app/exerciseSetupScreen.dart';
 import 'package:yafa_app/workoutSetupScreen.dart';
+import 'package:yafa_app/DataModels.dart';
+import 'package:yafa_app/DataBase.dart';
+import 'package:hive/hive.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 
 class LandingScreen extends StatelessWidget {
-  static List<ListItem> items = [
-          ExerciseItem('Deadlift', '15 kg'),
-          ExerciseItem('Benchpress', '12 kg'),
-          ExerciseItem('Pullup', '50 kg'),
-          ExerciseItem('Squat', '1 kg'),
-          ExerciseItem('Biceps Curl', '15 s'),
-        ];
-
-  const LandingScreen({super.key});
-
   @override
   Widget build(BuildContext context) {
     const title = 'Fitness Tracker';
-    final points = [(10, 1), (20, 1)];
+    // List exercises = then(taskBox.values.toList());
 
     return MaterialApp(
       title: title,
@@ -52,26 +46,39 @@ class LandingScreen extends StatelessWidget {
           const Text("Dauer 00:41:32 ")
           ]),
           Expanded(
-              child: ListView.builder(
-              itemCount: items.length,
-              // Provide a builder function. This is where the magic happens.
-              itemBuilder: (context, index) {
-                final item = items[index];
-                return ListTile(
-                  leading: const CircleAvatar(radius: 17.5,backgroundColor: Colors.cyan,child: Icon(Icons.timer_outlined, color: Colors.white,),),
-                  title: item.buildTitle(context),
-                  subtitle: 
-                        Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                  item.buildSubtitle(context),
-                  const Text(" 12847 reps")
-                  ]),
-                  onTap: () {
-                    Navigator.push(context, MaterialPageRoute(builder: (context) => const ExerciseScreen()),);
-                  }
-                );
-              })
+              child: ValueListenableBuilder(
+                valueListenable: Hive.box<Exercise>('Exercises').listenable(),
+                builder: (context, Box<Exercise> box, _) {
+                  if (!box.values.isEmpty) {
+                    return ListView.builder(
+                      itemCount: box.values.length,
+                      itemBuilder: (context, index) {
+                        final currentData = box.getAt(index);
+                        final exerciseType = currentData!.type;
+                        final repBase = currentData!.defaultRepBase;
+                        final repMax = currentData!.defaultRepMax;
+                        final increment = currentData!.defaultIncrement;
+                        final itemList = [Icons.sports_tennis, Icons.agriculture_outlined, Icons.cable, Icons.sports_martial_arts];
+                        final currentIcon = itemList[exerciseType];
+                        return ListTile(
+                          leading: CircleAvatar(radius: 17.5,backgroundColor: Colors.cyan,child: Icon(currentIcon, color: Colors.white,),),
+                          title: Text(currentData!.name),
+                          subtitle: 
+                                Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: [
+                            Text("$repBase/$repMax with $increment kg")
+                        ]),
+                        onTap: () {
+                          Navigator.push(context, MaterialPageRoute(builder: (context) => const ExerciseScreen()),);
+                        }
+                      );
+                    });
+                  } else {
+                    return const CircularProgressIndicator();
+                }
+                }
+              )
             )
             ]
         ),
@@ -96,4 +103,13 @@ class ExerciseItem implements ListItem {
 
   @override
   Widget buildSubtitle(BuildContext context) => Text(meta);
+}
+
+void main() async {
+  // final box = await Hive.openBox<Exercise>('Exercises');
+  runApp(MaterialApp(
+      title: 'Navigation Basics',
+      // home: ExerciseListScreen(),
+      home: LandingScreen(),
+    ));
 }

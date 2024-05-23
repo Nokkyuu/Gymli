@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:yafa_app/DataModels.dart';
+import 'package:hive/hive.dart';
+import 'dart:developer';
 
 enum ExerciseDevice { free, machine, cable, body }
 
@@ -9,17 +12,42 @@ class ExerciseSetupScreen extends StatefulWidget {
   State<ExerciseSetupScreen> createState() => _ExerciseSetupScreenState();
 }
 
+void add_exercise(String exerciseName, ExerciseDevice chosenDevice, int minRep, int repRange, double weightInc, List<int> muscleGroups) async {
+  final box = await Hive.openBox<Exercise>('Exercises');
+  int exerciseType = chosenDevice.index;
+  String muscleGroupString = ""; // muscleGroups -> vielleicht besser Liste?
+  var boxmap = box.values.toList();
+  List<String> exerciseList = [];
+  for (var e in boxmap) {
+    exerciseList.add(e.name);
+  }
+  // boxmap.values.forEach((v) => print("Value: $v"));
+
+  // var a = boxmap.getAllKeys();
+  // log(a);
+
+  if (!exerciseList.contains(exerciseName)) {
+    box.add(Exercise(name: exerciseName, type: exerciseType, muscleGroups: muscleGroupString, defaultRepBase: minRep, defaultRepMax: repRange, defaultIncrement: weightInc));
+  } else {
+    box.putAt(exerciseList.indexOf(exerciseName), Exercise(name: exerciseName, type: exerciseType, muscleGroups: muscleGroupString, defaultRepBase: minRep, defaultRepMax: repRange, defaultIncrement: weightInc));
+
+  }
+
+}
+
+
 class _ExerciseSetupScreenState extends State<ExerciseSetupScreen> {
   ExerciseDevice chosenDevice = ExerciseDevice.free;
   double boxSpace = 10;
-  double minRep = 1;
-  double repRange = 1;
-  double weightInc = 1;
+  double minRep = 10;
+  double repRange = 15;
+  double weightInc = 2.5;
+  List<int> muscleGroups = [1];
+  final exerciseTitleController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
     const title = 'New Exercise';
-
     return MaterialApp(
         title: title,
         home: Scaffold(
@@ -33,13 +61,13 @@ class _ExerciseSetupScreenState extends State<ExerciseSetupScreen> {
                   color: Colors.black54,
                 ),
               ),
-              title: const SizedBox(
+              title: SizedBox(
                 width: 300,
                 child: TextField(
                   textAlign: TextAlign.center,
-                  //TODO: Fonz Size
+                  controller: exerciseTitleController,
                   obscureText: false,
-                  decoration: InputDecoration(
+                  decoration: const InputDecoration(
                     border: UnderlineInputBorder(),
                     labelText: 'GiveMeName',
                     //alignLabelWithHint: true
@@ -161,6 +189,7 @@ class _ExerciseSetupScreenState extends State<ExerciseSetupScreen> {
                     iconSize: 40,
                     tooltip: 'Confirm',
                     onPressed: () {
+                      add_exercise(exerciseTitleController.text, chosenDevice, minRep.toInt(), repRange.toInt(), weightInc, muscleGroups);
                       setState(() {});
                     },
                   ),
