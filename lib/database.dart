@@ -1,7 +1,4 @@
 import 'dart:async';
-import 'package:flutter/widgets.dart';
-import 'package:path/path.dart';
-import 'package:sqflite/sqflite.dart';
 import 'dart:developer';
 
 class Exercise {
@@ -33,18 +30,4 @@ class Exercise {
       'defaultIncrement': defaultIncrement
     };
   }
-}
-
-
-Future<Database> openMyDatabase() async {
-  final dbPath = await getDatabasesPath();
-  final path = join(dbPath, 'database.sqlite');
-  final database = await openDatabase(
-    path,
-    version: 1,
-    onCreate: (db, version) async {
-      // Create tables here
-    },
-  );
-  return database;
 }
