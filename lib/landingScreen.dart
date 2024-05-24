@@ -63,7 +63,7 @@ class LandingScreen extends StatelessWidget {
                         final itemList = [Icons.sports_tennis, Icons.agriculture_outlined, Icons.cable, Icons.sports_martial_arts];
                         final currentIcon = itemList[exerciseType];
                         return ListTile(
-                          leading: CircleAvatar(radius: 17.5,backgroundColor: Colors.cyan,child: Icon(currentIcon, color: Colors.white,),),
+                          leading: CircleAvatar(radius: 17.5,child: Icon(currentIcon),),
                           title: Text(currentData!.name),
                           subtitle: 
                                 Row(

@@ -59,7 +59,6 @@ class _ExerciseSetupScreenState extends State<ExerciseSetupScreen> {
                 },
                 child: const Icon(
                   Icons.arrow_back_ios,
-                  color: Colors.black54,
                 ),
               ),
               title: SizedBox(
@@ -238,11 +237,10 @@ class HeadCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final style = theme.textTheme.bodyMedium!.copyWith(
-      color: theme.colorScheme.onPrimary,
+
     );
 
     return Card(
-      color: theme.colorScheme.primary,
       child: Padding(
         padding: const EdgeInsets.all(10.0),
         child: Text(

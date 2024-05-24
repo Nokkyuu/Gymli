@@ -47,7 +47,6 @@ class _WorkoutSetupScreenState extends State<WorkoutSetupScreen> {
               },
               child: const Icon(
                 Icons.arrow_back_ios,
-                color: Colors.black54,
               ),
             ),
             title: const Text(title),
