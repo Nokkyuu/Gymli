@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-//import 'package:fl_chart/fl_chart.dart';
 import 'package:yafa_app/exerciseScreen.dart';
 import 'package:yafa_app/exerciseSetupScreen.dart';
 import 'package:yafa_app/workoutSetupScreen.dart';
@@ -14,16 +13,10 @@ class LandingScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     const title = 'Fitness Tracker';
     // List exercises = then(taskBox.values.toList());
-
     return MaterialApp(
       title: title,
       theme: Theme.of(context),
-      home: Scaffold(
-        appBar: AppBar(
-          title: const Text(title),
-          centerTitle: true,
-        ),
-        body: Column(
+      home: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           mainAxisSize: MainAxisSize.max,
           children: <Widget>[
@@ -31,13 +24,7 @@ class LandingScreen extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           mainAxisSize: MainAxisSize.max,
           children: <Widget>[
-          TextButton(
-            style: const ButtonStyle(
-            ),
-            onPressed: () {
-              Navigator.push(context, MaterialPageRoute(builder: (context) => const ExerciseSetupScreen()));},
-            child: const Text('New Exercise'),
-          ),
+          ExerciseSetupButton(context),
           TextButton(
             style: const ButtonStyle(
             ),
@@ -45,7 +32,7 @@ class LandingScreen extends StatelessWidget {
               Navigator.push(context, MaterialPageRoute(builder: (context) => const WorkoutSetupScreen()));},
             child: const Text('New Workout'),
           ),
-          const Text("Dauer 00:41:32 ")
+          const Text("")
           ]),
           Expanded(
               child: ValueListenableBuilder(
@@ -72,6 +59,7 @@ class LandingScreen extends StatelessWidget {
                             Text("$repBase/$repMax with $increment kg")
                         ]),
                         onTap: () {
+                          
                           Navigator.push(context, MaterialPageRoute(builder: (context) => ExerciseScreen(currentData!.name)));
                         }
                       );
@@ -84,8 +72,17 @@ class LandingScreen extends StatelessWidget {
             )
             ]
         ),
-      ),
-    );
+      );
+  }
+
+  TextButton ExerciseSetupButton(BuildContext context) {
+    return TextButton(
+          style: const ButtonStyle(
+          ),
+          onPressed: () {
+            Navigator.push(context, MaterialPageRoute(builder: (context) => const ExerciseSetupScreen()));},
+          child: const Text('New Exercise'),
+        );
   }
 }
 

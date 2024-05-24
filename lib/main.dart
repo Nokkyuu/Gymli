@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
-//import 'dart:math';
-//import 'package:fl_chart/fl_chart.dart';
-//import 'package:yafa_app/exerciseListScreen.dart';
-//import 'package:yafa_app/exerciseScreen.dart';
-//import 'package:yafa_app/exerciseSetupScreen.dart';
 import 'package:yafa_app/landingScreen.dart';
 import 'package:hive/hive.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:yafa_app/DataModels.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:yafa_app/exerciseSetupScreen.dart';
+import 'package:yafa_app/workoutSetupScreen.dart';
+
+bool state = false;
 
 Future<int> populateExercises() async {
   final box = await Hive.openBox<Exercise>('Exercises');
@@ -89,21 +88,23 @@ void main() async {
 
   // await populate();
 
+Brightness mode =  Brightness.light;
+Color themecolor = Colors.blue;
+
+
   runApp(FutureBuilder(
     future: populateExercises(),
     builder: (_, snap) {
       if (snap.hasData) {
         //here you can use the MyService singleton and its members
         return MaterialApp(
+          
           theme: ThemeData(
             useMaterial3: true,
-            // Define the default brightness and colors.
             colorScheme: ColorScheme.fromSeed(
-              seedColor: Colors.blue,
-              brightness: Brightness.light,
+              seedColor: themecolor,
+              brightness: mode,
             ),
-            // Define the default `TextTheme`. Use this to specify the default
-            // text styling for headlines, titles, bodies of text, and more.
             textTheme: TextTheme(
               displayLarge: const TextStyle(
                 fontSize: 72,
@@ -118,17 +119,60 @@ void main() async {
             ),
           ),
           title: 'Navigation Basics',
-          // home: ExerciseListScreen(),
-          home: LandingScreen(),
+          home: Scaffold(
+          appBar: AppBar(
+          leading: Builder(
+            
+          builder: (context) {
+            return IconButton(
+              icon: const Icon(Icons.menu),
+              onPressed: () {
+                Scaffold.of(context).openDrawer();
+              },
+            );
+          },
+        ),
+          actions: <Widget>[
+            IconButton(
+            icon: Icon(Icons.light),
+            onPressed: (() => mode = Brightness.dark)),//FIXME: doesnt work yet, but why
+          ],
+          title: const Text("Fitness Tracker"),
+          centerTitle: true,),
+          body: LandingScreen(),
+          drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            const DrawerHeader(
+              decoration: BoxDecoration(
+                color: Colors.blue,
+              ),
+              child: Text('Drawer Header'),
+            ),
+
+            ListTile(
+              title: const Text('Exercise Setup'),
+              onTap: () {
+                //Navigator.push(context, MaterialPageRoute(builder: (context) => const ExerciseSetupScreen()));
+                //FIXME: no context, but why
+              },
+            ),
+            ListTile(
+              title: const Text('Workout Setup'),
+              onTap: () {
+               // Navigator.push(context, MaterialPageRoute(builder: (context) => const WorkoutSetupScreen()));
+               //FIXME: no context, but why, i think we need to transfer all of this into a statefull widget for this to work
+              },
+            ),
+          ],
+        ),
+      ),),
+          
         );
       }
       return CircularProgressIndicator();
     },
   ));
 
-  // runApp(MaterialApp(
-  //   title: 'Navigation Basics',
-  //   // home: ExerciseListScreen(),
-  //   home: LandingScreen(),
-  // ));
 }

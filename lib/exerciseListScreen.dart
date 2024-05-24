@@ -26,7 +26,6 @@ class ExerciseListScreen extends StatelessWidget {
           leading: InkWell( onTap: () {Navigator.pop(context); },
           child: const Icon(
             Icons.arrow_back_ios,
-            color: Colors.black54,
           ),),
           title: const Text(title),
         ),
