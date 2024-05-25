@@ -240,7 +240,7 @@ class _MainAppState extends State<MainApp> {
               decoration: BoxDecoration(
                 //color: Colors.blueAccent
               ),
-              child: Text('Where you wanna go, Amigo'),
+              child: Image(image: AssetImage('images/menu2.png')),
             ),
           ListTile(
             title: const Text('Exercise Setup'),
@@ -254,6 +254,23 @@ class _MainAppState extends State<MainApp> {
               setState(() {
              Navigator.push(context, MaterialPageRoute(builder: (context) => const WorkoutSetupScreen()));
             });},
+          
+          ),
+          ListTile(
+            title: const Text('Statistics'),
+            onTap: () {
+              setState(() {
+             Navigator.push(context, MaterialPageRoute(builder: (context) => const WorkoutSetupScreen()));
+            });},
+          
+          ),
+          ListTile(
+            title: const Text('Settings'),
+            onTap: () {
+              setState(() {
+             Navigator.push(context, MaterialPageRoute(builder: (context) => const WorkoutSetupScreen()));
+            });},
+          
           ),
           IconButton(
               icon: const Icon(Icons.light),
