@@ -158,6 +158,7 @@ class _ExerciseScreen extends State<ExerciseScreen> {
                   minY: minScore - 5.0,
                   maxY: maxScore + 5.0,
                 ))),
+            const Divider(),
             Expanded(
                 child: ValueListenableBuilder(
                     valueListenable:
@@ -204,10 +205,12 @@ class _ExerciseScreen extends State<ExerciseScreen> {
                         return const Text("No Training yet.");
                       }
                     })),
+                    const Divider(),
             Padding(
                 padding: const EdgeInsets.only(left: 50, right: 50, bottom: 10),
                 child: Column(
                   children: [
+                    
                     Row(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         mainAxisSize: MainAxisSize.max,
