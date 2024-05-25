@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:yafa_app/DataModels.dart';
 import 'package:hive/hive.dart';
 import 'dart:developer';
-
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 enum ExerciseDevice { free, machine, cable, body }
 
 class ExerciseSetupScreen extends StatefulWidget {
@@ -96,11 +97,11 @@ class _ExerciseSetupScreenState extends State<ExerciseSetupScreen> {
                         ButtonSegment<ExerciseDevice>(
                             value: ExerciseDevice.free,
                             label: Text('Free'),
-                            icon: Icon(Icons.sports_tennis)),
+                            icon: FaIcon(FontAwesomeIcons.dumbbell)),
                         ButtonSegment<ExerciseDevice>(
                             value: ExerciseDevice.machine,
                             label: Text('Machine'),
-                            icon: Icon(Icons.agriculture_outlined)),
+                            icon: Icon(Icons.forklift)),
                         ButtonSegment<ExerciseDevice>(
                             value: ExerciseDevice.cable,
                             label: Text('Cable'),

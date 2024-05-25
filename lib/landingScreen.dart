@@ -7,7 +7,7 @@ import 'package:yafa_app/DataBase.dart';
 import 'package:hive/hive.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
-
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 class LandingScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -31,10 +31,10 @@ class LandingScreen extends StatelessWidget {
                           final repBase = currentData!.defaultRepBase;
                           final repMax = currentData!.defaultRepMax;
                           final increment = currentData!.defaultIncrement;
-                          final itemList = [Icons.sports_tennis, Icons.agriculture_outlined, Icons.cable, Icons.sports_martial_arts];
+                          final itemList = [FontAwesomeIcons.dumbbell, Icons.forklift, Icons.cable, Icons.sports_martial_arts];
                           final currentIcon = itemList[exerciseType];
                           return ListTile(
-                            leading: CircleAvatar(radius: 17.5,child: Icon(currentIcon),),
+                            leading: CircleAvatar(radius: 17.5,child: FaIcon(currentIcon),),
                             title: Text(currentData!.name),
                             subtitle: 
                                   Row(

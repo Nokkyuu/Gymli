@@ -190,7 +190,7 @@ class MainApp extends StatefulWidget {
 
 class _MainAppState extends State<MainApp> {
   Brightness mode =  Brightness.light;
-  Color themecolor = Colors.blue;
+  Color themecolor = Color.fromARGB(255, 0, 7, 42);
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
