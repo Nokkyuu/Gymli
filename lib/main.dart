@@ -6,7 +6,6 @@ import 'package:yafa_app/DataModels.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:yafa_app/exerciseSetupScreen.dart';
 import 'package:yafa_app/workoutSetupScreen.dart';
-import 'package:yafa_app/globals.dart' as globals;
 bool state = false;
 
 Future<int> populateExercises() async {
@@ -95,33 +94,7 @@ void main() async {
     builder: (_, snap) {
       if (snap.hasData) {
         //here you can use the MyService singleton and its members
-        ;
-
-        return MaterialApp(
-          
-          theme: ThemeData(
-            useMaterial3: true,
-            colorScheme: ColorScheme.fromSeed(
-              seedColor: globals.themecolor,
-              brightness: globals.mode,
-            ),
-            textTheme: TextTheme(
-              displayLarge: const TextStyle(
-                fontSize: 72,
-                fontWeight: FontWeight.bold,
-              ),
-              titleLarge: GoogleFonts.oswald(
-                fontSize: 30,
-                fontStyle: FontStyle.italic,
-              ),
-              bodyMedium: GoogleFonts.merriweather(),
-              displaySmall: GoogleFonts.pacifico(),
-            ),
-          ),
-          title: 'Navigation Basics',
-          home: MainBody(),
-          
-        );
+      return MainApp();
       }
       return CircularProgressIndicator();
     },
@@ -129,20 +102,43 @@ void main() async {
 
 }
 
-class MainBody extends StatefulWidget {
-  const MainBody({
+class MainApp extends StatefulWidget {
+  const MainApp({
     super.key,
   });
 
   @override
-  State<MainBody> createState() => _MainBodyState();
+  State<MainApp> createState() => _MainAppState();
 }
 
-class _MainBodyState extends State<MainBody> {
-
+class _MainAppState extends State<MainApp> {
+  Brightness mode =  Brightness.light;
+  Color themecolor = Colors.blue;
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return MaterialApp(
+      
+      theme: ThemeData(
+        useMaterial3: true,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: themecolor,
+          brightness: mode,
+        ),
+        textTheme: TextTheme(
+          displayLarge: const TextStyle(
+            fontSize: 72,
+            fontWeight: FontWeight.bold,
+          ),
+          titleLarge: GoogleFonts.oswald(
+            fontSize: 30,
+            fontStyle: FontStyle.italic,
+          ),
+          bodyMedium: GoogleFonts.merriweather(),
+          displaySmall: GoogleFonts.pacifico(),
+        ),
+      ),
+      title: 'Navigation Basics',
+      home: Scaffold(
     appBar: AppBar(
     leading: Builder(
       
@@ -162,12 +158,6 @@ class _MainBodyState extends State<MainBody> {
             child: ListView(
     padding: EdgeInsets.zero,
     children: [
-      const DrawerHeader(
-        decoration: BoxDecoration(
-          color: Colors.blue,
-        ),
-        child: Text('Drawer Header'),
-      ),
     
       ListTile(
         title: const Text('Exercise Setup'),
@@ -186,12 +176,17 @@ class _MainBodyState extends State<MainBody> {
           tooltip: 'Increase volume by 10',
           onPressed: () {
             setState(() {
-              globals.mode = Brightness.dark; //TODO: how to make it work?
+              if (mode == Brightness.light){
+              mode = Brightness.dark;}
+              else{ mode = Brightness.light;}
             });
           },
         ),
     ],
             ),
-          ),);
+          ),),
+      
+    );
   }
 }
+
