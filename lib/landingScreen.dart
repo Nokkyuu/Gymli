@@ -24,7 +24,13 @@ class LandingScreen extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           mainAxisSize: MainAxisSize.max,
           children: <Widget>[
-          ExerciseSetupButton(context),
+          TextButton(
+            style: const ButtonStyle(
+            ),
+            onPressed: () {
+              Navigator.push(context, MaterialPageRoute(builder: (context) => const ExerciseSetupScreen()));},
+            child: const Text('New Exercise'),
+          ),
           TextButton(
             style: const ButtonStyle(
             ),
@@ -73,16 +79,6 @@ class LandingScreen extends StatelessWidget {
             ]
         ),
       );
-  }
-
-  TextButton ExerciseSetupButton(BuildContext context) {
-    return TextButton(
-          style: const ButtonStyle(
-          ),
-          onPressed: () {
-            Navigator.push(context, MaterialPageRoute(builder: (context) => const ExerciseSetupScreen()));},
-          child: const Text('New Exercise'),
-        );
   }
 }
 

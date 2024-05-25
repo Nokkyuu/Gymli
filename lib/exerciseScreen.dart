@@ -92,6 +92,7 @@ class _ExerciseScreen extends State<ExerciseScreen> {
       home: Scaffold(
         appBar: AppBar(
           leading: InkWell( onTap: () {Navigator.pop(context); },
+          
           child: const Icon(
             Icons.arrow_back_ios,
             color: Colors.black54,
