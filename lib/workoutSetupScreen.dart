@@ -36,10 +36,7 @@ class _WorkoutSetupScreenState extends State<WorkoutSetupScreen> {
   Widget build(BuildContext context) {
     const title = 'Workout Editor';
 
-    return MaterialApp(
-      theme: Theme.of(context),
-      title: title,
-      home: Scaffold(
+    return Scaffold(
           appBar: AppBar(
             leading: InkWell(
               onTap: () {
@@ -158,8 +155,8 @@ class _WorkoutSetupScreenState extends State<WorkoutSetupScreen> {
               //for (var Exercise in ExerciseList.values) 
               //  ExerciseTile(exerciseName: Exercise.exerciseName, warmUpS: Exercise.warmUpS, workS: Exercise.workS, dropS: Exercise.dropS),
             ],
-          )),
-    );
+          ))
+    ;
   }
 }
 

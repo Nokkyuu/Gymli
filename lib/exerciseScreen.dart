@@ -86,10 +86,7 @@ class _ExerciseScreen extends State<ExerciseScreen> {
     TextEditingController dateInputController = TextEditingController(text: DateTime.now().toString());
     graphData = getTrainingScores(widget.exerciseName);
 
-    return MaterialApp(
-      theme: Theme.of(context),
-      title: title,
-      home: Scaffold(
+    return Scaffold(
         appBar: AppBar(
           leading: InkWell( onTap: () {Navigator.pop(context); },
           
@@ -227,8 +224,8 @@ class _ExerciseScreen extends State<ExerciseScreen> {
           // ]),
 
         ),
-      ),
-    );
+      )
+    ;
   }
 }
 

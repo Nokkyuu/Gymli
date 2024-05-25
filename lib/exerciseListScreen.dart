@@ -18,10 +18,7 @@ class ExerciseListScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const title = 'ExercliseList';
-    return MaterialApp(
-      title: title,
-      theme: Theme.of(context),
-      home: Scaffold(
+    return Scaffold(
         appBar: AppBar(
           leading: InkWell( onTap: () {Navigator.pop(context); },
           child: const Icon(
@@ -49,8 +46,8 @@ class ExerciseListScreen extends StatelessWidget {
             )
           ]
         ),
-      ),
-    );
+      )
+    ;
   }
 }
 

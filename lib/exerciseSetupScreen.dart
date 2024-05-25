@@ -48,10 +48,7 @@ class _ExerciseSetupScreenState extends State<ExerciseSetupScreen> {
   @override
   Widget build(BuildContext context) {
     const title = 'New Exercise';
-    return MaterialApp(
-      theme: Theme.of(context),
-        title: title,
-        home: Scaffold(
+    return Scaffold(
             appBar: AppBar(
               leading: InkWell(
                 onTap: () {
@@ -196,7 +193,7 @@ class _ExerciseSetupScreenState extends State<ExerciseSetupScreen> {
                   ),
                 ],
               ),
-            )));
+            ));
   }
 }
 
