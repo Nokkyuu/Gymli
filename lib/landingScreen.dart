@@ -49,7 +49,7 @@ class _LandingScreenState extends State<LandingScreen> {
   final TextEditingController MuscleController = TextEditingController();
   WorkoutList? selectedWorkout;
   MuscleList? selectedMuscle;
-
+  
 
   @override
   Widget build(BuildContext context) {
@@ -72,8 +72,10 @@ class _LandingScreenState extends State<LandingScreen> {
               ),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
+                
                 children: [
                   DropdownMenu<WorkoutList>(
+                    width: MediaQuery.of(context).size.width * 0.5,
                           enabled: true,
                           //initialSelection: WorkoutList.Push,
                           controller: WorkoutController,
@@ -94,6 +96,7 @@ class _LandingScreenState extends State<LandingScreen> {
                           }).toList(),
                         ),
                         DropdownMenu<MuscleList>(
+                          width: MediaQuery.of(context).size.width * 0.5,
                           enabled: true,
                           //initialSelection: MuscleList.Pectoralis_major,
                           controller: MuscleController,
