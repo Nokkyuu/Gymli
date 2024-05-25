@@ -16,68 +16,51 @@ class LandingScreen extends StatelessWidget {
     return MaterialApp(
       title: title,
       theme: Theme.of(context),
-      home: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          mainAxisSize: MainAxisSize.max,
-          children: <Widget>[
-            Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          mainAxisSize: MainAxisSize.max,
-          children: <Widget>[
-          TextButton(
-            style: const ButtonStyle(
-            ),
-            onPressed: () {
-              Navigator.push(context, MaterialPageRoute(builder: (context) => const ExerciseSetupScreen()));},
-            child: const Text('New Exercise'),
-          ),
-          TextButton(
-            style: const ButtonStyle(
-            ),
-            onPressed: () { 
-              Navigator.push(context, MaterialPageRoute(builder: (context) => const WorkoutSetupScreen()));},
-            child: const Text('New Workout'),
-          ),
-          const Text("")
-          ]),
-          Expanded(
-              child: ValueListenableBuilder(
-                valueListenable: Hive.box<Exercise>('Exercises').listenable(),
-                builder: (context, Box<Exercise> box, _) {
-                  if (!box.values.isEmpty) {
-                    return ListView.builder(
-                      itemCount: box.values.length,
-                      itemBuilder: (context, index) {
-                        final currentData = box.getAt(index);
-                        final exerciseType = currentData!.type;
-                        final repBase = currentData!.defaultRepBase;
-                        final repMax = currentData!.defaultRepMax;
-                        final increment = currentData!.defaultIncrement;
-                        final itemList = [Icons.sports_tennis, Icons.agriculture_outlined, Icons.cable, Icons.sports_martial_arts];
-                        final currentIcon = itemList[exerciseType];
-                        return ListTile(
-                          leading: CircleAvatar(radius: 17.5,child: Icon(currentIcon),),
-                          title: Text(currentData!.name),
-                          subtitle: 
-                                Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children: [
-                            Text("$repBase/$repMax with $increment kg")
-                        ]),
-                        onTap: () {
-                          
-                          Navigator.push(context, MaterialPageRoute(builder: (context) => ExerciseScreen(currentData!.name)));
-                        }
-                      );
-                    });
-                  } else {
-                    return const CircularProgressIndicator();
-                }
-                }
+      home: Scaffold(
+        body: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.max,
+            children: <Widget>[
+            
+            Expanded(
+                child: ValueListenableBuilder(
+                  valueListenable: Hive.box<Exercise>('Exercises').listenable(),
+                  builder: (context, Box<Exercise> box, _) {
+                    if (!box.values.isEmpty) {
+                      return ListView.builder(
+                        itemCount: box.values.length,
+                        itemBuilder: (context, index) {
+                          final currentData = box.getAt(index);
+                          final exerciseType = currentData!.type;
+                          final repBase = currentData!.defaultRepBase;
+                          final repMax = currentData!.defaultRepMax;
+                          final increment = currentData!.defaultIncrement;
+                          final itemList = [Icons.sports_tennis, Icons.agriculture_outlined, Icons.cable, Icons.sports_martial_arts];
+                          final currentIcon = itemList[exerciseType];
+                          return ListTile(
+                            leading: CircleAvatar(radius: 17.5,child: Icon(currentIcon),),
+                            title: Text(currentData!.name),
+                            subtitle: 
+                                  Row(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            children: [
+                              Text("$repBase/$repMax with $increment kg")
+                          ]),
+                          onTap: () {
+                            
+                            Navigator.push(context, MaterialPageRoute(builder: (context) => ExerciseScreen(currentData!.name)));
+                          }
+                        );
+                      });
+                    } else {
+                      return const CircularProgressIndicator();
+                  }
+                  }
+                )
               )
-            )
-            ]
-        ),
+              ]
+          ),
+      ),
       );
   }
 }

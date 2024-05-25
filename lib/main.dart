@@ -6,7 +6,7 @@ import 'package:yafa_app/DataModels.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:yafa_app/exerciseSetupScreen.dart';
 import 'package:yafa_app/workoutSetupScreen.dart';
-
+import 'package:yafa_app/globals.dart' as globals;
 bool state = false;
 
 Future<int> populateExercises() async {
@@ -88,8 +88,6 @@ void main() async {
 
   // await populate();
 
-Brightness mode =  Brightness.light;
-Color themecolor = Colors.blue;
 
 
   runApp(FutureBuilder(
@@ -97,13 +95,15 @@ Color themecolor = Colors.blue;
     builder: (_, snap) {
       if (snap.hasData) {
         //here you can use the MyService singleton and its members
+        ;
+
         return MaterialApp(
           
           theme: ThemeData(
             useMaterial3: true,
             colorScheme: ColorScheme.fromSeed(
-              seedColor: themecolor,
-              brightness: mode,
+              seedColor: globals.themecolor,
+              brightness: globals.mode,
             ),
             textTheme: TextTheme(
               displayLarge: const TextStyle(
@@ -119,55 +119,7 @@ Color themecolor = Colors.blue;
             ),
           ),
           title: 'Navigation Basics',
-          home: Scaffold(
-          appBar: AppBar(
-          leading: Builder(
-            
-          builder: (context) {
-            return IconButton(
-              icon: const Icon(Icons.menu),
-              onPressed: () {
-                Scaffold.of(context).openDrawer();
-              },
-            );
-          },
-        ),
-          actions: <Widget>[
-            IconButton(
-            icon: Icon(Icons.light),
-            onPressed: (() => mode = Brightness.dark)),//FIXME: doesnt work yet, but why
-          ],
-          title: const Text("Fitness Tracker"),
-          centerTitle: true,),
-          body: LandingScreen(),
-          drawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            const DrawerHeader(
-              decoration: BoxDecoration(
-                color: Colors.blue,
-              ),
-              child: Text('Drawer Header'),
-            ),
-
-            ListTile(
-              title: const Text('Exercise Setup'),
-              onTap: () {
-                //Navigator.push(context, MaterialPageRoute(builder: (context) => const ExerciseSetupScreen()));
-                //FIXME: no context, but why
-              },
-            ),
-            ListTile(
-              title: const Text('Workout Setup'),
-              onTap: () {
-               // Navigator.push(context, MaterialPageRoute(builder: (context) => const WorkoutSetupScreen()));
-               //FIXME: no context, but why, i think we need to transfer all of this into a statefull widget for this to work
-              },
-            ),
-          ],
-        ),
-      ),),
+          home: MainBody(),
           
         );
       }
@@ -175,4 +127,71 @@ Color themecolor = Colors.blue;
     },
   ));
 
+}
+
+class MainBody extends StatefulWidget {
+  const MainBody({
+    super.key,
+  });
+
+  @override
+  State<MainBody> createState() => _MainBodyState();
+}
+
+class _MainBodyState extends State<MainBody> {
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+    appBar: AppBar(
+    leading: Builder(
+      
+    builder: (context) {
+      return IconButton(
+        icon: const Icon(Icons.menu),
+        onPressed: () {
+          Scaffold.of(context).openDrawer();
+        },
+      );
+    },
+            ),
+    title: const Text("Fitness Tracker"),
+    centerTitle: true,),
+    body: LandingScreen(),
+    drawer: Drawer(
+            child: ListView(
+    padding: EdgeInsets.zero,
+    children: [
+      const DrawerHeader(
+        decoration: BoxDecoration(
+          color: Colors.blue,
+        ),
+        child: Text('Drawer Header'),
+      ),
+    
+      ListTile(
+        title: const Text('Exercise Setup'),
+        onTap: () {
+          Navigator.push(context, MaterialPageRoute(builder: (context) => const ExerciseSetupScreen()));
+        },
+      ),
+      ListTile(
+        title: const Text('Workout Setup'),
+        onTap: () {
+         Navigator.push(context, MaterialPageRoute(builder: (context) => const WorkoutSetupScreen()));
+        },
+      ),
+      IconButton(
+          icon: const Icon(Icons.light),
+          tooltip: 'Increase volume by 10',
+          onPressed: () {
+            setState(() {
+              globals.mode = Brightness.dark; //TODO: how to make it work?
+            });
+          },
+        ),
+    ],
+            ),
+          ),);
+  }
 }
