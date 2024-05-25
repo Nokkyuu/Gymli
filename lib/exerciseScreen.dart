@@ -92,7 +92,6 @@ class _ExerciseScreen extends State<ExerciseScreen> {
           
           child: const Icon(
             Icons.arrow_back_ios,
-            color: Colors.black54,
           ),),
           title: Text(title),
         ),

@@ -160,6 +160,12 @@ class _MainAppState extends State<MainApp> {
                 child: ListView(
         padding: EdgeInsets.zero,
         children: [
+          const DrawerHeader(
+              decoration: BoxDecoration(
+                //color: Colors.blueAccent
+              ),
+              child: Text('Where you wanna go, Amigo'),
+            ),
           ListTile(
             title: const Text('Exercise Setup'),
             onTap: () {

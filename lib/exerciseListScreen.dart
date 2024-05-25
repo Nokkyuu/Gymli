@@ -68,7 +68,7 @@ class DateItem implements ListItem {
   @override
   Widget buildIcon(BuildContext context) => const Text("");
   @override
-  Color getColor(BuildContext context) => const Color.fromARGB(255, 196, 104, 104);
+  Color getColor(BuildContext context) => Theme.of(context).splashColor;
 }
 // add new button?
 class ExerciseItem implements ListItem {
