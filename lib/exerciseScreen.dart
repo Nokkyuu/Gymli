@@ -149,8 +149,8 @@ class _ExerciseScreen extends State<ExerciseScreen> {
           mainAxisSize: MainAxisSize.max,
           children: <Widget>[
             SizedBox(
-                width: 500,
-                height: 200,
+                width: MediaQuery.of(context).size.width,
+                height: MediaQuery.of(context).size.height * 0.3,
                 child: LineChart(LineChartData(
                   lineBarsData: [
                     LineChartBarData(spots: graphData),
@@ -182,10 +182,9 @@ class _ExerciseScreen extends State<ExerciseScreen> {
                               return ListTile(
                                   leading: CircleAvatar(
                                     radius: 17.5,
-                                    backgroundColor: Colors.cyan,
+                                    //backgroundColor: Colors.cyan,
                                     child: FaIcon(
                                       workIcons[item.setType],
-                                      color: Colors.white,
                                     ),
                                   ),
                                   title: Text(
@@ -234,23 +233,9 @@ class _ExerciseScreen extends State<ExerciseScreen> {
                                 ),
                                 keyboardType: TextInputType.number),
                           ),
-                          TextButton(
-                            style: const ButtonStyle(),
-                            onPressed: () {
-                              addSet(
-                                  widget.exerciseName,
-                                  double.parse(weightController.text),
-                                  int.parse(repetitionController.text),
-                                  _selected.first.index,
-                                  dateInputController.text);
-                              _newData = max(_newData,
-                                  double.parse(weightController.text));
-                              updateGraph();
-                            },
-                            child: const Text('Submit'),
-                          ),
+                          
                         ]),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 10),
                     SegmentedButton<ExerciseType>(
                       segments: const <ButtonSegment<ExerciseType>>[
                         ButtonSegment<ExerciseType>(
@@ -269,6 +254,24 @@ class _ExerciseScreen extends State<ExerciseScreen> {
                       selected: _selected,
                       onSelectionChanged: updateSelected,
                     ),
+                    const SizedBox(height: 10),
+                    TextButton.icon(
+                            style: const ButtonStyle(),
+                            label: const Text('Submit'),
+                            icon: const Icon(Icons.send),
+                            onPressed: () {
+                              addSet(
+                                  widget.exerciseName,
+                                  double.parse(weightController.text),
+                                  int.parse(repetitionController.text),
+                                  _selected.first.index,
+                                  dateInputController.text);
+                              _newData = max(_newData,
+                                  double.parse(weightController.text));
+                              updateGraph();
+                            },
+                             
+                          ),
                   ],
                 )),
             const Padding(padding: EdgeInsets.only(bottom: 50)),

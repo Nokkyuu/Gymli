@@ -72,7 +72,7 @@ class DateItem implements ListItem {
   @override
   Widget buildIcon(BuildContext context) => const Text("");
   @override
-  Color getColor(BuildContext context) => Theme.of(context).splashColor;
+  Color getColor(BuildContext context) => Theme.of(context).hoverColor;
 }
 // add new button?
 class ExerciseItem implements ListItem {
@@ -86,7 +86,7 @@ class ExerciseItem implements ListItem {
   @override
   Widget buildSubtitle(BuildContext context) => Text(meta);
   @override
-  Widget buildIcon(BuildContext context) => CircleAvatar(radius: 17.5,backgroundColor: Colors.cyan,child: FaIcon(workIcon, color: Colors.white,),);
+  Widget buildIcon(BuildContext context) => CircleAvatar(radius: 17.5,child: FaIcon(workIcon,),);
   @override
   Color getColor(BuildContext context) => Colors.transparent;
 }

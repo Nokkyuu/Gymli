@@ -274,7 +274,7 @@ class _MainAppState extends State<MainApp> {
           ),
           IconButton(
               icon: const Icon(Icons.light),
-              tooltip: 'Increase volume by 10',
+              tooltip: 'Light/Dark Mode',
               onPressed: () {
                 setState(() {
                   if (mode == Brightness.light){
