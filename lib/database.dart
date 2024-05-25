@@ -5,7 +5,7 @@ class DbHelper {
   int deleteIndex = 0;
   late Box box;
   DbHelper() { openbox(); }
-  openbox() async { box = await Hive.box('Exercise'); }
+  openbox() async { box = Hive.box('Exercise'); }
 
   Future<Map> getExercises() {
     if (box.values.isEmpty) {

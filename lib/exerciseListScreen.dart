@@ -1,17 +1,21 @@
-import 'package:flutter/material.dart';
+// ignore_for_file: file_names
 
+import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+
+final workIcons = [FontAwesomeIcons.fire, FontAwesomeIcons.handFist, FontAwesomeIcons.arrowDown];
 class ExerciseListScreen extends StatelessWidget {
   static List<ListItem> items = [
     DateItem("10.02.2024"),
-    ExerciseItem('10 kg for 6 Reps', '11:42:21', Icons.local_fire_department),
-    ExerciseItem('15 kg for 10 Reps', '11:45:43', Icons.rowing),
-    ExerciseItem('15 kg for 10 Reps', '11:48:02', Icons.rowing),
-    ExerciseItem('15 kg for 10 Reps', '11:41:55', Icons.rowing),
+    ExerciseItem('10 kg for 6 Reps', '11:42:21', workIcons.first),
+    ExerciseItem('15 kg for 10 Reps', '11:45:43', workIcons[1]),
+    ExerciseItem('15 kg for 10 Reps', '11:48:02', workIcons[1]),
+    ExerciseItem('15 kg for 10 Reps', '11:41:55', workIcons[1]),
     DateItem("08.02.2024"),
-    ExerciseItem('10 kg for 6 Reps', '11:42:21', Icons.local_fire_department),
-    ExerciseItem('15 kg for 10 Reps', '11:45:43', Icons.rowing),
-    ExerciseItem('15 kg for 10 Reps', '11:48:02', Icons.rowing),
-    ExerciseItem('15 kg for 10 Reps', '11:41:55', Icons.rowing),
+    ExerciseItem('10 kg for 6 Reps', '11:42:21', workIcons[0]),
+    ExerciseItem('15 kg for 10 Reps', '11:45:43', workIcons[1]),
+    ExerciseItem('15 kg for 10 Reps', '11:48:02', workIcons[1]),
+    ExerciseItem('15 kg for 10 Reps', '11:41:55', workIcons[1]),
   ];
 
   const ExerciseListScreen({super.key});
@@ -82,7 +86,7 @@ class ExerciseItem implements ListItem {
   @override
   Widget buildSubtitle(BuildContext context) => Text(meta);
   @override
-  Widget buildIcon(BuildContext context) => CircleAvatar(radius: 17.5,backgroundColor: Colors.cyan,child: Icon(workIcon, color: Colors.white,),);
+  Widget buildIcon(BuildContext context) => CircleAvatar(radius: 17.5,backgroundColor: Colors.cyan,child: FaIcon(workIcon, color: Colors.white,),);
   @override
   Color getColor(BuildContext context) => Colors.transparent;
 }

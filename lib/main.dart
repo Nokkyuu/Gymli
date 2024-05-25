@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:yafa_app/landingScreen.dart';
-import 'package:hive/hive.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:yafa_app/DataModels.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -171,9 +170,9 @@ void main() async {
     builder: (_, snap) {
       if (snap.hasData) {
         //here you can use the MyService singleton and its members
-      return MainApp();
+      return const MainApp();
       }
-      return CircularProgressIndicator();
+      return const CircularProgressIndicator();
     },
   ));
 
@@ -190,7 +189,7 @@ class MainApp extends StatefulWidget {
 
 class _MainAppState extends State<MainApp> {
   Brightness mode =  Brightness.light;
-  Color themecolor = Color.fromARGB(255, 0, 7, 42);
+  Color themecolor = const Color.fromARGB(255, 0, 7, 42);
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -230,7 +229,7 @@ class _MainAppState extends State<MainApp> {
             ),
     title: const Text("Fitness Tracker"),
     centerTitle: true,),
-    body: LandingScreen(),
+    body: const LandingScreen(),
     drawer: Builder(
       builder: (context) {
         return Drawer(

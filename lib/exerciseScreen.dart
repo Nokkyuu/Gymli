@@ -1,22 +1,32 @@
+// ignore_for_file: file_names
+
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:yafa_app/exerciseListScreen.dart';
 import 'package:fl_chart/fl_chart.dart';
-import 'package:hive/hive.dart';
 import 'package:yafa_app/DataModels.dart';
-import 'dart:developer';
 import 'package:intl/intl.dart';
 import 'dart:math';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 enum ExerciseType { warmup, work, dropset }
 
-final workIcons = [Icons.local_fire_department, Icons.rowing, Icons.south_east];
+final workIcons = [
+  FontAwesomeIcons.fire,
+  FontAwesomeIcons.handFist,
+  FontAwesomeIcons.arrowDown
+];
 
 List<DateTime> getTrainingDates(String exercise) {
   var box = Hive.box<TrainingSet>('TrainingSets');
   var items = box.values.where((item) => item.exercise == exercise).toList();
-  final dates = items.map((e) => DateFormat('yyyy-MM-dd').format(e.date)).toSet().toList();
-  dates.sort((a, b) { return a.toLowerCase().compareTo(b.toLowerCase());});  // wiederum etwas hacky
+  final dates = items
+      .map((e) => DateFormat('yyyy-MM-dd').format(e.date))
+      .toSet()
+      .toList();
+  dates.sort((a, b) {
+    return a.toLowerCase().compareTo(b.toLowerCase());
+  }); // wiederum etwas hacky
   List<DateTime> trainingDates = [];
   for (var d in dates) {
     trainingDates.add(DateFormat('yyyy-MM-dd').parse(d));
@@ -29,28 +39,47 @@ List<FlSpot> getTrainingScores(String exercise) {
   var trainings = Hive.box<TrainingSet>('TrainingSets').values.toList();
   trainings = trainings.where((item) => item.exercise == exercise).toList();
   var trainingDates = getTrainingDates(exercise);
-  var i = 0;
+  //var i = 0;
   for (var d in trainingDates) {
-    final day_diff = d.difference(DateTime.now()).inDays;
+    final dayDiff = d.difference(DateTime.now()).inDays;
 
     // if (day_diff > -21) {
-    var subTrainings = trainings.where((item) => item.date.day == d.day && item.date.month == d.month && item.date.year == d.year).toList();
-    var current_score = 0.0;
+    var subTrainings = trainings
+        .where((item) =>
+            item.date.day == d.day &&
+            item.date.month == d.month &&
+            item.date.year == d.year)
+        .toList();
+    var currentScore = 0.0;
     for (var s in subTrainings) {
-      current_score = max(current_score, s.weight + ((s.repetitions - s.baseReps) / (s.maxReps - s.baseReps)) * s.increment);
+      currentScore = max(
+          currentScore,
+          s.weight +
+              ((s.repetitions - s.baseReps) / (s.maxReps - s.baseReps)) *
+                  s.increment);
     }
-    scores.add(FlSpot((day_diff).toDouble(), current_score));
+    scores.add(FlSpot((dayDiff).toDouble(), currentScore));
     // }
   }
 
   return scores;
 }
 
-Future<int> addSet(String exercise, double weight, int repetitions, int setType, String when) async {
+Future<int> addSet(String exercise, double weight, int repetitions, int setType,
+    String when) async {
   var box = Hive.box<TrainingSet>('TrainingSets');
   var theDate = DateTime.parse(when);
   // TrainingSet ({required this.id, required this.exercise, required this.date, required this.weight, required this.repetitions, required this.setType, required this.baseReps, required this.maxReps, required this.increment, required this.machineName});
-  box.add(TrainingSet(exercise: exercise, date: theDate, setType: setType, weight:weight, repetitions: repetitions, baseReps: 8, maxReps: 12, increment: 5.0, machineName: ""));
+  box.add(TrainingSet(
+      exercise: exercise,
+      date: theDate,
+      setType: setType,
+      weight: weight,
+      repetitions: repetitions,
+      baseReps: 8,
+      maxReps: 12,
+      increment: 5.0,
+      machineName: ""));
   return 0;
 }
 
@@ -61,17 +90,19 @@ class ExerciseScreen extends StatefulWidget {
   @override
   State<ExerciseScreen> createState() => _ExerciseScreen();
 }
+
 class _ExerciseScreen extends State<ExerciseScreen> {
   // late String exerciseName;
   Set<ExerciseType> _selected = {ExerciseType.warmup};
   var _newData = 0.0;
-  List<FlSpot> graphData = [ FlSpot(0, 0)];
+  List<FlSpot> graphData = [const FlSpot(0, 0)];
   void updateSelected(Set<ExerciseType> newSelection) async {
     setState(() {
       _selected = newSelection;
     });
     updateGraph();
   }
+
   void updateGraph() async {
     setState(() {
       if (graphData.last.x == 0) {
@@ -82,13 +113,16 @@ class _ExerciseScreen extends State<ExerciseScreen> {
       }
     });
   }
+
   @override
   Widget build(BuildContext context) {
     var title = widget.exerciseName;
 
     TextEditingController weightController = TextEditingController(text: '15');
-    TextEditingController repetitionController = TextEditingController(text: '10');
-    TextEditingController dateInputController = TextEditingController(text: DateTime.now().toString());
+    TextEditingController repetitionController =
+        TextEditingController(text: '10');
+    TextEditingController dateInputController =
+        TextEditingController(text: DateTime.now().toString());
     graphData = getTrainingScores(widget.exerciseName);
 
     var minScore = 1e6;
@@ -97,149 +131,146 @@ class _ExerciseScreen extends State<ExerciseScreen> {
       minScore = min(minScore, d.y);
       maxScore = max(maxScore, d.y);
     }
-    
 
     return Scaffold(
-        appBar: AppBar(
-          leading: InkWell( onTap: () {Navigator.pop(context); },
-          
+      appBar: AppBar(
+        leading: InkWell(
+          onTap: () {
+            Navigator.pop(context);
+          },
           child: const Icon(
             Icons.arrow_back_ios,
-          ),),
-          title: Text(title),
+          ),
         ),
-        body: Column(
+        title: Text(title),
+      ),
+      body: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           mainAxisSize: MainAxisSize.max,
           children: <Widget>[
             SizedBox(
-              width: 500, 
-              height: 200,
-              child: LineChart(
-                LineChartData(
+                width: 500,
+                height: 200,
+                child: LineChart(LineChartData(
                   lineBarsData: [
-                    LineChartBarData(
-                    spots: graphData
-                  ),
-                ],
-                minY: minScore - 5.0,
-                maxY: maxScore + 5.0,
-              )
-            )
-            ),
-          Expanded(
-              child: ValueListenableBuilder(
-                valueListenable: Hive.box<TrainingSet>('TrainingSets').listenable(),
-                builder: (context, Box<TrainingSet> box, _) {
-                  var items = box.values.where((item) => item.exercise == widget.exerciseName).toList();
-                  var today = DateTime.now();
-                  items = items.where((item) => item.date.day == today.day && item.date.month == today.month && item.date.year == today.year).toList();
-                  if (!items.isEmpty) {
-                    return ListView.builder(
-                    itemCount: items.length,
-                    itemBuilder: (context, index) {
-                      final item = items[index];
-                      return ListTile(
-                        leading: CircleAvatar(radius: 17.5,backgroundColor: Colors.cyan,child: Icon(workIcons[item.setType], color: Colors.white,),),
-                        title: Text("${item.weight} for ${item.repetitions} reps"),
-                        subtitle: Text("${item.date.hour}:${item.date.minute}:${item.date.second}"),
-                        onTap: () {
-                          Navigator.push(context, MaterialPageRoute(builder: (context) => const ExerciseListScreen()),);
-                        }
-                      );
-                    });
-                  } else {
-                    return const Text("No Training yet.");
-                  }
-                }
-              )
-            ),
-            SegmentedButton<ExerciseType>(
-              segments: const <ButtonSegment<ExerciseType>>[
-                ButtonSegment<ExerciseType>(
-                    value: ExerciseType.warmup,
-                    label: Text('Warmup'),
-                    icon: Icon(Icons.local_fire_department)
-                    ),
-                ButtonSegment<ExerciseType>(
-                    value: ExerciseType.work,
-                    label: Text('Work'),
-                    icon: Icon(Icons.rowing)
-                    ),
-                ButtonSegment<ExerciseType>(
-                    value: ExerciseType.dropset,
-                    label: Text('Dropset'),
-                    icon: Icon(Icons.south_east)
-                    ),
-                    
-              ],
-              selected: _selected,
-              onSelectionChanged: updateSelected,
-            ),
+                    LineChartBarData(spots: graphData),
+                  ],
+                  minY: minScore - 5.0,
+                  maxY: maxScore + 5.0,
+                ))),
+            Expanded(
+                child: ValueListenableBuilder(
+                    valueListenable:
+                        Hive.box<TrainingSet>('TrainingSets').listenable(),
+                    builder: (context, Box<TrainingSet> box, _) {
+                      var items = box.values
+                          .where((item) => item.exercise == widget.exerciseName)
+                          .toList();
+                      var today = DateTime.now();
+                      items = items
+                          .where((item) =>
+                              item.date.day == today.day &&
+                              item.date.month == today.month &&
+                              item.date.year == today.year)
+                          .toList();
+                      if (items.isNotEmpty) {
+                        return ListView.builder(
+                            itemCount: items.length,
+                            itemBuilder: (context, index) {
+                              final item = items[index];
+                              return ListTile(
+                                  leading: CircleAvatar(
+                                    radius: 17.5,
+                                    backgroundColor: Colors.cyan,
+                                    child: FaIcon(
+                                      workIcons[item.setType],
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  title: Text(
+                                      "${item.weight} for ${item.repetitions} reps"),
+                                  subtitle: Text(
+                                      "${item.date.hour}:${item.date.minute}:${item.date.second}"),
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (context) =>
+                                              const ExerciseListScreen()),
+                                    );
+                                  });
+                            });
+                      } else {
+                        return const Text("No Training yet.");
+                      }
+                    })),
             Padding(
-              padding: const EdgeInsets.only(left: 50, right: 50),
-              child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              mainAxisSize: MainAxisSize.max,
-              children: <Widget>[
-                Expanded(
-                  child: TextField(
-                    controller: dateInputController,
-                    decoration: const InputDecoration(border: OutlineInputBorder()),
-                  ),
-                )
-            ]),
-            ),
-            Padding(
-              padding: const EdgeInsets.only(left: 50, right: 50, bottom: 10),
-              child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              mainAxisSize: MainAxisSize.max,
-              children: <Widget>[
-                Expanded(
-                  child: TextField(
-                    controller: weightController,
-                    decoration: const InputDecoration(border: OutlineInputBorder(), suffixText: 'kg',),
-                    keyboardType: TextInputType.number,
-                  ),
-                ),
-                Expanded(
-                  child: TextField(
-                    controller: repetitionController,
-                    decoration: const InputDecoration(border: OutlineInputBorder(), suffixText: 'reps',),
-                    keyboardType: TextInputType.number
-                  ),
-                ),
-                TextButton(
-                  style: const ButtonStyle(),
-                  onPressed: () { 
-                    addSet(widget.exerciseName, double.parse(weightController.text), int.parse(repetitionController.text), _selected.first.index, dateInputController.text);
-                    _newData = max(_newData, double.parse(weightController.text));
-                    updateGraph();
-                  },
-                  child: const Text('Submit'),
-                ),
-              ])
-            ),
-          const Padding(
-            padding: EdgeInsets.only(bottom: 50)
-          ),]
-          //               Row(
-          // mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          // mainAxisSize: MainAxisSize.max,
-          // children: <Widget>[
-          // TextButton(
-          //   style: ButtonStyle(
-          //   ),
-          //   onPressed: () { },
-          //   child: Text('Training Stoppen'),
-          // ),
-          // const Text("Dauer 00:41:32 ")
-          // ]),
-
-        ),
-      )
-    ;
+                padding: const EdgeInsets.only(left: 50, right: 50, bottom: 10),
+                child: Column(
+                  children: [
+                    Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        mainAxisSize: MainAxisSize.max,
+                        children: <Widget>[
+                          Expanded(
+                            child: TextField(
+                              controller: weightController,
+                              decoration: const InputDecoration(
+                                border: OutlineInputBorder(),
+                                suffixText: 'kg',
+                              ),
+                              keyboardType: TextInputType.number,
+                            ),
+                          ),
+                          Expanded(
+                            child: TextField(
+                                controller: repetitionController,
+                                decoration: const InputDecoration(
+                                  border: OutlineInputBorder(),
+                                  suffixText: 'reps',
+                                ),
+                                keyboardType: TextInputType.number),
+                          ),
+                          TextButton(
+                            style: const ButtonStyle(),
+                            onPressed: () {
+                              addSet(
+                                  widget.exerciseName,
+                                  double.parse(weightController.text),
+                                  int.parse(repetitionController.text),
+                                  _selected.first.index,
+                                  dateInputController.text);
+                              _newData = max(_newData,
+                                  double.parse(weightController.text));
+                              updateGraph();
+                            },
+                            child: const Text('Submit'),
+                          ),
+                        ]),
+                    const SizedBox(height: 20),
+                    SegmentedButton<ExerciseType>(
+                      segments: const <ButtonSegment<ExerciseType>>[
+                        ButtonSegment<ExerciseType>(
+                            value: ExerciseType.warmup,
+                            label: Text('Warmup'),
+                            icon: Icon(Icons.local_fire_department)),
+                        ButtonSegment<ExerciseType>(
+                            value: ExerciseType.work,
+                            label: Text('Work'),
+                            icon: FaIcon(FontAwesomeIcons.handFist)),
+                        ButtonSegment<ExerciseType>(
+                            value: ExerciseType.dropset,
+                            label: Text('Dropset'),
+                            icon: Icon(Icons.south_east)),
+                      ],
+                      selected: _selected,
+                      onSelectionChanged: updateSelected,
+                    ),
+                  ],
+                )),
+            const Padding(padding: EdgeInsets.only(bottom: 50)),
+          ]),
+    );
   }
 }
 
@@ -249,6 +280,7 @@ abstract class ListItem {
   Widget buildSubtitle(BuildContext context);
   Widget buildIcon(BuildContext context);
 }
+
 // add new button?
 class ExerciseItem implements ListItem {
   final String exerciseName;
@@ -261,5 +293,12 @@ class ExerciseItem implements ListItem {
   @override
   Widget buildSubtitle(BuildContext context) => Text(meta);
   @override
-  Widget buildIcon(BuildContext context) => CircleAvatar(radius: 17.5,backgroundColor: Colors.cyan,child: Icon(workIcon, color: Colors.white,),);
+  Widget buildIcon(BuildContext context) => CircleAvatar(
+        radius: 17.5,
+        backgroundColor: Colors.cyan,
+        child: Icon(
+          workIcon,
+          color: Colors.white,
+        ),
+      );
 }

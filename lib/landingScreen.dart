@@ -1,17 +1,16 @@
+// ignore: file_names
+// ignore_for_file: file_names, duplicate_ignore
+
 import 'package:flutter/material.dart';
 import 'package:yafa_app/exerciseScreen.dart';
-import 'package:yafa_app/exerciseSetupScreen.dart';
-import 'package:yafa_app/workoutSetupScreen.dart';
 import 'package:yafa_app/DataModels.dart';
-import 'package:yafa_app/DataBase.dart';
-import 'package:hive/hive.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 class LandingScreen extends StatelessWidget {
+  const LandingScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
-    const title = 'Fitness Tracker';
     // List exercises = then(taskBox.values.toList());
     return  Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -22,20 +21,20 @@ class LandingScreen extends StatelessWidget {
                 child: ValueListenableBuilder(
                   valueListenable: Hive.box<Exercise>('Exercises').listenable(),
                   builder: (context, Box<Exercise> box, _) {
-                    if (!box.values.isEmpty) {
+                    if (box.values.isNotEmpty) {
                       return ListView.builder(
                         itemCount: box.values.length,
                         itemBuilder: (context, index) {
                           final currentData = box.getAt(index);
                           final exerciseType = currentData!.type;
-                          final repBase = currentData!.defaultRepBase;
-                          final repMax = currentData!.defaultRepMax;
-                          final increment = currentData!.defaultIncrement;
+                          final repBase = currentData.defaultRepBase;
+                          final repMax = currentData.defaultRepMax;
+                          final increment = currentData.defaultIncrement;
                           final itemList = [FontAwesomeIcons.dumbbell, Icons.forklift, Icons.cable, Icons.sports_martial_arts];
                           final currentIcon = itemList[exerciseType];
                           return ListTile(
                             leading: CircleAvatar(radius: 17.5,child: FaIcon(currentIcon),),
-                            title: Text(currentData!.name),
+                            title: Text(currentData.name),
                             subtitle: 
                                   Row(
                             mainAxisAlignment: MainAxisAlignment.start,
@@ -44,7 +43,7 @@ class LandingScreen extends StatelessWidget {
                           ]),
                           onTap: () {
                             
-                            Navigator.push(context, MaterialPageRoute(builder: (context) => ExerciseScreen(currentData!.name)));
+                            Navigator.push(context, MaterialPageRoute(builder: (context) => ExerciseScreen(currentData.name)));
                           }
                         );
                       });
@@ -79,7 +78,7 @@ class ExerciseItem implements ListItem {
 
 void main() async {
   // final box = await Hive.openBox<Exercise>('Exercises');
-  runApp(MaterialApp(
+  runApp(const MaterialApp(
     
       title: 'Navigation Basics',
       // home: ExerciseListScreen(),
