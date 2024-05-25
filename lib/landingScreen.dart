@@ -13,11 +13,7 @@ class LandingScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     const title = 'Fitness Tracker';
     // List exercises = then(taskBox.values.toList());
-    return MaterialApp(
-      title: title,
-      theme: Theme.of(context),
-      home: Scaffold(
-        body: Column(
+    return  Column(
             mainAxisAlignment: MainAxisAlignment.center,
             mainAxisSize: MainAxisSize.max,
             children: <Widget>[
@@ -59,9 +55,7 @@ class LandingScreen extends StatelessWidget {
                 )
               )
               ]
-          ),
-      ),
-      );
+          );
   }
 }
 
