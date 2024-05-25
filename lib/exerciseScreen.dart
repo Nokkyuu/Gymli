@@ -27,16 +27,21 @@ List<DateTime> getTrainingDates(String exercise) {
 List<FlSpot> getTrainingScores(String exercise) {
   List<FlSpot> scores = [];
   var trainings = Hive.box<TrainingSet>('TrainingSets').values.toList();
+  trainings = trainings.where((item) => item.exercise == exercise).toList();
   var trainingDates = getTrainingDates(exercise);
   var i = 0;
   for (var d in trainingDates) {
-    var day_diff = d.difference(DateTime.now()).inDays;
-    if (day_diff > -5) {
-      var subTrainings = trainings.where((item) => item.date.day == d.day && item.date.month == d.month && item.date.year == d.year).toList();
-      scores.add(FlSpot((-1 * day_diff).toDouble(), subTrainings.first.weight));
+    final day_diff = d.difference(DateTime.now()).inDays;
+
+    // if (day_diff > -21) {
+    var subTrainings = trainings.where((item) => item.date.day == d.day && item.date.month == d.month && item.date.year == d.year).toList();
+    var current_score = 0.0;
+    for (var s in subTrainings) {
+      current_score = max(current_score, s.weight + ((s.repetitions - s.baseReps) / (s.maxReps - s.baseReps)) * s.increment);
     }
+    scores.add(FlSpot((day_diff).toDouble(), current_score));
+    // }
   }
-  // dates.sort((a, b) { return a.toLowerCase().compareTo(b.toLowerCase());});  // wiederum etwas hacky
 
   return scores;
 }
@@ -86,6 +91,14 @@ class _ExerciseScreen extends State<ExerciseScreen> {
     TextEditingController dateInputController = TextEditingController(text: DateTime.now().toString());
     graphData = getTrainingScores(widget.exerciseName);
 
+    var minScore = 1e6;
+    var maxScore = 0.0;
+    for (var d in graphData) {
+      minScore = min(minScore, d.y);
+      maxScore = max(maxScore, d.y);
+    }
+    
+
     return Scaffold(
         appBar: AppBar(
           leading: InkWell( onTap: () {Navigator.pop(context); },
@@ -101,7 +114,7 @@ class _ExerciseScreen extends State<ExerciseScreen> {
           children: <Widget>[
             SizedBox(
               width: 500, 
-              height: 130,
+              height: 200,
               child: LineChart(
                 LineChartData(
                   lineBarsData: [
@@ -109,6 +122,8 @@ class _ExerciseScreen extends State<ExerciseScreen> {
                     spots: graphData
                   ),
                 ],
+                minY: minScore - 5.0,
+                maxY: maxScore + 5.0,
               )
             )
             ),
