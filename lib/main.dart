@@ -117,7 +117,7 @@ class _MainAppState extends State<MainApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      
+
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(
@@ -154,37 +154,41 @@ class _MainAppState extends State<MainApp> {
     title: const Text("Fitness Tracker"),
     centerTitle: true,),
     body: LandingScreen(),
-    drawer: Drawer(
-            child: ListView(
-    padding: EdgeInsets.zero,
-    children: [
-    
-      ListTile(
-        title: const Text('Exercise Setup'),
-        onTap: () {
-          Navigator.push(context, MaterialPageRoute(builder: (context) => const ExerciseSetupScreen()));
-        },
-      ),
-      ListTile(
-        title: const Text('Workout Setup'),
-        onTap: () {
-         Navigator.push(context, MaterialPageRoute(builder: (context) => const WorkoutSetupScreen()));
-        },
-      ),
-      IconButton(
-          icon: const Icon(Icons.light),
-          tooltip: 'Increase volume by 10',
-          onPressed: () {
-            setState(() {
-              if (mode == Brightness.light){
-              mode = Brightness.dark;}
-              else{ mode = Brightness.light;}
-            });
-          },
-        ),
-    ],
+    drawer: Builder(
+      builder: (context) {
+        return Drawer(
+                child: ListView(
+        padding: EdgeInsets.zero,
+        children: [
+          ListTile(
+            title: const Text('Exercise Setup'),
+            onTap: () {
+              Navigator.push(context, MaterialPageRoute(builder: (context) => const ExerciseSetupScreen()));
+            },
+          ),
+          ListTile(
+            title: const Text('Workout Setup'),
+            onTap: () {
+              setState(() {
+             Navigator.push(context, MaterialPageRoute(builder: (context) => const WorkoutSetupScreen()));
+            });},
+          ),
+          IconButton(
+              icon: const Icon(Icons.light),
+              tooltip: 'Increase volume by 10',
+              onPressed: () {
+                setState(() {
+                  if (mode == Brightness.light){
+                  mode = Brightness.dark;}
+                  else{ mode = Brightness.light;}
+                });
+              },
             ),
-          ),),
+        ],
+                ),
+              );
+      }
+    ),),
       
     );
   }
