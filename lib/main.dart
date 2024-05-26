@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:yafa_app/landingScreen.dart';
-import 'package:hive/hive.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:yafa_app/DataModels.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -176,9 +175,9 @@ void main() async {
     builder: (_, snap) {
       if (snap.hasData) {
         //here you can use the MyService singleton and its members
-      return MainApp();
+      return const MainApp();
       }
-      return CircularProgressIndicator();
+      return const CircularProgressIndicator();
     },
   ));
 
@@ -195,7 +194,7 @@ class MainApp extends StatefulWidget {
 
 class _MainAppState extends State<MainApp> {
   Brightness mode =  Brightness.light;
-  Color themecolor = Colors.blue;
+  Color themecolor = const Color.fromARGB(255, 0, 7, 42);
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -235,7 +234,7 @@ class _MainAppState extends State<MainApp> {
             ),
     title: const Text("Fitness Tracker"),
     centerTitle: true,),
-    body: LandingScreen(),
+    body: const LandingScreen(),
     drawer: Builder(
       builder: (context) {
         return Drawer(
@@ -246,7 +245,7 @@ class _MainAppState extends State<MainApp> {
               decoration: BoxDecoration(
                 //color: Colors.blueAccent
               ),
-              child: Text('Where you wanna go, Amigo'),
+              child: Image(image: AssetImage('images/menu2.png')),
             ),
           ListTile(
             title: const Text('Exercise Setup'),
@@ -260,10 +259,27 @@ class _MainAppState extends State<MainApp> {
               setState(() {
              Navigator.push(context, MaterialPageRoute(builder: (context) => const WorkoutSetupScreen()));
             });},
+          
+          ),
+          ListTile(
+            title: const Text('Statistics'),
+            onTap: () {
+              setState(() {
+             Navigator.push(context, MaterialPageRoute(builder: (context) => const WorkoutSetupScreen()));
+            });},
+          
+          ),
+          ListTile(
+            title: const Text('Settings'),
+            onTap: () {
+              setState(() {
+             Navigator.push(context, MaterialPageRoute(builder: (context) => const WorkoutSetupScreen()));
+            });},
+          
           ),
           IconButton(
               icon: const Icon(Icons.light),
-              tooltip: 'Increase volume by 10',
+              tooltip: 'Light/Dark Mode',
               onPressed: () {
                 setState(() {
                   if (mode == Brightness.light){

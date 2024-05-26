@@ -1,4 +1,5 @@
-import 'package:flutter/gestures.dart';
+// ignore_for_file: file_names, constant_identifier_names
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:numberpicker/numberpicker.dart';
 //import 'package:fl_chart/fl_chart.dart';
@@ -57,12 +58,10 @@ class _WorkoutSetupScreenState extends State<WorkoutSetupScreen> {
                 child: TextField(
                   textAlign: TextAlign.center,
                   controller: TextEditingController(text: "Full Body Compound"),
-                  //TODO: Fonz Size
                   obscureText: false,
                   decoration: const InputDecoration(
                     border: UnderlineInputBorder(),
                     labelText: 'Workout Name',
-                    //alignLabelWithHint: true
                   ),
                 ),
               ),
@@ -105,7 +104,7 @@ class _WorkoutSetupScreenState extends State<WorkoutSetupScreen> {
                   ),
                 ],
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -141,7 +140,7 @@ class _WorkoutSetupScreenState extends State<WorkoutSetupScreen> {
                   ),
 
                 ],),
-              Divider(),
+              const Divider(),
               Expanded(
               child: ListView.builder(
               itemCount: ExerciseList.values.length,
@@ -179,7 +178,7 @@ class ExerciseTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListTile(
       enabled: true,
-      leading: const Icon(Icons.sports_tennis),
+      leading: const FaIcon(FontAwesomeIcons.dumbbell),
       title: Text(exerciseName),
       subtitle: Text('Warm Ups: $warmUpS, Work Sets: $workS, Drop Sets: $dropS'),
       trailing: IconButton(

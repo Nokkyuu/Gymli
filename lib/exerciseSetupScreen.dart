@@ -1,8 +1,9 @@
+// ignore_for_file: file_names, non_constant_identifier_names
+
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:yafa_app/DataModels.dart';
 import 'package:hive/hive.dart';
-import 'dart:developer';
-
 enum ExerciseDevice { free, machine, cable, body }
 
 class ExerciseSetupScreen extends StatefulWidget {
@@ -47,7 +48,6 @@ class _ExerciseSetupScreenState extends State<ExerciseSetupScreen> {
 
   @override
   Widget build(BuildContext context) {
-    const title = 'New Exercise';
     return Scaffold(
             appBar: AppBar(
               leading: InkWell(
@@ -77,30 +77,18 @@ class _ExerciseSetupScreenState extends State<ExerciseSetupScreen> {
                 mainAxisAlignment: MainAxisAlignment.start,
                 mainAxisSize: MainAxisSize.max,
                 children: [
-                  // SizedBox(height: boxSpace),
-                  // const SizedBox(
-                  //   width: 250,
-                  //   child: TextField(
-                  //         textAlign: TextAlign.left,
-                  //         //TODO: Fonz Size
-                  //         obscureText: false,
-                  //         decoration: InputDecoration(
-                  //           border: UnderlineInputBorder(),
-                  //           labelText: 'GiveMeName',
-                  //         ),
-                  //       ),
-                  // ),
+
                   SizedBox(height: boxSpace),
                   SegmentedButton<ExerciseDevice>(
                       segments: const <ButtonSegment<ExerciseDevice>>[
                         ButtonSegment<ExerciseDevice>(
                             value: ExerciseDevice.free,
                             label: Text('Free'),
-                            icon: Icon(Icons.sports_tennis)),
+                            icon: FaIcon(FontAwesomeIcons.dumbbell)),
                         ButtonSegment<ExerciseDevice>(
                             value: ExerciseDevice.machine,
                             label: Text('Machine'),
-                            icon: Icon(Icons.agriculture_outlined)),
+                            icon: Icon(Icons.forklift)),
                         ButtonSegment<ExerciseDevice>(
                             value: ExerciseDevice.cable,
                             label: Text('Cable'),
