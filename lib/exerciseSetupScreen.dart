@@ -163,8 +163,8 @@ class _ExerciseSetupScreenState extends State<ExerciseSetupScreen> {
                         isScrollControlled: true,
                         context: context,
                         sheetAnimationStyle: AnimationStyle(
-                          duration: const Duration(milliseconds: 300),
-                          reverseDuration: const Duration(milliseconds: 300),
+                          duration: const Duration(milliseconds: 600),
+                          reverseDuration: const Duration(milliseconds: 600),
                         ),
                         builder: (BuildContext context) {
                           return const BottomSheet();
@@ -207,7 +207,40 @@ class BottomSheet extends StatelessWidget {
               child: const Text('Close'),
               onPressed: () => Navigator.pop(context),
             ),
-            const Image(image: AssetImage('images/MuscleTemp.jpeg')),
+            Row(
+              children: [
+                SizedBox(
+                width: MediaQuery.of(context).size.width * 0.5,
+                height: MediaQuery.of(context).size.height * 0.7,
+                child:
+                Transform.scale(
+                scaleX: -1, 
+                child: Stack(children: [
+                  Image(fit: BoxFit.scaleDown,image: AssetImage('images/muscles/Front_bg.png'),),
+                  Image(fit: BoxFit.scaleDown,image: AssetImage('images/muscles/Front_biceps.png'),opacity: AlwaysStoppedAnimation(1),),
+                  Image(fit: BoxFit.scaleDown,image: AssetImage('images/muscles/Front_calves.png'),opacity: AlwaysStoppedAnimation(1),),
+                  Image(fit: BoxFit.scaleDown,image: AssetImage('images/muscles/Front_delts.png'),opacity: AlwaysStoppedAnimation(1),),
+                  Image(fit: BoxFit.scaleDown,image: AssetImage('images/muscles/Front_forearms.png'),opacity: AlwaysStoppedAnimation(1),),
+                  Image(fit: BoxFit.scaleDown,image: AssetImage('images/muscles/Front_pecs.png'),opacity: AlwaysStoppedAnimation(1),),
+                  Image(fit: BoxFit.scaleDown,image: AssetImage('images/muscles/Front_quads.png'),opacity: AlwaysStoppedAnimation(1),),
+                  Image(fit: BoxFit.scaleDown,image: AssetImage('images/muscles/Front_sideabs.png'),opacity: AlwaysStoppedAnimation(1),),
+                  Image(fit: BoxFit.scaleDown,image: AssetImage('images/muscles/Front_trapz.png'),opacity: AlwaysStoppedAnimation(1),),
+                  Image(fit: BoxFit.scaleDown,image: AssetImage('images/muscles/Front_abs.png'),opacity: AlwaysStoppedAnimation(1),),
+                  ])),
+            ),
+                SizedBox(width: MediaQuery.of(context).size.width * 0.5,
+                height: MediaQuery.of(context).size.height * 0.7,
+                child: Stack(children: [
+                  Image(fit: BoxFit.scaleDown,image: AssetImage('images/muscles/Back_bg.png')),
+                  Image(fit: BoxFit.scaleDown,image: AssetImage('images/muscles/Back_calves.png'),opacity: AlwaysStoppedAnimation(1),),
+                  Image(fit: BoxFit.scaleDown,image: AssetImage('images/muscles/Back_delts.png'),opacity: AlwaysStoppedAnimation(1),),
+                  Image(fit: BoxFit.scaleDown,image: AssetImage('images/muscles/Back_glutes.png'),opacity: AlwaysStoppedAnimation(1),),
+                  Image(fit: BoxFit.scaleDown,image: AssetImage('images/muscles/Back_hamstrings.png'),opacity: AlwaysStoppedAnimation(1),),
+                  Image(fit: BoxFit.scaleDown,image: AssetImage('images/muscles/Back_lats.png'),opacity: AlwaysStoppedAnimation(1),),
+                  Image(fit: BoxFit.scaleDown,image: AssetImage('images/muscles/Back_trapz.png'),opacity: AlwaysStoppedAnimation(1),),
+                  Image(fit: BoxFit.scaleDown,image: AssetImage('images/muscles/Back_triceps.png'),opacity: AlwaysStoppedAnimation(1),),
+                  ]))],
+            ),
           ],
         ),
       ),

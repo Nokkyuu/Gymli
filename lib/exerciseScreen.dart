@@ -197,7 +197,7 @@ TextEditingController weightController = TextEditingController(text: "0");
                   ],
                 )),
 
-            TextButton.icon(
+            ElevatedButton.icon(
               style: const ButtonStyle(),
               label: const Text('Submit'),
               icon: const Icon(Icons.send),
@@ -273,7 +273,11 @@ TextEditingController weightController = TextEditingController(text: "0");
                                   });
                             });
                       } else {
-                        return const Text("No Training yet.");
+                        return ListView(
+                          controller: _scrollController,
+                          children: const [ListTile(title: Text("No Training yet.")),],
+                          );
+                         ;
                       }
                     })),
             // const Divider(),
