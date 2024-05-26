@@ -44,7 +44,8 @@ class ExerciseListScreen extends StatelessWidget {
                   tileColor: item.getColor(context),
                   leading: item.buildIcon(context),
                   title: item.buildTitle(context),
-                  subtitle: item.buildSubtitle(context)
+                  subtitle: item.buildSubtitle(context),
+                  trailing: item.buildTrailing(context), 
                 );
               })
             )
@@ -61,6 +62,7 @@ abstract class ListItem {
   Widget buildSubtitle(BuildContext context);
   Widget buildIcon(BuildContext context);
   Color getColor(BuildContext context);
+  Widget buildTrailing(BuildContext context);
 }
 class DateItem implements ListItem {
   final String exerciseDate;
@@ -73,6 +75,8 @@ class DateItem implements ListItem {
   Widget buildIcon(BuildContext context) => const Text("");
   @override
   Color getColor(BuildContext context) => Theme.of(context).hoverColor;
+ @override
+  Widget buildTrailing(BuildContext context) => const Text("");
 }
 // add new button?
 class ExerciseItem implements ListItem {
@@ -89,4 +93,10 @@ class ExerciseItem implements ListItem {
   Widget buildIcon(BuildContext context) => CircleAvatar(radius: 17.5,child: FaIcon(workIcon,),);
   @override
   Color getColor(BuildContext context) => Colors.transparent;
-}
+  @override
+  Widget buildTrailing(BuildContext context) => IconButton(
+                    icon: const Icon(Icons.delete),
+                    onPressed:  () => print("deleted")
+                  );
+  }
+  

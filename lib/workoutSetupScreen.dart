@@ -40,6 +40,9 @@ class _WorkoutSetupScreenState extends State<WorkoutSetupScreen> {
 
     return Scaffold(
           appBar: AppBar(
+            actions:[IconButton(
+          onPressed: () => print("Workout deleted"),  //TODO: delete selected workout if it exists
+          icon: Icon(Icons.delete))],
             leading: InkWell(
               onTap: () {
                 Navigator.pop(context);
@@ -50,6 +53,7 @@ class _WorkoutSetupScreenState extends State<WorkoutSetupScreen> {
             ),
             title: const Text(title),
             centerTitle: true,
+            
           ),
           body: Column(
             children: [

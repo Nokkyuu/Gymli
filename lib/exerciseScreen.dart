@@ -94,9 +94,9 @@ class ExerciseScreen extends StatefulWidget {
 class _ExerciseScreen extends State<ExerciseScreen> {
   // late String exerciseName;
 final ScrollController _scrollController = ScrollController();  
-TextEditingController weightController = TextEditingController();
+TextEditingController weightController = TextEditingController(text: "0");
     TextEditingController repetitionController =
-        TextEditingController();
+        TextEditingController(text: "0");
 //   @override
 //   void initState() {
 //   super.initState();
@@ -157,13 +157,16 @@ TextEditingController weightController = TextEditingController();
           ),
         ),
         title: Text(title),
+        actions:[IconButton(
+          onPressed: () => print("edit exercise"),  //TODO: go to exercise setup to edit the current exercise
+          icon: Icon(Icons.edit))]
       ),
       body: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           mainAxisSize: MainAxisSize.max,
           children: <Widget>[
             Padding(
-                padding: const EdgeInsets.only(left: 50, right: 50, bottom: 10),
+                padding: const EdgeInsets.only(left: 30, right: 30, bottom: 10),
                 child: Column(
                   children: [
                     
@@ -256,6 +259,10 @@ TextEditingController weightController = TextEditingController();
                                       "${item.weight} for ${item.repetitions} reps"),
                                   subtitle: Text(
                                       "${item.date.hour}:${item.date.minute}:${item.date.second}"),
+                                  trailing: IconButton(
+                    icon: const Icon(Icons.delete),
+                    onPressed:  () => print("deleted")
+                  ),
                                   onTap: () {
                                     Navigator.push(
                                       context,
@@ -318,30 +325,31 @@ class InputFields extends StatelessWidget {
 }
 
 /// The base class for the different types of items the list can contain.
-abstract class ListItem {
-  Widget buildTitle(BuildContext context);
-  Widget buildSubtitle(BuildContext context);
-  Widget buildIcon(BuildContext context);
-}
+// abstract class ListItem {
+//   Widget buildTitle(BuildContext context);
+//   Widget buildSubtitle(BuildContext context);
+//   Widget buildIcon(BuildContext context);
+// }
 
 // add new button?
-class ExerciseItem implements ListItem {
-  final String exerciseName;
-  final String meta;
-  final IconData workIcon;
+// class ExerciseItem implements ListItem {
+//   final String exerciseName;
+//   final String meta;
+//   final IconData workIcon;
 
-  ExerciseItem(this.exerciseName, this.meta, this.workIcon);
-  @override
-  Widget buildTitle(BuildContext context) => Text(exerciseName);
-  @override
-  Widget buildSubtitle(BuildContext context) => Text(meta);
-  @override
-  Widget buildIcon(BuildContext context) => CircleAvatar(
-        radius: 17.5,
-        backgroundColor: Colors.cyan,
-        child: Icon(
-          workIcon,
-          color: Colors.white,
-        ),
-      );
-}
+//   ExerciseItem(this.exerciseName, this.meta, this.workIcon);
+//   @override
+//   Widget buildTitle(BuildContext context) => Text(exerciseName);
+//   @override
+//   Widget buildSubtitle(BuildContext context) => Text(meta);
+//   @override
+//   Widget buildIcon(BuildContext context) => CircleAvatar(
+//         radius: 17.5,
+//         backgroundColor: Colors.cyan,
+//         child: Icon(
+//           workIcon,
+//           color: Colors.white,
+//         ),
+//       );
+      
+// }

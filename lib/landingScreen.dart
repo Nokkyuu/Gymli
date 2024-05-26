@@ -86,6 +86,9 @@ class _LandingScreenState extends State<LandingScreen> {
                     return DropdownMenuEntry<WorkoutList>(
                       value: name,
                       label: name.workoutName,
+                      trailingIcon: IconButton(
+          onPressed: () => print("edit workout"),  //TODO: go to workout setup to edit the selected workout
+          icon: Icon(Icons.edit)),
                     );
                   }).toList(),
                 ),
@@ -95,7 +98,7 @@ class _LandingScreenState extends State<LandingScreen> {
                   //initialSelection: MuscleList.Pectoralis_major,
                   controller: MuscleController,
                   requestFocusOnTap: false,
-                  
+
                   label: const Text('Muscles'),
                   onSelected: (MuscleList? name) {
                     setState(() {
