@@ -170,7 +170,7 @@ void main() async {
   await Hive.initFlutter();
   Hive.registerAdapter(ExerciseAdapter());
   Hive.registerAdapter(TrainingSetAdapter());
-
+  // populateExercises();
 
   runApp(FutureBuilder(
     future: populateExercises(),

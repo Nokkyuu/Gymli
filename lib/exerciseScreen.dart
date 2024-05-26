@@ -221,7 +221,7 @@ class _ExerciseScreen extends State<ExerciseScreen> {
                                 border: OutlineInputBorder(),
                                 suffixText: 'kg',
                               ),
-                              keyboardType: TextInputType.number,
+                              // keyboardType: TextInputType.number,
                             ),
                           ),
                           Expanded(
@@ -231,7 +231,8 @@ class _ExerciseScreen extends State<ExerciseScreen> {
                                   border: OutlineInputBorder(),
                                   suffixText: 'reps',
                                 ),
-                                keyboardType: TextInputType.number),
+                                // keyboardType: TextInputType.number
+                                ),
                           ),
                           
                         ]),
@@ -274,7 +275,7 @@ class _ExerciseScreen extends State<ExerciseScreen> {
                           ),
                   ],
                 )),
-            const Padding(padding: EdgeInsets.only(bottom: 50)),
+            // const Padding(padding: EdgeInsets.only(bottom: 50)),
           ]),
     );
   }
