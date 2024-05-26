@@ -102,7 +102,7 @@ TextEditingController weightController = TextEditingController();
 //   super.initState();
 // }
 
-  Set<ExerciseType> _selected = {ExerciseType.warmup};
+  Set<ExerciseType> _selected = {ExerciseType.work};
   var _newData = 0.0;
   List<FlSpot> graphData = [const FlSpot(0, 0)];
   void updateSelected(Set<ExerciseType> newSelection) async {
