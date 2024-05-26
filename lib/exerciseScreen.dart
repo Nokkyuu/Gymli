@@ -169,10 +169,11 @@ TextEditingController weightController = TextEditingController();
                     
                     const SizedBox(height: 10),
                     SegmentedButton<ExerciseType>(
+                      showSelectedIcon: false,
                       segments: const <ButtonSegment<ExerciseType>>[
                         ButtonSegment<ExerciseType>(
                             value: ExerciseType.warmup,
-                            label: Text('Warmup'),
+                            label: Text('Warm'),
                             icon: Icon(Icons.local_fire_department)),
                         ButtonSegment<ExerciseType>(
                             value: ExerciseType.work,
@@ -180,7 +181,7 @@ TextEditingController weightController = TextEditingController();
                             icon: FaIcon(FontAwesomeIcons.handFist)),
                         ButtonSegment<ExerciseType>(
                             value: ExerciseType.dropset,
-                            label: Text('Dropset'),
+                            label: Text('Drop'),
                             icon: Icon(Icons.south_east)),
                       ],
                       selected: _selected,

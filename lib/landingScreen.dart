@@ -74,7 +74,7 @@ class _LandingScreenState extends State<LandingScreen> {
                   enabled: true,
                   //initialSelection: WorkoutList.Push,
                   controller: WorkoutController,
-                  requestFocusOnTap: true,
+                  requestFocusOnTap: false,
                   label: const Text('Workouts'),
                   onSelected: (WorkoutList? name) {
                     setState(() {
@@ -94,7 +94,8 @@ class _LandingScreenState extends State<LandingScreen> {
                   enabled: true,
                   //initialSelection: MuscleList.Pectoralis_major,
                   controller: MuscleController,
-                  requestFocusOnTap: true,
+                  requestFocusOnTap: false,
+                  
                   label: const Text('Muscles'),
                   onSelected: (MuscleList? name) {
                     setState(() {

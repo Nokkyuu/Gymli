@@ -71,7 +71,7 @@ class _WorkoutSetupScreenState extends State<WorkoutSetupScreen> {
                 children: [
                   Column(
                     children: [
-                      Text('Warm Ups: $warmUpS'),
+                      const Text('Warm Ups'),
                       NumberPicker(
                         value: warmUpS,
                         minValue: 0,
@@ -82,7 +82,7 @@ class _WorkoutSetupScreenState extends State<WorkoutSetupScreen> {
                   ),
                   Column(
                     children: [
-                      Text('Work Sets: $workS'),
+                      const Text('Work Sets'),
                       NumberPicker(
                         value: workS,
                         minValue: 0,
@@ -93,7 +93,7 @@ class _WorkoutSetupScreenState extends State<WorkoutSetupScreen> {
                   ),
                   Column(
                     children: [
-                      Text('Drop Sets: $dropS'),
+                      const Text('Drop Sets'),
                       NumberPicker(
                         value: dropS,
                         minValue: 0,

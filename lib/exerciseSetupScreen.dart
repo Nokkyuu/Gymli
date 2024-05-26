@@ -58,7 +58,14 @@ class _ExerciseSetupScreenState extends State<ExerciseSetupScreen> {
                   Icons.arrow_back_ios,
                 ),
               ),
-              title: SizedBox(
+              title: const Text("Exercise Setup"),
+            ),
+            body: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                mainAxisSize: MainAxisSize.max,
+                children: [
+                  SizedBox(
                 width: 300,
                 child: TextField(
                   textAlign: TextAlign.center,
@@ -66,36 +73,33 @@ class _ExerciseSetupScreenState extends State<ExerciseSetupScreen> {
                   obscureText: false,
                   decoration: const InputDecoration(
                     border: UnderlineInputBorder(),
-                    labelText: 'GiveMeName',
+                    labelText: 'Exercise Name',
                     //alignLabelWithHint: true
                   ),
                 ),
               ),
-            ),
-            body: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.start,
-                mainAxisSize: MainAxisSize.max,
-                children: [
 
                   SizedBox(height: boxSpace),
+                  const HeadCard(headline: "On what is the exercise done?"),
                   SegmentedButton<ExerciseDevice>(
+                    showSelectedIcon: false,
                       segments: const <ButtonSegment<ExerciseDevice>>[
                         ButtonSegment<ExerciseDevice>(
                             value: ExerciseDevice.free,
-                            label: Text('Free'),
+                            //label: Text('Free'),
+                            
                             icon: FaIcon(FontAwesomeIcons.dumbbell)),
                         ButtonSegment<ExerciseDevice>(
                             value: ExerciseDevice.machine,
-                            label: Text('Machine'),
+                            //label: Text('Machine',softWrap: false, overflow: TextOverflow.fade),
                             icon: Icon(Icons.forklift)),
                         ButtonSegment<ExerciseDevice>(
                             value: ExerciseDevice.cable,
-                            label: Text('Cable'),
+                            //label: Text('Cable'),
                             icon: Icon(Icons.cable)),
                         ButtonSegment<ExerciseDevice>(
                             value: ExerciseDevice.body,
-                            label: Text('Body'),
+                            //label: Text('Body'),
                             icon: Icon(Icons.sports_martial_arts)),
                       ],
                       selected: <ExerciseDevice>{
@@ -107,7 +111,7 @@ class _ExerciseSetupScreenState extends State<ExerciseSetupScreen> {
                         });
                       }),
                   SizedBox(height: boxSpace),
-                  const HeadCard(headline: "Minimum Repetitions"),
+                  const HeadCard(headline: "Starting Repetitions"),
                   Slider(
                     value: minRep,
                     min: 1,

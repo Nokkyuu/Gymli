@@ -21,7 +21,7 @@ class ExerciseListScreen extends StatelessWidget {
   const ExerciseListScreen({super.key});
   @override
   Widget build(BuildContext context) {
-    const title = 'ExercliseList';
+    const title = 'ExerciseList';
     return Scaffold(
         appBar: AppBar(
           leading: InkWell( onTap: () {Navigator.pop(context); },
