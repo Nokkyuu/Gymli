@@ -1,4 +1,5 @@
 // ignore_for_file: file_names, constant_identifier_names
+import 'package:flutter/widgets.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:numberpicker/numberpicker.dart';
@@ -73,6 +74,7 @@ class _WorkoutSetupScreenState extends State<WorkoutSetupScreen> {
                     children: [
                       const Text('Warm Ups'),
                       NumberPicker(
+                        decoration:BoxDecoration(border: Border.all()),
                         value: warmUpS,
                         minValue: 0,
                         maxValue: 10,
@@ -84,6 +86,7 @@ class _WorkoutSetupScreenState extends State<WorkoutSetupScreen> {
                     children: [
                       const Text('Work Sets'),
                       NumberPicker(
+                        decoration:BoxDecoration(border: Border.all()),
                         value: workS,
                         minValue: 0,
                         maxValue: 10,
@@ -95,6 +98,7 @@ class _WorkoutSetupScreenState extends State<WorkoutSetupScreen> {
                     children: [
                       const Text('Drop Sets'),
                       NumberPicker(
+                        decoration:BoxDecoration(border: Border.all()),
                         value: dropS,
                         minValue: 0,
                         maxValue: 10,
