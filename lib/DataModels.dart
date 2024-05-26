@@ -23,6 +23,14 @@ class Exercise extends HiveObject {
   int defaultRepMax = 0;
   @HiveField(5)
   double defaultIncrement = 0.0;
+
+  List<String> toCSVString() {
+    String muscleString = "";
+    for (var s in muscleGroups) {
+      muscleString += "$s;";
+    }
+    return [name, "$type", muscleString, "$defaultRepBase", "$defaultRepMax", "$defaultIncrement"];
+  }
 }
 
 @HiveType(typeId: 2)
@@ -46,6 +54,11 @@ class TrainingSet extends HiveObject {
   double increment = 0.0;
   @HiveField(8)
   String machineName = "";
+
+
+  List<String> toCSVString() {
+    return [exercise, date.toString(), "$weight", "$repetitions", "$setType", "$baseReps", "$maxReps", "$increment", machineName];
+  }
 }
 
 
