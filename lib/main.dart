@@ -252,6 +252,7 @@ class _MainAppState extends State<MainApp> {
           ListTile(
             title: const Text('Exercise Setup'),
             onTap: () {
+              Navigator.pop(context);
               Navigator.push(context, MaterialPageRoute(builder: (context) => const ExerciseSetupScreen()));
             },
           ),
@@ -259,6 +260,7 @@ class _MainAppState extends State<MainApp> {
             title: const Text('Workout Setup'),
             onTap: () {
               setState(() {
+                Navigator.pop(context);
              Navigator.push(context, MaterialPageRoute(builder: (context) => const WorkoutSetupScreen()));
             });},
           
