@@ -382,11 +382,11 @@ void add_sets_jim() async {
     setBox.add(TrainingSet(exercise: 'Biceps (Cable)', date: DateTime.parse('2024-05-21T16:00:00'), weight: 35, repetitions: 11, setType: 1, baseReps: 10, maxReps: 15, increment: 5.0, machineName: ''));
     setBox.add(TrainingSet(exercise: 'Biceps (Cable)', date: DateTime.parse('2024-05-21T16:04:00'), weight: 35, repetitions: 11, setType: 1, baseReps: 10, maxReps: 15, increment: 5.0, machineName: ''));
     setBox.add(TrainingSet(exercise: 'Biceps (Cable)', date: DateTime.parse('2024-05-21T16:08:00'), weight: 30, repetitions: 12, setType: 1, baseReps: 10, maxReps: 15, increment: 5.0, machineName: ''));
-    setBox.add(TrainingSet(exercise: 'Hamstrings', date: DateTime.parse('2024-04-28T16:00:00'), weight: 25.3, repetitions: 12, setType: 1, baseReps: 10, maxReps: 15, increment: 5.0, machineName: ''));
-    setBox.add(TrainingSet(exercise: 'Hamstrings', date: DateTime.parse('2024-04-28T16:04:00'), weight: 30.3, repetitions: 12, setType: 1, baseReps: 10, maxReps: 15, increment: 5.0, machineName: ''));
-    setBox.add(TrainingSet(exercise: 'Hamstrings', date: DateTime.parse('2024-04-28T16:08:00'), weight: 30.3, repetitions: 12, setType: 1, baseReps: 10, maxReps: 15, increment: 5.0, machineName: ''));
-    setBox.add(TrainingSet(exercise: 'Hamstrings', date: DateTime.parse('2024-05-16T16:00:00'), weight: 34.5, repetitions: 12, setType: 1, baseReps: 10, maxReps: 15, increment: 5.0, machineName: ''));
-    setBox.add(TrainingSet(exercise: 'Hamstrings', date: DateTime.parse('2024-05-16T16:04:00'), weight: 34.5, repetitions: 12, setType: 1, baseReps: 10, maxReps: 15, increment: 5.0, machineName: ''));
-    setBox.add(TrainingSet(exercise: 'Hamstrings', date: DateTime.parse('2024-05-16T16:08:00'), weight: 34.5, repetitions: 12, setType: 1, baseReps: 10, maxReps: 15, increment: 5.0, machineName: ''));
+    setBox.add(TrainingSet(exercise: 'Hamstrings (Machine)', date: DateTime.parse('2024-04-28T16:00:00'), weight: 25.3, repetitions: 12, setType: 1, baseReps: 10, maxReps: 15, increment: 5.0, machineName: ''));
+    setBox.add(TrainingSet(exercise: 'Hamstrings (Machine)', date: DateTime.parse('2024-04-28T16:04:00'), weight: 30.3, repetitions: 12, setType: 1, baseReps: 10, maxReps: 15, increment: 5.0, machineName: ''));
+    setBox.add(TrainingSet(exercise: 'Hamstrings (Machine)', date: DateTime.parse('2024-04-28T16:08:00'), weight: 30.3, repetitions: 12, setType: 1, baseReps: 10, maxReps: 15, increment: 5.0, machineName: ''));
+    setBox.add(TrainingSet(exercise: 'Hamstrings (Machine)', date: DateTime.parse('2024-05-16T16:00:00'), weight: 34.5, repetitions: 12, setType: 1, baseReps: 10, maxReps: 15, increment: 5.0, machineName: ''));
+    setBox.add(TrainingSet(exercise: 'Hamstrings (Machine)', date: DateTime.parse('2024-05-16T16:04:00'), weight: 34.5, repetitions: 12, setType: 1, baseReps: 10, maxReps: 15, increment: 5.0, machineName: ''));
+    setBox.add(TrainingSet(exercise: 'Hamstrings (Machine)', date: DateTime.parse('2024-05-16T16:08:00'), weight: 34.5, repetitions: 12, setType: 1, baseReps: 10, maxReps: 15, increment: 5.0, machineName: ''));
   }
 }

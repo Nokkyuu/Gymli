@@ -28,6 +28,11 @@ bool state = false;
 
 Future<int> populateExercises() async {
   final exerciseBox = await Hive.openBox<Exercise>('Exercises');
+  // exerciseBox.clear();
+  // final trainingsBox = await Hive.openBox<Exercise>('TrainingSets');
+  // trainingsBox.clear();
+  // return 0;
+
   if (exerciseBox.isEmpty) {
     exerciseBox.clear();
     exerciseBox.add(Exercise(
