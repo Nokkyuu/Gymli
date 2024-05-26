@@ -113,10 +113,17 @@ class _ExerciseScreen extends State<ExerciseScreen> {
       }
     });
   }
-
+ScrollController _scrollController = ScrollController();
+    
+      _scrollToBottom() {
+        _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+      }
   @override
   Widget build(BuildContext context) {
+    WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
     var title = widget.exerciseName;
+
+    
 
     TextEditingController weightController = TextEditingController(text: '15');
     TextEditingController repetitionController =
@@ -173,32 +180,7 @@ class _ExerciseScreen extends State<ExerciseScreen> {
                       onSelectionChanged: updateSelected,
                     ),
                     const SizedBox(height: 10),
-                    Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        mainAxisSize: MainAxisSize.max,
-                        children: <Widget>[
-                          Expanded(
-                            child: TextField(
-                              controller: weightController,
-                              decoration: const InputDecoration(
-                                border: OutlineInputBorder(),
-                                suffixText: 'kg',
-                              ),
-                              // keyboardType: TextInputType.number,
-                            ),
-                          ),
-                          Expanded(
-                            child: TextField(
-                                controller: repetitionController,
-                                decoration: const InputDecoration(
-                                  border: OutlineInputBorder(),
-                                  suffixText: 'reps',
-                                ),
-                                // keyboardType: TextInputType.number
-                                ),
-                          ),
-                          
-                        ]),
+                    InputFields(weightController: weightController, repetitionController: repetitionController),
                     const SizedBox(height: 10),
                     
                   ],
@@ -231,6 +213,9 @@ class _ExerciseScreen extends State<ExerciseScreen> {
                           .toList();
                       if (items.isNotEmpty) {
                         return ListView.builder(
+                          //reverse: true,
+                          controller: _scrollController,
+
                             itemCount: items.length,
                             itemBuilder: (context, index) {
                               final item = items[index];
@@ -280,6 +265,47 @@ class _ExerciseScreen extends State<ExerciseScreen> {
             // const Padding(padding: EdgeInsets.only(bottom: 50)),
           ]),
     );
+  }
+}
+
+class InputFields extends StatelessWidget {
+  const InputFields({
+    super.key,
+    required this.weightController,
+    required this.repetitionController,
+  });
+
+  final TextEditingController weightController;
+  final TextEditingController repetitionController;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        mainAxisSize: MainAxisSize.max,
+        children: <Widget>[
+          Expanded(
+            child: TextField(
+              controller: weightController,
+              decoration: const InputDecoration(
+                border: OutlineInputBorder(),
+                suffixText: 'kg',
+              ),
+              // keyboardType: TextInputType.number,
+            ),
+          ),
+          Expanded(
+            child: TextField(
+                controller: repetitionController,
+                decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+                  suffixText: 'reps',
+                ),
+                // keyboardType: TextInputType.number
+                ),
+          ),
+          
+        ]);
   }
 }
 
