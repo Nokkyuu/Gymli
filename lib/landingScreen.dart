@@ -51,8 +51,7 @@ class _LandingScreenState extends State<LandingScreen> {
   @override
   Widget build(BuildContext context) {
     // List exercises = then(taskBox.values.toList());
-    return Expanded(
-      child: Column(
+    return Column(
           mainAxisAlignment: MainAxisAlignment.center,
           mainAxisSize: MainAxisSize.max,
           children: [
@@ -158,8 +157,7 @@ class _LandingScreenState extends State<LandingScreen> {
                     }
                   }),
             )
-          ]),
-    );
+          ]);
   }
 }
 

@@ -125,7 +125,7 @@ TextEditingController weightController = TextEditingController();
 ScrollController _scrollController = ScrollController();
     
       _scrollToBottom() {
-        _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+        // _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
       }
   @override
   Widget build(BuildContext context) {
@@ -192,6 +192,23 @@ ScrollController _scrollController = ScrollController();
                     
                   ],
                 )),
+
+            TextButton.icon(
+              style: const ButtonStyle(),
+              label: const Text('Submit'),
+              icon: const Icon(Icons.send),
+              onPressed: () {
+                addSet(
+                    widget.exerciseName,
+                    double.parse(weightController.text),
+                    int.parse(repetitionController.text),
+                    _selected.first.index,
+                    dateInputController.text);
+                _newData = max(_newData,
+                    double.parse(weightController.text));
+                updateGraph();
+              },
+            ),
             SizedBox(
                 width: MediaQuery.of(context).size.width,
                 height: MediaQuery.of(context).size.height * 0.3,
@@ -251,24 +268,7 @@ ScrollController _scrollController = ScrollController();
                         return const Text("No Training yet.");
                       }
                     })),
-            const Divider(),
-            TextButton.icon(
-                            style: const ButtonStyle(),
-                            label: const Text('Submit'),
-                            icon: const Icon(Icons.send),
-                            onPressed: () {
-                              addSet(
-                                  widget.exerciseName,
-                                  double.parse(weightController.text),
-                                  int.parse(repetitionController.text),
-                                  _selected.first.index,
-                                  dateInputController.text);
-                              _newData = max(_newData,
-                                  double.parse(weightController.text));
-                              updateGraph();
-                            },
-                             
-                          ),
+            // const Divider(),
             // const Padding(padding: EdgeInsets.only(bottom: 50)),
           ]),
     );
