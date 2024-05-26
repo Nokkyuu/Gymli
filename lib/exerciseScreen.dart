@@ -148,6 +148,61 @@ class _ExerciseScreen extends State<ExerciseScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           mainAxisSize: MainAxisSize.max,
           children: <Widget>[
+            Padding(
+                padding: const EdgeInsets.only(left: 50, right: 50, bottom: 10),
+                child: Column(
+                  children: [
+                    
+                    const SizedBox(height: 10),
+                    SegmentedButton<ExerciseType>(
+                      segments: const <ButtonSegment<ExerciseType>>[
+                        ButtonSegment<ExerciseType>(
+                            value: ExerciseType.warmup,
+                            label: Text('Warmup'),
+                            icon: Icon(Icons.local_fire_department)),
+                        ButtonSegment<ExerciseType>(
+                            value: ExerciseType.work,
+                            label: Text('Work'),
+                            icon: FaIcon(FontAwesomeIcons.handFist)),
+                        ButtonSegment<ExerciseType>(
+                            value: ExerciseType.dropset,
+                            label: Text('Dropset'),
+                            icon: Icon(Icons.south_east)),
+                      ],
+                      selected: _selected,
+                      onSelectionChanged: updateSelected,
+                    ),
+                    const SizedBox(height: 10),
+                    Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        mainAxisSize: MainAxisSize.max,
+                        children: <Widget>[
+                          Expanded(
+                            child: TextField(
+                              controller: weightController,
+                              decoration: const InputDecoration(
+                                border: OutlineInputBorder(),
+                                suffixText: 'kg',
+                              ),
+                              // keyboardType: TextInputType.number,
+                            ),
+                          ),
+                          Expanded(
+                            child: TextField(
+                                controller: repetitionController,
+                                decoration: const InputDecoration(
+                                  border: OutlineInputBorder(),
+                                  suffixText: 'reps',
+                                ),
+                                // keyboardType: TextInputType.number
+                                ),
+                          ),
+                          
+                        ]),
+                    const SizedBox(height: 10),
+                    
+                  ],
+                )),
             SizedBox(
                 width: MediaQuery.of(context).size.width,
                 height: MediaQuery.of(context).size.height * 0.3,
@@ -159,7 +214,7 @@ class _ExerciseScreen extends State<ExerciseScreen> {
                   maxY: maxScore + 5.0,
                 ))),
             const Divider(),
-            Expanded(
+                    Expanded(
                 child: ValueListenableBuilder(
                     valueListenable:
                         Hive.box<TrainingSet>('TrainingSets').listenable(),
@@ -204,59 +259,8 @@ class _ExerciseScreen extends State<ExerciseScreen> {
                         return const Text("No Training yet.");
                       }
                     })),
-                    const Divider(),
-            Padding(
-                padding: const EdgeInsets.only(left: 50, right: 50, bottom: 10),
-                child: Column(
-                  children: [
-                    
-                    Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        mainAxisSize: MainAxisSize.max,
-                        children: <Widget>[
-                          Expanded(
-                            child: TextField(
-                              controller: weightController,
-                              decoration: const InputDecoration(
-                                border: OutlineInputBorder(),
-                                suffixText: 'kg',
-                              ),
-                              // keyboardType: TextInputType.number,
-                            ),
-                          ),
-                          Expanded(
-                            child: TextField(
-                                controller: repetitionController,
-                                decoration: const InputDecoration(
-                                  border: OutlineInputBorder(),
-                                  suffixText: 'reps',
-                                ),
-                                // keyboardType: TextInputType.number
-                                ),
-                          ),
-                          
-                        ]),
-                    const SizedBox(height: 10),
-                    SegmentedButton<ExerciseType>(
-                      segments: const <ButtonSegment<ExerciseType>>[
-                        ButtonSegment<ExerciseType>(
-                            value: ExerciseType.warmup,
-                            label: Text('Warmup'),
-                            icon: Icon(Icons.local_fire_department)),
-                        ButtonSegment<ExerciseType>(
-                            value: ExerciseType.work,
-                            label: Text('Work'),
-                            icon: FaIcon(FontAwesomeIcons.handFist)),
-                        ButtonSegment<ExerciseType>(
-                            value: ExerciseType.dropset,
-                            label: Text('Dropset'),
-                            icon: Icon(Icons.south_east)),
-                      ],
-                      selected: _selected,
-                      onSelectionChanged: updateSelected,
-                    ),
-                    const SizedBox(height: 10),
-                    TextButton.icon(
+            const Divider(),
+            TextButton.icon(
                             style: const ButtonStyle(),
                             label: const Text('Submit'),
                             icon: const Icon(Icons.send),
@@ -273,8 +277,6 @@ class _ExerciseScreen extends State<ExerciseScreen> {
                             },
                              
                           ),
-                  ],
-                )),
             // const Padding(padding: EdgeInsets.only(bottom: 50)),
           ]),
     );
