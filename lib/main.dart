@@ -4,7 +4,9 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:yafa_app/DataModels.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:yafa_app/exerciseSetupScreen.dart';
+import 'package:yafa_app/settingsScreen.dart';
 import 'package:yafa_app/workoutSetupScreen.dart';
+import 'package:yafa_app/exerciseScreen.dart';
 import 'package:yafa_app/jim.dart';
 import 'dart:async';
 bool state = false;
@@ -273,7 +275,7 @@ class _MainAppState extends State<MainApp> {
             title: const Text('Settings'),
             onTap: () {
               setState(() {
-             Navigator.push(context, MaterialPageRoute(builder: (context) => const WorkoutSetupScreen()));
+             Navigator.push(context, MaterialPageRoute(builder: (context) => const SettingsScreen()));
             });},
           
           ),
