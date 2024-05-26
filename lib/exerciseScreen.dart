@@ -86,13 +86,22 @@ Future<int> addSet(String exercise, double weight, int repetitions, int setType,
 class ExerciseScreen extends StatefulWidget {
   final String exerciseName;
   const ExerciseScreen(this.exerciseName, {super.key});
-
+  
   @override
   State<ExerciseScreen> createState() => _ExerciseScreen();
 }
 
 class _ExerciseScreen extends State<ExerciseScreen> {
   // late String exerciseName;
+  
+TextEditingController weightController = TextEditingController();
+    TextEditingController repetitionController =
+        TextEditingController();
+//   @override
+//   void initState() {
+//   super.initState();
+// }
+
   Set<ExerciseType> _selected = {ExerciseType.warmup};
   var _newData = 0.0;
   List<FlSpot> graphData = [const FlSpot(0, 0)];
@@ -125,9 +134,7 @@ ScrollController _scrollController = ScrollController();
 
     
 
-    TextEditingController weightController = TextEditingController(text: '15');
-    TextEditingController repetitionController =
-        TextEditingController(text: '10');
+    
     TextEditingController dateInputController =
         TextEditingController(text: DateTime.now().toString());
     graphData = getTrainingScores(widget.exerciseName);
