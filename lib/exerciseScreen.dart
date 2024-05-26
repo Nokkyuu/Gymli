@@ -93,7 +93,7 @@ class ExerciseScreen extends StatefulWidget {
 
 class _ExerciseScreen extends State<ExerciseScreen> {
   // late String exerciseName;
-  
+final ScrollController _scrollController = ScrollController();  
 TextEditingController weightController = TextEditingController();
     TextEditingController repetitionController =
         TextEditingController();
@@ -122,10 +122,10 @@ TextEditingController weightController = TextEditingController();
       }
     });
   }
-ScrollController _scrollController = ScrollController();
+
     
       _scrollToBottom() {
-        // _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+        _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
       }
   @override
   Widget build(BuildContext context) {
