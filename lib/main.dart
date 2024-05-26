@@ -269,6 +269,7 @@ class _MainAppState extends State<MainApp> {
             title: const Text('Statistics'),
             onTap: () {
               setState(() {
+                Navigator.pop(context);
              Navigator.push(context, MaterialPageRoute(builder: (context) => const WorkoutSetupScreen()));
             });},
           
@@ -277,6 +278,7 @@ class _MainAppState extends State<MainApp> {
             title: const Text('Settings'),
             onTap: () {
               setState(() {
+                Navigator.pop(context);
              Navigator.push(context, MaterialPageRoute(builder: (context) => const SettingsScreen()));
             });},
           
