@@ -6,7 +6,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:yafa_app/exerciseSetupScreen.dart';
 import 'package:yafa_app/settingsScreen.dart';
 import 'package:yafa_app/workoutSetupScreen.dart';
-import 'package:yafa_app/exerciseScreen.dart';
 import 'package:yafa_app/jim.dart';
 import 'dart:async';
 bool state = false;

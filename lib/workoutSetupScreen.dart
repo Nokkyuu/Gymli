@@ -1,5 +1,4 @@
 // ignore_for_file: file_names, constant_identifier_names
-import 'package:flutter/widgets.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:numberpicker/numberpicker.dart';
@@ -42,7 +41,7 @@ class _WorkoutSetupScreenState extends State<WorkoutSetupScreen> {
           appBar: AppBar(
             actions:[IconButton(
           onPressed: () => print("Workout deleted"),  //TODO: delete selected workout if it exists
-          icon: Icon(Icons.delete))],
+          icon: const Icon(Icons.delete))],
             leading: InkWell(
               onTap: () {
                 Navigator.pop(context);

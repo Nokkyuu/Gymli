@@ -88,7 +88,7 @@ class _LandingScreenState extends State<LandingScreen> {
                       label: name.workoutName,
                       trailingIcon: IconButton(
           onPressed: () => print("edit workout"),  //TODO: go to workout setup to edit the selected workout
-          icon: Icon(Icons.edit)),
+          icon: const Icon(Icons.edit)),
                     );
                   }).toList(),
                 ),

@@ -159,7 +159,7 @@ TextEditingController weightController = TextEditingController(text: "0");
         title: Text(title),
         actions:[IconButton(
           onPressed: () => print("edit exercise"),  //TODO: go to exercise setup to edit the current exercise
-          icon: Icon(Icons.edit))]
+          icon: const Icon(Icons.edit))]
       ),
       body: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -277,7 +277,7 @@ TextEditingController weightController = TextEditingController(text: "0");
                           controller: _scrollController,
                           children: const [ListTile(title: Text("No Training yet.")),],
                           );
-                         ;
+                         
                       }
                     })),
             // const Divider(),
