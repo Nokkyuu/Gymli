@@ -157,7 +157,7 @@ class _LandingScreenState extends State<LandingScreen> {
                                 });
                           });
                     } else {
-                      return const CircularProgressIndicator();
+                      return Text("No exercises yet");
                     }
                   }),
             )

@@ -27,7 +27,7 @@ bool state = false;
 
 
 Future<int> populateExercises() async {
-  final exerciseBox = await Hive.openBox<Exercise>('Exercises');
+  final exerciseBox = await Hive.box<Exercise>('Exercises');
   // exerciseBox.clear();
   // final trainingsBox = await Hive.openBox<Exercise>('TrainingSets');
   // trainingsBox.clear();
@@ -39,6 +39,7 @@ Future<int> populateExercises() async {
         name: "Benchpress",
         type: 0,
         muscleGroups: ["Pectoralis major", "Front Deltoids", "Triceps"],
+        muscleIntensities: [1.0, 0.5, 0.5],
         defaultRepBase: 8,
         defaultRepMax: 12,
         defaultIncrement: 5.0));
@@ -46,6 +47,7 @@ Future<int> populateExercises() async {
         name: "Benchpress (Machine)",
         type: 0,
         muscleGroups: ["Pectoralis major", "Front Deltoids", "Triceps"],
+        muscleIntensities: [1.0, 0.5, 0.5],
         defaultRepBase: 8,
         defaultRepMax: 12,
         defaultIncrement: 5.0));
@@ -53,6 +55,7 @@ Future<int> populateExercises() async {
         name: "Squat (Machine)",
         type: 1,
         muscleGroups: ["Quadriceps", "Gluteus maximus"],
+        muscleIntensities: [1.0, 0.5],
         defaultRepBase: 15,
         defaultRepMax: 18,
         defaultIncrement: 5.9));
@@ -60,6 +63,7 @@ Future<int> populateExercises() async {
         name: "Squat",
         type: 0,
         muscleGroups: ["Quadriceps", "Abdominals", "Gluteus maximus"],
+        muscleIntensities: [1.0, 0.5, 0.5],
         defaultRepBase: 15,
         defaultRepMax: 18,
         defaultIncrement: 5.9));
@@ -73,6 +77,7 @@ Future<int> populateExercises() async {
           "Quadriceps",
           "Hamstrings"
         ],
+        muscleIntensities: [0.5, 0.5, 0.5, 0.5, 0.5],
         defaultRepBase: 15,
         defaultRepMax: 18,
         defaultIncrement: 5.0));
@@ -80,6 +85,7 @@ Future<int> populateExercises() async {
         name: "Triceps (Cable)",
         type: 2,
         muscleGroups: ["Triceps"],
+        muscleIntensities: [1.0],
         defaultRepBase: 15,
         defaultRepMax: 20,
         defaultIncrement: 5.0));
@@ -87,6 +93,7 @@ Future<int> populateExercises() async {
         name: "Biceps (Cable)",
         type: 2,
         muscleGroups: ["Biceps"],
+        muscleIntensities: [1.0],
         defaultRepBase: 10,
         defaultRepMax: 15,
         defaultIncrement: 5.0));
@@ -94,6 +101,7 @@ Future<int> populateExercises() async {
         name: "Biceps Curls",
         type: 0,
         muscleGroups: ["Biceps"],
+        muscleIntensities: [1.0],
         defaultRepBase: 10,
         defaultRepMax: 15,
         defaultIncrement: 1.25));
@@ -101,6 +109,7 @@ Future<int> populateExercises() async {
         name: "Side Delt Raises",
         type: 0,
         muscleGroups: ["Side Deltoids"],
+        muscleIntensities: [1.0],
         defaultRepBase: 15,
         defaultRepMax: 20,
         defaultIncrement: 5.0));
@@ -108,6 +117,7 @@ Future<int> populateExercises() async {
         name: "Face Pulls",
         type: 0,
         muscleGroups: ["Rear Deltoids", "Trapezius", "Side Deltoids"],
+        muscleIntensities: [1.0, 0.5, 0.5],
         defaultRepBase: 15,
         defaultRepMax: 20,
         defaultIncrement: 5.0));
@@ -115,6 +125,7 @@ Future<int> populateExercises() async {
         name: "Face Pulls (Cable)",
         type: 2,
         muscleGroups: ["Rear Deltoids", "Trapezius", "Side Deltoids"],
+        muscleIntensities: [1.0, 0.5, 0.5],
         defaultRepBase: 15,
         defaultRepMax: 20,
         defaultIncrement: 5.0));
@@ -122,6 +133,7 @@ Future<int> populateExercises() async {
         name: "Rows (Machine)",
         type: 1,
         muscleGroups: ["Rear Deltoids", "Trapezius", "Latissimus dorsi"],
+        muscleIntensities: [0.5, 1.0, 0.5],
         defaultRepBase: 10,
         defaultRepMax: 15,
         defaultIncrement: 5.0));
@@ -129,6 +141,7 @@ Future<int> populateExercises() async {
         name: "Pec Flys (Machine)",
         type: 1,
         muscleGroups: ["Front Deltoids", "Pectoralis Major"],
+        muscleIntensities: [0.5, 1.0],
         defaultRepBase: 10,
         defaultRepMax: 15,
         defaultIncrement: 5.0));
@@ -136,6 +149,7 @@ Future<int> populateExercises() async {
         name: "Pec Flys (Cable)",
         type: 2,
         muscleGroups: ["Front Deltoids", "Pectoralis Major"],
+        muscleIntensities: [0.5, 1.0],
         defaultRepBase: 10,
         defaultRepMax: 15,
         defaultIncrement: 5.0));
@@ -143,6 +157,7 @@ Future<int> populateExercises() async {
         name: "Lat Pulldowns (Machine)",
         type: 1,
         muscleGroups: ["Biceps", "Latissimus dorsi"],
+        muscleIntensities: [0.5, 1.0],
         defaultRepBase: 10,
         defaultRepMax: 15,
         defaultIncrement: 5.0));
@@ -150,6 +165,7 @@ Future<int> populateExercises() async {
         name: "Pullups",
         type: 0,
         muscleGroups: ["Biceps", "Latissimus dorsi"],
+        muscleIntensities: [0.5, 1.0],
         defaultRepBase: 8,
         defaultRepMax: 12,
         defaultIncrement: 5.0));
@@ -157,6 +173,7 @@ Future<int> populateExercises() async {
         name: "Hamstrings (Machine)",
         type: 1,
         muscleGroups: ["Hamstrings"],
+        muscleIntensities: [1.0],
         defaultRepBase: 8,
         defaultRepMax: 12,
         defaultIncrement: 5.0));
@@ -170,18 +187,12 @@ void main() async {
   Hive.registerAdapter(ExerciseAdapter());
   Hive.registerAdapter(TrainingSetAdapter());
   // populateExercises();
+  final setBox = await Hive.openBox<TrainingSet>('TrainingSets');
+  final exerciseBox = await Hive.openBox<Exercise>('Exercises');
 
-  runApp(FutureBuilder(
-    future: populateExercises(),
-    builder: (_, snap) {
-      if (snap.hasData) {
-        //here you can use the MyService singleton and its members
-      return const MainApp();
-      }
-      return const CircularProgressIndicator();
-    },
-  ));
 
+  runApp(MainApp()
+  );
 }
 
 class MainApp extends StatefulWidget {

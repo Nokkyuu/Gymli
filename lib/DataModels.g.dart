@@ -20,6 +20,7 @@ class ExerciseAdapter extends TypeAdapter<Exercise> {
       name: fields[0] as String,
       type: fields[1] as int,
       muscleGroups: (fields[2] as List).cast<String>(),
+      muscleIntensities: (fields[2] as List).cast<double>(),
       defaultRepBase: fields[3] as int,
       defaultRepMax: fields[4] as int,
       defaultIncrement: fields[5] as double,

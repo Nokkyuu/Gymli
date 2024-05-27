@@ -10,7 +10,7 @@ final setTypeNames = ["Warm", "Work", "Drop"];
 
 @HiveType(typeId: 1)
 class Exercise extends HiveObject {
-  Exercise ({ required this.name, required this.type, required this.muscleGroups, required this.defaultRepBase, required this.defaultRepMax, required this.defaultIncrement });
+  Exercise ({ required this.name, required this.type, required this.muscleGroups, required this.muscleIntensities, required this.defaultRepBase, required this.defaultRepMax, required this.defaultIncrement });
   @HiveField(0)
   String name = "";
   @HiveField(1)
@@ -23,14 +23,17 @@ class Exercise extends HiveObject {
   int defaultRepMax = 0;
   @HiveField(5)
   double defaultIncrement = 0.0;
+  @HiveField(6)
+  List<double> muscleIntensities = [];
 
   List<String> toCSVString() {
     String muscleString = "";
-    for (var s in muscleGroups) {
-      muscleString += "$s;";
-    }
-    return [name, "$type", muscleString, "$defaultRepBase", "$defaultRepMax", "$defaultIncrement"];
+    String intensitiesString = "";
+    for (var s in muscleGroups) { muscleString += "$s;"; }
+    for (var s in muscleIntensities) { intensitiesString += "$s;"; }
+    return [name, "$type", muscleString, intensitiesString, "$defaultRepBase", "$defaultRepMax", "$defaultIncrement"];
   }
+
 }
 
 @HiveType(typeId: 2)

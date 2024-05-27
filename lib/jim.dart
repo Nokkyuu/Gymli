@@ -5,7 +5,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:yafa_app/DataModels.dart';
 
 void add_sets_jim() async {
-  final setBox = await Hive.openBox<TrainingSet>('TrainingSets');
+  final setBox = await Hive.box<TrainingSet>('TrainingSets');
   if (setBox.isEmpty) {setBox.add(TrainingSet(exercise: 'Squat', date: DateTime.parse('2024-03-19T16:00:00'), weight: 40, repetitions: 10, setType: 1, baseReps: 10, maxReps: 15, increment: 5.0, machineName: ''));
     setBox.add(TrainingSet(exercise: 'Squat', date: DateTime.parse('2024-03-19T16:04:00'), weight: 40, repetitions: 10, setType: 1, baseReps: 10, maxReps: 15, increment: 5.0, machineName: ''));
     setBox.add(TrainingSet(exercise: 'Squat', date: DateTime.parse('2024-03-19T16:08:00'), weight: 40, repetitions: 10, setType: 1, baseReps: 10, maxReps: 15, increment: 5.0, machineName: ''));

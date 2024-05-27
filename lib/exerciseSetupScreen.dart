@@ -19,9 +19,8 @@ void add_exercise(String exerciseName, ExerciseDevice chosenDevice, int minRep,
     int repRange, double weightInc, List<int> muscleGroups) async {
   final box = await Hive.openBox<Exercise>('Exercises');
   int exerciseType = chosenDevice.index;
-  List<String> muscleGroupStrings = [
-    ""
-  ]; // muscleGroups -> vielleicht besser Liste?
+  List<String> muscleGroupStrings = []; // muscleGroups -> vielleicht besser Liste?
+  List<double> muscleIntensities = [];
   var boxmap = box.values.toList();
   List<String> exerciseList = [];
   for (var e in boxmap) {
@@ -39,7 +38,8 @@ void add_exercise(String exerciseName, ExerciseDevice chosenDevice, int minRep,
         muscleGroups: muscleGroupStrings,
         defaultRepBase: minRep,
         defaultRepMax: repRange,
-        defaultIncrement: weightInc));
+        defaultIncrement: weightInc,
+        muscleIntensities: muscleIntensities));
   } else {
     box.putAt(
         exerciseList.indexOf(exerciseName),
@@ -49,7 +49,8 @@ void add_exercise(String exerciseName, ExerciseDevice chosenDevice, int minRep,
             muscleGroups: muscleGroupStrings,
             defaultRepBase: minRep,
             defaultRepMax: repRange,
-            defaultIncrement: weightInc));
+            defaultIncrement: weightInc,
+            muscleIntensities: muscleIntensities));
   }
 }
 
