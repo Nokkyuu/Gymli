@@ -361,7 +361,7 @@ class _InputFields extends State<InputFields> {
           NumberPicker(
             value: widget.weightKg,
             minValue: -70,
-            maxValue: 140,
+            maxValue: 250,
             haptics: true,
             itemHeight: itemHeight,
             itemWidth: itemWidth,
