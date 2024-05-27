@@ -25,7 +25,15 @@ bool state = false;
 // Quadriceps
 // Forearms
 // Calves
-
+void get_exercise_list() async {
+  final box = await Hive.openBox<Exercise>('Exercises');
+  var boxmap = box.values.toList();
+  List<String> exerciseList = [];
+  for (var e in boxmap) {
+    exerciseList.add(e.name);
+  }
+  globals.exerciseList = exerciseList;
+}
 
 Future<int> populateExercises() async {
   final exerciseBox = await Hive.box<Exercise>('Exercises');
@@ -265,6 +273,7 @@ class _MainAppState extends State<MainApp> {
             onTap: () {
               Navigator.pop(context);
               Navigator.push(context, MaterialPageRoute(builder: (context) => const ExerciseSetupScreen()));
+              get_exercise_list();
               for (var i in globals.muscle_val.keys)
                 {globals.muscle_val[i] = 0;}
             },

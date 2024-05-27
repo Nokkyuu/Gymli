@@ -1,4 +1,5 @@
 library my_prj.globals;
+
   var muscle_val = {
     "delts": 0.0,
     "glutes": 0.0,
@@ -13,5 +14,8 @@ library my_prj.globals;
     "quads": 0.0,
     "calves": 0.0,
   };
+  List<String> exerciseList = [];
+
+
 
   

@@ -15,11 +15,22 @@ class ExerciseSetupScreen extends StatefulWidget {
   State<ExerciseSetupScreen> createState() => _ExerciseSetupScreenState();
 }
 
+void get_exercise_list() async {
+  final box = await Hive.openBox<Exercise>('Exercises');
+  var boxmap = box.values.toList();
+  List<String> exerciseList = [];
+  for (var e in boxmap) {
+    exerciseList.add(e.name);
+  }
+  globals.exerciseList = exerciseList;
+}
+
 void add_exercise(String exerciseName, ExerciseDevice chosenDevice, int minRep,
     int repRange, double weightInc, List<int> muscleGroups) async {
   final box = await Hive.openBox<Exercise>('Exercises');
   int exerciseType = chosenDevice.index;
-  List<String> muscleGroupStrings = []; // muscleGroups -> vielleicht besser Liste?
+  List<String> muscleGroupStrings =
+      []; // muscleGroups -> vielleicht besser Liste?
   List<double> muscleIntensities = [];
   var boxmap = box.values.toList();
   List<String> exerciseList = [];
@@ -67,9 +78,12 @@ class _ExerciseSetupScreenState extends State<ExerciseSetupScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
-          actions:[IconButton(
-          onPressed: () => print("Workout deleted"),  //TODO: delete selected workout if it exists
-          icon: const Icon(Icons.delete))],
+          actions: [
+            IconButton(
+                onPressed: () => print(
+                    "Workout deleted"), //TODO: delete selected workout if it exists
+                icon: const Icon(Icons.delete))
+          ],
           leading: InkWell(
             onTap: () {
               Navigator.pop(context);
@@ -193,17 +207,73 @@ class _ExerciseSetupScreenState extends State<ExerciseSetupScreen> {
                 icon: const Icon(Icons.check),
                 iconSize: 40,
                 tooltip: 'Confirm',
-                onPressed: () {
-                  add_exercise(
-                      exerciseTitleController.text,
-                      chosenDevice,
-                      minRep.toInt(),
-                      repRange.toInt(),
-                      weightInc,
-                      muscleGroups);
-                  setState(() {});
-                  Navigator.pop(context);
-                },
+                onPressed: () => showDialog<String>(
+                  context: context,
+                  builder: (BuildContext context) => Dialog(
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: <Widget>[
+                          () {
+                            if (!globals.exerciseList
+                                .contains(exerciseTitleController.text)) {
+                              get_exercise_list(); //important redundancy if you dont leave the screen after saving
+                              return Text('Save this Exercise?');
+                            }
+                            return Text(
+                              'Attention! \n Sure to overwrite this Exercise?',
+                              textAlign: TextAlign.center,
+                            );
+                          }(),
+                          Text('${exerciseTitleController.text}'),
+                          Text('on ${chosenDevice.name}'),
+                          Text(
+                              'with ${minRep.toInt()} to ${minRep.toInt() + repRange.toInt()} reps and'),
+                          Text('$weightInc kg weight increases?'),
+                          const SizedBox(height: 15),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              TextButton(
+                                onPressed: () {
+                                  add_exercise(
+                                      exerciseTitleController.text,
+                                      chosenDevice,
+                                      minRep.toInt(),
+                                      repRange.toInt(),
+                                      weightInc,
+                                      muscleGroups);
+                                  setState(() {});
+                                  Navigator.pop(context);
+                                },
+                                child: const Text('Yes'),
+                              ),
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.pop(context);
+                                },
+                                child: const Text('No'),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                )
+
+                // add_exercise(
+                //     exerciseTitleController.text,
+                //     chosenDevice,
+                //     minRep.toInt(),
+                //     repRange.toInt(),
+                //     weightInc,
+                //     muscleGroups);
+                // setState(() {});
+                // Navigator.pop(context);
+                ,
               ),
             ],
           ),
@@ -221,7 +291,6 @@ class BottomSheet extends StatefulWidget {
 }
 
 class _BottomSheetState extends State<BottomSheet> {
-
   opacity_change(double op) {
     if (op >= 1.0) {
       op = 0.0;
@@ -259,51 +328,66 @@ class _BottomSheetState extends State<BottomSheet> {
                         ),
                         Image(
                           fit: BoxFit.scaleDown,
-                          image: const AssetImage('images/muscles/Front_biceps.png'),
-                          opacity:
-                              AlwaysStoppedAnimation(globals.muscle_val["biceps"]!),
+                          image: const AssetImage(
+                              'images/muscles/Front_biceps.png'),
+                          opacity: AlwaysStoppedAnimation(
+                              globals.muscle_val["biceps"]!),
                         ),
                         Image(
                           fit: BoxFit.scaleDown,
-                          image: const AssetImage('images/muscles/Front_calves.png'),
-                          opacity:
-                              AlwaysStoppedAnimation(globals.muscle_val["calves"]!),
+                          image: const AssetImage(
+                              'images/muscles/Front_calves.png'),
+                          opacity: AlwaysStoppedAnimation(
+                              globals.muscle_val["calves"]!),
                         ),
                         Image(
                           fit: BoxFit.scaleDown,
-                          image: const AssetImage('images/muscles/Front_delts.png'),
-                          opacity: AlwaysStoppedAnimation(globals.muscle_val["delts"]!),
+                          image: const AssetImage(
+                              'images/muscles/Front_delts.png'),
+                          opacity: AlwaysStoppedAnimation(
+                              globals.muscle_val["delts"]!),
+                        ),
+                        Image(
+                          fit: BoxFit.scaleDown,
+                          image: const AssetImage(
+                              'images/muscles/Front_forearms.png'),
+                          opacity: AlwaysStoppedAnimation(
+                              globals.muscle_val["fore"]!),
                         ),
                         Image(
                           fit: BoxFit.scaleDown,
                           image:
-                              const AssetImage('images/muscles/Front_forearms.png'),
-                          opacity: AlwaysStoppedAnimation(globals.muscle_val["fore"]!),
+                              const AssetImage('images/muscles/Front_pecs.png'),
+                          opacity: AlwaysStoppedAnimation(
+                              globals.muscle_val["pecs"]!),
                         ),
                         Image(
                           fit: BoxFit.scaleDown,
-                          image: const AssetImage('images/muscles/Front_pecs.png'),
-                          opacity: AlwaysStoppedAnimation(globals.muscle_val["pecs"]!),
+                          image: const AssetImage(
+                              'images/muscles/Front_quads.png'),
+                          opacity: AlwaysStoppedAnimation(
+                              globals.muscle_val["quads"]!),
                         ),
                         Image(
                           fit: BoxFit.scaleDown,
-                          image: const AssetImage('images/muscles/Front_quads.png'),
-                          opacity: AlwaysStoppedAnimation(globals.muscle_val["quads"]!),
+                          image: const AssetImage(
+                              'images/muscles/Front_sideabs.png'),
+                          opacity: AlwaysStoppedAnimation(
+                              globals.muscle_val["abs"]!),
                         ),
                         Image(
                           fit: BoxFit.scaleDown,
-                          image: const AssetImage('images/muscles/Front_sideabs.png'),
-                          opacity: AlwaysStoppedAnimation(globals.muscle_val["abs"]!),
+                          image: const AssetImage(
+                              'images/muscles/Front_trapz.png'),
+                          opacity: AlwaysStoppedAnimation(
+                              globals.muscle_val["trapz"]!),
                         ),
                         Image(
                           fit: BoxFit.scaleDown,
-                          image: const AssetImage('images/muscles/Front_trapz.png'),
-                          opacity: AlwaysStoppedAnimation(globals.muscle_val["trapz"]!),
-                        ),
-                        Image(
-                          fit: BoxFit.scaleDown,
-                          image: const AssetImage('images/muscles/Front_abs.png'),
-                          opacity: AlwaysStoppedAnimation(globals.muscle_val["abs"]!),
+                          image:
+                              const AssetImage('images/muscles/Front_abs.png'),
+                          opacity: AlwaysStoppedAnimation(
+                              globals.muscle_val["abs"]!),
                         ),
                         FractionallySizedBox(
                             alignment: Alignment.bottomRight,
@@ -314,11 +398,13 @@ class _BottomSheetState extends State<BottomSheet> {
                               children: [
                                 TextButton(
                                     onPressed: () => setState(() {
-                                          globals.muscle_val["biceps"] = opacity_change(
-                                              globals.muscle_val["biceps"]!);
+                                          globals.muscle_val["biceps"] =
+                                              opacity_change(globals
+                                                  .muscle_val["biceps"]!);
                                         }),
                                     child: Transform.scale(
-                                        scaleX: -1, child: const Text("biceps")))
+                                        scaleX: -1,
+                                        child: const Text("biceps")))
                               ],
                             )),
                         FractionallySizedBox(
@@ -330,11 +416,13 @@ class _BottomSheetState extends State<BottomSheet> {
                               children: [
                                 TextButton(
                                     onPressed: () => setState(() {
-                                          globals.muscle_val["fore"] = opacity_change(
-                                              globals.muscle_val["fore"]!);
+                                          globals.muscle_val["fore"] =
+                                              opacity_change(
+                                                  globals.muscle_val["fore"]!);
                                         }),
                                     child: Transform.scale(
-                                        scaleX: -1, child: const Text("forearm")))
+                                        scaleX: -1,
+                                        child: const Text("forearm")))
                               ],
                             )),
                         FractionallySizedBox(
@@ -346,14 +434,15 @@ class _BottomSheetState extends State<BottomSheet> {
                               children: [
                                 TextButton(
                                     onPressed: () => setState(() {
-                                          globals.muscle_val["delts"] = opacity_change(
-                                              globals.muscle_val["delts"]!);
+                                          globals.muscle_val["delts"] =
+                                              opacity_change(
+                                                  globals.muscle_val["delts"]!);
                                         }),
                                     child: Transform.scale(
                                         scaleX: -1, child: const Text("  ")))
                               ],
                             )),
-                            FractionallySizedBox(
+                        FractionallySizedBox(
                             alignment: Alignment.bottomRight,
                             heightFactor: 0.28,
                             widthFactor: 0.7,
@@ -362,72 +451,77 @@ class _BottomSheetState extends State<BottomSheet> {
                               children: [
                                 TextButton(
                                     onPressed: () => setState(() {
-                                          globals.muscle_val["pecs"] = opacity_change(
-                                              globals.muscle_val["pecs"]!);
+                                          globals.muscle_val["pecs"] =
+                                              opacity_change(
+                                                  globals.muscle_val["pecs"]!);
                                         }),
                                     child: Transform.scale(
                                         scaleX: -1, child: const Text("pecs")))
                               ],
                             )),
-                            FractionallySizedBox(
+                        FractionallySizedBox(
                             alignment: Alignment.bottomRight,
-                            heightFactor: 0.4 ,
+                            heightFactor: 0.4,
                             widthFactor: 0.7,
                             child: Stack(
                               alignment: AlignmentDirectional.bottomEnd,
                               children: [
                                 TextButton(
                                     onPressed: () => setState(() {
-                                          globals.muscle_val["abs"] = opacity_change(
-                                              globals.muscle_val["abs"]!);
+                                          globals.muscle_val["abs"] =
+                                              opacity_change(
+                                                  globals.muscle_val["abs"]!);
                                         }),
                                     child: Transform.scale(
                                         scaleX: -1, child: const Text("abs")))
                               ],
                             )),
-                            FractionallySizedBox(
+                        FractionallySizedBox(
                             alignment: Alignment.bottomRight,
-                            heightFactor: 0.2 ,
+                            heightFactor: 0.2,
                             widthFactor: 0.7,
                             child: Stack(
                               alignment: AlignmentDirectional.bottomEnd,
                               children: [
                                 TextButton(
                                     onPressed: () => setState(() {
-                                          globals.muscle_val["trapz"] = opacity_change(
-                                              globals.muscle_val["trapz"]!);
+                                          globals.muscle_val["trapz"] =
+                                              opacity_change(
+                                                  globals.muscle_val["trapz"]!);
                                         }),
                                     child: Transform.scale(
                                         scaleX: -1, child: const Text("  ")))
                               ],
                             )),
-                            FractionallySizedBox(
+                        FractionallySizedBox(
                             alignment: Alignment.bottomRight,
-                            heightFactor: 0.6 ,
+                            heightFactor: 0.6,
                             widthFactor: 0.62,
                             child: Stack(
                               alignment: AlignmentDirectional.bottomEnd,
                               children: [
                                 TextButton(
                                     onPressed: () => setState(() {
-                                          globals.muscle_val["quads"] = opacity_change(
-                                              globals.muscle_val["quads"]!);
+                                          globals.muscle_val["quads"] =
+                                              opacity_change(
+                                                  globals.muscle_val["quads"]!);
                                         }),
                                     child: Transform.scale(
                                         scaleX: -1, child: const Text("quads")))
                               ],
                             )),
-                            FractionallySizedBox(
+                        FractionallySizedBox(
                             alignment: Alignment.bottomRight,
-                            heightFactor: 0.8 ,
+                            heightFactor: 0.8,
                             widthFactor: 0.58,
                             child: Stack(
                               alignment: AlignmentDirectional.bottomEnd,
                               children: [
                                 TextButton(
                                     onPressed: () => setState(() {
-                                          globals.muscle_val["calves"] = opacity_change(
-                                              globals.muscle_val["calves"]!);
+                                          globals.muscle_val["calves"] =
+                                              opacity_change(globals
+                                                  .muscle_val["calves"]!);
                                         }),
                                     child: Transform.scale(
                                         scaleX: -1, child: const Text("   ")))
@@ -444,43 +538,58 @@ class _BottomSheetState extends State<BottomSheet> {
                           image: AssetImage('images/muscles/Back_bg.png')),
                       Image(
                         fit: BoxFit.scaleDown,
-                        image: const AssetImage('images/muscles/Back_calves.png'),
-                        opacity: AlwaysStoppedAnimation(globals.muscle_val["calves"]!),
+                        image:
+                            const AssetImage('images/muscles/Back_calves.png'),
+                        opacity: AlwaysStoppedAnimation(
+                            globals.muscle_val["calves"]!),
                       ),
                       Image(
                         fit: BoxFit.scaleDown,
-                        image: const AssetImage('images/muscles/Back_forearms.png'),
-                        opacity: AlwaysStoppedAnimation(globals.muscle_val["fore"]!),
+                        image: const AssetImage(
+                            'images/muscles/Back_forearms.png'),
+                        opacity:
+                            AlwaysStoppedAnimation(globals.muscle_val["fore"]!),
                       ),
                       Image(
                         fit: BoxFit.scaleDown,
-                        image: const AssetImage('images/muscles/Back_delts.png'),
-                        opacity: AlwaysStoppedAnimation(globals.muscle_val["delts"]!),
+                        image:
+                            const AssetImage('images/muscles/Back_delts.png'),
+                        opacity: AlwaysStoppedAnimation(
+                            globals.muscle_val["delts"]!),
                       ),
                       Image(
                         fit: BoxFit.scaleDown,
-                        image: const AssetImage('images/muscles/Back_glutes.png'),
-                        opacity: AlwaysStoppedAnimation(globals.muscle_val["glutes"]!),
+                        image:
+                            const AssetImage('images/muscles/Back_glutes.png'),
+                        opacity: AlwaysStoppedAnimation(
+                            globals.muscle_val["glutes"]!),
                       ),
                       Image(
                         fit: BoxFit.scaleDown,
-                        image: const AssetImage('images/muscles/Back_hamstrings.png'),
-                        opacity: AlwaysStoppedAnimation(globals.muscle_val["hams"]!),
+                        image: const AssetImage(
+                            'images/muscles/Back_hamstrings.png'),
+                        opacity:
+                            AlwaysStoppedAnimation(globals.muscle_val["hams"]!),
                       ),
                       Image(
                         fit: BoxFit.scaleDown,
                         image: const AssetImage('images/muscles/Back_lats.png'),
-                        opacity: AlwaysStoppedAnimation(globals.muscle_val["lats"]!),
+                        opacity:
+                            AlwaysStoppedAnimation(globals.muscle_val["lats"]!),
                       ),
                       Image(
                         fit: BoxFit.scaleDown,
-                        image: const AssetImage('images/muscles/Back_trapz.png'),
-                        opacity: AlwaysStoppedAnimation(globals.muscle_val["trapz"]!),
+                        image:
+                            const AssetImage('images/muscles/Back_trapz.png'),
+                        opacity: AlwaysStoppedAnimation(
+                            globals.muscle_val["trapz"]!),
                       ),
                       Image(
                         fit: BoxFit.scaleDown,
-                        image: const AssetImage('images/muscles/Back_triceps.png'),
-                        opacity: AlwaysStoppedAnimation(globals.muscle_val["triceps"]!),
+                        image:
+                            const AssetImage('images/muscles/Back_triceps.png'),
+                        opacity: AlwaysStoppedAnimation(
+                            globals.muscle_val["triceps"]!),
                       ),
                       FractionallySizedBox(
                           alignment: Alignment.bottomRight,
@@ -491,8 +600,9 @@ class _BottomSheetState extends State<BottomSheet> {
                             children: [
                               TextButton(
                                   onPressed: () => setState(() {
-                                        globals.muscle_val["triceps"] = opacity_change(
-                                            globals.muscle_val["triceps"]!);
+                                        globals.muscle_val["triceps"] =
+                                            opacity_change(
+                                                globals.muscle_val["triceps"]!);
                                       }),
                                   child: const Text("triceps"))
                             ],
@@ -507,7 +617,8 @@ class _BottomSheetState extends State<BottomSheet> {
                               TextButton(
                                   onPressed: () => setState(() {
                                         globals.muscle_val["fore"] =
-                                            opacity_change(globals.muscle_val["fore"]!);
+                                            opacity_change(
+                                                globals.muscle_val["fore"]!);
                                       }),
                                   child: const Text("  "))
                             ],
@@ -521,8 +632,9 @@ class _BottomSheetState extends State<BottomSheet> {
                             children: [
                               TextButton(
                                   onPressed: () => setState(() {
-                                        globals.muscle_val["delts"] = opacity_change(
-                                            globals.muscle_val["delts"]!);
+                                        globals.muscle_val["delts"] =
+                                            opacity_change(
+                                                globals.muscle_val["delts"]!);
                                       }),
                                   child: const Text("delts"))
                             ],
@@ -536,8 +648,9 @@ class _BottomSheetState extends State<BottomSheet> {
                             children: [
                               TextButton(
                                   onPressed: () => setState(() {
-                                        globals.muscle_val["trapz"] = opacity_change(
-                                            globals.muscle_val["trapz"]!);
+                                        globals.muscle_val["trapz"] =
+                                            opacity_change(
+                                                globals.muscle_val["trapz"]!);
                                       }),
                                   child: const Text("trapz"))
                             ],
@@ -552,7 +665,8 @@ class _BottomSheetState extends State<BottomSheet> {
                               TextButton(
                                   onPressed: () => setState(() {
                                         globals.muscle_val["lats"] =
-                                            opacity_change(globals.muscle_val["lats"]!);
+                                            opacity_change(
+                                                globals.muscle_val["lats"]!);
                                       }),
                                   child: const Text("lats"))
                             ],
@@ -566,8 +680,9 @@ class _BottomSheetState extends State<BottomSheet> {
                             children: [
                               TextButton(
                                   onPressed: () => setState(() {
-                                        globals.muscle_val["glutes"] = opacity_change(
-                                            globals.muscle_val["glutes"]!);
+                                        globals.muscle_val["glutes"] =
+                                            opacity_change(
+                                                globals.muscle_val["glutes"]!);
                                       }),
                                   child: const Text("glutes"))
                             ],
@@ -582,7 +697,8 @@ class _BottomSheetState extends State<BottomSheet> {
                               TextButton(
                                   onPressed: () => setState(() {
                                         globals.muscle_val["hams"] =
-                                            opacity_change(globals.muscle_val["hams"]!);
+                                            opacity_change(
+                                                globals.muscle_val["hams"]!);
                                       }),
                                   child: const Text("hams"))
                             ],
@@ -596,8 +712,9 @@ class _BottomSheetState extends State<BottomSheet> {
                             children: [
                               TextButton(
                                   onPressed: () => setState(() {
-                                        globals.muscle_val["calves"] = opacity_change(
-                                            globals.muscle_val["calves"]!);
+                                        globals.muscle_val["calves"] =
+                                            opacity_change(
+                                                globals.muscle_val["calves"]!);
                                       }),
                                   child: const Text("calves"))
                             ],
