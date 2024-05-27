@@ -9,6 +9,7 @@ import 'package:intl/intl.dart';
 import 'dart:math';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:numberpicker/numberpicker.dart';
+import 'package:tuple/tuple.dart';
 
 enum ExerciseType { warmup, work, dropset }
 
@@ -33,6 +34,39 @@ List<DateTime> getTrainingDates(String exercise) {
     trainingDates.add(DateFormat('yyyy-MM-dd').parse(d));
   }
   return trainingDates;
+}
+
+Tuple2<double, int> getLastTrainingInfo(String exercise) {
+  var trainings = Hive.box<TrainingSet>('TrainingSets').values.toList();
+  trainings = trainings.where((item) => item.exercise == exercise).toList();
+  var trainingDates = getTrainingDates(exercise);
+  if (trainingDates.isEmpty) {
+    return const Tuple2<double, int>(20.0, 10);
+  }
+  // absolutely horrible solutions
+  var best_element = 0;
+  var best_element_distance = -999;
+  for (var i = 0; i < trainingDates.length; i++) {
+    final dayDiff = trainingDates[i].difference(DateTime.now()).inDays;
+    if (dayDiff > best_element_distance) {
+      best_element = i;
+      best_element_distance = dayDiff;
+    }
+  }
+  var d = trainingDates[best_element];
+  var latest_trainings = trainings.where((item) =>
+            item.date.day == d.day &&
+            item.date.month == d.month &&
+            item.date.year == d.year);
+  var best_weight = 0.0;
+  var best_reps = 0;
+    for (var s in latest_trainings) {
+      if (s.weight > best_weight) {
+        best_weight = s.weight;
+        best_reps = s.repetitions;
+      }
+    }
+  return Tuple2<double, int>(best_weight, best_reps);
 }
 
 List<FlSpot> getTrainingScores(String exercise) {
@@ -134,9 +168,6 @@ class _ExerciseScreen extends State<ExerciseScreen> {
   Widget build(BuildContext context) {
     WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
     var title = widget.exerciseName;
-
-    
-
     
     TextEditingController dateInputController =
         TextEditingController(text: DateTime.now().toString());
@@ -144,6 +175,11 @@ class _ExerciseScreen extends State<ExerciseScreen> {
 
     var minScore = 1e6;
     var maxScore = 0.0;
+    Tuple2<double, int> latestTrainingInfo = getLastTrainingInfo(widget.exerciseName);
+    weightKg = latestTrainingInfo.item1.toInt();
+    weightDg = (latestTrainingInfo.item1*100.0).toInt() % 100;
+    repetitions = latestTrainingInfo.item2;
+
     for (var d in graphData) {
       minScore = min(minScore, d.y);
       maxScore = max(maxScore, d.y);
