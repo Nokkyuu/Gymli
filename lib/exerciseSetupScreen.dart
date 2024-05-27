@@ -99,7 +99,7 @@ class _ExerciseSetupScreenState extends State<ExerciseSetupScreen> {
                 ),
               ),
               SizedBox(height: boxSpace),
-              const HeadCard(headline: "On what is the exercise done?"),
+              const HeadCard(headline: "Exercise Utility"),
               SegmentedButton<ExerciseDevice>(
                   showSelectedIcon: false,
                   segments: const <ButtonSegment<ExerciseDevice>>[
@@ -128,7 +128,7 @@ class _ExerciseSetupScreenState extends State<ExerciseSetupScreen> {
                     });
                   }),
               SizedBox(height: boxSpace),
-              const HeadCard(headline: "Starting Repetitions"),
+              const HeadCard(headline: "Minimum Repetitions To Achieve"),
               Slider(
                 value: minRep,
                 min: 1,
@@ -142,7 +142,7 @@ class _ExerciseSetupScreenState extends State<ExerciseSetupScreen> {
                 },
               ),
               SizedBox(height: boxSpace),
-              const HeadCard(headline: "Repetition Range"),
+              const HeadCard(headline: "Reps To Add Till Weight Increase"),
               Slider(
                 value: repRange,
                 min: 1,
@@ -156,7 +156,7 @@ class _ExerciseSetupScreenState extends State<ExerciseSetupScreen> {
                 },
               ),
               SizedBox(height: boxSpace),
-              const HeadCard(headline: "Weight Increments"),
+              const HeadCard(headline: "Weight Increase Increments"),
               Slider(
                 value: weightInc,
                 min: 1,
@@ -636,20 +636,20 @@ class HeadCard extends StatelessWidget {
   }
 }
 
-class ObscuredTextFieldSample extends StatelessWidget {
-  const ObscuredTextFieldSample({super.key});
+// class ObscuredTextFieldSample extends StatelessWidget {
+//   const ObscuredTextFieldSample({super.key});
 
-  @override
-  Widget build(BuildContext context) {
-    return const SizedBox(
-      width: 250,
-      child: TextField(
-        obscureText: true,
-        decoration: InputDecoration(
-          border: OutlineInputBorder(),
-          labelText: 'GiveMeName',
-        ),
-      ),
-    );
-  }
-}
+//   @override
+//   Widget build(BuildContext context) {
+//     return const SizedBox(
+//       width: 250,
+//       child: TextField(
+//         obscureText: true,
+//         decoration: InputDecoration(
+//           border: OutlineInputBorder(),
+//           labelText: 'GiveMeName',
+//         ),
+//       ),
+//     );
+//   }
+// }
