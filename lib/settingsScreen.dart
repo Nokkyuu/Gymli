@@ -67,6 +67,9 @@ void backupSetState(context) async {
 
 void restoreSetData(context) async {
   final filePath = await FlutterFileDialog.pickFile(params: const OpenFileDialogParams(dialogType: OpenFileDialogType.document, sourceType: SourceType.savedPhotosAlbum));
+  if (filePath == null) {
+    return;
+  }
   final myData = await rootBundle.loadString(filePath!);
   List<List<String>> csvTable = const CsvToListConverter(shouldParseNumbers: false).convert(myData);
   final setBox = await Hive.box<TrainingSet>('TrainingSets');
@@ -78,6 +81,9 @@ void restoreSetData(context) async {
 }
 void restoreExercises(context) async {
   final filePath = await FlutterFileDialog.pickFile(params: const OpenFileDialogParams(dialogType: OpenFileDialogType.document, sourceType: SourceType.savedPhotosAlbum));
+  if (filePath == null) {
+    return;
+  }
   final myData = await rootBundle.loadString(filePath!);
   final exerciseBox = await Hive.box<Exercise>('Exercises');
   exerciseBox.clear();
@@ -115,57 +121,79 @@ class _SettingsScreen extends State<SettingsScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           mainAxisSize: MainAxisSize.max,
           children: <Widget>[
+            Spacer(flex: 3,),
+            Divider(),
+            Text("Export App-Data"),
             Row(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
               TextButton.icon(
                 style: const ButtonStyle(),
-                label: const Text('Save Training Sets'),
-                icon: const Icon(Icons.expand_circle_down),
+                label: const Text('Training Sets'),
+                icon: const Icon(Icons.save),
                 onPressed: () {
                   backupSetState(context);
                 },
               ),
               TextButton.icon(
                 style: const ButtonStyle(),
-                label: const Text('Save Exercises'),
-                icon: const Icon(Icons.expand_sharp),
+                label: const Text('Exercises List'),
+                icon: const Icon(Icons.save),
                 onPressed: () {
                   backupExercises(context);
                 },
               ),
             ]),
-            TextButton.icon(
-              style: const ButtonStyle(),
-              label: const Text('Wipe Training Sets'),
-              icon: const Icon(Icons.delete_rounded),
-              onPressed: () {
-                wipeTrainingSets(context);
-              },
-            ),
-            TextButton.icon(
-              style: const ButtonStyle(),
-              label: const Text('Wipe Exercises'),
-              icon: const Icon(Icons.delete_forever),
-              onPressed: () {
-                wipeExercises(context);
-              },
-            ),
+            Divider(),
+            Spacer(),
+            Divider(),
+            Text("Wipe App-Data"),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
               TextButton.icon(
-              style: const ButtonStyle(),
-              label: const Text('Restore Training Sets'),
-              icon: const Icon(Icons.delete_forever),
-              onPressed: () {
-                restoreSetData(context);
-              },
-            ),
+                style: const ButtonStyle(),
+                label: const Text('Training Sets'),
+                icon: const Icon(Icons.delete_forever),
+                onPressed: () {
+                  wipeTrainingSets(context);
+                },
+              ),
               TextButton.icon(
-              style: const ButtonStyle(),
-              label: const Text('Restore Exercises'),
-              icon: const Icon(Icons.delete_forever),
-              onPressed: () {
-                restoreExercises(context);
-              },
-            ),
+                style: const ButtonStyle(),
+                label: const Text('Exercise List'),
+                icon: const Icon(Icons.delete_forever),
+                onPressed: () {
+                  wipeExercises(context);
+                }
+              ),
+              ]),
+            Divider(),
+            Spacer(),
+            Divider(),
+            Text("Restore App-Data"),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                TextButton.icon(
+                  style: const ButtonStyle(),
+                  label: const Text('Training Sets'),
+                  icon: const Icon(Icons.restore_page),
+                  onPressed: () {
+                    restoreSetData(context);
+                  },
+                ),
+                  TextButton.icon(
+                  style: const ButtonStyle(),
+                  label: const Text('Exercises List'),
+                  icon: const Icon(Icons.restore_page),
+                  onPressed: () {
+                    restoreExercises(context);
+                  },
+                ),
+            ]),
+            Divider(),
+            Spacer(),
           ]
         ),
     );
