@@ -360,7 +360,7 @@ class _InputFields extends State<InputFields> {
           const Spacer(),
           NumberPicker(
             value: widget.weightKg,
-            minValue: 0,
+            minValue: -70,
             maxValue: 140,
             haptics: true,
             itemHeight: itemHeight,
