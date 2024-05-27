@@ -8,6 +8,7 @@ import 'package:yafa_app/DataModels.dart';
 import 'package:intl/intl.dart';
 import 'dart:math';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:numberpicker/numberpicker.dart';
 
 enum ExerciseType { warmup, work, dropset }
 
@@ -93,15 +94,17 @@ class ExerciseScreen extends StatefulWidget {
 
 class _ExerciseScreen extends State<ExerciseScreen> {
   // late String exerciseName;
-final ScrollController _scrollController = ScrollController();  
-TextEditingController weightController = TextEditingController(text: "0");
-    TextEditingController repetitionController =
-        TextEditingController(text: "0");
+  final ScrollController _scrollController = ScrollController();  
 //   @override
 //   void initState() {
 //   super.initState();
 // }
 
+  int weightKg = 40;
+  int weightDg = 0;
+  int repetitions = 10;
+
+  late InputFields inputFieldAccessor = InputFields(weightDg: weightDg, weightKg: weightKg, repetitions: repetitions); 
   Set<ExerciseType> _selected = {ExerciseType.work};
   var _newData = 0.0;
   List<FlSpot> graphData = [const FlSpot(0, 0)];
@@ -191,7 +194,7 @@ TextEditingController weightController = TextEditingController(text: "0");
                       onSelectionChanged: updateSelected,
                     ),
                     const SizedBox(height: 10),
-                    InputFields(weightController: weightController, repetitionController: repetitionController),
+                    inputFieldAccessor,
                     const SizedBox(height: 10),
                     
                   ],
@@ -202,15 +205,17 @@ TextEditingController weightController = TextEditingController(text: "0");
               label: const Text('Submit'),
               icon: const Icon(Icons.send),
               onPressed: () {
+                // var weightValue = double.parse(weightController.text.replaceFirst(RegExp(','), "."));
+                double new_weight = inputFieldAccessor.weightKg.toDouble() + inputFieldAccessor.weightDg.toDouble() / 100.0;
                 addSet(
                     widget.exerciseName,
-                    double.parse(weightController.text),
-                    int.parse(repetitionController.text),
+                    new_weight,
+                    inputFieldAccessor.repetitions,
                     _selected.first.index,
                     dateInputController.text);
-                _newData = max(_newData,
-                    double.parse(weightController.text));
+                _newData = max(_newData, new_weight);
                 updateGraph();
+
               },
             ),
             SizedBox(
@@ -256,12 +261,15 @@ TextEditingController weightController = TextEditingController(text: "0");
                                     ),
                                   ),
                                   title: Text(
-                                      "${item.weight} for ${item.repetitions} reps"),
+                                      "${item.weight}kg for ${item.repetitions} reps"),
                                   subtitle: Text(
                                       "${item.date.hour}:${item.date.minute}:${item.date.second}"),
                                   trailing: IconButton(
-                    icon: const Icon(Icons.delete),
-                    onPressed:  () => print("deleted")
+                                  icon: const Icon(Icons.delete),
+                                  onPressed:  () =>  {
+                                    // box.delete(item)
+                                    print("Delete funzt nicht.")
+                                  }
                   ),
                                   onTap: () {
                                     Navigator.push(
@@ -287,43 +295,66 @@ TextEditingController weightController = TextEditingController(text: "0");
   }
 }
 
-class InputFields extends StatelessWidget {
-  const InputFields({
+class InputFields extends StatefulWidget {
+  // final String exerciseName;
+  // const InputFields({super.key});
+  int weightKg;
+  int weightDg;
+  int repetitions;
+  InputFields({
     super.key,
-    required this.weightController,
-    required this.repetitionController,
-  });
+    required this.weightKg,
+    required this.weightDg,
+    required this.repetitions,
+  });  
+  @override
+  State<InputFields> createState() => _InputFields();
+}
 
-  final TextEditingController weightController;
-  final TextEditingController repetitionController;
-
+class _InputFields extends State<InputFields> {
+  
+  double itemHeight = 35.0;
+  double itemWidth = 50.0;
   @override
   Widget build(BuildContext context) {
     return Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         mainAxisSize: MainAxisSize.max,
         children: <Widget>[
-          Expanded(
-            child: TextField(
-              controller: weightController,
-              decoration: const InputDecoration(
-                border: OutlineInputBorder(),
-                suffixText: 'kg',
-              ),
-              // keyboardType: TextInputType.number,
-            ),
+          const Spacer(),
+          NumberPicker(
+            value: widget.weightKg,
+            minValue: 0,
+            maxValue: 140,
+            haptics: true,
+            itemHeight: itemHeight,
+            itemWidth: itemWidth,
+            onChanged: (value) => setState(() => widget.weightKg = value),
           ),
-          Expanded(
-            child: TextField(
-                controller: repetitionController,
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  suffixText: 'reps',
-                ),
-                // keyboardType: TextInputType.number
-                ),
+          const Text(","),
+          NumberPicker(
+            value: widget.weightDg,
+            minValue: 0,
+            maxValue: 95,
+            haptics: true,
+            step: 5,
+            itemHeight: itemHeight,
+            itemWidth: itemWidth,
+            onChanged: (value) => setState(() => widget.weightDg = value),
           ),
-          
+          const Text("kg"),
+          const Spacer(),
+          NumberPicker(
+            value: widget.repetitions,
+            minValue: 1,
+            haptics: true,
+            maxValue: 25,
+            itemHeight: itemHeight,
+            itemWidth: itemWidth,
+            onChanged: (value) => setState(() => widget.repetitions = value),
+          ),
+          const Text("Reps"),
+          const Spacer()
         ]);
   }
 }
