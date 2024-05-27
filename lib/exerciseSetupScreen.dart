@@ -458,6 +458,11 @@ class _BottomSheetState extends State<BottomSheet> {
                       ),
                       Image(
                         fit: BoxFit.scaleDown,
+                        image: const AssetImage('images/muscles/Back_forearms.png'),
+                        opacity: AlwaysStoppedAnimation(muscle_val["fore"]!),
+                      ),
+                      Image(
+                        fit: BoxFit.scaleDown,
                         image: const AssetImage('images/muscles/Back_delts.png'),
                         opacity: AlwaysStoppedAnimation(muscle_val["delts"]!),
                       ),
