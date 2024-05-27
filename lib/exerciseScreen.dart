@@ -199,7 +199,18 @@ class _ExerciseScreen extends State<ExerciseScreen> {
         title: Text(title),
         actions:[IconButton(
           onPressed: () => print("edit exercise"),  //TODO: go to exercise setup to edit the current exercise
-          icon: const Icon(Icons.edit))]
+          icon: const Icon(Icons.edit)),
+          IconButton(
+          onPressed: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (context) =>
+                                              const ExerciseListScreen()),
+                                    );},
+          
+          icon: const Icon(Icons.list))
+          ]
       ),
       body: Column(
           mainAxisAlignment: MainAxisAlignment.center,
