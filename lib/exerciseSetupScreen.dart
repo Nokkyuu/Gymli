@@ -67,6 +67,9 @@ class _ExerciseSetupScreenState extends State<ExerciseSetupScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
+          actions:[IconButton(
+          onPressed: () => print("Workout deleted"),  //TODO: delete selected workout if it exists
+          icon: const Icon(Icons.delete))],
           leading: InkWell(
             onTap: () {
               Navigator.pop(context);
