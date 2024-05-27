@@ -257,13 +257,23 @@ class _ExerciseScreen extends State<ExerciseScreen> {
             SizedBox(
                 width: MediaQuery.of(context).size.width,
                 height: MediaQuery.of(context).size.height * 0.25,
-                child: LineChart(LineChartData(
-                  lineBarsData: [
-                    LineChartBarData(spots: graphData),
-                  ],
-                  minY: minScore - 5.0,
-                  maxY: maxScore + 5.0,
-                ))),
+                child: Padding(
+                  padding: const EdgeInsets.all(10.0),
+                  child: Padding(
+                    padding: const EdgeInsets.only(right: 10.0, top: 10.0, left: 0.0), // Hier das Padding rechts hinzufügen
+                    child: LineChart(LineChartData(
+                    titlesData: const FlTitlesData(
+                      topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                      rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                    ),
+                    lineBarsData: [
+                      LineChartBarData(spots: graphData),
+                    ],
+                    minY: minScore - 5.0,
+                    maxY: maxScore + 5.0,
+                  ))),
+                )
+            ),
             const Divider(),
                     Expanded(
                 child: ValueListenableBuilder(
