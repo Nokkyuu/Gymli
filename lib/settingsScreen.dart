@@ -72,6 +72,7 @@ void restoreSetData(context) async {
   final setBox = await Hive.box<TrainingSet>('TrainingSets');
   setBox.clear();
   for (List<String> row in csvTable) {
+    print(row);
     setBox.add(TrainingSet(exercise: row[0], date: DateTime.parse(row[1]), weight: double.parse(row[2]), repetitions: int.parse(row[3]), setType: int.parse(row[4]), baseReps: int.parse(row[5]), maxReps: int.parse(row[6]), increment: double.parse(row[7]), machineName: row[7]));
   }
 }
@@ -114,22 +115,25 @@ class _SettingsScreen extends State<SettingsScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           mainAxisSize: MainAxisSize.max,
           children: <Widget>[
-            TextButton.icon(
-              style: const ButtonStyle(),
-              label: const Text('Save Training Sets'),
-              icon: const Icon(Icons.expand_circle_down),
-              onPressed: () {
-                backupSetState(context);
-              },
-            ),
-            TextButton.icon(
-              style: const ButtonStyle(),
-              label: const Text('Save Exercises'),
-              icon: const Icon(Icons.expand_sharp),
-              onPressed: () {
-                backupExercises(context);
-              },
-            ),
+            Row(
+              children: [
+              TextButton.icon(
+                style: const ButtonStyle(),
+                label: const Text('Save Training Sets'),
+                icon: const Icon(Icons.expand_circle_down),
+                onPressed: () {
+                  backupSetState(context);
+                },
+              ),
+              TextButton.icon(
+                style: const ButtonStyle(),
+                label: const Text('Save Exercises'),
+                icon: const Icon(Icons.expand_sharp),
+                onPressed: () {
+                  backupExercises(context);
+                },
+              ),
+            ]),
             TextButton.icon(
               style: const ButtonStyle(),
               label: const Text('Wipe Training Sets'),

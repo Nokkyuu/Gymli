@@ -58,8 +58,8 @@ Tuple2<double, int> getLastTrainingInfo(String exercise) {
             item.date.day == d.day &&
             item.date.month == d.month &&
             item.date.year == d.year);
-  var best_weight = 0.0;
-  var best_reps = 0;
+  var best_weight = -100.0;
+  var best_reps = 1;
     for (var s in latest_trainings) {
       if (s.weight > best_weight) {
         best_weight = s.weight;
@@ -78,23 +78,23 @@ List<FlSpot> getTrainingScores(String exercise) {
   for (var d in trainingDates) {
     final dayDiff = d.difference(DateTime.now()).inDays;
 
-    // if (day_diff > -21) {
-    var subTrainings = trainings
-        .where((item) =>
-            item.date.day == d.day &&
-            item.date.month == d.month &&
-            item.date.year == d.year)
-        .toList();
-    var currentScore = 0.0;
-    for (var s in subTrainings) {
-      currentScore = max(
-          currentScore,
-          s.weight +
-              ((s.repetitions - s.baseReps) / (s.maxReps - s.baseReps)) *
-                  s.increment);
+    if (dayDiff > -(6*7)) {
+      var subTrainings = trainings
+          .where((item) =>
+              item.date.day == d.day &&
+              item.date.month == d.month &&
+              item.date.year == d.year)
+          .toList();
+      var currentScore = 0.0;
+      for (var s in subTrainings) {
+        currentScore = max(
+            currentScore,
+            s.weight +
+                ((s.repetitions - s.baseReps) / (s.maxReps - s.baseReps)) *
+                    s.increment);
+      }
+      scores.add(FlSpot((dayDiff).toDouble(), currentScore));
     }
-    scores.add(FlSpot((dayDiff).toDouble(), currentScore));
-    // }
   }
 
   return scores;
@@ -151,7 +151,7 @@ class _ExerciseScreen extends State<ExerciseScreen> {
 
   void updateGraph() async {
     setState(() {
-      if (graphData.last.x == 0) {
+      if (graphData.isNotEmpty && graphData.last.x == 0) {
         graphData.removeLast();
       }
       if (_newData > 0.0) {
@@ -176,6 +176,7 @@ class _ExerciseScreen extends State<ExerciseScreen> {
     var minScore = 1e6;
     var maxScore = 0.0;
     Tuple2<double, int> latestTrainingInfo = getLastTrainingInfo(widget.exerciseName);
+    print(latestTrainingInfo);
     weightKg = latestTrainingInfo.item1.toInt();
     weightDg = (latestTrainingInfo.item1*100.0).toInt() % 100;
     repetitions = latestTrainingInfo.item2;
@@ -261,16 +262,20 @@ class _ExerciseScreen extends State<ExerciseScreen> {
                   padding: const EdgeInsets.all(10.0),
                   child: Padding(
                     padding: const EdgeInsets.only(right: 10.0, top: 10.0, left: 0.0), // Hier das Padding rechts hinzufügen
-                    child: LineChart(LineChartData(
-                    titlesData: const FlTitlesData(
+                    child: LineChart
+                    (LineChartData(
+                      titlesData: const FlTitlesData(
                       topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
                       rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
                     ),
+                    clipData: FlClipData.all(),
                     lineBarsData: [
                       LineChartBarData(spots: graphData),
                     ],
                     minY: minScore - 5.0,
                     maxY: maxScore + 5.0,
+                    minX: -30.0,
+                    maxX: 0.0,
                   ))),
                 )
             ),
