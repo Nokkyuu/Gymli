@@ -256,7 +256,7 @@ class _ExerciseScreen extends State<ExerciseScreen> {
             ),
             SizedBox(
                 width: MediaQuery.of(context).size.width,
-                height: MediaQuery.of(context).size.height * 0.3,
+                height: MediaQuery.of(context).size.height * 0.25,
                 child: LineChart(LineChartData(
                   lineBarsData: [
                     LineChartBarData(spots: graphData),
@@ -303,8 +303,8 @@ class _ExerciseScreen extends State<ExerciseScreen> {
                                   trailing: IconButton(
                                   icon: const Icon(Icons.delete),
                                   onPressed:  () =>  {
-                                    // box.delete(item)
-                                    print("Delete funzt nicht.")
+                                    box.delete(item.key)
+                                    // print("Delete funzt nicht.")
                                   }
                   ),
                                   onTap: () {
