@@ -7,6 +7,7 @@ import 'package:yafa_app/DataModels.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
+
 enum WorkoutList {
   Push('Push'),
   Pull('Pull'),

@@ -8,6 +8,7 @@ import 'package:yafa_app/settingsScreen.dart';
 import 'package:yafa_app/workoutSetupScreen.dart';
 import 'package:yafa_app/jim.dart';
 import 'dart:async';
+import 'globals.dart' as globals;
 bool state = false;
 
 // Pectoralis major
@@ -264,6 +265,8 @@ class _MainAppState extends State<MainApp> {
             onTap: () {
               Navigator.pop(context);
               Navigator.push(context, MaterialPageRoute(builder: (context) => const ExerciseSetupScreen()));
+              for (var i in globals.muscle_val.keys)
+                {globals.muscle_val[i] = 0;}
             },
           ),
           ListTile(
