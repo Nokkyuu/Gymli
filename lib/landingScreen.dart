@@ -142,6 +142,7 @@ class _LandingScreenState extends State<LandingScreen> {
                           ];
                           final currentIcon = itemList[exerciseType];
                           return ListTile(
+                              
                               leading: CircleAvatar(
                                 radius: 17.5,
                                 child: FaIcon(currentIcon),
@@ -201,6 +202,7 @@ class _LandingScreenState extends State<LandingScreen> {
                               });
                         });
                   } else {
+                    Hive.box<Exercise>('Exercises').watch();
                     return const Text("No exercises yet");
                   }
                 }),
@@ -209,21 +211,21 @@ class _LandingScreenState extends State<LandingScreen> {
   }
 }
 
-/// The base class for the different types of items the list can contain.
-abstract class ListItem {
-  Widget buildTitle(BuildContext context);
-  Widget buildSubtitle(BuildContext context);
-}
+// /// The base class for the different types of items the list can contain.
+// abstract class ListItem {
+//   Widget buildTitle(BuildContext context);
+//   Widget buildSubtitle(BuildContext context);
+// }
 
-// add new button?
-class ExerciseItem implements ListItem {
-  final String exerciseName;
-  final String meta;
+// // add new button?
+// class ExerciseItem implements ListItem {
+//   final String exerciseName;
+//   final String meta;
 
-  ExerciseItem(this.exerciseName, this.meta);
-  @override
-  Widget buildTitle(BuildContext context) => Text(exerciseName);
+//   ExerciseItem(this.exerciseName, this.meta);
+//   @override
+//   Widget buildTitle(BuildContext context) => Text(exerciseName);
 
-  @override
-  Widget buildSubtitle(BuildContext context) => Text(meta);
-}
+//   @override
+//   Widget buildSubtitle(BuildContext context) => Text(meta);
+// }

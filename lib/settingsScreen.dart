@@ -1,5 +1,4 @@
 // ignore_for_file: file_names
-
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:yafa_app/DataModels.dart';
@@ -102,8 +101,9 @@ void restoreExercises(context) async {
     for (String e in row[3].split(";")) {
       if (e != "") { muscleIntensities.add(double.parse(e)); }
     }
-    exerciseBox.add(Exercise(name: row[0], type: int.parse(row[1]), muscleGroups: muscleGroups, muscleIntensities: muscleIntensities, defaultRepBase: int.parse(row[4]), defaultRepMax: int.parse(row[5]), defaultIncrement: double.parse(row[6])));
     
+    exerciseBox.add(Exercise(name: row[0], type: int.parse(row[1]), muscleGroups: muscleGroups, muscleIntensities: muscleIntensities, defaultRepBase: int.parse(row[4]), defaultRepMax: int.parse(row[5]), defaultIncrement: double.parse(row[6])));
+
 }
 } else {
   return;
@@ -189,6 +189,7 @@ class _SettingsScreen extends State<SettingsScreen> {
                   icon: const Icon(Icons.restore_page),
                   onPressed: () {
                     restoreSetData(context);
+                    Hive.box<Exercise>('Exercises').watch();
                     setState(() {});
                     Navigator.pop(context);
                   },
