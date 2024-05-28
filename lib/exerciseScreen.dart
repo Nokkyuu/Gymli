@@ -11,6 +11,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:numberpicker/numberpicker.dart';
 import 'package:tuple/tuple.dart';
 import 'package:yafa_app/exerciseSetupScreen.dart';
+import 'globals.dart' as globals;
 
 enum ExerciseType { warmup, work, dropset }
 
@@ -19,6 +20,16 @@ final workIcons = [
   FontAwesomeIcons.handFist,
   FontAwesomeIcons.arrowDown
 ];
+
+void get_exercise_list() async {
+  final box = await Hive.openBox<Exercise>('Exercises');
+  var boxmap = box.values.toList();
+  List<String> exerciseList = [];
+  for (var e in boxmap) {
+    exerciseList.add(e.name);
+  }
+  globals.exerciseList = exerciseList;
+}
 
 List<DateTime> getTrainingDates(String exercise) {
   var box = Hive.box<TrainingSet>('TrainingSets');
@@ -206,6 +217,7 @@ class _ExerciseScreen extends State<ExerciseScreen> {
                 icon: const Icon(Icons.edit)),
             IconButton(
                 onPressed: () {
+                  get_exercise_list();
                   Navigator.push(
                     context,
                     MaterialPageRoute(
