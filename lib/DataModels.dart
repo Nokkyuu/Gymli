@@ -5,7 +5,7 @@ part 'DataModels.g.dart';
 
 
 final exerciseTypeNames = ["Free", "Machine", "Cable", "Body"];
-final muscleGroupNames = ["Pectoralis major", "Trapezius", "Biceps", "Abdominals", "Front Deltoids", "Side Deltoids", "Rear Deltoids", "Latissimus dorsi", "Triceps", "Gluteus maximus", "Hamstrings", "Quadriceps", "Forearms", "Calves"];
+final muscleGroupNames = ["Pectoralis major", "Trapezius", "Biceps", "Abdominals", "Deltoids", "Latissimus dorsi", "Triceps", "Gluteus maximus", "Hamstrings", "Quadriceps", "Forearms", "Calves"];
 final setTypeNames = ["Warm", "Work", "Drop"];
 
 @HiveType(typeId: 1)

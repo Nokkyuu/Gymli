@@ -28,7 +28,7 @@ void get_exercise_list() async {
 }
 
 void add_exercise(String exerciseName, ExerciseDevice chosenDevice, int minRep,
-    int repRange, double weightInc, List<String> muscleGroups, List<double> muscleIntensities) async {
+    int repRange, double weightInc) async {
   final box = await Hive.openBox<Exercise>('Exercises');
   int exerciseType = chosenDevice.index;
   var boxmap = box.values.toList();
@@ -36,6 +36,15 @@ void add_exercise(String exerciseName, ExerciseDevice chosenDevice, int minRep,
   for (var e in boxmap) {
     exerciseList.add(e.name);
   }
+  List<String> muscleGroups = [];
+  List<double> muscleIntensities = [];
+  for (var m in muscleGroupNames) {
+    if (globals.muscle_val[m]! > 0.0) {
+      muscleGroups.add(m);
+      muscleIntensities.add(globals.muscle_val[m]!);
+    }
+  }
+
   // boxmap.values.forEach((v) => print("Value: $v"));
 
   // var a = boxmap.getAllKeys();
@@ -87,6 +96,9 @@ class _ExerciseSetupScreenState extends State<ExerciseSetupScreen> {
       minRep = exercise.defaultRepBase.toDouble();
       repRange = exercise.defaultRepMax.toDouble();
       weightInc = exercise.defaultIncrement;
+      for (var m in muscleGroupNames) {
+        globals.muscle_val[m] = 0.0;
+      }
       muscleGroups = exercise.muscleGroups;
       muscleIntensities = exercise.muscleIntensities;
       // muscleIntensities = exercise.muscleIntensities;
@@ -268,8 +280,7 @@ class _ExerciseSetupScreenState extends State<ExerciseSetupScreen> {
                                       chosenDevice,
                                       minRep.toInt(),
                                       repRange.toInt(),
-                                      weightInc,
-                                      muscleGroups,muscleIntensities);
+                                      weightInc);
                                   setState(() {});
                                   Navigator.pop(context);
                                 },
