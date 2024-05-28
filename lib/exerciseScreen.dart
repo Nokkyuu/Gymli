@@ -55,17 +55,17 @@ Tuple2<double, int> getLastTrainingInfo(String exercise) {
   }
   var d = trainingDates[best_element];
   var latest_trainings = trainings.where((item) =>
-            item.date.day == d.day &&
-            item.date.month == d.month &&
-            item.date.year == d.year);
+      item.date.day == d.day &&
+      item.date.month == d.month &&
+      item.date.year == d.year);
   var best_weight = -100.0;
   var best_reps = 1;
-    for (var s in latest_trainings) {
-      if (s.weight > best_weight) {
-        best_weight = s.weight;
-        best_reps = s.repetitions;
-      }
+  for (var s in latest_trainings) {
+    if (s.weight > best_weight) {
+      best_weight = s.weight;
+      best_reps = s.repetitions;
     }
+  }
   return Tuple2<double, int>(best_weight, best_reps);
 }
 
@@ -78,7 +78,7 @@ List<FlSpot> getTrainingScores(String exercise) {
   for (var d in trainingDates) {
     final dayDiff = d.difference(DateTime.now()).inDays;
 
-    if (dayDiff > -(6*7)) {
+    if (dayDiff > -(6 * 7)) {
       var subTrainings = trainings
           .where((item) =>
               item.date.day == d.day &&
@@ -121,14 +121,14 @@ Future<int> addSet(String exercise, double weight, int repetitions, int setType,
 class ExerciseScreen extends StatefulWidget {
   final String exerciseName;
   const ExerciseScreen(this.exerciseName, {super.key});
-  
+
   @override
   State<ExerciseScreen> createState() => _ExerciseScreen();
 }
 
 class _ExerciseScreen extends State<ExerciseScreen> {
   // late String exerciseName;
-  final ScrollController _scrollController = ScrollController();  
+  final ScrollController _scrollController = ScrollController();
 //   @override
 //   void initState() {
 //   super.initState();
@@ -138,7 +138,8 @@ class _ExerciseScreen extends State<ExerciseScreen> {
   int weightDg = 0;
   int repetitions = 10;
 
-  late InputFields inputFieldAccessor = InputFields(weightDg: weightDg, weightKg: weightKg, repetitions: repetitions); 
+  late InputFields inputFieldAccessor = InputFields(
+      weightDg: weightDg, weightKg: weightKg, repetitions: repetitions);
   Set<ExerciseType> _selected = {ExerciseType.work};
   var _newData = 0.0;
   List<FlSpot> graphData = [const FlSpot(0, 0)];
@@ -160,25 +161,26 @@ class _ExerciseScreen extends State<ExerciseScreen> {
     });
   }
 
-    
-      _scrollToBottom() {
-        _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
-      }
+  _scrollToBottom() {
+    _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+  }
+
   @override
   Widget build(BuildContext context) {
     WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
     var title = widget.exerciseName;
-    
+
     TextEditingController dateInputController =
         TextEditingController(text: DateTime.now().toString());
     graphData = getTrainingScores(widget.exerciseName);
 
     var minScore = 1e6;
     var maxScore = 0.0;
-    Tuple2<double, int> latestTrainingInfo = getLastTrainingInfo(widget.exerciseName);
+    Tuple2<double, int> latestTrainingInfo =
+        getLastTrainingInfo(widget.exerciseName);
     print(latestTrainingInfo);
     weightKg = latestTrainingInfo.item1.toInt();
-    weightDg = (latestTrainingInfo.item1*100.0).toInt() % 100;
+    weightDg = (latestTrainingInfo.item1 * 100.0).toInt() % 100;
     repetitions = latestTrainingInfo.item2;
 
     for (var d in graphData) {
@@ -188,39 +190,125 @@ class _ExerciseScreen extends State<ExerciseScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        leading: InkWell(
-          onTap: () {
-            Navigator.pop(context);
-          },
-          child: const Icon(
-            Icons.arrow_back_ios,
+          leading: InkWell(
+            onTap: () {
+              Navigator.pop(context);
+            },
+            child: const Icon(
+              Icons.arrow_back_ios,
+            ),
           ),
-        ),
-        title: Text(title),
-        actions:[IconButton(
-          onPressed: () => print("edit exercise"),  //TODO: go to exercise setup to edit the current exercise
-          icon: const Icon(Icons.edit)),
-          IconButton(
-          onPressed: () {
+          title: Text(title),
+          actions: [
+            IconButton(
+                onPressed: () => print(
+                    "edit exercise"), //TODO: go to exercise setup to edit the current exercise
+                icon: const Icon(Icons.edit)),
+            IconButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => const ExerciseListScreen()),
+                  );
+                },
+                icon: const Icon(Icons.list))
+          ]),
+      body: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.max,
+          children: <Widget>[
+            SizedBox(
+                width: MediaQuery.of(context).size.width,
+                height: MediaQuery.of(context).size.height * 0.25,
+                child: Padding(
+                  padding: const EdgeInsets.all(10.0),
+                  child: Padding(
+                      padding: const EdgeInsets.only(
+                          right: 10.0,
+                          top: 10.0,
+                          left: 0.0), // Hier das Padding rechts hinzufügen
+                      child: LineChart(LineChartData(
+                        titlesData: const FlTitlesData(
+                          topTitles: AxisTitles(
+                              sideTitles: SideTitles(showTitles: false)),
+                          rightTitles: AxisTitles(
+                              sideTitles: SideTitles(showTitles: false)),
+                        ),
+                        clipData: FlClipData.all(),
+                        lineBarsData: [
+                          LineChartBarData(spots: graphData),
+                        ],
+                        minY: minScore - 5.0,
+                        maxY: maxScore + 5.0,
+                        minX: -30.0,
+                        maxX: 0.0,
+                      ))),
+                )),
+            const Divider(),
+            Expanded(
+                child: ValueListenableBuilder(
+                    valueListenable:
+                        Hive.box<TrainingSet>('TrainingSets').listenable(),
+                    builder: (context, Box<TrainingSet> box, _) {
+                      var items = box.values
+                          .where((item) => item.exercise == widget.exerciseName)
+                          .toList();
+                      var today = DateTime.now();
+                      items = items
+                          .where((item) =>
+                              item.date.day == today.day &&
+                              item.date.month == today.month &&
+                              item.date.year == today.year)
+                          .toList();
+                      if (items.isNotEmpty) {
+                        return ListView.builder(
+                            //reverse: true,
+                            controller: _scrollController,
+                            itemCount: items.length,
+                            itemBuilder: (context, index) {
+                              final item = items[index];
+                              return ListTile(
+                                  leading: CircleAvatar(
+                                    radius: 17.5,
+                                    //backgroundColor: Colors.cyan,
+                                    child: FaIcon(
+                                      workIcons[item.setType],
+                                    ),
+                                  ),
+                                  title: Text(
+                                      "${item.weight}kg for ${item.repetitions} reps"),
+                                  subtitle: Text(
+                                      "${item.date.hour}:${item.date.minute}:${item.date.second}"),
+                                  trailing: IconButton(
+                                      icon: const Icon(Icons.delete),
+                                      onPressed: () => {
+                                            box.delete(item.key)
+                                            // print("Delete funzt nicht.")
+                                          }),
+                                  onTap: () {
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
                                           builder: (context) =>
                                               const ExerciseListScreen()),
-                                    );},
-          
-          icon: const Icon(Icons.list))
-          ]
-      ),
-      body: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          mainAxisSize: MainAxisSize.max,
-          children: <Widget>[
+                                    );
+                                  });
+                            });
+                      } else {
+                        return ListView(
+                          controller: _scrollController,
+                          children: const [
+                            ListTile(title: Text("No Training yet.")),
+                          ],
+                        );
+                      }
+                    })),
+            const Divider(),
             Padding(
                 padding: const EdgeInsets.only(left: 30, right: 30, bottom: 10),
                 child: Column(
                   children: [
-                    
                     const SizedBox(height: 10),
                     SegmentedButton<ExerciseType>(
                       showSelectedIcon: false,
@@ -243,18 +331,15 @@ class _ExerciseScreen extends State<ExerciseScreen> {
                     ),
                     const SizedBox(height: 10),
                     inputFieldAccessor,
-                    const SizedBox(height: 10),
-                    
                   ],
                 )),
-
             ElevatedButton.icon(
               style: const ButtonStyle(),
               label: const Text('Submit'),
               icon: const Icon(Icons.send),
               onPressed: () {
-                // var weightValue = double.parse(weightController.text.replaceFirst(RegExp(','), "."));
-                double new_weight = inputFieldAccessor.weightKg.toDouble() + inputFieldAccessor.weightDg.toDouble() / 100.0;
+                double new_weight = inputFieldAccessor.weightKg.toDouble() +
+                    inputFieldAccessor.weightDg.toDouble() / 100.0;
                 addSet(
                     widget.exerciseName,
                     new_weight,
@@ -263,95 +348,9 @@ class _ExerciseScreen extends State<ExerciseScreen> {
                     dateInputController.text);
                 _newData = max(_newData, new_weight);
                 updateGraph();
-
               },
             ),
-            SizedBox(
-                width: MediaQuery.of(context).size.width,
-                height: MediaQuery.of(context).size.height * 0.25,
-                child: Padding(
-                  padding: const EdgeInsets.all(10.0),
-                  child: Padding(
-                    padding: const EdgeInsets.only(right: 10.0, top: 10.0, left: 0.0), // Hier das Padding rechts hinzufügen
-                    child: LineChart
-                    (LineChartData(
-                      titlesData: const FlTitlesData(
-                      topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                      rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                    ),
-                    clipData: FlClipData.all(),
-                    lineBarsData: [
-                      LineChartBarData(spots: graphData),
-                    ],
-                    minY: minScore - 5.0,
-                    maxY: maxScore + 5.0,
-                    minX: -30.0,
-                    maxX: 0.0,
-                  ))),
-                )
-            ),
-            const Divider(),
-                    Expanded(
-                child: ValueListenableBuilder(
-                    valueListenable:
-                        Hive.box<TrainingSet>('TrainingSets').listenable(),
-                    builder: (context, Box<TrainingSet> box, _) {
-                      var items = box.values
-                          .where((item) => item.exercise == widget.exerciseName)
-                          .toList();
-                      var today = DateTime.now();
-                      items = items
-                          .where((item) =>
-                              item.date.day == today.day &&
-                              item.date.month == today.month &&
-                              item.date.year == today.year)
-                          .toList();
-                      if (items.isNotEmpty) {
-                        return ListView.builder(
-                          //reverse: true,
-                          controller: _scrollController,
-
-                            itemCount: items.length,
-                            itemBuilder: (context, index) {
-                              final item = items[index];
-                              return ListTile(
-                                  leading: CircleAvatar(
-                                    radius: 17.5,
-                                    //backgroundColor: Colors.cyan,
-                                    child: FaIcon(
-                                      workIcons[item.setType],
-                                    ),
-                                  ),
-                                  title: Text(
-                                      "${item.weight}kg for ${item.repetitions} reps"),
-                                  subtitle: Text(
-                                      "${item.date.hour}:${item.date.minute}:${item.date.second}"),
-                                  trailing: IconButton(
-                                  icon: const Icon(Icons.delete),
-                                  onPressed:  () =>  {
-                                    box.delete(item.key)
-                                    // print("Delete funzt nicht.")
-                                  }
-                  ),
-                                  onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                          builder: (context) =>
-                                              const ExerciseListScreen()),
-                                    );
-                                  });
-                            });
-                      } else {
-                        return ListView(
-                          controller: _scrollController,
-                          children: const [ListTile(title: Text("No Training yet.")),],
-                          );
-                         
-                      }
-                    })),
-            // const Divider(),
-            // const Padding(padding: EdgeInsets.only(bottom: 50)),
+            const SizedBox(height: 20),
           ]),
     );
   }
@@ -368,13 +367,12 @@ class InputFields extends StatefulWidget {
     required this.weightKg,
     required this.weightDg,
     required this.repetitions,
-  });  
+  });
   @override
   State<InputFields> createState() => _InputFields();
 }
 
 class _InputFields extends State<InputFields> {
-  
   double itemHeight = 35.0;
   double itemWidth = 50.0;
   @override
@@ -420,33 +418,3 @@ class _InputFields extends State<InputFields> {
         ]);
   }
 }
-
-/// The base class for the different types of items the list can contain.
-// abstract class ListItem {
-//   Widget buildTitle(BuildContext context);
-//   Widget buildSubtitle(BuildContext context);
-//   Widget buildIcon(BuildContext context);
-// }
-
-// add new button?
-// class ExerciseItem implements ListItem {
-//   final String exerciseName;
-//   final String meta;
-//   final IconData workIcon;
-
-//   ExerciseItem(this.exerciseName, this.meta, this.workIcon);
-//   @override
-//   Widget buildTitle(BuildContext context) => Text(exerciseName);
-//   @override
-//   Widget buildSubtitle(BuildContext context) => Text(meta);
-//   @override
-//   Widget buildIcon(BuildContext context) => CircleAvatar(
-//         radius: 17.5,
-//         backgroundColor: Colors.cyan,
-//         child: Icon(
-//           workIcon,
-//           color: Colors.white,
-//         ),
-//       );
-      
-// }
