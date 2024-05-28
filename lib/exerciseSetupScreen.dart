@@ -78,12 +78,7 @@ class _ExerciseSetupScreenState extends State<ExerciseSetupScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
-          actions: [
-            IconButton(
-                onPressed: () => print(
-                    "Workout deleted"), //TODO: delete selected workout if it exists
-                icon: const Icon(Icons.delete))
-          ],
+          
           leading: InkWell(
             onTap: () {
               Navigator.pop(context);
@@ -220,18 +215,27 @@ class _ExerciseSetupScreenState extends State<ExerciseSetupScreen> {
                             if (!globals.exerciseList
                                 .contains(exerciseTitleController.text)) {
                               get_exercise_list(); //important redundancy if you dont leave the screen after saving
-                              return Text('Save this Exercise?');
+                              return Text('Save Exercise:\n', style: Theme.of(context).textTheme.titleLarge,);
                             }
                             return Text(
-                              'Attention! \n Sure to overwrite this Exercise?',
+                              'Attention! \nOverwriting Exercise:\n',
                               textAlign: TextAlign.center,
+                              style: Theme.of(context).textTheme.titleLarge
                             );
                           }(),
-                          Text('${exerciseTitleController.text}'),
-                          Text('on ${chosenDevice.name}'),
-                          Text(
-                              'with ${minRep.toInt()} to ${minRep.toInt() + repRange.toInt()} reps and'),
-                          Text('$weightInc kg weight increases?'),
+                          Card(elevation: 5.0,child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text('${exerciseTitleController.text}\n',style: Theme.of(context).textTheme.titleMedium),
+                                Text('${chosenDevice.name}',),
+                            Text('${minRep.toInt()} to ${minRep.toInt() + repRange.toInt()} reps'),
+                            Text('$weightInc kg increments'),
+                              ],
+                            ),
+                          )),
+                          
                           const SizedBox(height: 15),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
@@ -248,13 +252,13 @@ class _ExerciseSetupScreenState extends State<ExerciseSetupScreen> {
                                   setState(() {});
                                   Navigator.pop(context);
                                 },
-                                child: const Text('Yes'),
+                                child: const Text('Confirm'),
                               ),
                               TextButton(
                                 onPressed: () {
                                   Navigator.pop(context);
                                 },
-                                child: const Text('No'),
+                                child: const Text('Cancel'),
                               ),
                             ],
                           ),
