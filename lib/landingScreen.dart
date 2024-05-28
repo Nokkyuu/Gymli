@@ -121,11 +121,13 @@ class _LandingScreenState extends State<LandingScreen> {
             child: ValueListenableBuilder(
                 valueListenable: Hive.box<Exercise>('Exercises').listenable(),
                 builder: (context, Box<Exercise> box, _) {
-                  box.values.toList();
+                  var items = box.values.toList();
+                  //box.values.toList();
                   if (box.values.isNotEmpty) {
                     return ListView.builder(
                         itemCount: box.values.length,
                         itemBuilder: (context, index) {
+                          final item = items[index];
                           final currentData = box.getAt(index);
                           final exerciseType = currentData!.type;
                           final repBase = currentData.defaultRepBase;
@@ -162,7 +164,7 @@ class _LandingScreenState extends State<LandingScreen> {
                                                   TextButton(
                                                     onPressed: () {
                                                       Navigator.pop(context);
-                                                      //box.delete(item.key);
+                                                      box.delete(item.key);
                                                       Box setbox = Hive.box<TrainingSet>('TrainingSets');
                                                       var items = setbox.values.toList();
                                                       items = setbox.values.where((item) => item.exercise == currentData.name).toList();   
