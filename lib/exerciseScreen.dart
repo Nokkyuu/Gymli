@@ -81,7 +81,7 @@ Tuple2<double, int> getLastTrainingInfo(String exercise) {
   return Tuple2<double, int>(best_weight, best_reps);
 }
 
-List<FlSpot> getTrainingScores(String exercise) {
+List<FlSpot> getTrainingScores(String exercise, int set) {
   List<FlSpot> scores = [];
   var trainings = Hive.box<TrainingSet>('TrainingSets').values.toList();
   trainings = trainings.where((item) => item.exercise == exercise).toList();
@@ -97,35 +97,32 @@ List<FlSpot> getTrainingScores(String exercise) {
               item.date.month == d.month &&
               item.date.year == d.year)
           .toList();
-      var currentScore = 0.0;
-      for (var s in subTrainings) {
-        currentScore = max(
-            currentScore,
-            s.weight +
-                ((s.repetitions - s.baseReps) / (s.maxReps - s.baseReps)) *
-                    s.increment);
+      if (subTrainings.length > set+1) {
+        var s = subTrainings[set];
+        var score = s.weight + ((s.repetitions - s.baseReps) / (s.maxReps - s.baseReps)) * s.increment;
+        scores.add(FlSpot((dayDiff).toDouble(), score));
       }
-      scores.add(FlSpot((dayDiff).toDouble(), currentScore));
     }
   }
-
   return scores;
 }
 
-Future<int> addSet(String exercise, double weight, int repetitions, int setType,
+Future<int> addSet(String exerciseName, double weight, int repetitions, int setType,
     String when) async {
   var box = Hive.box<TrainingSet>('TrainingSets');
   var theDate = DateTime.parse(when);
   // TrainingSet ({required this.id, required this.exercise, required this.date, required this.weight, required this.repetitions, required this.setType, required this.baseReps, required this.maxReps, required this.increment, required this.machineName});
+  var exercise = globals.get_exercise(exerciseName);
+
   box.add(TrainingSet(
-      exercise: exercise,
+      exercise: exerciseName,
       date: theDate,
       setType: setType,
       weight: weight,
       repetitions: repetitions,
-      baseReps: 8,
-      maxReps: 12,
-      increment: 5.0,
+      baseReps: exercise.defaultRepBase,
+      maxReps: exercise.defaultRepMax,
+      increment: exercise.defaultIncrement,
       machineName: ""));
   return 0;
 }
@@ -149,7 +146,8 @@ class _ExerciseScreen extends State<ExerciseScreen> {
       weightDg: weightDg, weightKg: weightKg, repetitions: repetitions);
   Set<ExerciseType> _selected = {ExerciseType.work};
   var _newData = 0.0;
-  List<FlSpot> graphData = [const FlSpot(0, 0)];
+  List<List<FlSpot>> trainingGraphs = [[], [], [], []];
+  List<List<FlSpot>> additionalGraphs = [[], [], [], []];
   void updateSelected(Set<ExerciseType> newSelection) async {
     setState(() {
       _selected = newSelection;
@@ -159,11 +157,11 @@ class _ExerciseScreen extends State<ExerciseScreen> {
 
   void updateGraph() async {
     setState(() {
-      if (graphData.isNotEmpty && graphData.last.x == 0) {
-        graphData.removeLast();
+      if (trainingGraphs[0].isNotEmpty && trainingGraphs[0].last.x == 0) {
+        trainingGraphs[0].removeLast();
       }
       if (_newData > 0.0) {
-        graphData.add(FlSpot(0, _newData));
+        trainingGraphs[0].add(FlSpot(0, _newData));
       }
     });
   }
@@ -179,7 +177,13 @@ class _ExerciseScreen extends State<ExerciseScreen> {
     
     TextEditingController dateInputController =
         TextEditingController(text: DateTime.now().toString());
-    graphData = getTrainingScores(widget.exerciseName);
+    for (var i = 0; i < 4; ++i) {
+      trainingGraphs[i] = getTrainingScores(widget.exerciseName, i);
+    }
+
+    for (int i = 0; i < globals.exercise_twins[widget.exerciseName]!.length; i++) {
+      additionalGraphs[i] = getTrainingScores(globals.exercise_twins[widget.exerciseName]![i], 0);
+    }
 
     var minScore = 1e6;
     var maxScore = 0.0;
@@ -190,9 +194,11 @@ class _ExerciseScreen extends State<ExerciseScreen> {
     weightDg = (latestTrainingInfo.item1 * 100.0).toInt() % 100;
     repetitions = latestTrainingInfo.item2;
 
-    for (var d in graphData) {
-      minScore = min(minScore, d.y);
-      maxScore = max(maxScore, d.y);
+    for (var i = 0; i < 4; ++i) {
+      for (var d in trainingGraphs[i]) {
+        minScore = min(minScore, d.y);
+        maxScore = max(maxScore, d.y);
+      }
     }
 
     return Scaffold(
@@ -249,11 +255,18 @@ class _ExerciseScreen extends State<ExerciseScreen> {
                         ),
                         clipData: const FlClipData.all(),
                         lineBarsData: [
-                          LineChartBarData(spots: graphData),
+                          LineChartBarData(spots: trainingGraphs[3], color: const Color.fromARGB(147, 219, 235, 248)),
+                          LineChartBarData(spots: trainingGraphs[2], color: const Color.fromARGB(148, 189, 218, 242)),
+                          LineChartBarData(spots: trainingGraphs[1], color: const Color.fromARGB(198, 123, 192, 249)),
+                          LineChartBarData(spots: trainingGraphs[0], color: const Color.fromARGB(255, 33, 150, 243)),
+                          LineChartBarData(spots: additionalGraphs[0], color: Colors.grey, isCurved: true),
+                          LineChartBarData(spots: additionalGraphs[1], color: Colors.green, isCurved: true),
+                          LineChartBarData(spots: additionalGraphs[2], color: Colors.yellow, isCurved: true),
+                          LineChartBarData(spots: additionalGraphs[3], color: Colors.red, isCurved: true),
                         ],
                         minY: minScore - 5.0,
                         maxY: maxScore + 5.0,
-                        minX: -30.0,
+                        minX: -45.0,
                         maxX: 0.0,
                       ))),
                 )),
