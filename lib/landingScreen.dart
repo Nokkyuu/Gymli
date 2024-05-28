@@ -37,7 +37,7 @@ enum MuscleList {
 
 class LandingScreen extends StatefulWidget {
   const LandingScreen({super.key});
-
+  
   @override
   State<LandingScreen> createState() => _LandingScreenState();
 }
@@ -49,8 +49,9 @@ class _LandingScreenState extends State<LandingScreen> {
   MuscleList? selectedMuscle;
 
   @override
+ 
   Widget build(BuildContext context) {
-    // List exercises = then(taskBox.values.toList());
+    
     return Column(
         mainAxisAlignment: MainAxisAlignment.center,
         mainAxisSize: MainAxisSize.max,
@@ -123,7 +124,7 @@ class _LandingScreenState extends State<LandingScreen> {
                 builder: (context, Box<Exercise> box, _) {
                   var items = box.values.toList();
                   //box.values.toList();
-                  if (box.values.isNotEmpty) {
+                  if (box.isNotEmpty) {
                     return ListView.builder(
                         itemCount: box.values.length,
                         itemBuilder: (context, index) {

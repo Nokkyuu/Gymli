@@ -5,13 +5,12 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:yafa_app/DataModels.dart';
 import 'package:csv/csv.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:file_picker/file_picker.dart';
 import 'dart:io';
 import 'package:flutter_file_dialog/flutter_file_dialog.dart';
 import 'package:intl/intl.dart';
 import 'package:confirm_dialog/confirm_dialog.dart';
-import 'dart:io';
-import 'package:flutter/services.dart' show rootBundle;
+//import 'package:file_picker/file_picker.dart';
+//import 'package:flutter/services.dart' show rootBundle;
 
 
 class SettingsScreen extends StatefulWidget {
@@ -20,6 +19,7 @@ class SettingsScreen extends StatefulWidget {
   @override
   State<SettingsScreen> createState() => _SettingsScreen();
 }
+
 void wipeExercises(context) async {
   if (await confirm(context)) {
     var exerciseBox = Hive.box<Exercise>('Exercises');
@@ -32,6 +32,7 @@ void wipeTrainingSets(context) async {
   trainingBox.clear();
   }
 }
+
 
 
 void backupExercises(context) async {
@@ -70,22 +71,26 @@ void restoreSetData(context) async {
   if (filePath == null) {
     return;
   }
-  final myData = await rootBundle.loadString(filePath!);
+  File file = File(filePath);
+  final myData =  await file.readAsString();
+  //final myData = await rootBundle.loadString(filePath!);
   List<List<String>> csvTable = const CsvToListConverter(shouldParseNumbers: false).convert(myData);
   final setBox = await Hive.box<TrainingSet>('TrainingSets');
   setBox.clear();
   for (List<String> row in csvTable) {
-    print(row);
+    //print(row);
     setBox.add(TrainingSet(exercise: row[0], date: DateTime.parse(row[1]), weight: double.parse(row[2]), repetitions: int.parse(row[3]), setType: int.parse(row[4]), baseReps: int.parse(row[5]), maxReps: int.parse(row[6]), increment: double.parse(row[7]), machineName: row[7]));
   }
 }
+
 void restoreExercises(context) async {
   final filePath = await FlutterFileDialog.pickFile(params: const OpenFileDialogParams(dialogType: OpenFileDialogType.document, sourceType: SourceType.savedPhotosAlbum));
-  if (filePath == null) {
-    return;
-  }
-  final myData = await rootBundle.loadString(filePath!);
-  final exerciseBox = await Hive.box<Exercise>('Exercises');
+  if (filePath != null) {
+  File file = File(filePath); 
+  final myData =  await file.readAsString();
+  //final myData = await rootBundle.loadString(file.path, cache: true);
+  //print(myData);
+  final exerciseBox = Hive.box<Exercise>('Exercises');
   exerciseBox.clear();
   List<List<String>> csvTable = const CsvToListConverter(shouldParseNumbers: false).convert(myData);
   for (List<String> row in csvTable) {
@@ -98,7 +103,10 @@ void restoreExercises(context) async {
       if (e != "") { muscleIntensities.add(double.parse(e)); }
     }
     exerciseBox.add(Exercise(name: row[0], type: int.parse(row[1]), muscleGroups: muscleGroups, muscleIntensities: muscleIntensities, defaultRepBase: int.parse(row[4]), defaultRepMax: int.parse(row[5]), defaultIncrement: double.parse(row[6])));
-
+    
+}
+} else {
+  return;
   }
 }
 
@@ -181,6 +189,8 @@ class _SettingsScreen extends State<SettingsScreen> {
                   icon: const Icon(Icons.restore_page),
                   onPressed: () {
                     restoreSetData(context);
+                    setState(() {});
+                    Navigator.pop(context);
                   },
                 ),
                   TextButton.icon(
@@ -189,6 +199,9 @@ class _SettingsScreen extends State<SettingsScreen> {
                   icon: const Icon(Icons.restore_page),
                   onPressed: () {
                     restoreExercises(context);
+                    setState(() {});
+                    Navigator.pop(context);
+                    
                   },
                 ),
             ]),
