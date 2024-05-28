@@ -229,7 +229,7 @@ class _ExerciseSetupScreenState extends State<ExerciseSetupScreen> {
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Text('${exerciseTitleController.text}\n',style: Theme.of(context).textTheme.titleMedium),
-                                Text('${chosenDevice.name}',),
+                                Text(chosenDevice.name),
                             Text('${minRep.toInt()} to ${minRep.toInt() + repRange.toInt()} reps'),
                             Text('$weightInc kg increments'),
                               ],
@@ -298,7 +298,6 @@ class _BottomSheetState extends State<BottomSheet> {
   opacity_change(double op) {
     if (op >= 1.0) {
       op = 0.0;
-      print("bla");
     } else {
       op += 0.5;
     }

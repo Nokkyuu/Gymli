@@ -121,12 +121,11 @@ class _LandingScreenState extends State<LandingScreen> {
             child: ValueListenableBuilder(
                 valueListenable: Hive.box<Exercise>('Exercises').listenable(),
                 builder: (context, Box<Exercise> box, _) {
-                  var items = box.values.toList();
+                  box.values.toList();
                   if (box.values.isNotEmpty) {
                     return ListView.builder(
                         itemCount: box.values.length,
                         itemBuilder: (context, index) {
-                          final item = items[index];
                           final currentData = box.getAt(index);
                           final exerciseType = currentData!.type;
                           final repBase = currentData.defaultRepBase;
@@ -199,7 +198,7 @@ class _LandingScreenState extends State<LandingScreen> {
                               });
                         });
                   } else {
-                    return Text("No exercises yet");
+                    return const Text("No exercises yet");
                   }
                 }),
           )

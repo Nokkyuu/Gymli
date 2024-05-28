@@ -1,4 +1,4 @@
-// ignore_for_file: file_names
+// ignore_for_file: file_names, non_constant_identifier_names
 
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -127,13 +127,8 @@ class ExerciseScreen extends StatefulWidget {
 }
 
 class _ExerciseScreen extends State<ExerciseScreen> {
-  // late String exerciseName;
+  //final String exerciseName;
   final ScrollController _scrollController = ScrollController();
-//   @override
-//   void initState() {
-//   super.initState();
-// }
-
   int weightKg = 40;
   int weightDg = 0;
   int repetitions = 10;
@@ -169,7 +164,7 @@ class _ExerciseScreen extends State<ExerciseScreen> {
   Widget build(BuildContext context) {
     WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
     var title = widget.exerciseName;
-
+    
     TextEditingController dateInputController =
         TextEditingController(text: DateTime.now().toString());
     graphData = getTrainingScores(widget.exerciseName);
@@ -178,7 +173,7 @@ class _ExerciseScreen extends State<ExerciseScreen> {
     var maxScore = 0.0;
     Tuple2<double, int> latestTrainingInfo =
         getLastTrainingInfo(widget.exerciseName);
-    print(latestTrainingInfo);
+    
     weightKg = latestTrainingInfo.item1.toInt();
     weightDg = (latestTrainingInfo.item1 * 100.0).toInt() % 100;
     repetitions = latestTrainingInfo.item2;
@@ -209,7 +204,7 @@ class _ExerciseScreen extends State<ExerciseScreen> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                        builder: (context) => const ExerciseListScreen()),
+                        builder: (context) => ExerciseListScreen(title)),
                   );
                 },
                 icon: const Icon(Icons.list))
@@ -235,7 +230,7 @@ class _ExerciseScreen extends State<ExerciseScreen> {
                           rightTitles: AxisTitles(
                               sideTitles: SideTitles(showTitles: false)),
                         ),
-                        clipData: FlClipData.all(),
+                        clipData: const FlClipData.all(),
                         lineBarsData: [
                           LineChartBarData(spots: graphData),
                         ],
@@ -284,14 +279,14 @@ class _ExerciseScreen extends State<ExerciseScreen> {
                                       icon: const Icon(Icons.delete),
                                       onPressed: () => {
                                             box.delete(item.key)
-                                            // print("Delete funzt nicht.")
+                                    
                                           }),
                                   onTap: () {
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
                                           builder: (context) =>
-                                              const ExerciseListScreen()),
+                                              ExerciseListScreen(title)),
                                     );
                                   });
                             });

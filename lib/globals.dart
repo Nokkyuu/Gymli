@@ -1,3 +1,5 @@
+// ignore_for_file: non_constant_identifier_names
+
 library my_prj.globals;
 
   var muscle_val = {

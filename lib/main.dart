@@ -1,3 +1,5 @@
+// ignore_for_file: non_constant_identifier_names
+
 import 'package:flutter/material.dart';
 import 'package:yafa_app/landingScreen.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -6,8 +8,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:yafa_app/exerciseSetupScreen.dart';
 import 'package:yafa_app/settingsScreen.dart';
 import 'package:yafa_app/workoutSetupScreen.dart';
-import 'package:yafa_app/jim.dart';
-import 'dart:async';
 import 'globals.dart' as globals;
 bool state = false;
 
@@ -35,172 +35,14 @@ void get_exercise_list() async {
   globals.exerciseList = exerciseList;
 }
 
-Future<int> populateExercises() async {
-  final exerciseBox = await Hive.box<Exercise>('Exercises');
-  // exerciseBox.clear();
-  // final trainingsBox = await Hive.openBox<Exercise>('TrainingSets');
-  // trainingsBox.clear();
-  // return 0;
-
-  if (exerciseBox.isEmpty) {
-    exerciseBox.clear();
-    exerciseBox.add(Exercise(
-        name: "Benchpress",
-        type: 0,
-        muscleGroups: ["Pectoralis major", "Front Deltoids", "Triceps"],
-        muscleIntensities: [1.0, 0.5, 0.5],
-        defaultRepBase: 8,
-        defaultRepMax: 12,
-        defaultIncrement: 5.0));
-    exerciseBox.add(Exercise(
-        name: "Benchpress (Machine)",
-        type: 0,
-        muscleGroups: ["Pectoralis major", "Front Deltoids", "Triceps"],
-        muscleIntensities: [1.0, 0.5, 0.5],
-        defaultRepBase: 8,
-        defaultRepMax: 12,
-        defaultIncrement: 5.0));
-    exerciseBox.add(Exercise(
-        name: "Squat (Machine)",
-        type: 1,
-        muscleGroups: ["Quadriceps", "Gluteus maximus"],
-        muscleIntensities: [1.0, 0.5],
-        defaultRepBase: 15,
-        defaultRepMax: 18,
-        defaultIncrement: 5.9));
-    exerciseBox.add(Exercise(
-        name: "Squat",
-        type: 0,
-        muscleGroups: ["Quadriceps", "Abdominals", "Gluteus maximus"],
-        muscleIntensities: [1.0, 0.5, 0.5],
-        defaultRepBase: 15,
-        defaultRepMax: 18,
-        defaultIncrement: 5.9));
-    exerciseBox.add(Exercise(
-        name: "Deadlift",
-        type: 0,
-        muscleGroups: [
-          "Latissimus dorsi",
-          "Trapezius",
-          "Gluteus maximus",
-          "Quadriceps",
-          "Hamstrings"
-        ],
-        muscleIntensities: [0.5, 0.5, 0.5, 0.5, 0.5],
-        defaultRepBase: 15,
-        defaultRepMax: 18,
-        defaultIncrement: 5.0));
-    exerciseBox.add(Exercise(
-        name: "Triceps (Cable)",
-        type: 2,
-        muscleGroups: ["Triceps"],
-        muscleIntensities: [1.0],
-        defaultRepBase: 15,
-        defaultRepMax: 20,
-        defaultIncrement: 5.0));
-    exerciseBox.add(Exercise(
-        name: "Biceps (Cable)",
-        type: 2,
-        muscleGroups: ["Biceps"],
-        muscleIntensities: [1.0],
-        defaultRepBase: 10,
-        defaultRepMax: 15,
-        defaultIncrement: 5.0));
-    exerciseBox.add(Exercise(
-        name: "Biceps Curls",
-        type: 0,
-        muscleGroups: ["Biceps"],
-        muscleIntensities: [1.0],
-        defaultRepBase: 10,
-        defaultRepMax: 15,
-        defaultIncrement: 1.25));
-    exerciseBox.add(Exercise(
-        name: "Side Delt Raises",
-        type: 0,
-        muscleGroups: ["Side Deltoids"],
-        muscleIntensities: [1.0],
-        defaultRepBase: 15,
-        defaultRepMax: 20,
-        defaultIncrement: 5.0));
-    exerciseBox.add(Exercise(
-        name: "Face Pulls",
-        type: 0,
-        muscleGroups: ["Rear Deltoids", "Trapezius", "Side Deltoids"],
-        muscleIntensities: [1.0, 0.5, 0.5],
-        defaultRepBase: 15,
-        defaultRepMax: 20,
-        defaultIncrement: 5.0));
-    exerciseBox.add(Exercise(
-        name: "Face Pulls (Cable)",
-        type: 2,
-        muscleGroups: ["Rear Deltoids", "Trapezius", "Side Deltoids"],
-        muscleIntensities: [1.0, 0.5, 0.5],
-        defaultRepBase: 15,
-        defaultRepMax: 20,
-        defaultIncrement: 5.0));
-    exerciseBox.add(Exercise(
-        name: "Rows (Machine)",
-        type: 1,
-        muscleGroups: ["Rear Deltoids", "Trapezius", "Latissimus dorsi"],
-        muscleIntensities: [0.5, 1.0, 0.5],
-        defaultRepBase: 10,
-        defaultRepMax: 15,
-        defaultIncrement: 5.0));
-      exerciseBox.add(Exercise(
-        name: "Pec Flys (Machine)",
-        type: 1,
-        muscleGroups: ["Front Deltoids", "Pectoralis Major"],
-        muscleIntensities: [0.5, 1.0],
-        defaultRepBase: 10,
-        defaultRepMax: 15,
-        defaultIncrement: 5.0));
-      exerciseBox.add(Exercise(
-        name: "Pec Flys (Cable)",
-        type: 2,
-        muscleGroups: ["Front Deltoids", "Pectoralis Major"],
-        muscleIntensities: [0.5, 1.0],
-        defaultRepBase: 10,
-        defaultRepMax: 15,
-        defaultIncrement: 5.0));
-      exerciseBox.add(Exercise(
-        name: "Lat Pulldowns (Machine)",
-        type: 1,
-        muscleGroups: ["Biceps", "Latissimus dorsi"],
-        muscleIntensities: [0.5, 1.0],
-        defaultRepBase: 10,
-        defaultRepMax: 15,
-        defaultIncrement: 5.0));
-      exerciseBox.add(Exercise(
-        name: "Pullups",
-        type: 0,
-        muscleGroups: ["Biceps", "Latissimus dorsi"],
-        muscleIntensities: [0.5, 1.0],
-        defaultRepBase: 8,
-        defaultRepMax: 12,
-        defaultIncrement: 5.0));
-      exerciseBox.add(Exercise(
-        name: "Hamstrings (Machine)",
-        type: 1,
-        muscleGroups: ["Hamstrings"],
-        muscleIntensities: [1.0],
-        defaultRepBase: 8,
-        defaultRepMax: 12,
-        defaultIncrement: 5.0));
-  }
-  add_sets_jim();
-  return 1;
-}
-
 void main() async {
   await Hive.initFlutter();
   Hive.registerAdapter(ExerciseAdapter());
   Hive.registerAdapter(TrainingSetAdapter());
   // populateExercises();
-  final setBox = await Hive.openBox<TrainingSet>('TrainingSets');
-  final exerciseBox = await Hive.openBox<Exercise>('Exercises');
 
 
-  runApp(MainApp()
+  runApp(const MainApp()
   );
 }
 

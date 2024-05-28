@@ -11,13 +11,20 @@ final workIcons = [
   FontAwesomeIcons.arrowDown
 ];
 
-class ExerciseListScreen extends StatelessWidget {
-  static String exercise = "Benchpress";
+class ExerciseListScreen extends StatefulWidget {
+  final String exercise;
+  const ExerciseListScreen(this.exercise, {super.key});
 
-  const ExerciseListScreen({super.key});
+  @override
+  State<ExerciseListScreen> createState() => _ExerciseListScreenState();
+}
+
+class _ExerciseListScreenState extends State<ExerciseListScreen> {
+  
   @override
   Widget build(BuildContext context) {
-    const title = 'ExerciseList';
+    var exercise = widget.exercise;
+    const title = 'Set Archive';
     return Scaffold(
       appBar: AppBar(
         leading: InkWell(
@@ -61,12 +68,10 @@ class ExerciseListScreen extends StatelessWidget {
                                       icon: const Icon(Icons.delete),
                                       onPressed: () => {
                                             box.delete(item.key)
-                                            
-                                            // print("Delete funzt nicht.")
                                           }));
                             });
                       } else {
-                        return Text("None");
+                        return const Text("None");
                       }
                     }))
           ]),

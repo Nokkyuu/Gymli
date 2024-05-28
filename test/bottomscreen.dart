@@ -72,7 +72,6 @@ class _BottomSheetExampleState extends State<BottomSheetExample> {
           ElevatedButton(
             child: const Text('showBottomSheet'),
             onPressed: () {
-              print("bla");
               showBottomSheet(
                 context: context,
                 sheetAnimationStyle: _animationStyle,
