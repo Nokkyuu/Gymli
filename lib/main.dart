@@ -40,7 +40,8 @@ void main() async {
   Hive.registerAdapter(ExerciseAdapter());
   Hive.registerAdapter(TrainingSetAdapter());
   // populateExercises();
-
+  await Hive.openBox<TrainingSet>('TrainingSets');
+  await Hive.openBox<Exercise>('Exercises');
 
   runApp(const MainApp()
   );
