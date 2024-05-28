@@ -163,7 +163,18 @@ class _LandingScreenState extends State<LandingScreen> {
                                                   TextButton(
                                                     onPressed: () {
                                                       Navigator.pop(context);
-                                                      box.delete(item.key);
+                                                      //box.delete(item.key);
+                                                      Box setbox = Hive.box<TrainingSet>('TrainingSets');
+                                                      var items = setbox.values.toList();
+                                                      
+                                                      items = setbox.values.where((item) => item.exercise == currentData.name).toList();
+                                                      
+                                                      for (var item in items){
+                                                        setbox.delete(item.key);
+                                                      }
+                                                      
+                                                      
+
                                                     },
                                                     child:
                                                         const Text('Confirm'),

@@ -61,6 +61,7 @@ class ExerciseListScreen extends StatelessWidget {
                                       icon: const Icon(Icons.delete),
                                       onPressed: () => {
                                             box.delete(item.key)
+                                            
                                             // print("Delete funzt nicht.")
                                           }));
                             });
