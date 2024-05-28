@@ -166,15 +166,10 @@ class _LandingScreenState extends State<LandingScreen> {
                                                       //box.delete(item.key);
                                                       Box setbox = Hive.box<TrainingSet>('TrainingSets');
                                                       var items = setbox.values.toList();
-                                                      
-                                                      items = setbox.values.where((item) => item.exercise == currentData.name).toList();
-                                                      
+                                                      items = setbox.values.where((item) => item.exercise == currentData.name).toList();   
                                                       for (var item in items){
                                                         setbox.delete(item.key);
                                                       }
-                                                      
-                                                      
-
                                                     },
                                                     child:
                                                         const Text('Confirm'),
