@@ -115,7 +115,7 @@ class _MainAppState extends State<MainApp> {
             title: const Text('Exercise Setup'),
             onTap: () {
               Navigator.pop(context);
-              Navigator.push(context, MaterialPageRoute(builder: (context) => const ExerciseSetupScreen()));
+              Navigator.push(context, MaterialPageRoute(builder: (context) => ExerciseSetupScreen("")));
               get_exercise_list();
               for (var i in globals.muscle_val.keys)
                 {globals.muscle_val[i] = 0;}

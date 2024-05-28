@@ -7,9 +7,11 @@ import 'package:hive/hive.dart';
 import 'globals.dart' as globals;
 
 enum ExerciseDevice { free, machine, cable, body }
+final exerciseMap = [ExerciseDevice.free, ExerciseDevice.machine, ExerciseDevice.cable, ExerciseDevice.body];
 
 class ExerciseSetupScreen extends StatefulWidget {
-  const ExerciseSetupScreen({super.key});
+  String exerciseName;
+  ExerciseSetupScreen(this.exerciseName, {super.key});
 
   @override
   State<ExerciseSetupScreen> createState() => _ExerciseSetupScreenState();
@@ -26,11 +28,9 @@ void get_exercise_list() async {
 }
 
 void add_exercise(String exerciseName, ExerciseDevice chosenDevice, int minRep,
-    int repRange, double weightInc, List<int> muscleGroups) async {
+    int repRange, double weightInc, List<String> muscleGroups) async {
   final box = await Hive.openBox<Exercise>('Exercises');
   int exerciseType = chosenDevice.index;
-  List<String> muscleGroupStrings =
-      []; // muscleGroups -> vielleicht besser Liste?
   List<double> muscleIntensities = [];
   var boxmap = box.values.toList();
   List<String> exerciseList = [];
@@ -46,7 +46,7 @@ void add_exercise(String exerciseName, ExerciseDevice chosenDevice, int minRep,
     box.add(Exercise(
         name: exerciseName,
         type: exerciseType,
-        muscleGroups: muscleGroupStrings,
+        muscleGroups: muscleGroups,
         defaultRepBase: minRep,
         defaultRepMax: repRange,
         defaultIncrement: weightInc,
@@ -57,7 +57,7 @@ void add_exercise(String exerciseName, ExerciseDevice chosenDevice, int minRep,
         Exercise(
             name: exerciseName,
             type: exerciseType,
-            muscleGroups: muscleGroupStrings,
+            muscleGroups: muscleGroups,
             defaultRepBase: minRep,
             defaultRepMax: repRange,
             defaultIncrement: weightInc,
@@ -71,14 +71,33 @@ class _ExerciseSetupScreenState extends State<ExerciseSetupScreen> {
   double minRep = 10;
   double repRange = 15;
   double weightInc = 2.5;
-  List<int> muscleGroups = [1];
+  List<String> muscleGroups = [];
+  List<double> muscleIntensities = [];
   final exerciseTitleController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    var box = Hive.box<Exercise>('Exercises');
+    var exerciseFilter = box.values.toList().where((item) => item.name == widget.exerciseName);
+    if (exerciseFilter.isEmpty) { return; }
+    var exercise = exerciseFilter.first;
+    exerciseTitleController.text = exercise.name;
+    this.setState(() {
+      chosenDevice = exerciseMap[exercise.type];
+      minRep = exercise.defaultRepBase.toDouble();
+      repRange = exercise.defaultRepMax.toDouble();
+      weightInc = exercise.defaultIncrement;
+      muscleGroups = exercise.muscleGroups;
+      muscleIntensities = exercise.muscleIntensities;
+      
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
-          
           leading: InkWell(
             onTap: () {
               Navigator.pop(context);

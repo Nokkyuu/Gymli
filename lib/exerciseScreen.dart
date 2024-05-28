@@ -10,6 +10,7 @@ import 'dart:math';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:numberpicker/numberpicker.dart';
 import 'package:tuple/tuple.dart';
+import 'package:yafa_app/exerciseSetupScreen.dart';
 
 enum ExerciseType { warmup, work, dropset }
 
@@ -196,8 +197,12 @@ class _ExerciseScreen extends State<ExerciseScreen> {
           title: Text(title),
           actions: [
             IconButton(
-                onPressed: () => print(
-                    "edit exercise"), //TODO: go to exercise setup to edit the current exercise
+                onPressed: () => {
+                   Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => ExerciseSetupScreen(title)),),
+                  },
                 icon: const Icon(Icons.edit)),
             IconButton(
                 onPressed: () {
