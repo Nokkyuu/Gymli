@@ -20,7 +20,7 @@ class ExerciseAdapter extends TypeAdapter<Exercise> {
       name: fields[0] as String,
       type: fields[1] as int,
       muscleGroups: (fields[2] as List).cast<String>(),
-      muscleIntensities: (fields[2] as List).cast<double>(),
+      muscleIntensities: (fields[6] as List).cast<double>(),
       defaultRepBase: fields[3] as int,
       defaultRepMax: fields[4] as int,
       defaultIncrement: fields[5] as double,
@@ -30,7 +30,7 @@ class ExerciseAdapter extends TypeAdapter<Exercise> {
   @override
   void write(BinaryWriter writer, Exercise obj) {
     writer
-      ..writeByte(6)
+      ..writeByte(7)
       ..writeByte(0)
       ..write(obj.name)
       ..writeByte(1)
@@ -42,7 +42,9 @@ class ExerciseAdapter extends TypeAdapter<Exercise> {
       ..writeByte(4)
       ..write(obj.defaultRepMax)
       ..writeByte(5)
-      ..write(obj.defaultIncrement);
+      ..write(obj.defaultIncrement)
+      ..writeByte(6)
+      ..write(obj.muscleIntensities);
   }
 
   @override
