@@ -1,6 +1,7 @@
 // ignore_for_file: non_constant_identifier_names
-
 library my_prj.globals;
+import 'package:yafa_app/DataModels.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 
   var muscle_val = {
     "Pectoralis major": 0.0,
@@ -18,6 +19,12 @@ library my_prj.globals;
   };
   List<String> exerciseList = [];
 
+
+  Exercise get_exercise(String exerciseName) {
+    var box = Hive.box<Exercise>('Exercises');
+    var exerciseFilter = box.values.toList().where((item) => item.name == exerciseName);
+    return exerciseFilter.first;
+  }
 
 
   

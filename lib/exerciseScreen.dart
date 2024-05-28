@@ -11,6 +11,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:numberpicker/numberpicker.dart';
 import 'package:tuple/tuple.dart';
 import 'package:yafa_app/exerciseSetupScreen.dart';
+import 'globals.dart' as globals;
 
 enum ExerciseType { warmup, work, dropset }
 
@@ -97,24 +98,25 @@ List<FlSpot> getTrainingScores(String exercise) {
       scores.add(FlSpot((dayDiff).toDouble(), currentScore));
     }
   }
-
   return scores;
 }
 
-Future<int> addSet(String exercise, double weight, int repetitions, int setType,
+Future<int> addSet(String exerciseName, double weight, int repetitions, int setType,
     String when) async {
   var box = Hive.box<TrainingSet>('TrainingSets');
   var theDate = DateTime.parse(when);
   // TrainingSet ({required this.id, required this.exercise, required this.date, required this.weight, required this.repetitions, required this.setType, required this.baseReps, required this.maxReps, required this.increment, required this.machineName});
+  var exercise = globals.get_exercise(exerciseName);
+
   box.add(TrainingSet(
-      exercise: exercise,
+      exercise: exerciseName,
       date: theDate,
       setType: setType,
       weight: weight,
       repetitions: repetitions,
-      baseReps: 8,
-      maxReps: 12,
-      increment: 5.0,
+      baseReps: exercise.defaultRepBase,
+      maxReps: exercise.defaultRepMax,
+      increment: exercise.defaultIncrement,
       machineName: ""));
   return 0;
 }
