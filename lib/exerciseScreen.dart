@@ -21,6 +21,16 @@ final workIcons = [
   FontAwesomeIcons.arrowDown
 ];
 
+void get_exercise_list() async {
+  final box = await Hive.openBox<Exercise>('Exercises');
+  var boxmap = box.values.toList();
+  List<String> exerciseList = [];
+  for (var e in boxmap) {
+    exerciseList.add(e.name);
+  }
+  globals.exerciseList = exerciseList;
+}
+
 List<DateTime> getTrainingDates(String exercise) {
   var box = Hive.box<TrainingSet>('TrainingSets');
   var items = box.values.where((item) => item.exercise == exercise).toList();
@@ -171,9 +181,9 @@ class _ExerciseScreen extends State<ExerciseScreen> {
       trainingGraphs[i] = getTrainingScores(widget.exerciseName, i);
     }
 
-    for (int i = 0; i < globals.exercise_twins[widget.exerciseName]!.length; i++) {
-      additionalGraphs[i] = getTrainingScores(globals.exercise_twins[widget.exerciseName]![i], 0);
-    }
+    // for (int i = 0; i < globals.exercise_twins[widget.exerciseName]!.length; i++) {
+    //   additionalGraphs[i] = getTrainingScores(globals.exercise_twins[widget.exerciseName]![i], 0);
+    // }
 
     var minScore = 1e6;
     var maxScore = 0.0;
@@ -204,15 +214,19 @@ class _ExerciseScreen extends State<ExerciseScreen> {
           title: Text(title),
           actions: [
             IconButton(
-                onPressed: () => {
+                onPressed: () {
+                  get_exercise_list();
                    Navigator.push(
                     context,
                     MaterialPageRoute(
-                        builder: (context) => ExerciseSetupScreen(title)),),
-                  },
+                        builder: (context) => ExerciseSetupScreen(title)),
+                    );
+                  }
+                  ,
                 icon: const Icon(Icons.edit)),
             IconButton(
                 onPressed: () {
+                  
                   Navigator.push(
                     context,
                     MaterialPageRoute(

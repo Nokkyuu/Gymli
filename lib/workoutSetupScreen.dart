@@ -1,7 +1,11 @@
 // ignore_for_file: file_names, constant_identifier_names
+import 'package:csv/csv.dart';
+import 'package:flutter/foundation.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:numberpicker/numberpicker.dart';
+import 'package:yafa_app/DataModels.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 //import 'package:fl_chart/fl_chart.dart';
 
 enum ExerciseList {
@@ -26,12 +30,30 @@ class WorkoutSetupScreen extends StatefulWidget {
   State<WorkoutSetupScreen> createState() => _WorkoutSetupScreenState();
 }
 
+
+
 class _WorkoutSetupScreenState extends State<WorkoutSetupScreen> {
   final TextEditingController exerciseController = TextEditingController();
-  ExerciseList? selectedExercise;
+  Exercise? selectedExercise;
+  ValueNotifier<bool> addRemEx = ValueNotifier<bool>(true);
   int warmUpS = 0;
   int workS = 0;
   int dropS = 0;
+  var box = Hive.box<Exercise>('Exercises');
+  TextEditingController workoutNameController = TextEditingController();
+  List<Exercise> allExercises = Hive.box<Exercise>('Exercises').values.toList();
+  List<Exercise> addedExercises = [];
+final itemList = [
+                            FontAwesomeIcons.dumbbell,
+                            Icons.forklift,
+                            Icons.cable,
+                            Icons.sports_martial_arts];
+
+
+   remExercise(Exercise exerciseRem){
+      addedExercises.remove(exerciseRem);
+      addRemEx.value = !addRemEx.value;
+    }
 
   @override
   Widget build(BuildContext context) {
@@ -61,7 +83,7 @@ class _WorkoutSetupScreenState extends State<WorkoutSetupScreen> {
                 width: 300,
                 child: TextField(
                   textAlign: TextAlign.center,
-                  controller: TextEditingController(text: "Full Body Compound"),
+                  controller: workoutNameController,
                   obscureText: false,
                   decoration: const InputDecoration(
                     border: UnderlineInputBorder(),
@@ -111,55 +133,86 @@ class _WorkoutSetupScreenState extends State<WorkoutSetupScreen> {
                   ),
                 ],
               ),
+              
+              const Divider(),
               const SizedBox(height: 20),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  
-                  DropdownMenu<ExerciseList>(
-                    initialSelection: ExerciseList.Benchpress,
-                    controller: exerciseController,
-                    requestFocusOnTap: true,
-                    label: const Text('Exercises'),
-                    onSelected: (ExerciseList? name) {
-                      setState(() {
-                        selectedExercise = name;
-                      });
-                    },
-                    dropdownMenuEntries: ExerciseList.values
-                        .map<DropdownMenuEntry<ExerciseList>>(
-                            (ExerciseList name) {
-                      return DropdownMenuEntry<ExerciseList>(
-                        value: name,
-                        label: name.exerciseName,
-                        //enabled: color.label != 'Grey',
-                        //style: MenuItemButton.styleFrom(
-                        //  foregroundColor: color.color,
-                        //),
-                      );
-                    }).toList(),
-                  ),
-                  
-                  TextButton.icon(
-                    icon: const Icon(Icons.add),
-                    label: const Text("Add Exercise") ,
-                    onPressed:  () => print("Added")
-                  ),
-
-                ],),
+              DropdownMenu<Exercise>(
+                width: MediaQuery.of(context).size.width * 0.7,
+                //initialSelection: ExerciseList.Benchpress,
+                controller: exerciseController,
+                requestFocusOnTap: true,
+                label: const Text('Exercises'),
+                onSelected: (selectExercises) {
+                  setState(() {
+                    selectedExercise = selectExercises;
+                  });
+                },
+                dropdownMenuEntries: allExercises
+                    .map<DropdownMenuEntry<Exercise>>(
+                        (Exercise name) {
+                  return DropdownMenuEntry<Exercise>(
+                    value: name,
+                    label: name.name,
+                    
+                    leadingIcon: FaIcon(itemList[name.type])
+                    //enabled: color.label != 'Grey',
+                    //style: MenuItemButton.styleFrom(
+                    //  foregroundColor: color.color,
+                    //),
+                  );
+                }).toList(),
+              ),
+              
+              TextButton.icon(
+                icon: const Icon(Icons.add),
+                label: const Text("Add Exercise") ,
+                onPressed:  () {
+                  setState(() {
+                    if (selectedExercise != null){
+                    addedExercises.add(selectedExercise!);
+                    addRemEx.value = !addRemEx.value;
+                    }else{return;}
+                  });
+                },
+                
+                
+                
+              ),
               const Divider(),
               Expanded(
-              child: ListView.builder(
-              itemCount: ExerciseList.values.length,
-              // Provide a builder function. This is where the magic happens.
-              itemBuilder: (context, index) {
-                final item = ExerciseList.values[index];
-                return ExerciseTile(exerciseName: item.exerciseName, warmUpS: item.warmUpS, workS: item.workS, dropS: item.dropS);
-              }),
+              child: ValueListenableBuilder(
+                valueListenable: addRemEx,
+                builder: (context, bool addRemEx, _) {
+                  var items = addedExercises;
+                  if (items.isNotEmpty) {
+                    return ListView.builder(
+                        itemCount: items.length,
+                        itemBuilder: (context, index) {
+                          final item = items[index];
+                          //final currentData = items[index];
+                          //final meta = metainfo[index];
+                          final exerciseType = item.type;
+                          //final repBase = currentData.defaultRepBase;
+                          //final repMax = currentData.defaultRepMax;
+                          //final increment = currentData.defaultIncrement;
+                          // final itemList = [
+                          //   FontAwesomeIcons.dumbbell,
+                          //   Icons.forklift,
+                          //   Icons.cable,
+                          //   Icons.sports_martial_arts
+                          // ];
+                          final currentIcon = itemList[exerciseType];
+                          return ExerciseTile(exerciseName: item.name, warmUpS: 1, workS: 1, dropS: 1, icon: currentIcon, remo: remExercise, item: item);
+                        });
+                  } else {
+                    //Hive.box<Exercise>('Exercises').watch();
+                    return const Text("No exercises yet");
+                  }
+                }),
+ 
               
             ),
-              //for (var Exercise in ExerciseList.values) 
-              //  ExerciseTile(exerciseName: Exercise.exerciseName, warmUpS: Exercise.warmUpS, workS: Exercise.workS, dropS: Exercise.dropS),
+
             ],
           ))
     ;
@@ -174,23 +227,29 @@ class ExerciseTile extends StatelessWidget {
     required this.warmUpS,
     required this.workS,
     required this.dropS,
+    required this.icon,
+    required this.remo,
+    required this.item,
   });
 
   final String exerciseName;
   final int warmUpS;
   final int workS;
   final int dropS;
+  final IconData icon;
+  final Function remo;
+  final Exercise item;
 
   @override
   Widget build(BuildContext context) {
     return ListTile(
       enabled: true,
-      leading: const FaIcon(FontAwesomeIcons.dumbbell),
+      leading: FaIcon(icon),
       title: Text(exerciseName),
       subtitle: Text('Warm Ups: $warmUpS, Work Sets: $workS, Drop Sets: $dropS'),
       trailing: IconButton(
-                    icon: const Icon(Icons.delete),
-                    onPressed:  () => print("deleted")
+                    icon: Icon(Icons.delete),
+                    onPressed:  () => remo(item)
                   ),
     );
   }
