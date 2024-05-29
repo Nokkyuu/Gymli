@@ -146,7 +146,11 @@ class _LandingScreenState extends State<LandingScreen> {
             children: [
               const Text("Filter by or "),
               TextButton.icon(
-                onPressed: () => showAllExercises(),
+                onPressed: () => setState(() {
+                    showAllExercises();
+                    WorkoutController.value = TextEditingValue.empty;
+                    MuscleController.value = TextEditingValue.empty;
+                  }),
                 label: const Text("Show All"),
                 icon: const Icon(Icons.search),
               )
