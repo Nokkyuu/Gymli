@@ -55,6 +55,7 @@ class LandingScreen extends StatefulWidget {
 class _LandingScreenState extends State<LandingScreen> {
   final TextEditingController WorkoutController = TextEditingController();
   final TextEditingController MuscleController = TextEditingController();
+  
   WorkoutList? selectedWorkout;
   MuscleList? selectedMuscle;
   var box = Hive.box<Exercise>('Exercises');
@@ -81,7 +82,7 @@ class _LandingScreenState extends State<LandingScreen> {
     for (var sets in Workoutname.setChoice){
       metainfo.add('Warm: ${sets[0]}, Work: ${sets[1]}, Drop: ${sets[2]}');
     }
-    print(Workoutname);
+    //print(Workoutname);
     filterApplied.value = !filterApplied.value;
   }
 
@@ -98,9 +99,9 @@ class _LandingScreenState extends State<LandingScreen> {
     var muscle = muscleName.muscleName;
     filteredExercises = [];
     metainfo = [];
-    print(muscle);
+    //print(muscle);
     for (var ex in allExercises){
-      print(ex.muscleGroups);
+      //print(ex.muscleGroups);
       if (ex.muscleGroups.contains(muscle)){
         filteredExercises.add(ex); 
       }
@@ -112,10 +113,29 @@ class _LandingScreenState extends State<LandingScreen> {
     filterApplied.value = !filterApplied.value;
   }
   
+
+@override
+  void initState() {
+    super.initState();
+      setState(() {
+       MuscleController.value = TextEditingValue.empty;
+  WorkoutController.value = TextEditingValue.empty;
+  showAllExercises(); 
+  });
+    }
+  
+
+
   
   @override
  
+
+  
+  
+ 
   Widget build(BuildContext context) {
+
+  
   updateAllExercises(); 
     return Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -145,6 +165,7 @@ class _LandingScreenState extends State<LandingScreen> {
                 onSelected: (WorkoutList? name) {
                   workoutFilterList(name!);
                   setState(() {
+                    MuscleController.value = TextEditingValue.empty;
                     selectedWorkout = name;
                   });
                 },
@@ -171,6 +192,7 @@ class _LandingScreenState extends State<LandingScreen> {
                 onSelected: (MuscleList? name) {
                   muscleFilterList(name!);
                   setState(() {
+                    WorkoutController.value = TextEditingValue.empty;
                     selectedMuscle = name;
                   });
                 },
