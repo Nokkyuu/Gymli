@@ -2,6 +2,8 @@
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:numberpicker/numberpicker.dart';
+import 'package:yafa_app/DataModels.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 //import 'package:fl_chart/fl_chart.dart';
 
 enum ExerciseList {
@@ -28,10 +30,17 @@ class WorkoutSetupScreen extends StatefulWidget {
 
 class _WorkoutSetupScreenState extends State<WorkoutSetupScreen> {
   final TextEditingController exerciseController = TextEditingController();
-  ExerciseList? selectedExercise;
+  Exercise? selectedExercise;
   int warmUpS = 0;
   int workS = 0;
   int dropS = 0;
+  var box = Hive.box<Exercise>('Exercises');
+  List<Exercise> allExercises = Hive.box<Exercise>('Exercises').values.toList();
+final itemList = [
+                            FontAwesomeIcons.dumbbell,
+                            Icons.forklift,
+                            Icons.cable,
+                            Icons.sports_martial_arts];
 
   @override
   Widget build(BuildContext context) {
@@ -111,42 +120,41 @@ class _WorkoutSetupScreenState extends State<WorkoutSetupScreen> {
                   ),
                 ],
               ),
+              
+              const Divider(),
               const SizedBox(height: 20),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  
-                  DropdownMenu<ExerciseList>(
-                    initialSelection: ExerciseList.Benchpress,
-                    controller: exerciseController,
-                    requestFocusOnTap: true,
-                    label: const Text('Exercises'),
-                    onSelected: (ExerciseList? name) {
-                      setState(() {
-                        selectedExercise = name;
-                      });
-                    },
-                    dropdownMenuEntries: ExerciseList.values
-                        .map<DropdownMenuEntry<ExerciseList>>(
-                            (ExerciseList name) {
-                      return DropdownMenuEntry<ExerciseList>(
-                        value: name,
-                        label: name.exerciseName,
-                        //enabled: color.label != 'Grey',
-                        //style: MenuItemButton.styleFrom(
-                        //  foregroundColor: color.color,
-                        //),
-                      );
-                    }).toList(),
-                  ),
-                  
-                  TextButton.icon(
-                    icon: const Icon(Icons.add),
-                    label: const Text("Add Exercise") ,
-                    onPressed:  () => print("Added")
-                  ),
-
-                ],),
+              DropdownMenu<Exercise>(
+                width: MediaQuery.of(context).size.width * 0.7,
+                //initialSelection: ExerciseList.Benchpress,
+                controller: exerciseController,
+                requestFocusOnTap: true,
+                label: const Text('Exercises'),
+                onSelected: (selectExercises) {
+                  setState(() {
+                    selectedExercise = selectExercises;
+                  });
+                },
+                dropdownMenuEntries: allExercises
+                    .map<DropdownMenuEntry<Exercise>>(
+                        (Exercise name) {
+                  return DropdownMenuEntry<Exercise>(
+                    value: name,
+                    label: name.name,
+                    
+                    leadingIcon: FaIcon(itemList[name.type])
+                    //enabled: color.label != 'Grey',
+                    //style: MenuItemButton.styleFrom(
+                    //  foregroundColor: color.color,
+                    //),
+                  );
+                }).toList(),
+              ),
+              
+              TextButton.icon(
+                icon: const Icon(Icons.add),
+                label: const Text("Add Exercise") ,
+                onPressed:  () => print("Added")
+              ),
               const Divider(),
               Expanded(
               child: ListView.builder(
