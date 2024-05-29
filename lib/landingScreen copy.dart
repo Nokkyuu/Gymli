@@ -13,15 +13,14 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 
 enum WorkoutList {
-  abcd('abcd', ["ab", "cd"], [[1, 2, 1], [0, 3, 3]]),
-  ab('ab', ["ab"], [[2,2,2]]),
-  cd('cd', ["cd"], [[0,3,0]]);
+  abcd('abcd', ["ab", "cd"]),
+  ab('ab', ["ab"]),
+  cd('cd', ["cd"]);
   
 
-  const WorkoutList(this.workoutName, this.workoutEx, this.setChoice);
+  const WorkoutList(this.workoutName, this.workoutEx);
   final String workoutName;
   final List<String> workoutEx;
-  final List<List<int>> setChoice;
 }
 
 enum MuscleList {
@@ -30,11 +29,11 @@ enum MuscleList {
   Biceps("Biceps"),
   Abdominals("Abdominals"),
   Delts("Deltoids"),
-  Latissimus_dorsi("Latissimus dorsi"),
+  Latissimus_dorsi("Dorsal Fins"),
   Triceps("Triceps"),
-  Gluteus_maximus("Gluteus maximus"),
-  Hamstrings("Hamstrings"),
-  Quadriceps("Quadriceps"),
+  Gluteus_maximus("Glutes"),
+  Hamstrings("Hams"),
+  Quadriceps("Quads"),
   Forearms("Forearms"),
   Calves("Calves");
 
@@ -62,61 +61,19 @@ class _LandingScreenState extends State<LandingScreen> {
   //List<Exercise> filteredExercises = Hive.box<Exercise>('Exercises').values.toList();
   ValueNotifier<bool> filterApplied = ValueNotifier<bool>(true);
   List<Exercise> filteredExercises = Hive.box<Exercise>('Exercises').values.toList();
-  List<String> metainfo = [];
-
-  void updateAllExercises() async {
-    allExercises = Hive.box<Exercise>('Exercises').values.toList();
-  filterApplied.value = !filterApplied.value;
-  }
-
-  void workoutFilterList(WorkoutList Workoutname){
+  
+  void FilterList(WorkoutList Workoutname){
     var filterMask = Workoutname.workoutEx;
-    filteredExercises = [];
-    metainfo = [];
-    for (var ex in allExercises){
-      if (filterMask.contains(ex.name)){
-        filteredExercises.add(ex); 
-      }
-    }
-    for (var sets in Workoutname.setChoice){
-      metainfo.add('Warm: ${sets[0]}, Work: ${sets[1]}, Drop: ${sets[2]}');
-    }
-    print(Workoutname);
-    filterApplied.value = !filterApplied.value;
-  }
+    filteredExercises;
+    for (var ex in filteredExercises);
 
-  void showAllExercises(){
-    filteredExercises = allExercises;
-    metainfo = [];
-    for (var ex in filteredExercises){
-      metainfo.add('Reps: ${ex.defaultRepBase} to ${ex.defaultRepBase + ex.defaultRepMax} Weight Incr.: ${ex.defaultIncrement}');
-    }
-    filterApplied.value = !filterApplied.value;
-  }
-
-    void muscleFilterList(MuscleList muscleName){
-    var muscle = muscleName.muscleName;
-    filteredExercises = [];
-    metainfo = [];
-    print(muscle);
-    for (var ex in allExercises){
-      print(ex.muscleGroups);
-      if (ex.muscleGroups.contains(muscle)){
-        filteredExercises.add(ex); 
-      }
-    }
-    for (var ex in filteredExercises){
-      metainfo.add('Reps: ${ex.defaultRepBase} to ${ex.defaultRepBase + ex.defaultRepMax} Weight Incr.: ${ex.defaultIncrement}');
-    }
-    
-    filterApplied.value = !filterApplied.value;
   }
   
   
   @override
  
   Widget build(BuildContext context) {
-  updateAllExercises(); 
+    
     return Column(
         mainAxisAlignment: MainAxisAlignment.center,
         mainAxisSize: MainAxisSize.max,
@@ -126,7 +83,7 @@ class _LandingScreenState extends State<LandingScreen> {
             children: [
               const Text("Filter by or "),
               TextButton.icon(
-                onPressed: () => showAllExercises(),
+                onPressed: () => print("Show All"),
                 label: const Text("Show All"),
                 icon: const Icon(Icons.search),
               )
@@ -143,7 +100,7 @@ class _LandingScreenState extends State<LandingScreen> {
                 requestFocusOnTap: false,
                 label: const Text('Workouts'),
                 onSelected: (WorkoutList? name) {
-                  workoutFilterList(name!);
+                  FilterList(name!);
                   setState(() {
                     selectedWorkout = name;
                   });
@@ -169,7 +126,6 @@ class _LandingScreenState extends State<LandingScreen> {
 
                 label: const Text('Muscles'),
                 onSelected: (MuscleList? name) {
-                  muscleFilterList(name!);
                   setState(() {
                     selectedMuscle = name;
                   });
@@ -190,18 +146,17 @@ class _LandingScreenState extends State<LandingScreen> {
                 valueListenable: filterApplied,
                 builder: (context, bool filterApplied, _) {
                   //var box = Hive.box<Exercise>('Exercises');
-                  var items = filteredExercises;
+                  var items = allExercises;
                   if (items.isNotEmpty) {
                     return ListView.builder(
                         itemCount: items.length,
                         itemBuilder: (context, index) {
                           final item = items[index];
                           final currentData = items[index];
-                          final meta = metainfo[index];
                           final exerciseType = currentData.type;
-                          //final repBase = currentData.defaultRepBase;
-                          //final repMax = currentData.defaultRepMax;
-                          //final increment = currentData.defaultIncrement;
+                          final repBase = currentData.defaultRepBase;
+                          final repMax = currentData.defaultRepMax;
+                          final increment = currentData.defaultIncrement;
                           final itemList = [
                             FontAwesomeIcons.dumbbell,
                             Icons.forklift,
@@ -240,7 +195,6 @@ class _LandingScreenState extends State<LandingScreen> {
                                                       items = setbox.values.where((item) => item.exercise == currentData.name).toList();   
                                                       for (var item in items){
                                                         setbox.delete(item.key);
-                                                        updateAllExercises();
                                                       }
                                                     },
                                                     child:
@@ -260,7 +214,7 @@ class _LandingScreenState extends State<LandingScreen> {
                               subtitle: Row(
                                   mainAxisAlignment: MainAxisAlignment.start,
                                   children: [
-                                    Text(meta)
+                                    Text("$repBase/$repMax with $increment kg")
                                   ]),
                               onTap: () {
                                 Navigator.push(
