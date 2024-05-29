@@ -9,7 +9,7 @@ import 'package:yafa_app/exerciseScreen.dart';
 import 'package:yafa_app/DataModels.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'globals.dart' as globals;
+
 
 enum WorkoutList {
   abcd('abcd', [
