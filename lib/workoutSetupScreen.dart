@@ -8,20 +8,20 @@ import 'package:yafa_app/DataModels.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 //import 'package:fl_chart/fl_chart.dart';
 
-enum ExerciseList {
-  Benchpress('Benchpress', 2, 3, 1),
-  Squat('Squat', 2, 2, 1),
-  Deadlift('Deadlift', 2, 3, 2),
-  Benchpress2('Benchpress2', 2, 3, 1),
-  Squat2('Squat2', 2, 2, 1),
-  Deadlift2('Deadlift2', 2, 3, 2);
+// enum ExerciseList {
+//   Benchpress('Benchpress', 2, 3, 1),
+//   Squat('Squat', 2, 2, 1),
+//   Deadlift('Deadlift', 2, 3, 2),
+//   Benchpress2('Benchpress2', 2, 3, 1),
+//   Squat2('Squat2', 2, 2, 1),
+//   Deadlift2('Deadlift2', 2, 3, 2);
 
-  const ExerciseList(this.exerciseName, this.warmUpS,this.workS, this.dropS);
-  final String exerciseName;
-  final int warmUpS;
-  final int workS;
-  final int dropS;
-}
+//   const ExerciseList(this.exerciseName, this.warmUpS,this.workS, this.dropS);
+//   final String exerciseName;
+//   final int warmUpS;
+//   final int workS;
+//   final int dropS;
+// }
 
 class WorkoutSetupScreen extends StatefulWidget {
   const WorkoutSetupScreen({super.key});
@@ -37,20 +37,21 @@ class _WorkoutSetupScreenState extends State<WorkoutSetupScreen> {
   Exercise? selectedExercise;
   ValueNotifier<bool> addRemEx = ValueNotifier<bool>(true);
   int warmUpS = 0;
-  int workS = 0;
+  int workS = 1;
   int dropS = 0;
   var box = Hive.box<Exercise>('Exercises');
   TextEditingController workoutNameController = TextEditingController();
   List<Exercise> allExercises = Hive.box<Exercise>('Exercises').values.toList();
-  List<Exercise> addedExercises = [];
-final itemList = [
-                            FontAwesomeIcons.dumbbell,
-                            Icons.forklift,
-                            Icons.cable,
-                            Icons.sports_martial_arts];
+  List<WorkoutUnit> addedExercises = [];
+
+  final itemList = [
+    FontAwesomeIcons.dumbbell,
+    Icons.forklift,
+    Icons.cable,
+    Icons.sports_martial_arts];
 
 
-   remExercise(Exercise exerciseRem){
+   remExercise(WorkoutUnit exerciseRem){
       addedExercises.remove(exerciseRem);
       addRemEx.value = !addRemEx.value;
     }
@@ -90,6 +91,16 @@ final itemList = [
                     labelText: 'Workout Name',
                   ),
                 ),
+              ),
+              TextButton.icon(
+                icon: const Icon(Icons.add),
+                label: const Text("Add Workout") ,
+                onPressed:  () {
+                  setState(() {
+                    var box = Hive.box("Workouts");
+                    box.add(Workout(exercise: workoutNameController.text, units: addedExercises));
+                  });
+                },
               ),
               const SizedBox(height: 20),
               Row(
@@ -169,14 +180,11 @@ final itemList = [
                 onPressed:  () {
                   setState(() {
                     if (selectedExercise != null){
-                    addedExercises.add(selectedExercise!);
+                    addedExercises.add(WorkoutUnit(exercise: selectedExercise!.name, warmups: warmUpS, worksets: workS, dropsets: dropS, type: selectedExercise!.type));
                     addRemEx.value = !addRemEx.value;
                     }else{return;}
                   });
                 },
-                
-                
-                
               ),
               const Divider(),
               Expanded(
@@ -202,7 +210,7 @@ final itemList = [
                           //   Icons.sports_martial_arts
                           // ];
                           final currentIcon = itemList[exerciseType];
-                          return ExerciseTile(exerciseName: item.name, warmUpS: 1, workS: 1, dropS: 1, icon: currentIcon, remo: remExercise, item: item);
+                          return ExerciseTile(exerciseName: item.exercise, warmUpS: item.warmups, workS: item.worksets, dropS: item.dropsets, icon: currentIcon, remo: remExercise, item: item);
                         });
                   } else {
                     //Hive.box<Exercise>('Exercises').watch();
@@ -238,7 +246,7 @@ class ExerciseTile extends StatelessWidget {
   final int dropS;
   final IconData icon;
   final Function remo;
-  final Exercise item;
+  final WorkoutUnit item;
 
   @override
   Widget build(BuildContext context) {

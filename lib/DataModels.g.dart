@@ -115,3 +115,86 @@ class TrainingSetAdapter extends TypeAdapter<TrainingSet> {
           runtimeType == other.runtimeType &&
           typeId == other.typeId;
 }
+
+class WorkoutUnitAdapter extends TypeAdapter<WorkoutUnit> {
+  @override
+  final int typeId = 3;
+
+  @override
+  WorkoutUnit read(BinaryReader reader) {
+    final numOfFields = reader.readByte();
+    final fields = <int, dynamic>{
+      for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
+    };
+    return WorkoutUnit(
+      exercise: fields[0] as String,
+      warmups: fields[1] as int,
+      worksets: fields[2] as int,
+      dropsets: fields[3] as int,
+      type: fields[4] as int,
+    );
+  }
+
+  @override
+  void write(BinaryWriter writer, WorkoutUnit obj) {
+    writer
+      ..writeByte(5)
+      ..writeByte(0)
+      ..write(obj.exercise)
+      ..writeByte(1)
+      ..write(obj.warmups)
+      ..writeByte(2)
+      ..write(obj.worksets)
+      ..writeByte(3)
+      ..write(obj.dropsets)
+      ..writeByte(4)
+      ..write(obj.type);
+  }
+
+  @override
+  int get hashCode => typeId.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is WorkoutUnitAdapter &&
+          runtimeType == other.runtimeType &&
+          typeId == other.typeId;
+}
+
+class WorkoutAdapter extends TypeAdapter<Workout> {
+  @override
+  final int typeId = 4;
+
+  @override
+  Workout read(BinaryReader reader) {
+    final numOfFields = reader.readByte();
+    final fields = <int, dynamic>{
+      for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
+    };
+    return Workout(
+      exercise: fields[0] as String,
+      units: (fields[1] as List).cast<WorkoutUnit>(),
+    );
+  }
+
+  @override
+  void write(BinaryWriter writer, Workout obj) {
+    writer
+      ..writeByte(2)
+      ..writeByte(0)
+      ..write(obj.exercise)
+      ..writeByte(1)
+      ..write(obj.units);
+  }
+
+  @override
+  int get hashCode => typeId.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is WorkoutAdapter &&
+          runtimeType == other.runtimeType &&
+          typeId == other.typeId;
+}

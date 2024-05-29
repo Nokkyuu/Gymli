@@ -69,3 +69,26 @@ class TrainingSet extends HiveObject {
 }
 
 
+@HiveType(typeId: 3)
+class WorkoutUnit extends HiveObject {
+  WorkoutUnit ({required this.exercise, required this.warmups, required this.worksets, required this.dropsets, required this.type});
+  @HiveField(0)
+  String exercise = ""; 
+  @HiveField(1)
+  int warmups = 0;
+  @HiveField(2)
+  int worksets = 0;
+  @HiveField(3)
+  int dropsets = 0;
+  @HiveField(4)
+  int type = 0;
+}
+
+@HiveType(typeId: 4)
+class Workout extends HiveObject {
+  Workout({required this.exercise, required this.units});
+  @HiveField(0)
+  String exercise = "";
+  @HiveField(1)
+  List<WorkoutUnit> units = [];
+}

@@ -42,6 +42,7 @@ void main() async {
   // populateExercises();
   await Hive.openBox<TrainingSet>('TrainingSets');
   await Hive.openBox<Exercise>('Exercises');
+  await Hive.openBox<Workout>('Workouts');
 
   runApp(const MainApp()
   );
