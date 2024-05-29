@@ -256,7 +256,7 @@ class _ExerciseScreen extends State<ExerciseScreen> {
                         minY: minScore - 5.0,
                         maxY: maxScore + 5.0,
                         minX: -45.0,
-                        maxX: 0.0,
+                        maxX: 1.0,
                       ))),
                 )),
             const Divider(),
