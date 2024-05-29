@@ -9,7 +9,8 @@ import 'package:flutter_file_dialog/flutter_file_dialog.dart';
 import 'package:intl/intl.dart';
 import 'package:confirm_dialog/confirm_dialog.dart';
 //import 'package:file_picker/file_picker.dart';
-//import 'package:flutter/services.dart' show rootBundle;
+import 'package:flutter/services.dart' show rootBundle;
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 
 class SettingsScreen extends StatefulWidget {
@@ -66,15 +67,27 @@ void backupSetState(context) async {
 }
 
 void restoreSetData(context) async {
+  if (kIsWeb) {
+    //print("bla");
+    var filePath = 'csv/set.csv';
+    final myData = await rootBundle.loadString(filePath);
+    //print(myData);
+    restoreSetLoad(myData);
+  } else {
   final filePath = await FlutterFileDialog.pickFile(params: const OpenFileDialogParams(dialogType: OpenFileDialogType.document, sourceType: SourceType.savedPhotosAlbum));
-  if (filePath == null) {
-    return;
-  }
-  File file = File(filePath);
+  if (filePath != null){
+  File file = File(filePath!); 
   final myData =  await file.readAsString();
-  //final myData = await rootBundle.loadString(filePath!);
+  restoreSetLoad(myData);
+  }
+  
+  else{return;}
+  }
+}
+
+void restoreSetLoad(myData) {
   List<List<String>> csvTable = const CsvToListConverter(shouldParseNumbers: false).convert(myData);
-  final setBox = await Hive.box<TrainingSet>('TrainingSets');
+  final setBox = Hive.box<TrainingSet>('TrainingSets');
   setBox.clear();
   for (List<String> row in csvTable) {
     //print(row);
@@ -83,11 +96,25 @@ void restoreSetData(context) async {
 }
 
 void restoreExercises(context) async {
+  if (kIsWeb) {
+    //print("bla");
+    var filePath = 'csv/ex.csv';
+    final myData = await rootBundle.loadString(filePath);
+    print(myData);
+    restoreExLoad(myData);
+  } else {
   final filePath = await FlutterFileDialog.pickFile(params: const OpenFileDialogParams(dialogType: OpenFileDialogType.document, sourceType: SourceType.savedPhotosAlbum));
-  if (filePath != null) {
-  File file = File(filePath); 
+  if (filePath != null){
+  File file = File(filePath!); 
   final myData =  await file.readAsString();
-  //final myData = await rootBundle.loadString(file.path, cache: true);
+  restoreExLoad(myData);
+  }
+  
+  else{return;}
+  }
+}
+  
+void restoreExLoad(myData){
   //print(myData);
   final exerciseBox = Hive.box<Exercise>('Exercises');
   exerciseBox.clear();
@@ -105,10 +132,8 @@ void restoreExercises(context) async {
     exerciseBox.add(Exercise(name: row[0], type: int.parse(row[1]), muscleGroups: muscleGroups, muscleIntensities: muscleIntensities, defaultRepBase: int.parse(row[4]), defaultRepMax: int.parse(row[5]), defaultIncrement: double.parse(row[6])));
 
 }
-} else {
-  return;
-  }
-}
+} 
+
 
 class _SettingsScreen extends State<SettingsScreen> {
   @override
