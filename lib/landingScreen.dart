@@ -9,6 +9,7 @@ import 'package:yafa_app/exerciseScreen.dart';
 import 'package:yafa_app/DataModels.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'globals.dart' as globals;
 
 enum WorkoutList {
   abcd('abcd', [
@@ -74,7 +75,7 @@ class _LandingScreenState extends State<LandingScreen> {
       Hive.box<Exercise>('Exercises').values.toList();
   List<String> metainfo = [];
 
-  void updateAllExercises() async {
+  void updateAllExercises() {
     allExercises = Hive.box<Exercise>('Exercises').values.toList();
     filterApplied.value = !filterApplied.value;
   }
@@ -258,6 +259,7 @@ class _LandingScreenState extends State<LandingScreen> {
                                                   const SizedBox(height: 15),
                                                   TextButton(
                                                     onPressed: () {
+                                                      
                                                       Navigator.pop(context);
                                                       box.delete(item.key);
                                                       Box setbox =
@@ -272,7 +274,20 @@ class _LandingScreenState extends State<LandingScreen> {
                                                           .toList();
                                                       for (var item in items) {
                                                         setbox.delete(item.key);
-                                                        updateAllExercises();
+                                                        
+                                                      }
+                                                      updateAllExercises();
+                                                      if (WorkoutController.value != TextEditingValue.empty)
+                                                      {
+                                                        workoutFilterList(selectedWorkout!);
+                                                      }
+                                                      else if (MuscleController.value != TextEditingValue.empty)
+                                                      {
+                                                        muscleFilterList(selectedMuscle!);
+                                                      }
+                                                      else
+                                                      {
+                                                        showAllExercises();
                                                       }
                                                     },
                                                     child:
@@ -280,6 +295,7 @@ class _LandingScreenState extends State<LandingScreen> {
                                                   ),
                                                   TextButton(
                                                     onPressed: () {
+                                                      
                                                       Navigator.pop(context);
                                                     },
                                                     child: const Text('Cancel'),
@@ -301,7 +317,7 @@ class _LandingScreenState extends State<LandingScreen> {
                               });
                         });
                   } else {
-                    Hive.box<Exercise>('Exercises').watch();
+                    //Hive.box<Exercise>('Exercises').watch();
                     return const Text("No exercises yet");
                   }
                 }),

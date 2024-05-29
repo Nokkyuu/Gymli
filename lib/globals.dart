@@ -52,5 +52,48 @@ import 'package:hive_flutter/hive_flutter.dart';
     return exerciseFilter.first;
   }
 
+  enum WorkoutList {
+  abcd('abcd', [
+    "ab",
+    "cd"
+  ], [
+    [1, 2, 1],
+    [0, 3, 3]
+  ]),
+  ab('ab', [
+    "ab"
+  ], [
+    [2, 2, 2]
+  ]),
+  cd('cd', [
+    "cd"
+  ], [
+    [0, 3, 0]
+  ]);
+
+  const WorkoutList(this.workoutName, this.workoutEx, this.setChoice);
+  final String workoutName;
+  final List<String> workoutEx;
+  final List<List<int>> setChoice;
+}
+
+enum MuscleList {
+  Pectoralis_major("Pectoralis major"),
+  Trapezius("Trapezius"),
+  Biceps("Biceps"),
+  Abdominals("Abdominals"),
+  Delts("Deltoids"),
+  Latissimus_dorsi("Latissimus dorsi"),
+  Triceps("Triceps"),
+  Gluteus_maximus("Gluteus maximus"),
+  Hamstrings("Hamstrings"),
+  Quadriceps("Quadriceps"),
+  Forearms("Forearms"),
+  Calves("Calves");
+
+  const MuscleList(this.muscleName);
+  final String muscleName;
+}
+
 
   
