@@ -8,6 +8,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:yafa_app/exerciseSetupScreen.dart';
 import 'package:yafa_app/settingsScreen.dart';
 import 'package:yafa_app/workoutSetupScreen.dart';
+import 'package:yafa_app/statisticsScreen.dart';
 import 'globals.dart' as globals;
 bool state = false;
 
@@ -143,7 +144,7 @@ class _MainAppState extends State<MainApp> {
             onTap: () {
               setState(() {
                 Navigator.pop(context);
-             Navigator.push(context, MaterialPageRoute(builder: (context) =>  WorkoutSetupScreen("")));
+                Navigator.push(context, MaterialPageRoute(builder: (context) =>  StatisticsScreen()));
             });},
           
           ),
@@ -152,7 +153,7 @@ class _MainAppState extends State<MainApp> {
             onTap: () {
               setState(() {
                 Navigator.pop(context);
-             Navigator.push(context, MaterialPageRoute(builder: (context) => const SettingsScreen()));
+                Navigator.push(context, MaterialPageRoute(builder: (context) => const SettingsScreen()));
             });},
           
           ),

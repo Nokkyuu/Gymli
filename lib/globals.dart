@@ -59,7 +59,10 @@ import 'package:intl/intl.dart';
 
 List<DateTime> getTrainingDates(String exercise) {
   var box = Hive.box<TrainingSet>('TrainingSets');
-  var items = box.values.where((item) => item.exercise == exercise).toList();
+  var items = box.values;
+  if (exercise != "") {
+    items = items.where((item) => item.exercise == exercise).toList();
+  }
   final dates = items
       .map((e) => DateFormat('yyyy-MM-dd').format(e.date))
       .toSet()
