@@ -13,31 +13,6 @@ import 'package:yafa_app/workoutSetupScreen.dart';
 import 'globals.dart' as globals;
 
 
-enum WorkoutList {
-  abcd('abcd', [
-    "ab",
-    "cd"
-  ], [
-    [1, 2, 1],
-    [0, 3, 3]
-  ]),
-  ab('ab', [
-    "ab"
-  ], [
-    [2, 2, 2]
-  ]),
-  cd('cd', [
-    "cd"
-  ], [
-    [0, 3, 0]
-  ]);
-
-  const WorkoutList(this.workoutName, this.workoutEx, this.setChoice);
-  final String workoutName;
-  final List<String> workoutEx;
-  final List<List<int>> setChoice;
-}
-
 enum MuscleList {
   Pectoralis_major("Pectoralis major"),
   Trapezius("Trapezius"),
@@ -257,7 +232,9 @@ class _LandingScreenState extends State<LandingScreen> {
                                 radius: 17.5,
                                 child: FaIcon(currentIcon),
                               ),
+                              dense: true,
                               title: Text(currentData.name),
+
                               subtitle: Row(
                                   mainAxisAlignment: MainAxisAlignment.start,
                                   children: [Text(meta)]),

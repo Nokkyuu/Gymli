@@ -195,7 +195,7 @@ class _ExerciseScreen extends State<ExerciseScreen> {
           children: <Widget>[
             SizedBox(
                 width: MediaQuery.of(context).size.width,
-                height: MediaQuery.of(context).size.height * 0.25,
+                height: MediaQuery.of(context).size.height * 0.20,
                 child: Padding(
                   padding: const EdgeInsets.all(10.0),
                   child: Padding(
@@ -244,11 +244,12 @@ class _ExerciseScreen extends State<ExerciseScreen> {
                               return ListTile(
                                   leading: CircleAvatar(
                                     radius: 17.5,
-                                    //backgroundColor: Colors.cyan,
                                     child: FaIcon(
                                       workIcons[item.setType],
                                     ),
                                   ),
+                                  dense: true,
+                                  visualDensity: const VisualDensity(vertical: -3), // to compact
                                   title: Text(
                                       "${item.weight}kg for ${item.repetitions} reps"),
                                   subtitle: Text(
@@ -323,7 +324,7 @@ class _ExerciseScreen extends State<ExerciseScreen> {
                 updateGraph();
               },
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 40),
           ]),
     );
   }
