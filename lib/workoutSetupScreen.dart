@@ -84,26 +84,23 @@ class _WorkoutSetupScreenState extends State<WorkoutSetupScreen> {
 
     return Scaffold(
           appBar: AppBar(
-            actions:[IconButton(
-            onPressed: () {
-              if (currentWorkout != null) {
-                var box = Hive.box<Workout>("Workouts");
-                print("Done");
-                box.delete(currentWorkout!.key);
-                Navigator.pop(context);
-              }
-            },
-          icon: const Icon(Icons.delete))],
             leading: InkWell(
-              onTap: () {
-                Navigator.pop(context);
-              },
-              child: const Icon(
-                Icons.arrow_back_ios,
-              ),
+              onTap: () {Navigator.pop(context); },
+            child: const Icon(Icons.arrow_back_ios),
             ),
             title: const Text(title),
             centerTitle: true,
+            actions:[
+              IconButton(
+                onPressed: () {
+                  if (currentWorkout != null) {
+                    var box = Hive.box<Workout>("Workouts");
+                    box.delete(currentWorkout!.key);
+                    Navigator.pop(context);
+                  }
+                },
+              icon: const Icon(Icons.delete))
+            ],
           ),
           body: Column(
             children: [

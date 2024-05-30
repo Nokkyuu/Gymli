@@ -91,6 +91,7 @@ class _ExerciseScreen extends State<ExerciseScreen> {
   int weightKg = 40;
   int weightDg = 0;
   int repetitions = 10;
+  List<LineChartBarData> barData = [];
 
   late InputFields inputFieldAccessor = InputFields(
       weightDg: weightDg, weightKg: weightKg, repetitions: repetitions);
@@ -98,6 +99,7 @@ class _ExerciseScreen extends State<ExerciseScreen> {
   var _newData = 0.0;
   List<List<FlSpot>> trainingGraphs = [[], [], [], []];
   List<List<FlSpot>> additionalGraphs = [[], [], [], []];
+
   void updateSelected(Set<ExerciseType> newSelection) async {
     setState(() {
       _selected = newSelection;
@@ -126,7 +128,6 @@ class _ExerciseScreen extends State<ExerciseScreen> {
     var title = widget.exerciseName;
     
     TextEditingController dateInputController = TextEditingController(text: DateTime.now().toString());
-    List<LineChartBarData> barData = [];
     for (var i = 0; i < 4; ++i) {
       trainingGraphs[i] = getTrainingScores(widget.exerciseName, i);
       if (trainingGraphs[i].isNotEmpty) {

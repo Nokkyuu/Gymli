@@ -103,7 +103,6 @@ class _LandingScreenState extends State<LandingScreen> {
     for (var e in workout.units) {
       metainfo.add('Warm: ${e.warmups}, Work: ${e.worksets}, Drop: ${e.dropsets}');
     }
-    //print(Workoutname);
     filterApplied.value = !filterApplied.value;
   }
 
@@ -258,64 +257,6 @@ class _LandingScreenState extends State<LandingScreen> {
                                 radius: 17.5,
                                 child: FaIcon(currentIcon),
                               ),
-                              trailing: IconButton(
-                                  icon: const Icon(Icons.delete),
-                                  onPressed: () => showDialog<String>(
-                                      context: context,
-                                      builder: (BuildContext context) => Dialog(
-                                            child: Padding(
-                                              padding:
-                                                  const EdgeInsets.all(8.0),
-                                              child: Column(
-                                                mainAxisSize: MainAxisSize.min,
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment.center,
-                                                children: <Widget>[
-                                                  const Text(
-                                                      'Confirm Deletion:'),
-                                                  const SizedBox(height: 15),
-                                                  TextButton(
-                                                    onPressed: () {
-                                                      
-                                                      Navigator.pop(context);
-                                                      box.delete(item.key);
-                                                      Box setbox =
-                                                          Hive.box<TrainingSet>(
-                                                              'TrainingSets');
-                                                      var items = setbox.values
-                                                          .toList();
-                                                      items = setbox.values
-                                                          .where((item) =>
-                                                              item.exercise ==
-                                                              currentData.name)
-                                                          .toList();
-                                                      for (var item in items) {
-                                                        setbox.delete(item.key);
-                                                        
-                                                      }
-                                                      updateAllExercises();
-                                                      if (WorkoutController.value != TextEditingValue.empty) {
-                                                        workoutFilterList(selectedWorkout!);
-                                                      } else if (MuscleController.value != TextEditingValue.empty) {
-                                                        muscleFilterList(selectedMuscle!);
-                                                      } else {
-                                                        showAllExercises();
-                                                      }
-                                                    },
-                                                    child:
-                                                        const Text('Confirm'),
-                                                  ),
-                                                  TextButton(
-                                                    onPressed: () {
-                                                      
-                                                      Navigator.pop(context);
-                                                    },
-                                                    child: const Text('Cancel'),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                          ))),
                               title: Text(currentData.name),
                               subtitle: Row(
                                   mainAxisAlignment: MainAxisAlignment.start,

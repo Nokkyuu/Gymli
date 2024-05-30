@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:yafa_app/DataModels.dart';
 import 'package:hive/hive.dart';
+import 'package:yafa_app/landingScreen.dart';
 import 'globals.dart' as globals;
 
 enum ExerciseDevice { free, machine, cable, body }
@@ -82,6 +83,7 @@ class _ExerciseSetupScreenState extends State<ExerciseSetupScreen> {
   List<String> muscleGroups = [];
   List<double> muscleIntensities = [];
   final exerciseTitleController = TextEditingController();
+  Exercise? currentExercise;
 
   @override
   void initState() {
@@ -89,18 +91,18 @@ class _ExerciseSetupScreenState extends State<ExerciseSetupScreen> {
     var box = Hive.box<Exercise>('Exercises');
     var exerciseFilter = box.values.toList().where((item) => item.name == widget.exerciseName);
     if (exerciseFilter.isEmpty) { return; }
-    var exercise = exerciseFilter.first;
-    exerciseTitleController.text = exercise.name;
+    currentExercise = exerciseFilter.first;
+    exerciseTitleController.text = currentExercise!.name;
     this.setState(() {
-      chosenDevice = exerciseMap[exercise.type];
-      minRep = exercise.defaultRepBase.toDouble();
-      repRange = exercise.defaultRepMax.toDouble();
-      weightInc = exercise.defaultIncrement;
+      chosenDevice = exerciseMap[currentExercise!.type];
+      minRep = currentExercise!.defaultRepBase.toDouble();
+      repRange = currentExercise!.defaultRepMax.toDouble();
+      weightInc = currentExercise!.defaultIncrement;
       for (var m in muscleGroupNames) {
         globals.muscle_val[m] = 0.0;
       }
-      muscleGroups = exercise.muscleGroups;
-      muscleIntensities = exercise.muscleIntensities;
+      muscleGroups = currentExercise!.muscleGroups;
+      muscleIntensities = currentExercise!.muscleIntensities;
       // muscleIntensities = exercise.muscleIntensities;
       for (var i = 0; i < muscleGroups.length; i++) {
         globals.muscle_val[muscleGroups[i]] = muscleIntensities[i];
@@ -113,14 +115,27 @@ class _ExerciseSetupScreenState extends State<ExerciseSetupScreen> {
     return Scaffold(
         appBar: AppBar(
           leading: InkWell(
-            onTap: () {
-              Navigator.pop(context);
-            },
-            child: const Icon(
-              Icons.arrow_back_ios,
-            ),
+            onTap: () { Navigator.pop(context); },
+            child: const Icon( Icons.arrow_back_ios ),
           ),
           title: const Text("Exercise Setup"),
+          actions:[
+              IconButton(
+                onPressed: () {
+                  var box = Hive.box<Exercise>("Exercises");
+                  box.delete(currentExercise!.key);
+                  Box setbox = Hive.box<TrainingSet>('TrainingSets');
+                  var items = setbox.values.toList();
+                  items = setbox.values.where((item) => item.exercise == currentExercise!.name).toList();
+                  for (var item in items) {
+                    setbox.delete(item.key);
+                    
+                  }
+                  int count = 0;
+                  Navigator.of(context).popUntil((_) => count++ >= 2);
+                },
+              icon: const Icon(Icons.delete))
+            ],
         ),
         body: Center(
           child: Column(
@@ -282,13 +297,16 @@ class _ExerciseSetupScreenState extends State<ExerciseSetupScreen> {
                                       repRange.toInt(),
                                       weightInc);
                                   setState(() {});
-                                  Navigator.pop(context);
+                                  int count = 0;
+                                  Navigator.of(context).popUntil((_) => count++ >= 2);
                                 },
                                 child: const Text('Confirm'),
                               ),
                               TextButton(
                                 onPressed: () {
-                                  Navigator.pop(context);
+                                  int count = 0;
+                                  Navigator.of(context).popUntil((_) => count++ >= 2);
+
                                 },
                                 child: const Text('Cancel'),
                               ),
