@@ -173,7 +173,7 @@ class WorkoutAdapter extends TypeAdapter<Workout> {
       for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
     };
     return Workout(
-      exercise: fields[0] as String,
+      name: fields[0] as String,
       units: (fields[1] as List).cast<WorkoutUnit>(),
     );
   }
@@ -183,7 +183,7 @@ class WorkoutAdapter extends TypeAdapter<Workout> {
     writer
       ..writeByte(2)
       ..writeByte(0)
-      ..write(obj.exercise)
+      ..write(obj.name)
       ..writeByte(1)
       ..write(obj.units);
   }

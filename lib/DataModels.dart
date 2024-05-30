@@ -86,9 +86,9 @@ class WorkoutUnit extends HiveObject {
 
 @HiveType(typeId: 4)
 class Workout extends HiveObject {
-  Workout({required this.exercise, required this.units});
+  Workout({required this.name, required this.units});
   @HiveField(0)
-  String exercise = "";
+  String name = "";
   @HiveField(1)
   List<WorkoutUnit> units = [];
 }

@@ -39,11 +39,16 @@ void main() async {
   await Hive.initFlutter();
   Hive.registerAdapter(ExerciseAdapter());
   Hive.registerAdapter(TrainingSetAdapter());
+  Hive.registerAdapter(WorkoutAdapter());
+  Hive.registerAdapter(WorkoutUnitAdapter());
   // populateExercises();
   await Hive.openBox<TrainingSet>('TrainingSets');
   await Hive.openBox<Exercise>('Exercises');
-  await Hive.openBox<Workout>('Workouts');
-
+  var box = await Hive.openBox<Workout>('Workouts');
+  // box.clear();
+  // var unit = WorkoutUnit(exercise: "Benchpress", warmups: 0, worksets: 2, dropsets: 1, type: 1);
+  // var workout = Workout(name: "Test", units: [unit]);
+  // box.add(workout);
   runApp(const MainApp()
   );
 }
@@ -60,6 +65,8 @@ class MainApp extends StatefulWidget {
 class _MainAppState extends State<MainApp> {
   Brightness mode =  Brightness.light;
   Color themecolor = const Color.fromARGB(255, 0, 7, 42);
+
+  LandingScreen landingScreen = LandingScreen();
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -99,7 +106,7 @@ class _MainAppState extends State<MainApp> {
             ),
     title: const Text("Fitness Tracker"),
     centerTitle: true,),
-    body: const LandingScreen(),
+    body: landingScreen,
     drawer: Builder(
       builder: (context) {
         return Drawer(
@@ -127,7 +134,7 @@ class _MainAppState extends State<MainApp> {
             onTap: () {
               setState(() {
                 Navigator.pop(context);
-             Navigator.push(context, MaterialPageRoute(builder: (context) => const WorkoutSetupScreen()));
+             Navigator.push(context, MaterialPageRoute(builder: (context) =>  WorkoutSetupScreen("")));
             });},
           
           ),
@@ -136,7 +143,7 @@ class _MainAppState extends State<MainApp> {
             onTap: () {
               setState(() {
                 Navigator.pop(context);
-             Navigator.push(context, MaterialPageRoute(builder: (context) => const WorkoutSetupScreen()));
+             Navigator.push(context, MaterialPageRoute(builder: (context) =>  WorkoutSetupScreen("")));
             });},
           
           ),

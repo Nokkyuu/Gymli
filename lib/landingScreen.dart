@@ -9,6 +9,8 @@ import 'package:yafa_app/exerciseScreen.dart';
 import 'package:yafa_app/DataModels.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:yafa_app/workoutSetupScreen.dart';
+import 'globals.dart' as globals;
 
 
 enum WorkoutList {
@@ -56,19 +58,24 @@ enum MuscleList {
 
 class LandingScreen extends StatefulWidget {
   const LandingScreen({super.key});
-
+  
   @override
-  State<LandingScreen> createState() => _LandingScreenState();
+  State<LandingScreen> createState() {
+    return _LandingScreenState();
+  }
 }
 
 class _LandingScreenState extends State<LandingScreen> {
   final TextEditingController WorkoutController = TextEditingController();
   final TextEditingController MuscleController = TextEditingController();
 
-  WorkoutList? selectedWorkout;
+  Workout? selectedWorkout;
   MuscleList? selectedMuscle;
   var box = Hive.box<Exercise>('Exercises');
   List<Exercise> allExercises = Hive.box<Exercise>('Exercises').values.toList();
+
+  var availableWorkouts = Hive.box<Workout>('Workouts').values.toList();
+
   //List<Exercise> filteredExercises = Hive.box<Exercise>('Exercises').values.toList();
   ValueNotifier<bool> filterApplied = ValueNotifier<bool>(true);
   List<Exercise> filteredExercises =
@@ -80,8 +87,12 @@ class _LandingScreenState extends State<LandingScreen> {
     filterApplied.value = !filterApplied.value;
   }
 
-  void workoutFilterList(WorkoutList Workoutname) {
-    var filterMask = Workoutname.workoutEx;
+  void workoutFilterList(Workout workout) {
+
+    var filterMask = [];
+    for (var e in workout.units) {
+      filterMask.add(e.exercise);
+    }
     filteredExercises = [];
     metainfo = [];
     for (var ex in allExercises) {
@@ -89,8 +100,8 @@ class _LandingScreenState extends State<LandingScreen> {
         filteredExercises.add(ex);
       }
     }
-    for (var sets in Workoutname.setChoice) {
-      metainfo.add('Warm: ${sets[0]}, Work: ${sets[1]}, Drop: ${sets[2]}');
+    for (var e in workout.units) {
+      metainfo.add('Warm: ${e.warmups}, Work: ${e.worksets}, Drop: ${e.dropsets}');
     }
     //print(Workoutname);
     filterApplied.value = !filterApplied.value;
@@ -100,8 +111,10 @@ class _LandingScreenState extends State<LandingScreen> {
     filteredExercises = allExercises;
     metainfo = [];
     for (var ex in filteredExercises) {
-      metainfo.add(
-          'Reps: ${ex.defaultRepBase} to ${ex.defaultRepBase + ex.defaultRepMax} Weight Incr.: ${ex.defaultIncrement}');
+      var lastTraining = globals.getLastTrainingDay(ex.name);
+      var dayDiff = DateTime.now().difference(lastTraining).inDays;
+      String dayInfo =  dayDiff > 0 ? "$dayDiff days ago" : "today";
+      metainfo.add('${ex.defaultRepBase}-${ex.defaultRepBase + ex.defaultRepMax}@${ex.defaultIncrement}kg $dayInfo');
     }
     filterApplied.value = !filterApplied.value;
   }
@@ -125,6 +138,12 @@ class _LandingScreenState extends State<LandingScreen> {
     filterApplied.value = !filterApplied.value;
   }
 
+  @override
+  Future<void> _reload(var value) async {
+    setState(() {
+      availableWorkouts = Hive.box<Workout>('Workouts').values.toList();
+    });
+  }
   @override
   void initState() {
     super.initState();
@@ -160,28 +179,30 @@ class _LandingScreenState extends State<LandingScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              DropdownMenu<WorkoutList>(
+              DropdownMenu<Workout>(
                 width: MediaQuery.of(context).size.width * 0.5,
                 enabled: true,
+                key: UniqueKey(),
                 //initialSelection: WorkoutList.Push,
                 controller: WorkoutController,
                 requestFocusOnTap: false,
                 label: const Text('Workouts'),
-                onSelected: (WorkoutList? name) {
-                  workoutFilterList(name!);
+                onSelected: (Workout? workout) {
+                  workoutFilterList(workout!);
                   setState(() {
                     MuscleController.value = TextEditingValue.empty;
-                    selectedWorkout = name;
+                    selectedWorkout = workout;
                   });
                 },
-                dropdownMenuEntries: WorkoutList.values
-                    .map<DropdownMenuEntry<WorkoutList>>((WorkoutList name) {
-                  return DropdownMenuEntry<WorkoutList>(
-                    value: name,
-                    label: name.workoutName,
+                dropdownMenuEntries: availableWorkouts
+                    .map<DropdownMenuEntry<Workout>>((Workout workout) {
+                  return DropdownMenuEntry<Workout>(
+                    value: workout,
+                    label: workout.name,
                     trailingIcon: IconButton(
-                        onPressed: () => print(
-                            "edit workout"), //TODO: go to workout setup to edit the selected workout
+                        onPressed: () => {
+                          Navigator.push( context, MaterialPageRoute(builder: (context) => WorkoutSetupScreen(workout.name))).then((value) => _reload(value))
+                        },
                         icon: const Icon(Icons.edit)),
                   );
                 }).toList(),
@@ -216,7 +237,6 @@ class _LandingScreenState extends State<LandingScreen> {
             child: ValueListenableBuilder(
                 valueListenable: filterApplied,
                 builder: (context, bool filterApplied, _) {
-                  //var box = Hive.box<Exercise>('Exercises');
                   var items = filteredExercises;
                   if (items.isNotEmpty) {
                     return ListView.builder(
@@ -226,9 +246,6 @@ class _LandingScreenState extends State<LandingScreen> {
                           final currentData = items[index];
                           final meta = metainfo[index];
                           final exerciseType = currentData.type;
-                          //final repBase = currentData.defaultRepBase;
-                          //final repMax = currentData.defaultRepMax;
-                          //final increment = currentData.defaultIncrement;
                           final itemList = [
                             FontAwesomeIcons.dumbbell,
                             Icons.forklift,
@@ -277,16 +294,11 @@ class _LandingScreenState extends State<LandingScreen> {
                                                         
                                                       }
                                                       updateAllExercises();
-                                                      if (WorkoutController.value != TextEditingValue.empty)
-                                                      {
+                                                      if (WorkoutController.value != TextEditingValue.empty) {
                                                         workoutFilterList(selectedWorkout!);
-                                                      }
-                                                      else if (MuscleController.value != TextEditingValue.empty)
-                                                      {
+                                                      } else if (MuscleController.value != TextEditingValue.empty) {
                                                         muscleFilterList(selectedMuscle!);
-                                                      }
-                                                      else
-                                                      {
+                                                      } else {
                                                         showAllExercises();
                                                       }
                                                     },
@@ -313,7 +325,7 @@ class _LandingScreenState extends State<LandingScreen> {
                                     context,
                                     MaterialPageRoute(
                                         builder: (context) =>
-                                            ExerciseScreen(currentData.name)));
+                                            ExerciseScreen(currentData.name))).then((value) => _reload(value));
                               });
                         });
                   } else {

@@ -24,7 +24,8 @@ import 'package:hive_flutter/hive_flutter.dart';
 // }
 
 class WorkoutSetupScreen extends StatefulWidget {
-  const WorkoutSetupScreen({super.key});
+  final String workoutName;
+  WorkoutSetupScreen(this.workoutName, {super.key});
 
   @override
   State<WorkoutSetupScreen> createState() => _WorkoutSetupScreenState();
@@ -39,10 +40,31 @@ class _WorkoutSetupScreenState extends State<WorkoutSetupScreen> {
   int warmUpS = 0;
   int workS = 1;
   int dropS = 0;
+  Workout? currentWorkout;
   var box = Hive.box<Exercise>('Exercises');
   TextEditingController workoutNameController = TextEditingController();
   List<Exercise> allExercises = Hive.box<Exercise>('Exercises').values.toList();
   List<WorkoutUnit> addedExercises = [];
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.workoutName != "") {
+      workoutNameController.text = widget.workoutName;
+      var boxValues = Hive.box<Workout>("Workouts").values.toList();
+      Workout workout = boxValues.where((item) => item.name == widget.workoutName).toList().first;
+      currentWorkout = workout;
+      addedExercises = workout.units;
+    } else {
+      workoutNameController.text = "Jetzt4";
+    }
+  }
+
+  void addWorkout(String name, List<WorkoutUnit> units) {
+    var box = Hive.box<Workout>("Workouts");
+    box.add(Workout(name: name, units: units));
+    Navigator.pop(context);
+  }
 
   final itemList = [
     FontAwesomeIcons.dumbbell,
@@ -63,7 +85,14 @@ class _WorkoutSetupScreenState extends State<WorkoutSetupScreen> {
     return Scaffold(
           appBar: AppBar(
             actions:[IconButton(
-          onPressed: () => print("Workout deleted"),  //TODO: delete selected workout if it exists
+            onPressed: () {
+              if (currentWorkout != null) {
+                var box = Hive.box<Workout>("Workouts");
+                print("Done");
+                box.delete(currentWorkout!.key);
+                Navigator.pop(context);
+              }
+            },
           icon: const Icon(Icons.delete))],
             leading: InkWell(
               onTap: () {
@@ -75,7 +104,6 @@ class _WorkoutSetupScreenState extends State<WorkoutSetupScreen> {
             ),
             title: const Text(title),
             centerTitle: true,
-            
           ),
           body: Column(
             children: [
@@ -96,10 +124,7 @@ class _WorkoutSetupScreenState extends State<WorkoutSetupScreen> {
                 icon: const Icon(Icons.add),
                 label: const Text("Add Workout") ,
                 onPressed:  () {
-                  setState(() {
-                    var box = Hive.box("Workouts");
-                    box.add(Workout(exercise: workoutNameController.text, units: addedExercises));
-                  });
+                  addWorkout(workoutNameController.text, addedExercises);
                 },
               ),
               const SizedBox(height: 20),
