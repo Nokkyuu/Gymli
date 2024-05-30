@@ -5,7 +5,6 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:yafa_app/exerciseListScreen.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:yafa_app/DataModels.dart';
-import 'package:intl/intl.dart';
 import 'dart:math';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:numberpicker/numberpicker.dart';
@@ -31,61 +30,12 @@ void get_exercise_list() async {
   globals.exerciseList = exerciseList;
 }
 
-List<DateTime> getTrainingDates(String exercise) {
-  var box = Hive.box<TrainingSet>('TrainingSets');
-  var items = box.values.where((item) => item.exercise == exercise).toList();
-  final dates = items
-      .map((e) => DateFormat('yyyy-MM-dd').format(e.date))
-      .toSet()
-      .toList();
-  dates.sort((a, b) {
-    return a.toLowerCase().compareTo(b.toLowerCase());
-  }); // wiederum etwas hacky
-  List<DateTime> trainingDates = [];
-  for (var d in dates) {
-    trainingDates.add(DateFormat('yyyy-MM-dd').parse(d));
-  }
-  return trainingDates;
-}
-
-Tuple2<double, int> getLastTrainingInfo(String exercise) {
-  var trainings = Hive.box<TrainingSet>('TrainingSets').values.toList();
-  trainings = trainings.where((item) => item.exercise == exercise).toList();
-  var trainingDates = getTrainingDates(exercise);
-  if (trainingDates.isEmpty) {
-    return const Tuple2<double, int>(20.0, 10);
-  }
-  // absolutely horrible solutions
-  var best_element = 0;
-  var best_element_distance = -999;
-  for (var i = 0; i < trainingDates.length; i++) {
-    final dayDiff = trainingDates[i].difference(DateTime.now()).inDays;
-    if (dayDiff > best_element_distance) {
-      best_element = i;
-      best_element_distance = dayDiff;
-    }
-  }
-  var d = trainingDates[best_element];
-  var latest_trainings = trainings.where((item) =>
-      item.date.day == d.day &&
-      item.date.month == d.month &&
-      item.date.year == d.year);
-  var best_weight = -100.0;
-  var best_reps = 1;
-  for (var s in latest_trainings) {
-    if (s.weight > best_weight) {
-      best_weight = s.weight;
-      best_reps = s.repetitions;
-    }
-  }
-  return Tuple2<double, int>(best_weight, best_reps);
-}
 
 List<FlSpot> getTrainingScores(String exercise, int set) {
   List<FlSpot> scores = [];
   var trainings = Hive.box<TrainingSet>('TrainingSets').values.toList();
   trainings = trainings.where((item) => item.exercise == exercise).toList();
-  var trainingDates = getTrainingDates(exercise);
+  var trainingDates = globals.getTrainingDates(exercise);
   //var i = 0;
   for (var d in trainingDates) {
     final dayDiff = d.difference(DateTime.now()).inDays;
@@ -175,10 +125,14 @@ class _ExerciseScreen extends State<ExerciseScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
     var title = widget.exerciseName;
     
-    TextEditingController dateInputController =
-        TextEditingController(text: DateTime.now().toString());
+    TextEditingController dateInputController = TextEditingController(text: DateTime.now().toString());
+    List<LineChartBarData> barData = [];
     for (var i = 0; i < 4; ++i) {
       trainingGraphs[i] = getTrainingScores(widget.exerciseName, i);
+      if (trainingGraphs[i].isNotEmpty) {
+        int reduce = (255 - ((i/4)*100)).toInt();
+        barData.add(LineChartBarData(spots: trainingGraphs[i], color: Color.fromARGB(reduce, 33, 150, 243)));
+      }
     }
 
     // for (int i = 0; i < globals.exercise_twins[widget.exerciseName]!.length; i++) {
@@ -187,8 +141,7 @@ class _ExerciseScreen extends State<ExerciseScreen> {
 
     var minScore = 1e6;
     var maxScore = 0.0;
-    Tuple2<double, int> latestTrainingInfo =
-        getLastTrainingInfo(widget.exerciseName);
+    Tuple2<double, int> latestTrainingInfo = globals.getLastTrainingInfo(widget.exerciseName);
     
     weightKg = latestTrainingInfo.item1.toInt();
     weightDg = (latestTrainingInfo.item1 * 100.0).toInt() % 100;
@@ -257,16 +210,7 @@ class _ExerciseScreen extends State<ExerciseScreen> {
                               sideTitles: SideTitles(showTitles: false)),
                         ),
                         clipData: const FlClipData.all(),
-                        lineBarsData: [
-                          LineChartBarData(spots: trainingGraphs[3], color: const Color.fromARGB(147, 219, 235, 248)),
-                          LineChartBarData(spots: trainingGraphs[2], color: const Color.fromARGB(148, 189, 218, 242)),
-                          LineChartBarData(spots: trainingGraphs[1], color: const Color.fromARGB(198, 123, 192, 249)),
-                          LineChartBarData(spots: trainingGraphs[0], color: const Color.fromARGB(255, 33, 150, 243)),
-                          LineChartBarData(spots: additionalGraphs[0], color: Colors.grey, isCurved: true),
-                          LineChartBarData(spots: additionalGraphs[1], color: Colors.green, isCurved: true),
-                          LineChartBarData(spots: additionalGraphs[2], color: Colors.yellow, isCurved: true),
-                          LineChartBarData(spots: additionalGraphs[3], color: Colors.red, isCurved: true),
-                        ],
+                        lineBarsData: barData,
                         minY: minScore - 5.0,
                         maxY: maxScore + 5.0,
                         minX: -45.0,
