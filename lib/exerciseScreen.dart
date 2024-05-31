@@ -141,7 +141,14 @@ class _ExerciseScreen extends State<ExerciseScreen> {
   void initState() {
     super.initState();
     var trainings = globals.getTrainings(DateTime.now());
-    if (trainings.isNotEmpty) { workoutStartTime = trainings[0].date;}
+    if (trainings.isNotEmpty) {
+      workoutStartTime = trainings[0].date;
+      fictiveStart = trainings.last.date;
+    }
+    var duration = DateTime.now().difference(fictiveStart);
+    var workoutDuration = DateTime.now().difference(workoutStartTime);
+    timerText = Text("Working out: ${workoutDuration.toString().split(".")[0]} - Idle: ${duration.toString().split(".")[0]}");
+
     timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       setState(() {
         var duration = DateTime.now().difference(fictiveStart);
