@@ -95,6 +95,7 @@ class _ExerciseScreen extends State<ExerciseScreen> {
   int weightKg = 40;
   int weightDg = 0;
   int repetitions = 10;
+  late Timer timer;
   List<LineChartBarData> barData = [];
   Text timerText = Text("Workout: 00:42:21 - Idle: 00:03:45");
   DateTime fictiveStart = DateTime.now();
@@ -133,11 +134,17 @@ class _ExerciseScreen extends State<ExerciseScreen> {
     });
   }
 
+ @override
+  void dispose() {
+    // Cancel the timer when the state is disposed
+    timer.cancel();
+    super.dispose();
+  }
 
   @override
   void initState() {
     super.initState();
-    Timer.periodic(const Duration(seconds: 1), (timer) {
+    timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       setState(() {
         var duration = DateTime.now().difference(fictiveStart);
         timerText = Text("${duration.toString().split(".")[0]}");
