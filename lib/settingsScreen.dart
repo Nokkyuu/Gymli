@@ -128,6 +128,12 @@ void restoreExLoad(myData){
     for (String e in row[3].split(";")) {
       if (e != "") { muscleIntensities.add(double.parse(e)); }
     }
+    if (muscleGroups.length > muscleIntensities.length) {
+      muscleIntensities = [];
+      for (var i = 0; i < muscleGroups.length; ++i) {
+        muscleIntensities.add(1.0);
+      }
+    }
     
     exerciseBox.add(Exercise(name: row[0], type: int.parse(row[1]), muscleGroups: muscleGroups, muscleIntensities: muscleIntensities, defaultRepBase: int.parse(row[4]), defaultRepMax: int.parse(row[5]), defaultIncrement: double.parse(row[6])));
 

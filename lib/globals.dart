@@ -50,12 +50,22 @@ import 'package:intl/intl.dart';
   List<String> exerciseList = [];
 
 
-  Exercise get_exercise(String exerciseName) {
-    var box = Hive.box<Exercise>('Exercises');
-    var exerciseFilter = box.values.toList().where((item) => item.name == exerciseName);
-    return exerciseFilter.first;
-  }
+Exercise get_exercise(String exerciseName) {
+  var box = Hive.box<Exercise>('Exercises');
+  var exerciseFilter = box.values.toList().where((item) => item.name == exerciseName);
+  return exerciseFilter.first;
+}
 
+List<TrainingSet> getExerciseTrainings(String exercise) {
+  var items = Hive.box<TrainingSet>('TrainingSets').values;
+  return items.where((item) => item.exercise == exercise).toList();
+
+}
+
+List<TrainingSet> getTrainings(DateTime day) {
+  var items = Hive.box<TrainingSet>('TrainingSets').values;
+  return items.where((item) => item.date.day == day.day &&item.date.month == day.month &&item.date.year == day.year).toList();
+}
 
 List<DateTime> getTrainingDates(String exercise) {
   var box = Hive.box<TrainingSet>('TrainingSets');

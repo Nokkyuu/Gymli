@@ -73,7 +73,8 @@ class _ExerciseListScreenState extends State<ExerciseListScreen> {
                       } else {
                         return const Text("None");
                       }
-                    }))
+                    })
+                  )
           ]),
     );
   }
