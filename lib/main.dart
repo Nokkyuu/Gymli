@@ -104,8 +104,24 @@ class _MainAppState extends State<MainApp> {
         },
       );
     },
-            ),
-    title: const Text("Fitness Tracker"),
+    ),
+    title: Row(
+              // mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.only(left: 15.0),
+                  child: Image.asset(
+                 'images/Icon-App_3.png',
+                  fit: BoxFit.contain,
+                  height: 50,
+                  ),
+                ),
+
+              Container(
+                  padding: const EdgeInsets.all(0.0), child: Text('Weight Wise'))
+            ],
+        ),//const Text("Weight Wise"),
+    
     centerTitle: true,),
     body: landingScreen,
     drawer: Builder(
@@ -118,7 +134,7 @@ class _MainAppState extends State<MainApp> {
               decoration: BoxDecoration(
                 //color: Colors.blueAccent
               ),
-              child: Image(image: AssetImage('images/menu2.png')),
+              child: Image(image: AssetImage('images/Icon-App_3.png')),
             ),
           ListTile(
             title: const Text('Exercise Setup'),

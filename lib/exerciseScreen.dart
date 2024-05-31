@@ -175,8 +175,7 @@ class _ExerciseScreen extends State<ExerciseScreen> {
                     MaterialPageRoute(
                         builder: (context) => ExerciseSetupScreen(title)),
                     );
-                  }
-                  ,
+                  },
                 icon: const Icon(Icons.edit)),
             IconButton(
                 onPressed: () {

@@ -32,9 +32,9 @@ class Exercise extends HiveObject {
     for (var s in muscleGroups) {
       muscleString += "$s;";
     }
-    // for (var s in muscleIntensities) {
-    //   intensitiesString += "$s;";
-    // }
+    for (var s in muscleIntensities) {
+      intensitiesString += "$s;";
+    }
     return [name, "$type", muscleString, intensitiesString, "$defaultRepBase", "$defaultRepMax", "$defaultIncrement"];
   }
 
