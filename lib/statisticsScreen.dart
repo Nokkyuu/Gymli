@@ -149,197 +149,199 @@ class _StatisticsScreen extends State<StatisticsScreen> {
         ),
         title: const Text("Statistics"),
       ),
-      body: Column(
+      body: ListView(
+        
+        
+        children: [Text("Selected Training Interval", style: subStyle),
+        const SizedBox(height: 5),
+        Row(
           mainAxisAlignment: MainAxisAlignment.center,
-          mainAxisSize: MainAxisSize.max,
-          children: <Widget>[
-            Text("Selected Training Interval", style: subStyle),
-            const SizedBox(height: 5),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Spacer(),
-                DropdownMenu<String>(
-                  label: const Text("Start"),
-                  onSelected: (String? date) { updateView(); },
-                  dropdownMenuEntries: trainingDates.map<DropdownMenuEntry<String>>((String name) { return DropdownMenuEntry<String>(value: name, label: name); }).toList(),
-                ),
-                const Spacer(),
-                DropdownMenu<String>(
-                  label: const Text("End"),
-                  onSelected: (String? date) { updateView(); },
-                  dropdownMenuEntries: trainingDates.map<DropdownMenuEntry<String>>((String name) { return DropdownMenuEntry<String>(value: name, label: name); }).toList(),
-                ),
-                const Spacer(),
-              ]
+          children: [
+            const Spacer(),
+            DropdownMenu<String>(
+              label: const Text("Start"),
+              onSelected: (String? date) { updateView(); },
+              dropdownMenuEntries: trainingDates.map<DropdownMenuEntry<String>>((String name) { return DropdownMenuEntry<String>(value: name, label: name); }).toList(),
             ),
-            const SizedBox(height: 20),
-            Text("Number of training days: $numberOfTrainingDays"),
-            Text(trainingDuration),
-            const Divider(),
-            Text("Number of Trainings per Week", style: subStyle),
-            SizedBox(
-              width: MediaQuery.of(context).size.width,
-              height: MediaQuery.of(context).size.height * 0.15,
-              child: Padding(
-                padding: const EdgeInsets.only(right: 10.0, top: 15.0, left: 0.0), // Hier das Padding rechts hinzufügen
-                child: LineChart(
-                  LineChartData(
-                  borderData: FlBorderData(show: false),
-                  titlesData: const FlTitlesData(topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)), rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false))),
-                  lineBarsData: trainingsPerWeekChart,
-                  maxY: 4
-                )
-              ),
-              )
+            const Spacer(),
+            DropdownMenu<String>(
+              label: const Text("End"),
+              onSelected: (String? date) { updateView(); },
+              dropdownMenuEntries: trainingDates.map<DropdownMenuEntry<String>>((String name) { return DropdownMenuEntry<String>(value: name, label: name); }).toList(),
             ),
-            const SizedBox(height: 20),
-            Text("Muscle usage per workout", style: subStyle),
-            const SizedBox(height: 5),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: (() {
-                List<Widget> widgets = [];
-                for (int i = 0; i < barChartMuscleColors.length/2; i++) {
-                  widgets.add(Wrap(children: [Container(width: 14.0, height: 14.0, color: barChartMuscleColors[i]), Text(" ${barChartMuscleNames[i]}", style: TextStyle(fontSize: 10.0))]));
-                  // widgets.add(Text(barChartMuscleNames[i]));
-                }
-                return widgets;
-              })(),
-            ),
-            const SizedBox(height: 2),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: (() {
-                List<Widget> widgets = [];
-                for (int i = (barChartMuscleColors.length/2).toInt(); i < barChartMuscleColors.length; i++) {
-                  widgets.add(Wrap(children: [Container(width: 14.0, height: 14.0, color: barChartMuscleColors[i]), Text(" ${barChartMuscleNames[i]}", style: TextStyle(fontSize: 10.0))]));
-                  // widgets.add(Text(barChartMuscleNames[i]));
-                }
-                return widgets;
-              })(),
-            ),
-            SizedBox(
-              width: MediaQuery.of(context).size.width,
-              height: MediaQuery.of(context).size.height * 0.15,
-              child: Padding(
-                padding: const EdgeInsets.only(right: 10.0, top: 5.0, left: 10.0), // Hier das Padding rechts hinzufügen
-                child: BarChart(
-                  BarChartData(
-                  alignment: BarChartAlignment.spaceBetween,
-                  titlesData: const FlTitlesData(
-                    topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                    rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                    bottomTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                    leftTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                    ),
-                    barGroups: barChartStatistics,
-                    ),
-                  ),
-                ),
-            ),
-            Spacer(),
-            Column(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: (() {
-                List<Widget> widgets = [];
-                for (var d in exerciseDetails) {
-                  widgets.add(d);
-                }
-                return widgets;
-              })(),
-            ),
-            // SizedBox(
-            //   width: MediaQuery.of(context).size.width,
-            //   height: MediaQuery.of(context).size.height * 0.15,
-            //   child: PieChart(
-            //   PieChartData(
-            //     pieTouchData: PieTouchData(
-            //       touchCallback: (FlTouchEvent event, pieTouchResponse) {
-            //         setState(() {
-            //           if (!event.isInterestedForInteractions ||
-            //               pieTouchResponse == null ||
-            //               pieTouchResponse.touchedSection == null) {
-            //             return;
-            //           }
-            //         });
-            //       },
-            //     ),
-            //     borderData: FlBorderData(
-            //       show: false,
-            //     ),
-            //     sectionsSpace: 0,
-            //     centerSpaceRadius: 40,
-            //     sections: List.generate(4, (i) {
-            //       // final isTouched = i == touchedIndex;
-            //       final isTouched = false;
-            //       final fontSize = isTouched ? 25.0 : 16.0;
-            //       final radius = isTouched ? 60.0 : 50.0;
-            //       const shadows = [Shadow(color: Colors.black, blurRadius: 2)];
-            //       switch (i) {
-            //         case 0:
-            //           return PieChartSectionData(
-            //             color: barChartMuscleColors[0],
-            //             value: 40,
-            //             title: '40%',
-            //             radius: radius,
-            //             titleStyle: TextStyle(
-            //               fontSize: fontSize,
-            //               fontWeight: FontWeight.bold,
-            //               color: barChartMuscleColors[1],
-            //               shadows: shadows,
-            //             ),
-            //           );
-            //         case 1:
-            //           return PieChartSectionData(
-            //             color: barChartMuscleColors[2],
-            //             value: 30,
-            //             title: '30%',
-            //             radius: radius,
-            //             titleStyle: TextStyle(
-            //               fontSize: fontSize,
-            //               fontWeight: FontWeight.bold,
-            //               color: barChartMuscleColors[3],
-            //               shadows: shadows,
-            //             ),
-            //           );
-            //         case 2:
-            //           return PieChartSectionData(
-            //             color: barChartMuscleColors[4],
-            //             value: 15,
-            //             title: '15%',
-            //             radius: radius,
-            //             titleStyle: TextStyle(
-            //               fontSize: fontSize,
-            //               fontWeight: FontWeight.bold,
-            //               color: barChartMuscleColors[5],
-            //               shadows: shadows,
-            //             ),
-            //           );
-            //         case 3:
-            //           return PieChartSectionData(
-            //             color: barChartMuscleColors[6],
-            //             value: 15,
-            //             title: '15%',
-            //             radius: radius,
-            //             titleStyle: TextStyle(
-            //               fontSize: fontSize,
-            //               fontWeight: FontWeight.bold,
-            //               color: barChartMuscleColors[7],
-            //               shadows: shadows,
-            //             ),
-            //           );
-            //         default:
-            //           throw Error();
-            //       }
-            //     }),
-            //   ),
-            //   ),
-            // ),
-            Spacer(),
-
+            const Spacer(),
           ]
         ),
+        const SizedBox(height: 20),
+        Text("Number of training days: $numberOfTrainingDays"),
+        Text(trainingDuration),
+        const Divider(),
+        Text("Number of Trainings per Week", style: subStyle),
+        SizedBox(
+          width: MediaQuery.of(context).size.width,
+          height: MediaQuery.of(context).size.height * 0.15,
+          child: Padding(
+            padding: const EdgeInsets.only(right: 10.0, top: 15.0, left: 0.0), // Hier das Padding rechts hinzufügen
+            child: LineChart(
+              LineChartData(
+              borderData: FlBorderData(show: false),
+              titlesData: const FlTitlesData(topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)), rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false))),
+              lineBarsData: trainingsPerWeekChart,
+              maxY: 4
+            )
+          ),
+          )
+        ),
+        const SizedBox(height: 20),
+        Text("Muscle usage per workout", style: subStyle),
+        const SizedBox(height: 5),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: (() {
+            List<Widget> widgets = [];
+            for (int i = 0; i < barChartMuscleColors.length/2; i++) {
+              widgets.add(Wrap(children: [Container(width: 14.0, height: 14.0, color: barChartMuscleColors[i]), Text(" ${barChartMuscleNames[i]}", style: TextStyle(fontSize: 10.0))]));
+              // widgets.add(Text(barChartMuscleNames[i]));
+            }
+            return widgets;
+          })(),
+        ),
+        const SizedBox(height: 2),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: (() {
+            List<Widget> widgets = [];
+            for (int i = (barChartMuscleColors.length/2).toInt(); i < barChartMuscleColors.length; i++) {
+              widgets.add(Wrap(children: [Container(width: 14.0, height: 14.0, color: barChartMuscleColors[i]), Text(" ${barChartMuscleNames[i]}", style: TextStyle(fontSize: 10.0))]));
+              // widgets.add(Text(barChartMuscleNames[i]));
+            }
+            return widgets;
+          })(),
+        ),
+        SizedBox(
+          width: MediaQuery.of(context).size.width,
+          height: MediaQuery.of(context).size.height * 0.15,
+          child: Padding(
+            padding: const EdgeInsets.only(right: 10.0, top: 5.0, left: 10.0), // Hier das Padding rechts hinzufügen
+            child: BarChart(
+              BarChartData(
+              alignment: BarChartAlignment.spaceBetween,
+              titlesData: const FlTitlesData(
+                topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                bottomTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                leftTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                ),
+                barGroups: barChartStatistics,
+                ),
+              ),
+            ),
+        ),
+        Spacer(),
+        Column(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: (() {
+            List<Widget> widgets = [];
+            for (var d in exerciseDetails) {
+              widgets.add(d);
+            }
+            return widgets;
+          })(),
+        ),
+        SizedBox(
+          height: 100,
+        ),
+        SizedBox(
+          width: MediaQuery.of(context).size.width,
+          height: MediaQuery.of(context).size.height * 0.15,
+          child: PieChart(
+          PieChartData(
+            pieTouchData: PieTouchData(
+              touchCallback: (FlTouchEvent event, pieTouchResponse) {
+                setState(() {
+                  if (!event.isInterestedForInteractions ||
+                      pieTouchResponse == null ||
+                      pieTouchResponse.touchedSection == null) {
+                    return;
+                  }
+                });
+              },
+            ),
+            borderData: FlBorderData(
+              show: false,
+            ),
+            sectionsSpace: 0,
+            centerSpaceRadius: 40,
+            sections: List.generate(4, (i) {
+              // final isTouched = i == touchedIndex;
+              final isTouched = false;
+              final fontSize = isTouched ? 25.0 : 16.0;
+              final radius = isTouched ? 60.0 : 50.0;
+              const shadows = [Shadow(color: Colors.black, blurRadius: 2)];
+              switch (i) {
+                case 0:
+                  return PieChartSectionData(
+                    color: barChartMuscleColors[0],
+                    value: 40,
+                    title: '40%',
+                    radius: radius,
+                    titleStyle: TextStyle(
+                      fontSize: fontSize,
+                      fontWeight: FontWeight.bold,
+                      color: barChartMuscleColors[1],
+                      shadows: shadows,
+                    ),
+                  );
+                case 1:
+                  return PieChartSectionData(
+                    color: barChartMuscleColors[2],
+                    value: 30,
+                    title: '30%',
+                    radius: radius,
+                    titleStyle: TextStyle(
+                      fontSize: fontSize,
+                      fontWeight: FontWeight.bold,
+                      color: barChartMuscleColors[3],
+                      shadows: shadows,
+                    ),
+                  );
+                case 2:
+                  return PieChartSectionData(
+                    color: barChartMuscleColors[4],
+                    value: 15,
+                    title: '15%',
+                    radius: radius,
+                    titleStyle: TextStyle(
+                      fontSize: fontSize,
+                      fontWeight: FontWeight.bold,
+                      color: barChartMuscleColors[5],
+                      shadows: shadows,
+                    ),
+                  );
+                case 3:
+                  return PieChartSectionData(
+                    color: barChartMuscleColors[6],
+                    value: 15,
+                    title: '15%',
+                    radius: radius,
+                    titleStyle: TextStyle(
+                      fontSize: fontSize,
+                      fontWeight: FontWeight.bold,
+                      color: barChartMuscleColors[7],
+                      shadows: shadows,
+                    ),
+                  );
+                default:
+                  throw Error();
+              }
+            }),
+          ),
+          ),
+        ),
+        Spacer(),
+        for (var i in List.generate(15, (i) => i))
+          Text("bla"),]
+      ),
     );
   }
 }
