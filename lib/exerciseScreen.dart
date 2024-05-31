@@ -99,6 +99,7 @@ class _ExerciseScreen extends State<ExerciseScreen> {
   List<LineChartBarData> barData = [];
   Text timerText = Text("Workout: 00:42:21 - Idle: 00:03:45");
   DateTime fictiveStart = DateTime.now();
+  DateTime workoutStartTime = DateTime.now();
 
   late InputFields inputFieldAccessor = InputFields(
       weightDg: weightDg, weightKg: weightKg, repetitions: repetitions);
@@ -128,11 +129,6 @@ class _ExerciseScreen extends State<ExerciseScreen> {
   _scrollToBottom() {
     _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
   }
-  void handleTimeout() {
-    setState(() {
-      timerText = Text("asd");
-    });
-  }
 
  @override
   void dispose() {
@@ -144,10 +140,13 @@ class _ExerciseScreen extends State<ExerciseScreen> {
   @override
   void initState() {
     super.initState();
+    var trainings = globals.getTrainings(DateTime.now());
+    if (trainings.isNotEmpty) { workoutStartTime = trainings[0].date;}
     timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       setState(() {
         var duration = DateTime.now().difference(fictiveStart);
-        timerText = Text("${duration.toString().split(".")[0]}");
+        var workoutDuration = DateTime.now().difference(workoutStartTime);
+        timerText = Text("Working out: ${workoutDuration.toString().split(".")[0]} - Idle: ${duration.toString().split(".")[0]}");
         // timerText = Text("ASD");
       });
     // timer.cancel();
@@ -360,6 +359,7 @@ class _ExerciseScreen extends State<ExerciseScreen> {
                     dateInputController.text);
                 _newData = max(_newData, new_weight);
                 updateGraph();
+                fictiveStart = DateTime.now();
               }
               
             ),
