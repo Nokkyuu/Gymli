@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:tuple/tuple.dart';
 import 'package:yafa_app/DataModels.dart';
 import 'package:hive/hive.dart';
 import 'package:yafa_app/landingScreen.dart';
@@ -345,6 +346,48 @@ class BottomSheet extends StatefulWidget {
 }
 
 class _BottomSheetState extends State<BottomSheet> {
+  final List<List<String>> frontImages = 
+  [['images/muscles/Front_biceps.png', 'Biceps'],
+  ['images/muscles/Front_calves.png', 'Calves' ], 
+  ['images/muscles/Front_delts.png', 'Deltoids'], 
+  ['images/muscles/Front_forearms.png', 'Forearms'], 
+  ['images/muscles/Front_pecs.png', 'Pectoralis major'], 
+  ['images/muscles/Front_quads.png', 'Quadriceps'], 
+  ['images/muscles/Front_sideabs.png', 'Abdominals'],
+  ['images/muscles/Front_abs.png', 'Abdominals'],
+  ['images/muscles/Front_trapz.png', 'Trapezius'], 
+  ['images/muscles/Front_abs.png', 'Trapezius']];
+  final List<List<String>> backImages = 
+  [['images/muscles/Back_calves.png', 'Calves'],
+  ['images/muscles/Back_delts.png', 'Deltoids' ], 
+  ['images/muscles/Back_forearms.png', 'Forearms'], 
+  ['images/muscles/Back_glutes.png', 'Gluteus maximus'], 
+  ['images/muscles/Back_hamstrings.png', 'Hamstrings'], 
+  ['images/muscles/Back_lats.png', 'Latissimus dorsi'], 
+  ['images/muscles/Back_trapz.png', 'Trapezius'],
+  ['images/muscles/Back_triceps.png', 'Triceps'],
+];
+  final List<List> frontButtons = [
+    [0.35,0.4,'Biceps'],
+    [0.46,0.4,'Forearms'],
+    [0.25,0.4,'Deltoids'],
+    [0.28,0.7,'Pectoralis major'],
+    [0.4,0.7,'Abdominals'],
+    [0.2,0.7,'Trapezius'],
+    [0.6,0.62,'Quadriceps'],
+    [0.8,0.58, 'Calves'],
+  ];
+    final List<List> backButtons = [
+    [0.82,0.6,'Calves'],
+    [0.25,0.4,'Deltoids'],
+    [0.5,0.4,'Forearms'],
+    [0.55,0.7,'Gluteus maximus'],
+    [0.68,0.6,'Hamstrings'],
+    [0.4,0.7,'Latissimus dorsi'],
+    [0.2,0.7,'Trapezius'],
+    [0.35,0.4, 'Triceps'],
+  ];
+
   opacity_change(double op) {
     if (op >= 1.0) {
       op = 0.0;
@@ -353,7 +396,7 @@ class _BottomSheetState extends State<BottomSheet> {
     }
     return op;
   }
-
+  
   @override
   Widget build(BuildContext context) {
     return SizedBox.expand(
@@ -379,205 +422,32 @@ class _BottomSheetState extends State<BottomSheet> {
                           fit: BoxFit.scaleDown,
                           image: AssetImage('images/muscles/Front_bg.png'),
                         ),
+                        
+                        for (var i in frontImages)
                         Image(
                           fit: BoxFit.scaleDown,
-                          image: const AssetImage(
-                              'images/muscles/Front_biceps.png'),
+                          image: AssetImage(
+                              i[0]),
                           opacity: AlwaysStoppedAnimation(
-                              globals.muscle_val["Biceps"]!),
+                              globals.muscle_val[i[1]]!),
                         ),
-                        Image(
-                          fit: BoxFit.scaleDown,
-                          image: const AssetImage(
-                              'images/muscles/Front_calves.png'),
-                          opacity: AlwaysStoppedAnimation(
-                              globals.muscle_val["Calves"]!),
-                        ),
-                        Image(
-                          fit: BoxFit.scaleDown,
-                          image: const AssetImage(
-                              'images/muscles/Front_delts.png'),
-                          opacity: AlwaysStoppedAnimation(
-                              globals.muscle_val["Deltoids"]!),
-                        ),
-                        Image(
-                          fit: BoxFit.scaleDown,
-                          image: const AssetImage(
-                              'images/muscles/Front_forearms.png'),
-                          opacity: AlwaysStoppedAnimation(
-                              globals.muscle_val[ "Forearms"]!),
-                        ),
-                        Image(
-                          fit: BoxFit.scaleDown,
-                          image:
-                              const AssetImage('images/muscles/Front_pecs.png'),
-                          opacity: AlwaysStoppedAnimation(
-                              globals.muscle_val["Pectoralis major"]!),
-                        ),
-                        Image(
-                          fit: BoxFit.scaleDown,
-                          image: const AssetImage(
-                              'images/muscles/Front_quads.png'),
-                          opacity: AlwaysStoppedAnimation(
-                              globals.muscle_val["Quadriceps"]!),
-                        ),
-                        Image(
-                          fit: BoxFit.scaleDown,
-                          image: const AssetImage(
-                              'images/muscles/Front_sideabs.png'),
-                          opacity: AlwaysStoppedAnimation(
-                              globals.muscle_val["Abdominals"]!),
-                        ),
-                        Image(
-                          fit: BoxFit.scaleDown,
-                          image: const AssetImage(
-                              'images/muscles/Front_trapz.png'),
-                          opacity: AlwaysStoppedAnimation(
-                              globals.muscle_val["Trapezius"]!),
-                        ),
-                        Image(
-                          fit: BoxFit.scaleDown,
-                          image:
-                              const AssetImage('images/muscles/Front_abs.png'),
-                          opacity: AlwaysStoppedAnimation(
-                              globals.muscle_val["Abdominals"]!),
-                        ),
+                        for (var i in frontButtons)
                         FractionallySizedBox(
                             alignment: Alignment.bottomRight,
-                            heightFactor: 0.35,
-                            widthFactor: 0.4,
+                            heightFactor: i[0],
+                            widthFactor: i[1],
                             child: Stack(
                               alignment: AlignmentDirectional.bottomEnd,
                               children: [
                                 TextButton(
                                     onPressed: () => setState(() {
-                                          globals.muscle_val["Biceps"] =
+                                          globals.muscle_val[i[2]] =
                                               opacity_change(globals
-                                                  .muscle_val["Biceps"]!);
+                                                  .muscle_val[i[2]]!);
                                         }),
                                     child: Transform.scale(
                                         scaleX: -1,
-                                        child: const Text("Biceps")))
-                              ],
-                            )),
-                        FractionallySizedBox(
-                            alignment: Alignment.bottomRight,
-                            heightFactor: 0.46,
-                            widthFactor: 0.4,
-                            child: Stack(
-                              alignment: AlignmentDirectional.bottomEnd,
-                              children: [
-                                TextButton(
-                                    onPressed: () => setState(() {
-                                          globals.muscle_val[ "Forearms"] =
-                                              opacity_change(
-                                                  globals.muscle_val[ "Forearms"]!);
-                                        }),
-                                    child: Transform.scale(
-                                        scaleX: -1,
-                                        child: const Text("forearm")))
-                              ],
-                            )),
-                        FractionallySizedBox(
-                            alignment: Alignment.bottomRight,
-                            heightFactor: 0.25,
-                            widthFactor: 0.4,
-                            child: Stack(
-                              alignment: AlignmentDirectional.bottomEnd,
-                              children: [
-                                TextButton(
-                                    onPressed: () => setState(() {
-                                          globals.muscle_val["Deltoids"] =
-                                              opacity_change(
-                                                  globals.muscle_val["Deltoids"]!);
-                                        }),
-                                    child: Transform.scale(
-                                        scaleX: -1, child: const Text("  ")))
-                              ],
-                            )),
-                        FractionallySizedBox(
-                            alignment: Alignment.bottomRight,
-                            heightFactor: 0.28,
-                            widthFactor: 0.7,
-                            child: Stack(
-                              alignment: AlignmentDirectional.bottomEnd,
-                              children: [
-                                TextButton(
-                                    onPressed: () => setState(() {
-                                          globals.muscle_val["Pectoralis major"] =
-                                              opacity_change(
-                                                  globals.muscle_val["Pectoralis major"]!);
-                                        }),
-                                    child: Transform.scale(
-                                        scaleX: -1, child: const Text("Pectoralis major")))
-                              ],
-                            )),
-                        FractionallySizedBox(
-                            alignment: Alignment.bottomRight,
-                            heightFactor: 0.4,
-                            widthFactor: 0.7,
-                            child: Stack(
-                              alignment: AlignmentDirectional.bottomEnd,
-                              children: [
-                                TextButton(
-                                    onPressed: () => setState(() {
-                                          globals.muscle_val["Abdominals"] =
-                                              opacity_change(
-                                                  globals.muscle_val["Abdominals"]!);
-                                        }),
-                                    child: Transform.scale(
-                                        scaleX: -1, child: const Text("Abdominals")))
-                              ],
-                            )),
-                        FractionallySizedBox(
-                            alignment: Alignment.bottomRight,
-                            heightFactor: 0.2,
-                            widthFactor: 0.7,
-                            child: Stack(
-                              alignment: AlignmentDirectional.bottomEnd,
-                              children: [
-                                TextButton(
-                                    onPressed: () => setState(() {
-                                          globals.muscle_val["Trapezius"] =
-                                              opacity_change(
-                                                  globals.muscle_val["Trapezius"]!);
-                                        }),
-                                    child: Transform.scale(
-                                        scaleX: -1, child: const Text("  ")))
-                              ],
-                            )),
-                        FractionallySizedBox(
-                            alignment: Alignment.bottomRight,
-                            heightFactor: 0.6,
-                            widthFactor: 0.62,
-                            child: Stack(
-                              alignment: AlignmentDirectional.bottomEnd,
-                              children: [
-                                TextButton(
-                                    onPressed: () => setState(() {
-                                          globals.muscle_val["Quadriceps"] =
-                                              opacity_change(
-                                                  globals.muscle_val["Quadriceps"]!);
-                                        }),
-                                    child: Transform.scale(
-                                        scaleX: -1, child: const Text("Quadriceps")))
-                              ],
-                            )),
-                        FractionallySizedBox(
-                            alignment: Alignment.bottomRight,
-                            heightFactor: 0.8,
-                            widthFactor: 0.58,
-                            child: Stack(
-                              alignment: AlignmentDirectional.bottomEnd,
-                              children: [
-                                TextButton(
-                                    onPressed: () => setState(() {
-                                          globals.muscle_val["Calves"] =
-                                              opacity_change(globals
-                                                  .muscle_val["Calves"]!);
-                                        }),
-                                    child: Transform.scale(
-                                        scaleX: -1, child: const Text("   ")))
+                                        child:Text(i[2])))
                               ],
                             )),
                       ])),
@@ -589,189 +459,32 @@ class _BottomSheetState extends State<BottomSheet> {
                       const Image(
                           fit: BoxFit.scaleDown,
                           image: AssetImage('images/muscles/Back_bg.png')),
+                          for (var i in backImages)
                       Image(
                         fit: BoxFit.scaleDown,
                         image:
-                            const AssetImage('images/muscles/Back_calves.png'),
+                            AssetImage(i[0]),
                         opacity: AlwaysStoppedAnimation(
-                            globals.muscle_val["Calves"]!),
+                            globals.muscle_val[i[1]]!),
                       ),
-                      Image(
-                        fit: BoxFit.scaleDown,
-                        image: const AssetImage(
-                            'images/muscles/Back_forearms.png'),
-                        opacity:
-                            AlwaysStoppedAnimation(globals.muscle_val[ "Forearms"]!),
-                      ),
-                      Image(
-                        fit: BoxFit.scaleDown,
-                        image:
-                            const AssetImage('images/muscles/Back_delts.png'),
-                        opacity: AlwaysStoppedAnimation(
-                            globals.muscle_val["Deltoids"]!),
-                      ),
-                      Image(
-                        fit: BoxFit.scaleDown,
-                        image:
-                            const AssetImage('images/muscles/Back_glutes.png'),
-                        opacity: AlwaysStoppedAnimation(
-                            globals.muscle_val["Gluteus maximus"]!),
-                      ),
-                      Image(
-                        fit: BoxFit.scaleDown,
-                        image: const AssetImage(
-                            'images/muscles/Back_hamstrings.png'),
-                        opacity:
-                            AlwaysStoppedAnimation(globals.muscle_val["Hamstrings"]!),
-                      ),
-                      Image(
-                        fit: BoxFit.scaleDown,
-                        image: const AssetImage('images/muscles/Back_lats.png'),
-                        opacity:
-                            AlwaysStoppedAnimation(globals.muscle_val["Latissimus dorsi"]!),
-                      ),
-                      Image(
-                        fit: BoxFit.scaleDown,
-                        image:
-                            const AssetImage('images/muscles/Back_trapz.png'),
-                        opacity: AlwaysStoppedAnimation(
-                            globals.muscle_val["Trapezius"]!),
-                      ),
-                      Image(
-                        fit: BoxFit.scaleDown,
-                        image:
-                            const AssetImage('images/muscles/Back_triceps.png'),
-                        opacity: AlwaysStoppedAnimation(
-                            globals.muscle_val["Triceps"]!),
-                      ),
+                      for (var i in backButtons)
                       FractionallySizedBox(
                           alignment: Alignment.bottomRight,
-                          heightFactor: 0.35,
-                          widthFactor: 0.4,
+                          heightFactor: i[0],
+                          widthFactor: i[1],
                           child: Stack(
                             alignment: AlignmentDirectional.bottomEnd,
                             children: [
                               TextButton(
                                   onPressed: () => setState(() {
-                                        globals.muscle_val["Triceps"] =
+                                        globals.muscle_val[i[2]] =
                                             opacity_change(
-                                                globals.muscle_val["Triceps"]!);
+                                                globals.muscle_val[i[2]]!);
                                       }),
-                                  child: const Text("Triceps"))
+                                  child: Text(i[2]))
                             ],
                           )),
-                      FractionallySizedBox(
-                          alignment: Alignment.bottomRight,
-                          heightFactor: 0.5,
-                          widthFactor: 0.4,
-                          child: Stack(
-                            alignment: AlignmentDirectional.bottomEnd,
-                            children: [
-                              TextButton(
-                                  onPressed: () => setState(() {
-                                        globals.muscle_val[ "Forearms"] =
-                                            opacity_change(
-                                                globals.muscle_val[ "Forearms"]!);
-                                      }),
-                                  child: const Text("  "))
-                            ],
-                          )),
-                      FractionallySizedBox(
-                          alignment: Alignment.bottomRight,
-                          heightFactor: 0.25,
-                          widthFactor: 0.4,
-                          child: Stack(
-                            alignment: AlignmentDirectional.bottomEnd,
-                            children: [
-                              TextButton(
-                                  onPressed: () => setState(() {
-                                        globals.muscle_val["Deltoids"] =
-                                            opacity_change(
-                                                globals.muscle_val["Deltoids"]!);
-                                      }),
-                                  child: const Text("Deltoids"))
-                            ],
-                          )),
-                      FractionallySizedBox(
-                          alignment: Alignment.bottomRight,
-                          heightFactor: 0.2,
-                          widthFactor: 0.7,
-                          child: Stack(
-                            alignment: AlignmentDirectional.bottomEnd,
-                            children: [
-                              TextButton(
-                                  onPressed: () => setState(() {
-                                        globals.muscle_val["Trapezius"] =
-                                            opacity_change(
-                                                globals.muscle_val["Trapezius"]!);
-                                      }),
-                                  child: const Text("Trapezius"))
-                            ],
-                          )),
-                      FractionallySizedBox(
-                          alignment: Alignment.bottomRight,
-                          heightFactor: 0.4,
-                          widthFactor: 0.7,
-                          child: Stack(
-                            alignment: AlignmentDirectional.bottomEnd,
-                            children: [
-                              TextButton(
-                                  onPressed: () => setState(() {
-                                        globals.muscle_val["Latissimus dorsi"] =
-                                            opacity_change(
-                                                globals.muscle_val["Latissimus dorsi"]!);
-                                      }),
-                                  child: const Text("Latissimus dorsi"))
-                            ],
-                          )),
-                      FractionallySizedBox(
-                          alignment: Alignment.bottomRight,
-                          heightFactor: 0.55,
-                          widthFactor: 0.7,
-                          child: Stack(
-                            alignment: AlignmentDirectional.bottomEnd,
-                            children: [
-                              TextButton(
-                                  onPressed: () => setState(() {
-                                        globals.muscle_val["Gluteus maximus"] =
-                                            opacity_change(
-                                                globals.muscle_val["Gluteus maximus"]!);
-                                      }),
-                                  child: const Text("Gluteus maximus"))
-                            ],
-                          )),
-                      FractionallySizedBox(
-                          alignment: Alignment.bottomRight,
-                          heightFactor: 0.68,
-                          widthFactor: 0.6,
-                          child: Stack(
-                            alignment: AlignmentDirectional.bottomEnd,
-                            children: [
-                              TextButton(
-                                  onPressed: () => setState(() {
-                                        globals.muscle_val["Hamstrings"] =
-                                            opacity_change(
-                                                globals.muscle_val["Hamstrings"]!);
-                                      }),
-                                  child: const Text("Hamstrings"))
-                            ],
-                          )),
-                      FractionallySizedBox(
-                          alignment: Alignment.bottomRight,
-                          heightFactor: 0.82,
-                          widthFactor: 0.6,
-                          child: Stack(
-                            alignment: AlignmentDirectional.bottomEnd,
-                            children: [
-                              TextButton(
-                                  onPressed: () => setState(() {
-                                        globals.muscle_val["Calves"] =
-                                            opacity_change(
-                                                globals.muscle_val["Calves"]!);
-                                      }),
-                                  child: const Text("Calves"))
-                            ],
-                          )),
+                      
                     ]))
               ],
             ),
@@ -805,21 +518,3 @@ class HeadCard extends StatelessWidget {
     );
   }
 }
-
-// class ObscuredTextFieldSample extends StatelessWidget {
-//   const ObscuredTextFieldSample({super.key});
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return const SizedBox(
-//       width: 250,
-//       child: TextField(
-//         obscureText: true,
-//         decoration: InputDecoration(
-//           border: OutlineInputBorder(),
-//           labelText: 'GiveMeName',
-//         ),
-//       ),
-//     );
-//   }
-// }
