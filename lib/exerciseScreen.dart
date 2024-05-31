@@ -10,6 +10,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:numberpicker/numberpicker.dart';
 import 'package:tuple/tuple.dart';
 import 'package:yafa_app/exerciseSetupScreen.dart';
+import 'package:flutter_timer_countdown/flutter_timer_countdown.dart';
 import 'globals.dart' as globals;
 
 enum ExerciseType { warmup, work, dropset }
@@ -30,7 +31,6 @@ void get_exercise_list() async {
   globals.exerciseList = exerciseList;
 }
 
-
 List<FlSpot> getTrainingScores(String exercise, int set) {
   List<FlSpot> scores = [];
   var trainings = Hive.box<TrainingSet>('TrainingSets').values.toList();
@@ -47,9 +47,11 @@ List<FlSpot> getTrainingScores(String exercise, int set) {
               item.date.month == d.month &&
               item.date.year == d.year)
           .toList();
-      if (subTrainings.length > set+1) {
+      if (subTrainings.length > set + 1) {
         var s = subTrainings[set];
-        var score = s.weight + ((s.repetitions - s.baseReps) / (s.maxReps - s.baseReps)) * s.increment;
+        var score = s.weight +
+            ((s.repetitions - s.baseReps) / (s.maxReps - s.baseReps)) *
+                s.increment;
         scores.add(FlSpot((dayDiff).toDouble(), score));
       }
     }
@@ -57,8 +59,8 @@ List<FlSpot> getTrainingScores(String exercise, int set) {
   return scores;
 }
 
-Future<int> addSet(String exerciseName, double weight, int repetitions, int setType,
-    String when) async {
+Future<int> addSet(String exerciseName, double weight, int repetitions,
+    int setType, String when) async {
   var box = Hive.box<TrainingSet>('TrainingSets');
   var theDate = DateTime.parse(when);
   // TrainingSet ({required this.id, required this.exercise, required this.date, required this.weight, required this.repetitions, required this.setType, required this.baseReps, required this.maxReps, required this.increment, required this.machineName});
@@ -126,13 +128,16 @@ class _ExerciseScreen extends State<ExerciseScreen> {
   Widget build(BuildContext context) {
     WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
     var title = widget.exerciseName;
-    
-    TextEditingController dateInputController = TextEditingController(text: DateTime.now().toString());
+
+    TextEditingController dateInputController =
+        TextEditingController(text: DateTime.now().toString());
     for (var i = 0; i < 4; ++i) {
       trainingGraphs[i] = getTrainingScores(widget.exerciseName, i);
       if (trainingGraphs[i].isNotEmpty) {
-        int reduce = (255 - ((i/4)*100)).toInt();
-        barData.add(LineChartBarData(spots: trainingGraphs[i], color: Color.fromARGB(reduce, 33, 150, 243)));
+        int reduce = (255 - ((i / 4) * 100)).toInt();
+        barData.add(LineChartBarData(
+            spots: trainingGraphs[i],
+            color: Color.fromARGB(reduce, 33, 150, 243)));
       }
     }
 
@@ -142,8 +147,9 @@ class _ExerciseScreen extends State<ExerciseScreen> {
 
     var minScore = 1e6;
     var maxScore = 0.0;
-    Tuple2<double, int> latestTrainingInfo = globals.getLastTrainingInfo(widget.exerciseName);
-    
+    Tuple2<double, int> latestTrainingInfo =
+        globals.getLastTrainingInfo(widget.exerciseName);
+
     weightKg = latestTrainingInfo.item1.toInt();
     weightDg = (latestTrainingInfo.item1 * 100.0).toInt() % 100;
     repetitions = latestTrainingInfo.item2;
@@ -170,17 +176,15 @@ class _ExerciseScreen extends State<ExerciseScreen> {
             IconButton(
                 onPressed: () {
                   get_exercise_list();
-                   Navigator.push(
+                  Navigator.push(
                     context,
                     MaterialPageRoute(
                         builder: (context) => ExerciseSetupScreen(title)),
-                    );
-                  }
-                  ,
+                  );
+                },
                 icon: const Icon(Icons.edit)),
             IconButton(
                 onPressed: () {
-                  
                   Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -249,17 +253,15 @@ class _ExerciseScreen extends State<ExerciseScreen> {
                                     ),
                                   ),
                                   dense: true,
-                                  visualDensity: const VisualDensity(vertical: -3), // to compact
+                                  visualDensity: const VisualDensity(
+                                      vertical: -3), // to compact
                                   title: Text(
                                       "${item.weight}kg for ${item.repetitions} reps"),
                                   subtitle: Text(
                                       "${item.date.hour}:${item.date.minute}:${item.date.second}"),
                                   trailing: IconButton(
                                       icon: const Icon(Icons.delete),
-                                      onPressed: () => {
-                                            box.delete(item.key)
-                                    
-                                          }),
+                                      onPressed: () => {box.delete(item.key)}),
                                   onTap: () {
                                     Navigator.push(
                                       context,
@@ -311,9 +313,12 @@ class _ExerciseScreen extends State<ExerciseScreen> {
               style: const ButtonStyle(),
               label: const Text('Submit'),
               icon: const Icon(Icons.send),
-              onPressed: () {
+              onPressed: 
+              
+              () {
                 double new_weight = inputFieldAccessor.weightKg.toDouble() +
                     inputFieldAccessor.weightDg.toDouble() / 100.0;
+                
                 addSet(
                     widget.exerciseName,
                     new_weight,
@@ -322,7 +327,46 @@ class _ExerciseScreen extends State<ExerciseScreen> {
                     dateInputController.text);
                 _newData = max(_newData, new_weight);
                 updateGraph();
-              },
+                
+                showDialog<String>(
+                      context: context,
+                      builder: (BuildContext context) => Dialog(
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: <Widget>[
+                              Card(
+                                child: Padding(
+                                  padding: const EdgeInsets.all(12.0),
+                                  child: TimerCountdown(
+                                    endTime: DateTime.now().add(
+                                      const Duration(
+                                        minutes: 2,
+                                        seconds: 0, //TODO: Change or deactivate timer completly in settings
+                                      ), 
+                                    ),
+                                    enableDescriptions: false,
+                                    format: CountDownTimerFormat.minutesSeconds,
+                                    onEnd: () {
+                                      Navigator.pop(context);
+                                    },
+                                  ),
+                                ),
+                              ),
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.pop(context);
+                                },
+                                child: const Text('Cancel Timer'),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );}
+              
             ),
             const SizedBox(height: 40),
           ]),

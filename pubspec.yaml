@@ -22,6 +22,7 @@ dependencies:
   confirm_dialog: ^1.0.3
   tuple: ^2.0.2
   time_machine: ^0.9.17
+  flutter_timer_countdown: ^1.0.7
 
 dev_dependencies:
   flutter_test:
