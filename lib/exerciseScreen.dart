@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:yafa_app/exerciseListScreen.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'dart:async';
 import 'package:yafa_app/DataModels.dart';
 import 'dart:math';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -12,6 +13,7 @@ import 'package:tuple/tuple.dart';
 import 'package:yafa_app/exerciseSetupScreen.dart';
 import 'package:flutter_timer_countdown/flutter_timer_countdown.dart';
 import 'globals.dart' as globals;
+import 'package:intl/intl.dart';
 
 enum ExerciseType { warmup, work, dropset }
 
@@ -94,6 +96,8 @@ class _ExerciseScreen extends State<ExerciseScreen> {
   int weightDg = 0;
   int repetitions = 10;
   List<LineChartBarData> barData = [];
+  Text timerText = Text("Workout: 00:42:21 - Idle: 00:03:45");
+  DateTime fictiveStart = DateTime.now();
 
   late InputFields inputFieldAccessor = InputFields(
       weightDg: weightDg, weightKg: weightKg, repetitions: repetitions);
@@ -123,7 +127,25 @@ class _ExerciseScreen extends State<ExerciseScreen> {
   _scrollToBottom() {
     _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
   }
+  void handleTimeout() {
+    setState(() {
+      timerText = Text("asd");
+    });
+  }
 
+
+  @override
+  void initState() {
+    super.initState();
+    Timer.periodic(const Duration(seconds: 1), (timer) {
+      setState(() {
+        var duration = DateTime.now().difference(fictiveStart);
+        timerText = Text("${duration.toString().split(".")[0]}");
+        // timerText = Text("ASD");
+      });
+    // timer.cancel();
+    });
+  }
   @override
   Widget build(BuildContext context) {
     WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
@@ -172,6 +194,10 @@ class _ExerciseScreen extends State<ExerciseScreen> {
             ),
           ),
           title: Text(title),
+          bottom: PreferredSize(
+            child: timerText,
+            preferredSize: Size.zero
+          ),
           actions: [
             IconButton(
                 onPressed: () {
@@ -327,45 +353,7 @@ class _ExerciseScreen extends State<ExerciseScreen> {
                     dateInputController.text);
                 _newData = max(_newData, new_weight);
                 updateGraph();
-                
-                showDialog<String>(
-                      context: context,
-                      builder: (BuildContext context) => Dialog(
-                        child: Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: <Widget>[
-                              Card(
-                                child: Padding(
-                                  padding: const EdgeInsets.all(12.0),
-                                  child: TimerCountdown(
-                                    endTime: DateTime.now().add(
-                                      const Duration(
-                                        minutes: 2,
-                                        seconds: 0, //TODO: Change or deactivate timer completly in settings
-                                      ), 
-                                    ),
-                                    enableDescriptions: false,
-                                    format: CountDownTimerFormat.minutesSeconds,
-                                    onEnd: () {
-                                      Navigator.pop(context);
-                                    },
-                                  ),
-                                ),
-                              ),
-                              TextButton(
-                                onPressed: () {
-                                  Navigator.pop(context);
-                                },
-                                child: const Text('Cancel Timer'),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    );}
+              }
               
             ),
             const SizedBox(height: 40),

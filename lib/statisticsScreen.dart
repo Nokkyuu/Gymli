@@ -119,19 +119,19 @@ class _StatisticsScreen extends State<StatisticsScreen> {
         barChartStatistics.add(generateBars(i, accumulatedScore, barChartMuscleColors));
       }
 
-      List<String> exerciseDetailNames = ["Benchpress", "Squat (Machine)"];
-      for (String exercise in exerciseDetailNames) {
-        List<TrainingSet> trainings = globals.getExerciseTrainings(exercise);
-        Period diff = LocalDate.dateTime(trainings.last.date).periodSince(LocalDate.dateTime(trainings.first.date));
-        int sets = trainings.length;
-        String duration = "${diff.months} month and ${diff.weeks} weeks";
-        double weight = 0.0;
-        for (var t in trainings) {
-          weight += t.weight * t.repetitions;
-        }
-        exerciseDetails.add(Text("$exercise:", textAlign: TextAlign.left));
-        exerciseDetails.add(Text("Lifted $weight kg in $duration during $sets sets"));
-      }
+      // List<String> exerciseDetailNames = ["Benchpress", "Squat (Machine)"];
+      // for (String exercise in exerciseDetailNames) {
+      //   List<TrainingSet> trainings = globals.getExerciseTrainings(exercise);
+      //   Period diff = LocalDate.dateTime(trainings.last.date).periodSince(LocalDate.dateTime(trainings.first.date));
+      //   int sets = trainings.length;
+      //   String duration = "${diff.months} month and ${diff.weeks} weeks";
+      //   double weight = 0.0;
+      //   for (var t in trainings) {
+      //     weight += t.weight * t.repetitions;
+      //   }
+      //   exerciseDetails.add(Text("$exercise:", textAlign: TextAlign.left));
+      //   exerciseDetails.add(Text("Lifted $weight kg in $duration during $sets sets"));
+      // }
     });
   }
 
