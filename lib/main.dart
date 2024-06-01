@@ -64,7 +64,6 @@ void main() async {
   runApp(const MainApp()
   );
 }
-
 class MainApp extends StatefulWidget {
   const MainApp({
     super.key,
@@ -77,6 +76,14 @@ class MainApp extends StatefulWidget {
 class _MainAppState extends State<MainApp> {
   Brightness mode =  Brightness.light;
   Color themecolor = Colors.orange;
+  bool isDarkMode = false;
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    isDarkMode = Theme.of(context).brightness == Brightness.dark;
+  }
 
 
   LandingScreen landingScreen = LandingScreen();
@@ -123,7 +130,9 @@ class _MainAppState extends State<MainApp> {
                 Container(
                   padding: const EdgeInsets.only(left: 15.0),
                   child: Image.asset(
-                 'images/Icon-App_3.png',
+                    isDarkMode
+                    ? 'images/Icon-App_3_Darkmode.png'
+                    : 'images/Icon-App_3.png',
                   fit: BoxFit.contain,
                   height: 50,
                   ),
@@ -142,11 +151,15 @@ class _MainAppState extends State<MainApp> {
                 child: ListView(
         padding: EdgeInsets.zero,
         children: [
-          const DrawerHeader(
-              decoration: BoxDecoration(
+          DrawerHeader(
+              decoration: const BoxDecoration(
                 //color: Colors.blueAccent
               ),
-              child: Image(image: AssetImage('images/Icon-App_3.png')),
+              child: Image(image: AssetImage(
+                  isDarkMode
+                    ? 'images/Icon-App_3_Darkmode.png'
+                    : 'images/Icon-App_3.png',
+                )),
             ),
           ListTile(
             title: const Text('Exercise Setup'),
