@@ -11,6 +11,8 @@ import 'package:confirm_dialog/confirm_dialog.dart';
 //import 'package:file_picker/file_picker.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'globals.dart' as globals;
+import 'package:shared_preferences/shared_preferences.dart';
 
 
 class SettingsScreen extends StatefulWidget {
@@ -142,6 +144,16 @@ void restoreExLoad(myData){
 
 
 class _SettingsScreen extends State<SettingsScreen> {
+  final wakeUpTimeController = TextEditingController();
+  Future<SharedPreferences> _preferences = SharedPreferences.getInstance();
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    wakeUpTimeController.text = "${globals.idleTimerWakeup}";
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -160,6 +172,31 @@ class _SettingsScreen extends State<SettingsScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           mainAxisSize: MainAxisSize.max,
           children: <Widget>[
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+              Text("Wakeup Timer (s)"),
+              SizedBox(
+                width: 100,
+                child: 
+              TextField(
+                  textAlign: TextAlign.center,
+                  controller: wakeUpTimeController,
+                  obscureText: false,
+                  decoration: const InputDecoration(
+                    border: UnderlineInputBorder(),
+                    //alignLabelWithHint: true
+                  ),
+                  onChanged: (String s) async {
+                    if (double.tryParse(s) != null) {
+                      final SharedPreferences prefs = await _preferences;
+                      globals.idleTimerWakeup = int.parse(s);
+                      prefs.setInt('idleWakeTime', globals.idleTimerWakeup);
+                    }
+                  }
+                ),
+              ),
+            ],),
             Spacer(flex: 3,),
             Divider(),
             Text("Export App-Data"),

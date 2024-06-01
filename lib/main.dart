@@ -10,6 +10,7 @@ import 'package:yafa_app/settingsScreen.dart';
 import 'package:yafa_app/workoutSetupScreen.dart';
 import 'package:yafa_app/statisticsScreen.dart';
 import 'globals.dart' as globals;
+import 'package:shared_preferences/shared_preferences.dart';
 bool state = false;
 
 // Pectoralis major
@@ -35,6 +36,13 @@ void get_exercise_list() async {
   }
   globals.exerciseList = exerciseList;
 }
+Future<void> getPreferences() async {
+  Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
+  final SharedPreferences prefs = await _prefs;
+  // prefs.setInt('idleWakeTime', 90);
+  globals.idleTimerWakeup = prefs.getInt('idleWakeTime')!;
+  // print(prefs.getInt('counter'));
+}
 
 void main() async {
   await Hive.initFlutter();
@@ -42,6 +50,9 @@ void main() async {
   Hive.registerAdapter(TrainingSetAdapter());
   Hive.registerAdapter(WorkoutAdapter());
   Hive.registerAdapter(WorkoutUnitAdapter());
+
+  getPreferences();
+
   // populateExercises();
   await Hive.openBox<TrainingSet>('TrainingSets');
   await Hive.openBox<Exercise>('Exercises');

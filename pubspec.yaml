@@ -23,6 +23,7 @@ dependencies:
   tuple: ^2.0.2
   time_machine: ^0.9.17
   flutter_timer_countdown: ^1.0.7
+  shared_preferences: ^2.2.3
 
 dev_dependencies:
   flutter_test:
