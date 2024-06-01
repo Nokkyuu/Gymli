@@ -14,6 +14,7 @@ import 'package:yafa_app/exerciseSetupScreen.dart';
 import 'package:flutter_timer_countdown/flutter_timer_countdown.dart';
 import 'globals.dart' as globals;
 import 'package:intl/intl.dart';
+import 'package:flutter/services.dart';
 
 enum ExerciseType { warmup, work, dropset }
 
@@ -152,6 +153,10 @@ class _ExerciseScreen extends State<ExerciseScreen> {
     timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       setState(() {
         var duration = DateTime.now().difference(fictiveStart);
+        int secondsSince = duration.inSeconds;
+        if (secondsSince >= globals.idleTimerWakeup && secondsSince <= globals.idleTimerWakeup+3) {
+          HapticFeedback.vibrate();
+        }
         var workoutDuration = DateTime.now().difference(workoutStartTime);
         timerText = Text("Working out: ${workoutDuration.toString().split(".")[0]} - Idle: ${duration.toString().split(".")[0]}");
         // timerText = Text("ASD");
