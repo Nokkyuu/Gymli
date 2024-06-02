@@ -1,7 +1,7 @@
 // ignore_for_file: file_names
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:yafa_app/DataModels.dart';
+import 'package:Gymli/DataModels.dart';
 import 'package:csv/csv.dart';
 import 'package:path_provider/path_provider.dart';
 import 'dart:io';
@@ -79,7 +79,7 @@ void restoreSetData(context) async {
   } else {
   final filePath = await FlutterFileDialog.pickFile(params: const OpenFileDialogParams(dialogType: OpenFileDialogType.document, sourceType: SourceType.savedPhotosAlbum));
   if (filePath != null){
-  File file = File(filePath!); 
+  File file = File(filePath); 
   final myData =  await file.readAsString();
   restoreSetLoad(myData);
   }
@@ -103,12 +103,12 @@ void restoreExercises(context) async {
     //print("bla");
     var filePath = 'csv/ex.csv';
     final myData = await rootBundle.loadString(filePath);
-    print(myData);
+    // print(myData);
     restoreExLoad(myData);
   } else {
   final filePath = await FlutterFileDialog.pickFile(params: const OpenFileDialogParams(dialogType: OpenFileDialogType.document, sourceType: SourceType.savedPhotosAlbum));
   if (filePath != null){
-  File file = File(filePath!); 
+  File file = File(filePath); 
   final myData =  await file.readAsString();
   restoreExLoad(myData);
   }
@@ -145,7 +145,7 @@ void restoreExLoad(myData){
 class _SettingsScreen extends State<SettingsScreen> {
   final wakeUpTimeController = TextEditingController();
   // final equationController = TextEditingController();
-  Future<SharedPreferences> _preferences = SharedPreferences.getInstance();
+  final Future<SharedPreferences> _preferences = SharedPreferences.getInstance();
   DisplayMode selectedMode = DisplayMode.light;
 
   @override
@@ -176,7 +176,7 @@ class _SettingsScreen extends State<SettingsScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-              Text("Wakeup Timer (s)"),
+              const Text("Wakeup Timer (s)"),
               SizedBox(
                 width: 100,
                 child: 
@@ -201,7 +201,7 @@ class _SettingsScreen extends State<SettingsScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                Text("Display mode"),
+                const Text("Display mode"),
                 SegmentedButton<DisplayMode>(
                       showSelectedIcon: false,
                       segments: const <ButtonSegment<DisplayMode>>[
@@ -224,7 +224,7 @@ class _SettingsScreen extends State<SettingsScreen> {
                Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-              Text("Score calculation"),
+              const Text("Score calculation"),
               Column(
                 children: [
                   SegmentedButton<DisplayMode>(
@@ -247,9 +247,9 @@ class _SettingsScreen extends State<SettingsScreen> {
                   }),
               ])
             ],),
-            Spacer(flex: 3,),
-            Divider(),
-            Text("Export App-Data"),
+            const Spacer(flex: 3,),
+            const Divider(),
+            const Text("Export App-Data"),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -270,10 +270,10 @@ class _SettingsScreen extends State<SettingsScreen> {
                 },
               ),
             ]),
-            Divider(),
-            Spacer(),
-            Divider(),
-            Text("Wipe App-Data"),
+            const Divider(),
+            const Spacer(),
+            const Divider(),
+            const Text("Wipe App-Data"),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -294,10 +294,10 @@ class _SettingsScreen extends State<SettingsScreen> {
                 }
               ),
               ]),
-            Divider(),
-            Spacer(),
-            Divider(),
-            Text("Restore App-Data"),
+            const Divider(),
+            const Spacer(),
+            const Divider(),
+            const Text("Restore App-Data"),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -324,8 +324,8 @@ class _SettingsScreen extends State<SettingsScreen> {
                   },
                 ),
             ]),
-            Divider(),
-            Spacer(),
+            const Divider(),
+            const Spacer(),
           ]
         ),
     );

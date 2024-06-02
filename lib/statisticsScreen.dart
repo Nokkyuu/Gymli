@@ -1,14 +1,12 @@
 // ignore_for_file: file_names
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'dart:io';
 import 'package:intl/intl.dart';
 //import 'package:file_picker/file_picker.dart';
 import 'globals.dart' as globals;
 import 'package:time_machine/time_machine.dart';
 import 'package:fl_chart/fl_chart.dart';
-import 'package:yafa_app/DataModels.dart';
+import 'package:Gymli/DataModels.dart';
 import 'package:tuple/tuple.dart';
 
 class StatisticsScreen extends StatefulWidget {
@@ -219,7 +217,7 @@ class _StatisticsScreen extends State<StatisticsScreen> {
           children: (() {
             List<Widget> widgets = [];
             for (int i = 0; i < barChartMuscleColors.length/2; i++) {
-              widgets.add(Wrap(children: [Container(width: 14.0, height: 14.0, color: barChartMuscleColors[i]), Text(" ${barChartMuscleNames[i]}", style: TextStyle(fontSize: 10.0))]));
+              widgets.add(Wrap(children: [Container(width: 14.0, height: 14.0, color: barChartMuscleColors[i]), Text(" ${barChartMuscleNames[i]}", style: const TextStyle(fontSize: 10.0))]));
               // widgets.add(Text(barChartMuscleNames[i]));
             }
             return widgets;
@@ -231,7 +229,7 @@ class _StatisticsScreen extends State<StatisticsScreen> {
           children: (() {
             List<Widget> widgets = [];
             for (int i = (barChartMuscleColors.length/2).toInt(); i < barChartMuscleColors.length; i++) {
-              widgets.add(Wrap(children: [Container(width: 14.0, height: 14.0, color: barChartMuscleColors[i]), Text(" ${barChartMuscleNames[i]}", style: TextStyle(fontSize: 10.0))]));
+              widgets.add(Wrap(children: [Container(width: 14.0, height: 14.0, color: barChartMuscleColors[i]), Text(" ${barChartMuscleNames[i]}", style: const TextStyle(fontSize: 10.0))]));
               // widgets.add(Text(barChartMuscleNames[i]));
             }
             return widgets;
@@ -267,7 +265,7 @@ class _StatisticsScreen extends State<StatisticsScreen> {
             return widgets;
           })(),
         ),
-        SizedBox(
+        const SizedBox(
           height: 100,
         ),
         SizedBox(

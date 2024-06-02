@@ -1,10 +1,8 @@
 // ignore_for_file: file_names, constant_identifier_names
-import 'package:csv/csv.dart';
-import 'package:flutter/foundation.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:numberpicker/numberpicker.dart';
-import 'package:yafa_app/DataModels.dart';
+import 'package:Gymli/DataModels.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 //import 'package:fl_chart/fl_chart.dart';
 
@@ -25,7 +23,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 
 class WorkoutSetupScreen extends StatefulWidget {
   final String workoutName;
-  WorkoutSetupScreen(this.workoutName, {super.key});
+  const WorkoutSetupScreen(this.workoutName, {super.key});
 
   @override
   State<WorkoutSetupScreen> createState() => _WorkoutSetupScreenState();
@@ -288,7 +286,7 @@ class ExerciseTile extends StatelessWidget {
       title: Text(exerciseName),
       subtitle: Text('Warm Ups: $warmUpS, Work Sets: $workS, Drop Sets: $dropS'),
       trailing: IconButton(
-                    icon: Icon(Icons.delete),
+                    icon: const Icon(Icons.delete),
                     onPressed:  () => remo(item)
                   ),
     );

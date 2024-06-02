@@ -1,3 +1,3 @@
-# yafa_app
+# Gymli
 
-A new Flutter project.
+Hypertrophy Helper

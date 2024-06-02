@@ -1,7 +1,6 @@
 // ignore_for_file: non_constant_identifier_names
 library my_prj.globals;
-import 'package:flutter/cupertino.dart';
-import 'package:yafa_app/DataModels.dart';
+import 'package:Gymli/DataModels.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:tuple/tuple.dart';
 import 'package:intl/intl.dart';

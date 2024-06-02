@@ -2,15 +2,14 @@
 
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:tuple/tuple.dart';
-import 'package:yafa_app/DataModels.dart';
+import 'package:Gymli/DataModels.dart';
 import 'package:hive/hive.dart';
-import 'package:yafa_app/landingScreen.dart';
 import 'globals.dart' as globals;
 
 enum ExerciseDevice { free, machine, cable, body }
 final exerciseMap = [ExerciseDevice.free, ExerciseDevice.machine, ExerciseDevice.cable, ExerciseDevice.body];
 
+// ignore: must_be_immutable
 class ExerciseSetupScreen extends StatefulWidget {
   String exerciseName;
   ExerciseSetupScreen(this.exerciseName, {super.key});
@@ -94,7 +93,7 @@ class _ExerciseSetupScreenState extends State<ExerciseSetupScreen> {
     if (exerciseFilter.isEmpty) { return; }
     currentExercise = exerciseFilter.first;
     exerciseTitleController.text = currentExercise!.name;
-    this.setState(() {
+    setState(() {
       chosenDevice = exerciseMap[currentExercise!.type];
       minRep = currentExercise!.defaultRepBase.toDouble();
       repRange = currentExercise!.defaultRepMax.toDouble();

@@ -3,13 +3,12 @@
 
 //import 'dart:ffi';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:yafa_app/exerciseScreen.dart';
-import 'package:yafa_app/DataModels.dart';
+import 'package:Gymli/exerciseScreen.dart';
+import 'package:Gymli/DataModels.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:yafa_app/workoutSetupScreen.dart';
+import 'package:Gymli/workoutSetupScreen.dart';
 import 'globals.dart' as globals;
 
 
@@ -112,7 +111,6 @@ class _LandingScreenState extends State<LandingScreen> {
     filterApplied.value = !filterApplied.value;
   }
 
-  @override
   Future<void> _reload(var value) async {
     setState(() {
       availableWorkouts = Hive.box<Workout>('Workouts').values.toList();
@@ -216,7 +214,6 @@ class _LandingScreenState extends State<LandingScreen> {
                     return ListView.builder(
                         itemCount: items.length,
                         itemBuilder: (context, index) {
-                          final item = items[index];
                           final currentData = items[index];
                           final meta = metainfo[index];
                           final exerciseType = currentData.type;

@@ -1,14 +1,14 @@
 // ignore_for_file: non_constant_identifier_names
 
 import 'package:flutter/material.dart';
-import 'package:yafa_app/landingScreen.dart';
+import 'package:Gymli/landingScreen.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:yafa_app/DataModels.dart';
+import 'package:Gymli/DataModels.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:yafa_app/exerciseSetupScreen.dart';
-import 'package:yafa_app/settingsScreen.dart';
-import 'package:yafa_app/workoutSetupScreen.dart';
-import 'package:yafa_app/statisticsScreen.dart';
+import 'package:Gymli/exerciseSetupScreen.dart';
+import 'package:Gymli/settingsScreen.dart';
+import 'package:Gymli/workoutSetupScreen.dart';
+import 'package:Gymli/statisticsScreen.dart';
 import 'globals.dart' as globals;
 import 'package:shared_preferences/shared_preferences.dart';
 bool state = false;
@@ -37,8 +37,8 @@ void get_exercise_list() async {
   globals.exerciseList = exerciseList;
 }
 Future<void> getPreferences() async {
-  Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
-  final SharedPreferences prefs = await _prefs;
+  Future<SharedPreferences> prefs0 = SharedPreferences.getInstance();
+  final SharedPreferences prefs = await prefs0;
   // prefs.setInt('idleWakeTime', 90);
   globals.idleTimerWakeup = prefs.getInt('idleWakeTime')!;
   // print(prefs.getInt('counter'));
@@ -87,7 +87,7 @@ class _MainAppState extends State<MainApp> {
   }
 
 
-  LandingScreen landingScreen = LandingScreen();
+  LandingScreen landingScreen = const LandingScreen();
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -125,11 +125,11 @@ class _MainAppState extends State<MainApp> {
       );
     },
     ),
-    title: Row(
-              // mainAxisAlignment: MainAxisAlignment.center,
+    title: Row(//alignment: Alignment.center,
+              //mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Container(
-                  padding: const EdgeInsets.only(left: 15.0),
+                  padding: const EdgeInsets.only(left: 50.0),
                   child: Image.asset(
                     isDarkMode
                     ? 'images/Icon-App_3_Darkmode.png'
@@ -138,12 +138,12 @@ class _MainAppState extends State<MainApp> {
                   height: 50,
                   ),
                 ),
-
+    
               Container(
-                  padding: const EdgeInsets.all(0.0), child: Text('Weight Wise'))
+                  padding: const EdgeInsets.all(0.0), child: const Text('Gymli', textAlign: TextAlign.center,))
             ],
         ),//const Text("Weight Wise"),
-    
+    //actions: const [ Text("")],
     centerTitle: true,),
     body: landingScreen,
     drawer: Builder(
@@ -186,7 +186,7 @@ class _MainAppState extends State<MainApp> {
             onTap: () {
               setState(() {
                 Navigator.pop(context);
-                Navigator.push(context, MaterialPageRoute(builder: (context) =>  StatisticsScreen()));
+                Navigator.push(context, MaterialPageRoute(builder: (context) =>  const StatisticsScreen()));
             });},
           
           ),

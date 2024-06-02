@@ -1,20 +1,17 @@
 // ignore_for_file: file_names, non_constant_identifier_names
 
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:yafa_app/exerciseListScreen.dart';
+import 'package:Gymli/exerciseListScreen.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'dart:async';
-import 'package:yafa_app/DataModels.dart';
+import 'package:Gymli/DataModels.dart';
 import 'dart:math';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:numberpicker/numberpicker.dart';
 import 'package:tuple/tuple.dart';
-import 'package:yafa_app/exerciseSetupScreen.dart';
-import 'package:flutter_timer_countdown/flutter_timer_countdown.dart';
+import 'package:Gymli/exerciseSetupScreen.dart';
 import 'globals.dart' as globals;
-import 'package:intl/intl.dart';
 import 'package:flutter/services.dart';
 
 enum ExerciseType { warmup, work, dropset }
@@ -111,7 +108,7 @@ class _ExerciseScreen extends State<ExerciseScreen> {
   int repetitions = 10;
   late Timer timer;
   List<LineChartBarData> barData = [];
-  Text timerText = Text("Workout: 00:42:21 - Idle: 00:03:45");
+  Text timerText = const Text("Workout: 00:42:21 - Idle: 00:03:45");
   DateTime fictiveStart = DateTime.now();
   DateTime workoutStartTime = DateTime.now();
 
@@ -226,8 +223,8 @@ class _ExerciseScreen extends State<ExerciseScreen> {
           ),
           title: Text(title),
           bottom: PreferredSize(
-            child: timerText,
-            preferredSize: Size.zero
+            preferredSize: Size.zero,
+            child: timerText
           ),
           actions: [
             IconButton(
@@ -392,6 +389,7 @@ class _ExerciseScreen extends State<ExerciseScreen> {
   }
 }
 
+// ignore: must_be_immutable
 class InputFields extends StatefulWidget {
   // final String exerciseName;
   // const InputFields({super.key});
@@ -581,24 +579,24 @@ class _WeightConfigurator extends State<WeightConfigurator> {
                       updateWeight();
                     });
                   }),
-            Spacer(),
-            Text("Pick weights on one side"),
-            SizedBox(height: 10.0),
+            const Spacer(),
+            const Text("Pick weights on one side"),
+            const SizedBox(height: 10.0),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 RotatedBox(
                   quarterTurns: 1, child:
                   Container(
-                    color: Colors.black45, width: 95, alignment: Alignment.center, padding: EdgeInsets.all(2),
-                    child: Text('5 kg', style: TextStyle(color: Colors.white,fontSize: 15.0)),
+                    color: Colors.black45, width: 95, alignment: Alignment.center, padding: const EdgeInsets.all(2),
+                    child: const Text('5 kg', style: TextStyle(color: Colors.white,fontSize: 15.0)),
                   ),
                 ),
-                Padding(padding:EdgeInsets.all(1), child:
+                Padding(padding:const EdgeInsets.all(1), child:
                   RotatedBox(
                   quarterTurns: 1, child:
                   Container(
-                    color: Colors.black45, width: 110, alignment: Alignment.center, padding: EdgeInsets.all(2),
+                    color: Colors.black45, width: 110, alignment: Alignment.center, padding: const EdgeInsets.all(2),
                     child: const Text('10 kg', style: TextStyle(color: Colors.white,fontSize: 15.0)),
                   ),
                   ),
@@ -606,35 +604,35 @@ class _WeightConfigurator extends State<WeightConfigurator> {
                 RotatedBox(
                   quarterTurns: 1, child:
                   Container(
-                    color: Colors.black45, width: 110, alignment: Alignment.center, padding: EdgeInsets.all(2),
-                    child: Text('10 kg', style: TextStyle(color: Colors.white,fontSize: 15.0)),
+                    color: Colors.black45, width: 110, alignment: Alignment.center, padding: const EdgeInsets.all(2),
+                    child: const Text('10 kg', style: TextStyle(color: Colors.white,fontSize: 15.0)),
                   ),
                 ),
                 Container(
                     color: Colors.black54, width: 100, alignment: Alignment.center,
-                    child: Text('bar', style: TextStyle(color: Colors.white, fontSize: 10.0)),
+                    child: const Text('bar', style: TextStyle(color: Colors.white, fontSize: 10.0)),
                   ),
                 RotatedBox(
                   quarterTurns: 1, child:
                   Container(
-                    color: Colors.black45, width: 110, alignment: Alignment.center, padding: EdgeInsets.all(2),
-                    child: Text('10 kg', style: TextStyle(color: Colors.white,fontSize: 15.0)),
+                    color: Colors.black45, width: 110, alignment: Alignment.center, padding: const EdgeInsets.all(2),
+                    child: const Text('10 kg', style: TextStyle(color: Colors.white,fontSize: 15.0)),
                   ),
                 ),
-                Padding(padding:EdgeInsets.all(1), child:
+                Padding(padding:const EdgeInsets.all(1), child:
                   RotatedBox(
                   quarterTurns: 1, child:
                   Container(
-                    color: Colors.black45, width: 110, alignment: Alignment.center, padding: EdgeInsets.all(2),
-                    child: Text('10 kg', style: TextStyle(color: Colors.white,fontSize: 15.0)),
+                    color: Colors.black45, width: 110, alignment: Alignment.center, padding: const EdgeInsets.all(2),
+                    child: const Text('10 kg', style: TextStyle(color: Colors.white,fontSize: 15.0)),
                   ),
                   ),
                 ),
                 RotatedBox(
                   quarterTurns: 1, child:
                   Container(
-                    color: Colors.black45, width: 95, alignment: Alignment.center, padding: EdgeInsets.all(2),
-                    child: Text('5 kg', style: TextStyle(color: Colors.white,fontSize: 15.0)),
+                    color: Colors.black45, width: 95, alignment: Alignment.center, padding: const EdgeInsets.all(2),
+                    child: const Text('5 kg', style: TextStyle(color: Colors.white,fontSize: 15.0)),
                   ),
                 ),
               ]
@@ -700,7 +698,7 @@ class _WeightConfigurator extends State<WeightConfigurator> {
             //     return widgets;
             //     })(),
             // ),
-            Spacer(),
+            const Spacer(),
           ],
         ),
       ),
