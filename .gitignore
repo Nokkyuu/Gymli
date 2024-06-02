@@ -14,9 +14,9 @@ __pycache__/
 build/
 develop-eggs/
 dist/
-ios/
-macos/
-android/
+#ios/
+#macos/
+#android/
 downloads/
 eggs/
 .eggs/
