@@ -40,7 +40,13 @@ Future<void> getPreferences() async {
   Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
   final SharedPreferences prefs = await _prefs;
   // prefs.setInt('idleWakeTime', 90);
-  globals.idleTimerWakeup = prefs.getInt('idleWakeTime')!;
+  if (prefs.getInt('idleWakeTime') != null) {
+    globals.idleTimerWakeup = prefs.getInt('idleWakeTime')!;
+  }
+  if (prefs.getInt('graphNumberOfDays') != null) {
+    globals.graphNumberOfDays = prefs.getInt('graphNumberOfDays')!;
+
+  }
   // print(prefs.getInt('counter'));
 }
 

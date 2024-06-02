@@ -6,7 +6,8 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:tuple/tuple.dart';
 import 'package:intl/intl.dart';
 
-  int idleTimerWakeup = 120;
+  int idleTimerWakeup = 90;
+  int graphNumberOfDays = 40;
 
   var muscle_val = {
     "Pectoralis major": 0.0,

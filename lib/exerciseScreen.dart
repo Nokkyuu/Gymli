@@ -56,7 +56,7 @@ List<FlSpot> getTrainingScores(String exercise, int set) {
   for (var d in trainingDates) {
     final dayDiff = d.difference(DateTime.now()).inDays;
 
-    if (dayDiff > -(6 * 7)) {
+    if (dayDiff > -(globals.graphNumberOfDays)) {
       var subTrainings = trainings
           .where((item) =>
               item.date.day == d.day &&
@@ -109,6 +109,7 @@ class _ExerciseScreen extends State<ExerciseScreen> {
   int weightKg = 40;
   int weightDg = 0;
   int repetitions = 10;
+  double maxHistoryDistance = globals.graphNumberOfDays.toDouble();
   late Timer timer;
   List<LineChartBarData> barData = [];
   Text timerText = Text("Workout: 00:42:21 - Idle: 00:03:45");
@@ -171,7 +172,10 @@ class _ExerciseScreen extends State<ExerciseScreen> {
           HapticFeedback.vibrate();
         }
         var workoutDuration = DateTime.now().difference(workoutStartTime);
-        timerText = Text("Working out: ${workoutDuration.toString().split(".")[0]} - Idle: ${duration.toString().split(".")[0]}");
+        String workoutString = workoutDuration.toString().split(".")[0]; // ewwww, nasty
+        workoutString = workoutString.split(":")[0] + ":" + workoutString.split(":")[1];
+
+        timerText = Text("Working out: ${workoutString} - Idle: ${duration.toString().split(".")[0]}");
         // timerText = Text("ASD");
       });
     // timer.cancel();
@@ -184,6 +188,10 @@ class _ExerciseScreen extends State<ExerciseScreen> {
             spots: trainingGraphs[i],
             color: graphColors[i]));
       }
+    }
+    if (trainingGraphs[0].isNotEmpty) {
+      maxHistoryDistance = min(trainingGraphs[0][0].x*-1, maxHistoryDistance);
+
     }
   }
 
@@ -273,7 +281,7 @@ class _ExerciseScreen extends State<ExerciseScreen> {
                         lineBarsData: barData,
                         minY: minScore - 5.0,
                         maxY: maxScore + 5.0,
-                        minX: -45.0,
+                        minX: -maxHistoryDistance - 1.0,
                         maxX: 1.0,
                       ))),
                 )),
