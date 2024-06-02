@@ -103,7 +103,6 @@ void restoreExercises(context) async {
     //print("bla");
     var filePath = 'csv/ex.csv';
     final myData = await rootBundle.loadString(filePath);
-    // print(myData);
     restoreExLoad(myData);
   } else {
   final filePath = await FlutterFileDialog.pickFile(params: const OpenFileDialogParams(dialogType: OpenFileDialogType.document, sourceType: SourceType.savedPhotosAlbum));
@@ -144,6 +143,7 @@ void restoreExLoad(myData){
 
 class _SettingsScreen extends State<SettingsScreen> {
   final wakeUpTimeController = TextEditingController();
+  final graphNumberOfDays = TextEditingController();
   // final equationController = TextEditingController();
   final Future<SharedPreferences> _preferences = SharedPreferences.getInstance();
   DisplayMode selectedMode = DisplayMode.light;
@@ -152,6 +152,7 @@ class _SettingsScreen extends State<SettingsScreen> {
   void initState() {
     super.initState();
     wakeUpTimeController.text = "${globals.idleTimerWakeup}";
+    graphNumberOfDays.text = "${globals.graphNumberOfDays}";
     // equationController.text = "w * ((r-b)/(m-b)) * r";
   }
 
@@ -201,19 +202,69 @@ class _SettingsScreen extends State<SettingsScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
+              Text("Graph days"),
+              SizedBox(
+                width: 100,
+                child: 
+              TextField(
+                  textAlign: TextAlign.center,
+                  controller: graphNumberOfDays,
+                  obscureText: false,
+                  decoration: const InputDecoration(
+                    border: UnderlineInputBorder(),
+                    //alignLabelWithHint: true
+                  ),
+                  onChanged: (String s) async {
+                    if (double.tryParse(s) != null) {
+                      final SharedPreferences prefs = await _preferences;
+                      globals.idleTimerWakeup = int.parse(s);
+                      prefs.setInt('graphNumberOfDays', globals.graphNumberOfDays);
+                    }
+                  }
+                ),
+              ),
+            ],),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+              Text("Graph days"),
+              SizedBox(
+                width: 100,
+                child: 
+              TextField(
+                  textAlign: TextAlign.center,
+                  controller: graphNumberOfDays,
+                  obscureText: false,
+                  decoration: const InputDecoration(
+                    border: UnderlineInputBorder(),
+                    //alignLabelWithHint: true
+                  ),
+                  onChanged: (String s) async {
+                    if (double.tryParse(s) != null) {
+                      final SharedPreferences prefs = await _preferences;
+                      globals.idleTimerWakeup = int.parse(s);
+                      prefs.setInt('graphNumberOfDays', globals.graphNumberOfDays);
+                    }
+                  }
+                ),
+              ),
+            ],),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
                 const Text("Display mode"),
                 SegmentedButton<DisplayMode>(
                       showSelectedIcon: false,
                       segments: const <ButtonSegment<DisplayMode>>[
-                    ButtonSegment<DisplayMode>(
-                        value: DisplayMode.light,
-                        //label: Text('Free'),
-                        icon: Icon(Icons.light_mode)),
-                    ButtonSegment<DisplayMode>(
-                        value: DisplayMode.dark,
-                        //label: Text('Machine',softWrap: false, overflow: TextOverflow.fade),
-                        icon: Icon(Icons.dark_mode)),
-],
+                        ButtonSegment<DisplayMode>(
+                            value: DisplayMode.light,
+                            //label: Text('Free'),
+                            icon: Icon(Icons.light_mode)),
+                        ButtonSegment<DisplayMode>(
+                            value: DisplayMode.dark,
+                            //label: Text('Machine',softWrap: false, overflow: TextOverflow.fade),
+                            icon: Icon(Icons.dark_mode)),
+                        ],
                   selected: <DisplayMode>{selectedMode},
                   onSelectionChanged: (Set<DisplayMode> s) {
                     setState(() {
