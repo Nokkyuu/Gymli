@@ -583,6 +583,14 @@ class _WeightConfigurator extends State<WeightConfigurator> {
             Spacer(),
             Text("Pick weights on one side"),
             SizedBox(height: 10.0),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                Text("1",
+                style: TextStyle(backgroundColor: Colors.blue)),
+                Text("1"),
+              ]
+            ),
             // Row(
             //   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             //   children: (() {
@@ -593,57 +601,57 @@ class _WeightConfigurator extends State<WeightConfigurator> {
             //     return widgets;
             //   })(),
             // ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: (() {
-                List<Widget> widgets = [];
-                for (int i = 0; i < kg_controller.length; ++i) {
-                  widgets.add(SizedBox(
-                width: 40,
-                child: TextFormField(
-                  controller: kg_controller[i],
-                  // enabled: false,
-                  decoration: InputDecoration(
-                    labelText: kg_texts[i],
-                    alignLabelWithHint: true, 
-                    labelStyle: const TextStyle(fontSize: 14.0),
-                    border: const OutlineInputBorder(),
-                  ),
-                  textAlign: TextAlign.center,
-                )));
-                }
-                return widgets;
-                })(),
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: (() {
-                List<Widget> widgets = [];
-                for (int i = 0; i < kg_counter.length; ++i) {
-                  widgets.add(
-                    Column(
-                      children: [
-                        IconButton(
-                        icon: const Icon(FontAwesomeIcons.plus),
-                        onPressed: () {
-                          setState(() {
-                            increase(i);
-                          });
-                        }),
-                        IconButton(
-                        icon: const Icon(FontAwesomeIcons.minus),
-                        onPressed: () {
-                          setState(() {
-                            decrease(i);
-                          });
-                        }),
-                      ]
-                    )
-                  );
-                }
-                return widgets;
-                })(),
-            ),
+            // Row(
+            //   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            //   children: (() {
+            //     List<Widget> widgets = [];
+            //     for (int i = 0; i < kg_controller.length; ++i) {
+            //       widgets.add(SizedBox(
+            //     width: 40,
+            //     child: TextFormField(
+            //       controller: kg_controller[i],
+            //       // enabled: false,
+            //       decoration: InputDecoration(
+            //         labelText: kg_texts[i],
+            //         alignLabelWithHint: true, 
+            //         labelStyle: const TextStyle(fontSize: 14.0),
+            //         border: const OutlineInputBorder(),
+            //       ),
+            //       textAlign: TextAlign.center,
+            //     )));
+            //     }
+            //     return widgets;
+            //     })(),
+            // ),
+            // Row(
+            //   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            //   children: (() {
+            //     List<Widget> widgets = [];
+            //     for (int i = 0; i < kg_counter.length; ++i) {
+            //       widgets.add(
+            //         Column(
+            //           children: [
+            //             IconButton(
+            //             icon: const Icon(FontAwesomeIcons.plus),
+            //             onPressed: () {
+            //               setState(() {
+            //                 increase(i);
+            //               });
+            //             }),
+            //             IconButton(
+            //             icon: const Icon(FontAwesomeIcons.minus),
+            //             onPressed: () {
+            //               setState(() {
+            //                 decrease(i);
+            //               });
+            //             }),
+            //           ]
+            //         )
+            //       );
+            //     }
+            //     return widgets;
+            //     })(),
+            // ),
             Spacer(),
           ],
         ),
