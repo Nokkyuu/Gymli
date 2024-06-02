@@ -355,7 +355,7 @@ class _BottomSheetState extends State<BottomSheet> {
   ['images/muscles/Front_sideabs.png', 'Abdominals'],
   ['images/muscles/Front_abs.png', 'Abdominals'],
   ['images/muscles/Front_trapz.png', 'Trapezius'], 
-  ['images/muscles/Front_abs.png', 'Trapezius']];
+  ['images/muscles/Front_abs.png', 'Abdominals']];
   final List<List<String>> backImages = 
   [['images/muscles/Back_calves.png', 'Calves'],
   ['images/muscles/Back_delts.png', 'Deltoids' ], 
