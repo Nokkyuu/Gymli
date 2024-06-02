@@ -500,6 +500,9 @@ class _WeightConfigurator extends State<WeightConfigurator> {
   double itemHeight = 50.0;
   double itemWidth = 30.0;
   ExerciseDevice selectedDevice = ExerciseDevice.barbell20;
+  List<Widget> rightContainers = [];
+  late Container acceptRow;
+  late DragTarget<Text> accepter ;
 
   List<TextEditingController> kg_controller = [];
   late List<int> kg_counter = [];
@@ -507,6 +510,17 @@ class _WeightConfigurator extends State<WeightConfigurator> {
   List<double> kgs = [1, 1.25, 2, 2.5, 5, 10, 20, 25];
   List<String> kg_texts = [" 1", "1¼", " 2", "2½", " 5", "10", "20", "25"];
 
+  void addWeight(String txt) {
+    print(txt);
+    rightContainers.add(RotatedBox(
+                quarterTurns: 1, child:
+                Container(
+                  color: Colors.black45, width: 110, alignment: Alignment.center, padding: const EdgeInsets.all(2),
+                  child: Text("10", style: const TextStyle(color: Colors.white,fontSize: 15.0)),
+                ),
+              ),);
+    
+  }
   @override
   void initState() {
     super.initState();
@@ -516,6 +530,21 @@ class _WeightConfigurator extends State<WeightConfigurator> {
       kg_counter.add(0);
     }
     updateWeight();
+
+    acceptRow = Container(width: 100, height: 100, color: Colors.black87.withOpacity(0.3), child: 
+      Row(children: rightContainers,
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,)
+    );
+    accepter = DragTarget<Text>(
+            onAcceptWithDetails: (text) {
+                setState(() {
+                  addWeight(text.data.data!);
+                });
+            },
+            builder: (context, accepted, rejected) {
+              return acceptRow;
+            });
+    addWeight("20");
   }
 
   void increase(int i) {
@@ -590,59 +619,96 @@ class _WeightConfigurator extends State<WeightConfigurator> {
             const Spacer(),
             const Text("Pick weights on one side"),
             const SizedBox(height: 10.0),
+            Wrap(alignment: WrapAlignment.center,
+            children: (() {
+                List<Widget> widgets = [];
+                for (int i = 0; i < kg_texts.length; ++i) {
+                  widgets.add(Draggable<Text>(
+                  data: Text(kg_texts[i]),
+                  feedback: Container(
+                    width: 50, height: 30, 
+                    color: Colors.black45.withOpacity(0.5),
+                    child: Center(child: Text(kg_texts[i], style: TextStyle(color: Colors.white, fontSize: 10.0)),),
+                  ),
+                  child: Padding(padding: EdgeInsets.only(left: 1, right: 1.0), child: Container(
+                    width: 40, height: 30, color: Colors.black45,
+                    child: Center(child: Text(kg_texts[i], style: TextStyle(color: Colors.white, fontSize: 14.0)),),
+                  ))
+                ));
+                }
+                return widgets;
+              })(),
+            ),
+            SizedBox(height: 10),
+            TextButton.icon(
+                icon: const Icon(Icons.add),
+                label: const Text("Add Exercise") ,
+                onPressed:  () {
+                  setState(() {
+                    addWeight("20");
+                  });
+                },
+            ),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                RotatedBox(
-                  quarterTurns: 1, child:
-                  Container(
-                    color: Colors.black45, width: 95, alignment: Alignment.center, padding: const EdgeInsets.all(2),
-                    child: const Text('5 kg', style: TextStyle(color: Colors.white,fontSize: 15.0)),
-                  ),
-                ),
-                Padding(padding:const EdgeInsets.all(1), child:
-                  RotatedBox(
-                  quarterTurns: 1, child:
-                  Container(
-                    color: Colors.black45, width: 110, alignment: Alignment.center, padding: const EdgeInsets.all(2),
-                    child: const Text('10 kg', style: TextStyle(color: Colors.white,fontSize: 15.0)),
-                  ),
-                  ),
-                ),
-                RotatedBox(
-                  quarterTurns: 1, child:
-                  Container(
-                    color: Colors.black45, width: 110, alignment: Alignment.center, padding: const EdgeInsets.all(2),
-                    child: const Text('10 kg', style: TextStyle(color: Colors.white,fontSize: 15.0)),
-                  ),
-                ),
+                // accepter,
+
+                // RotatedBox(
+                //   quarterTurns: 1, child:
+                //   Container(
+                //     width: 95, alignment: Alignment.center, padding: const EdgeInsets.all(2),
+                //     child: const Text('5 kg', style: TextStyle(color: Colors.white,fontSize: 15.0)),
+                //     decoration: BoxDecoration(
+                //       borderRadius: BorderRadius.all(Radius.circular(6.0)),
+                //       color: Colors.black45, 
+                //     ),
+                //   ),
+                // ),
+                // Padding(padding:const EdgeInsets.all(1), child:
+                //   RotatedBox(
+                //   quarterTurns: 1, child:
+                //   Container(
+                //     color: Colors.black45, width: 110, alignment: Alignment.center, padding: const EdgeInsets.all(2),
+                //     child: const Text('10 kg', style: TextStyle(color: Colors.white,fontSize: 15.0)),
+                //   ),
+                //   ),
+                // ),
+                // RotatedBox(
+                //   quarterTurns: 1, child:
+                //   Container(
+                //     color: Colors.black45, width: 110, alignment: Alignment.center, padding: const EdgeInsets.all(2),
+                //     child: const Text('10 kg', style: TextStyle(color: Colors.white,fontSize: 15.0)),
+                //   ),
+                // ),
                 Container(
                     color: Colors.black54, width: 100, alignment: Alignment.center,
                     child: const Text('bar', style: TextStyle(color: Colors.white, fontSize: 10.0)),
                   ),
-                RotatedBox(
-                  quarterTurns: 1, child:
-                  Container(
-                    color: Colors.black45, width: 110, alignment: Alignment.center, padding: const EdgeInsets.all(2),
-                    child: const Text('10 kg', style: TextStyle(color: Colors.white,fontSize: 15.0)),
-                  ),
-                ),
-                Padding(padding:const EdgeInsets.all(1), child:
-                  RotatedBox(
-                  quarterTurns: 1, child:
-                  Container(
-                    color: Colors.black45, width: 110, alignment: Alignment.center, padding: const EdgeInsets.all(2),
-                    child: const Text('10 kg', style: TextStyle(color: Colors.white,fontSize: 15.0)),
-                  ),
-                  ),
-                ),
-                RotatedBox(
-                  quarterTurns: 1, child:
-                  Container(
-                    color: Colors.black45, width: 95, alignment: Alignment.center, padding: const EdgeInsets.all(2),
-                    child: const Text('5 kg', style: TextStyle(color: Colors.white,fontSize: 15.0)),
-                  ),
-                ),
+                accepter
+                // RotatedBox(
+                //   quarterTurns: 1, child:
+                //   Container(
+                //     color: Colors.black45, width: 110, alignment: Alignment.center, padding: const EdgeInsets.all(2),
+                //     child: const Text('10 kg', style: TextStyle(color: Colors.white,fontSize: 15.0)),
+                //   ),
+                // ),
+                // Padding(padding:const EdgeInsets.all(1), child:
+                //   RotatedBox(
+                //   quarterTurns: 1, child:
+                //   Container(
+                //     color: Colors.black45, width: 110, alignment: Alignment.center, padding: const EdgeInsets.all(2),
+                //     child: const Text('10 kg', style: TextStyle(color: Colors.white,fontSize: 15.0)),
+                //   ),
+                //   ),
+                // ),
+                // RotatedBox(
+                //   quarterTurns: 1, child:
+                //   Container(
+                //     color: Colors.black45, width: 95, alignment: Alignment.center, padding: const EdgeInsets.all(2),
+                //     child: const Text('5 kg', style: TextStyle(color: Colors.white,fontSize: 15.0)),
+                //   ),
+                // ),
               ]
             ),
             // Row(
