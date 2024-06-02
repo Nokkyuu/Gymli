@@ -149,7 +149,7 @@ class _StatisticsScreen extends State<StatisticsScreen> {
         ),
         title: const Text("Statistics"),
       ),
-      body: Column(
+      body: ListView(
         children: <Widget>[
           Text("Selected Training Interval", style: subStyle),
         const SizedBox(height: 5),
@@ -237,106 +237,106 @@ class _StatisticsScreen extends State<StatisticsScreen> {
             ),
         ),
         // Spacer(),
-        // Column(
-        //   mainAxisAlignment: MainAxisAlignment.spaceAround,
-        //   children: (() {
-        //     List<Widget> widgets = [];
-        //     for (var d in exerciseDetails) {
-        //       widgets.add(d);
-        //     }
-        //     return widgets;
-        //   })(),
-        // ),
-        // SizedBox(
-        //   height: 100,
-        // ),
-        // SizedBox(
-        //   width: MediaQuery.of(context).size.width,
-        //   height: MediaQuery.of(context).size.height * 0.15,
-        //   child: PieChart(
-        //   PieChartData(
-        //     pieTouchData: PieTouchData(
-        //       touchCallback: (FlTouchEvent event, pieTouchResponse) {
-        //         setState(() {
-        //           if (!event.isInterestedForInteractions ||
-        //               pieTouchResponse == null ||
-        //               pieTouchResponse.touchedSection == null) {
-        //             return;
-        //           }
-        //         });
-        //       },
-        //     ),
-        //     borderData: FlBorderData(
-        //       show: false,
-        //     ),
-        //     sectionsSpace: 0,
-        //     centerSpaceRadius: 40,
-        //     sections: List.generate(4, (i) {
-        //       // final isTouched = i == touchedIndex;
-        //       final isTouched = false;
-        //       final fontSize = isTouched ? 25.0 : 16.0;
-        //       final radius = isTouched ? 60.0 : 50.0;
-        //       const shadows = [Shadow(color: Colors.black, blurRadius: 2)];
-        //       switch (i) {
-        //         case 0:
-        //           return PieChartSectionData(
-        //             color: barChartMuscleColors[0],
-        //             value: 40,
-        //             title: '40%',
-        //             radius: radius,
-        //             titleStyle: TextStyle(
-        //               fontSize: fontSize,
-        //               fontWeight: FontWeight.bold,
-        //               color: barChartMuscleColors[1],
-        //               shadows: shadows,
-        //             ),
-        //           );
-        //         case 1:
-        //           return PieChartSectionData(
-        //             color: barChartMuscleColors[2],
-        //             value: 30,
-        //             title: '30%',
-        //             radius: radius,
-        //             titleStyle: TextStyle(
-        //               fontSize: fontSize,
-        //               fontWeight: FontWeight.bold,
-        //               color: barChartMuscleColors[3],
-        //               shadows: shadows,
-        //             ),
-        //           );
-        //         case 2:
-        //           return PieChartSectionData(
-        //             color: barChartMuscleColors[4],
-        //             value: 15,
-        //             title: '15%',
-        //             radius: radius,
-        //             titleStyle: TextStyle(
-        //               fontSize: fontSize,
-        //               fontWeight: FontWeight.bold,
-        //               color: barChartMuscleColors[5],
-        //               shadows: shadows,
-        //             ),
-        //           );
-        //         case 3:
-        //           return PieChartSectionData(
-        //             color: barChartMuscleColors[6],
-        //             value: 15,
-        //             title: '15%',
-        //             radius: radius,
-        //             titleStyle: TextStyle(
-        //               fontSize: fontSize,
-        //               fontWeight: FontWeight.bold,
-        //               color: barChartMuscleColors[7],
-        //               shadows: shadows,
-        //             ),
-        //           );
-        //         default:
-        //           throw Error();
-        //       }
-        //     }),
-        //   ),
-        //   ),
-        // ),
+        Column(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: (() {
+            List<Widget> widgets = [];
+            for (var d in exerciseDetails) {
+              widgets.add(d);
+            }
+            return widgets;
+          })(),
+        ),
+        SizedBox(
+          height: 100,
+        ),
+        SizedBox(
+          width: MediaQuery.of(context).size.width,
+          height: MediaQuery.of(context).size.height * 0.15,
+          child: PieChart(
+          PieChartData(
+            pieTouchData: PieTouchData(
+              touchCallback: (FlTouchEvent event, pieTouchResponse) {
+                setState(() {
+                  if (!event.isInterestedForInteractions ||
+                      pieTouchResponse == null ||
+                      pieTouchResponse.touchedSection == null) {
+                    return;
+                  }
+                });
+              },
+            ),
+            borderData: FlBorderData(
+              show: false,
+            ),
+            sectionsSpace: 0,
+            centerSpaceRadius: 40,
+            sections: List.generate(4, (i) {
+              // final isTouched = i == touchedIndex;
+              final isTouched = false;
+              final fontSize = isTouched ? 25.0 : 16.0;
+              final radius = isTouched ? 60.0 : 50.0;
+              const shadows = [Shadow(color: Colors.black, blurRadius: 2)];
+              switch (i) {
+                case 0:
+                  return PieChartSectionData(
+                    color: barChartMuscleColors[0],
+                    value: 40,
+                    title: '40%',
+                    radius: radius,
+                    titleStyle: TextStyle(
+                      fontSize: fontSize,
+                      fontWeight: FontWeight.bold,
+                      color: barChartMuscleColors[1],
+                      shadows: shadows,
+                    ),
+                  );
+                case 1:
+                  return PieChartSectionData(
+                    color: barChartMuscleColors[2],
+                    value: 30,
+                    title: '30%',
+                    radius: radius,
+                    titleStyle: TextStyle(
+                      fontSize: fontSize,
+                      fontWeight: FontWeight.bold,
+                      color: barChartMuscleColors[3],
+                      shadows: shadows,
+                    ),
+                  );
+                case 2:
+                  return PieChartSectionData(
+                    color: barChartMuscleColors[4],
+                    value: 15,
+                    title: '15%',
+                    radius: radius,
+                    titleStyle: TextStyle(
+                      fontSize: fontSize,
+                      fontWeight: FontWeight.bold,
+                      color: barChartMuscleColors[5],
+                      shadows: shadows,
+                    ),
+                  );
+                case 3:
+                  return PieChartSectionData(
+                    color: barChartMuscleColors[6],
+                    value: 15,
+                    title: '15%',
+                    radius: radius,
+                    titleStyle: TextStyle(
+                      fontSize: fontSize,
+                      fontWeight: FontWeight.bold,
+                      color: barChartMuscleColors[7],
+                      shadows: shadows,
+                    ),
+                  );
+                default:
+                  throw Error();
+              }
+            }),
+          ),
+          ),
+        ),
         // Spacer(),
         // for (var i in List.generate(15, (i) => i))
         //   Text("bla"),]
