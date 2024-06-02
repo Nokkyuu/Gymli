@@ -77,12 +77,13 @@ class _MainAppState extends State<MainApp> {
   Brightness mode =  Brightness.light;
   Color themecolor = Colors.orange;
   bool isDarkMode = false;
+  
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
   }
 
 

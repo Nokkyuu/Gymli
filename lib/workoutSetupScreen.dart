@@ -56,7 +56,7 @@ class _WorkoutSetupScreenState extends State<WorkoutSetupScreen> {
       currentWorkout = workout;
       addedExercises = workout.units;
     } else {
-      workoutNameController.text = "Jetzt4";
+      workoutNameController.text = "";
     }
   }
 

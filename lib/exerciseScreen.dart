@@ -1,6 +1,7 @@
 // ignore_for_file: file_names, non_constant_identifier_names
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:yafa_app/exerciseListScreen.dart';
 import 'package:fl_chart/fl_chart.dart';
@@ -17,6 +18,18 @@ import 'package:intl/intl.dart';
 import 'package:flutter/services.dart';
 
 enum ExerciseType { warmup, work, dropset }
+
+const List<Color> graphColors = [
+Color.fromARGB(255, 5,112,176),
+Color.fromARGB(255, 116,169,207),
+Color.fromARGB(255, 189,201,225),
+Color.fromARGB(255, 241,238,246)];
+
+const List<Color> twinColors = [
+Color.fromARGB(255, 254,240,217),
+Color.fromARGB(255, 253,204,138),
+Color.fromARGB(255, 252,141,89),
+Color.fromARGB(255, 215,48,31)];
 
 final workIcons = [
   FontAwesomeIcons.fire,
@@ -163,23 +176,24 @@ class _ExerciseScreen extends State<ExerciseScreen> {
       });
     // timer.cancel();
     });
+
+    for (var i = 3; i >= 0; --i) {
+      trainingGraphs[i] = getTrainingScores(widget.exerciseName, i);
+      if (trainingGraphs[i].isNotEmpty) {
+        barData.add(LineChartBarData(
+            spots: trainingGraphs[i],
+            color: graphColors[i]));
+      }
+    }
   }
+
   @override
   Widget build(BuildContext context) {
     WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
     var title = widget.exerciseName;
 
-    TextEditingController dateInputController =
-        TextEditingController(text: DateTime.now().toString());
-    for (var i = 0; i < 4; ++i) {
-      trainingGraphs[i] = getTrainingScores(widget.exerciseName, i);
-      if (trainingGraphs[i].isNotEmpty) {
-        int reduce = (255 - ((i / 4) * 100)).toInt();
-        barData.add(LineChartBarData(
-            spots: trainingGraphs[i],
-            color: Color.fromARGB(reduce, 33, 150, 243)));
-      }
-    }
+    TextEditingController dateInputController = TextEditingController(text: DateTime.now().toString());
+
 
     // for (int i = 0; i < globals.exercise_twins[widget.exerciseName]!.length; i++) {
     //   additionalGraphs[i] = getTrainingScores(globals.exercise_twins[widget.exerciseName]![i], 0);
@@ -187,8 +201,7 @@ class _ExerciseScreen extends State<ExerciseScreen> {
 
     var minScore = 1e6;
     var maxScore = 0.0;
-    Tuple2<double, int> latestTrainingInfo =
-        globals.getLastTrainingInfo(widget.exerciseName);
+    Tuple2<double, int> latestTrainingInfo = globals.getLastTrainingInfo(widget.exerciseName);
 
     weightKg = latestTrainingInfo.item1.toInt();
     weightDg = (latestTrainingInfo.item1 * 100.0).toInt() % 100;
@@ -253,10 +266,8 @@ class _ExerciseScreen extends State<ExerciseScreen> {
                           left: 0.0), // Hier das Padding rechts hinzufügen
                       child: LineChart(LineChartData(
                         titlesData: const FlTitlesData(
-                          topTitles: AxisTitles(
-                              sideTitles: SideTitles(showTitles: false)),
-                          rightTitles: AxisTitles(
-                              sideTitles: SideTitles(showTitles: false)),
+                          topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                          rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
                         ),
                         clipData: const FlClipData.all(),
                         lineBarsData: barData,
@@ -406,6 +417,28 @@ class _InputFields extends State<InputFields> {
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         mainAxisSize: MainAxisSize.max,
         children: <Widget>[
+          Column(
+            children: [
+              IconButton(
+                icon: const Icon(FontAwesomeIcons.calculator),
+                onPressed: () {
+                  setState(() {
+                    showModalBottomSheet<dynamic>(
+                    // isScrollControlled: true,
+                    context: context,
+                    sheetAnimationStyle: AnimationStyle(
+                      duration: const Duration(milliseconds: 0),
+                      reverseDuration: const Duration(milliseconds: 0),
+                    ),
+                    builder: (BuildContext context) {
+                      return const WeightConfigurator();
+                    },
+                  );
+                  });
+                },
+              ),
+            ]
+          ),
           const Spacer(),
           NumberPicker(
             value: widget.weightKg,
@@ -439,7 +472,182 @@ class _InputFields extends State<InputFields> {
             onChanged: (value) => setState(() => widget.repetitions = value),
           ),
           const Text("Reps"),
+          const Spacer(),
           const Spacer()
         ]);
+  }
+}
+
+
+
+class WeightConfigurator extends StatefulWidget {
+  const WeightConfigurator({
+    super.key,
+  });
+
+  @override
+  State<WeightConfigurator> createState() => _WeightConfigurator();
+}
+
+enum ExerciseDevice { dumbbell, barbell20, barbellhome }
+class _WeightConfigurator extends State<WeightConfigurator> {
+  double itemHeight = 50.0;
+  double itemWidth = 30.0;
+  ExerciseDevice selectedDevice = ExerciseDevice.dumbbell;
+
+  List<TextEditingController> kg_controller = [];
+  late List<int> kg_counter = [];
+
+  List<double> kgs = [1, 1.25, 2, 2.5, 5, 10, 20, 25];
+  List<String> kg_texts = [" 1", "1¼", " 2", "2½", " 5", "10", "20", "25"];
+
+  @override
+  void initState() {
+    super.initState();
+    for (int i = 0; i < kg_texts.length; ++i) {
+      kg_controller.add(TextEditingController());
+      kg_controller.last.text = "0";
+      kg_counter.add(0);
+    }
+    updateWeight();
+  }
+
+  void increase(int i) {
+    kg_counter[i] += 1;
+    kg_controller[i].text = kg_counter[i].toString();
+    updateWeight();
+  }
+  void decrease(int i) {
+    kg_counter[i] -= kg_counter[i] > 0 ? 1 : 0;
+    kg_controller[i].text = kg_counter[i].toString();
+    updateWeight();
+  }
+
+  String weightText = "";
+
+  void updateWeight() {
+    double currentWeight = 0.0;
+    for (int i = 0; i < kgs.length; ++i) {
+      currentWeight += kgs[i]*kg_counter[i];
+    }
+    currentWeight *= 2.0;
+    List<double> adds = [2.3, 20.0, 8.6];
+    currentWeight += adds[selectedDevice.index];
+    weightText = "Stacked weight: $currentWeight kg";
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox.expand(
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            const SizedBox(height: 20.0),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+              ElevatedButton(
+                child: const Text('Escape'),
+                onPressed: () => Navigator.pop(context),
+              ),
+              ElevatedButton(
+                child: const Text('Take weight'),
+                onPressed: () => Navigator.pop(context),
+              ),
+            ]),
+            const Spacer(),
+            Text(weightText, style: const TextStyle(fontSize: 10),),
+            const SizedBox(height: 20.0),
+            SegmentedButton<ExerciseDevice>(
+                  showSelectedIcon: false,
+                  segments: const <ButtonSegment<ExerciseDevice>>[
+                    ButtonSegment<ExerciseDevice>(
+                        value: ExerciseDevice.dumbbell,
+                        label: Text('Dumbbell')),
+                    ButtonSegment<ExerciseDevice>(
+                        value: ExerciseDevice.barbell20,
+                        label: Text('Barbell Gym')),
+                    ButtonSegment<ExerciseDevice>(
+                        value: ExerciseDevice.barbellhome,
+                        label: Text('Barbell Home'))
+                  ],
+                  selected: <ExerciseDevice>{selectedDevice},
+                  onSelectionChanged: (Set<ExerciseDevice> newSelection) {
+                    setState(() {
+                      selectedDevice = newSelection.first;
+                      updateWeight();
+                    });
+                  }),
+            Spacer(),
+            Text("Pick weights on one side"),
+            SizedBox(height: 10.0),
+            // Row(
+            //   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            //   children: (() {
+            //     List<Widget> widgets = [];
+            //     for (var variable in kg_texts) {
+            //       widgets.add(Text("$variable", style: TextStyle(fontFamily: "Courier New")));
+            //     }
+            //     return widgets;
+            //   })(),
+            // ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: (() {
+                List<Widget> widgets = [];
+                for (int i = 0; i < kg_controller.length; ++i) {
+                  widgets.add(SizedBox(
+                width: 40,
+                child: TextFormField(
+                  controller: kg_controller[i],
+                  // enabled: false,
+                  decoration: InputDecoration(
+                    labelText: kg_texts[i],
+                    alignLabelWithHint: true, 
+                    labelStyle: const TextStyle(fontSize: 14.0),
+                    border: const OutlineInputBorder(),
+                  ),
+                  textAlign: TextAlign.center,
+                )));
+                }
+                return widgets;
+                })(),
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: (() {
+                List<Widget> widgets = [];
+                for (int i = 0; i < kg_counter.length; ++i) {
+                  widgets.add(
+                    Column(
+                      children: [
+                        IconButton(
+                        icon: const Icon(FontAwesomeIcons.plus),
+                        onPressed: () {
+                          setState(() {
+                            increase(i);
+                          });
+                        }),
+                        IconButton(
+                        icon: const Icon(FontAwesomeIcons.minus),
+                        onPressed: () {
+                          setState(() {
+                            decrease(i);
+                          });
+                        }),
+                      ]
+                    )
+                  );
+                }
+                return widgets;
+                })(),
+            ),
+            Spacer(),
+          ],
+        ),
+      ),
+    );
   }
 }

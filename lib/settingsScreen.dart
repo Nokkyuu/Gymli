@@ -14,6 +14,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'globals.dart' as globals;
 import 'package:shared_preferences/shared_preferences.dart';
 
+enum DisplayMode { light, dark }
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -136,22 +137,23 @@ void restoreExLoad(myData){
         muscleIntensities.add(1.0);
       }
     }
-    
     exerciseBox.add(Exercise(name: row[0], type: int.parse(row[1]), muscleGroups: muscleGroups, muscleIntensities: muscleIntensities, defaultRepBase: int.parse(row[4]), defaultRepMax: int.parse(row[5]), defaultIncrement: double.parse(row[6])));
-
-}
+  }
 } 
 
 
 class _SettingsScreen extends State<SettingsScreen> {
   final wakeUpTimeController = TextEditingController();
+  // final equationController = TextEditingController();
   Future<SharedPreferences> _preferences = SharedPreferences.getInstance();
+  DisplayMode selectedMode = DisplayMode.light;
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
     wakeUpTimeController.text = "${globals.idleTimerWakeup}";
+    // equationController.text = "w * ((r-b)/(m-b)) * r";
   }
 
   @override
@@ -173,7 +175,7 @@ class _SettingsScreen extends State<SettingsScreen> {
           mainAxisSize: MainAxisSize.max,
           children: <Widget>[
             Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
               Text("Wakeup Timer (s)"),
               SizedBox(
@@ -196,6 +198,55 @@ class _SettingsScreen extends State<SettingsScreen> {
                   }
                 ),
               ),
+            ],),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                Text("Display mode"),
+                SegmentedButton<DisplayMode>(
+                      showSelectedIcon: false,
+                      segments: const <ButtonSegment<DisplayMode>>[
+                    ButtonSegment<DisplayMode>(
+                        value: DisplayMode.light,
+                        //label: Text('Free'),
+                        icon: Icon(Icons.light_mode)),
+                    ButtonSegment<DisplayMode>(
+                        value: DisplayMode.dark,
+                        //label: Text('Machine',softWrap: false, overflow: TextOverflow.fade),
+                        icon: Icon(Icons.dark_mode)),
+],
+                  selected: <DisplayMode>{selectedMode},
+                  onSelectionChanged: (Set<DisplayMode> s) {
+                    setState(() {
+                      selectedMode = s.first;
+                    });
+                  }),
+              ]),
+               Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+              Text("Score calculation"),
+              Column(
+                children: [
+                  SegmentedButton<DisplayMode>(
+                      showSelectedIcon: false,
+                      segments: const <ButtonSegment<DisplayMode>>[
+                    ButtonSegment<DisplayMode>(
+                        value: DisplayMode.light,
+                        label: Text('Equation'),
+                        icon: Icon(Icons.calculate)),
+                    ButtonSegment<DisplayMode>(
+                        value: DisplayMode.dark,
+                        label: Text('Records'),
+                        icon: Icon(Icons.arrow_outward))
+                      ],
+                  selected: <DisplayMode>{selectedMode},
+                  onSelectionChanged: (Set<DisplayMode> s) {
+                    setState(() {
+                      selectedMode = s.first;
+                    });
+                  }),
+              ])
             ],),
             Spacer(flex: 3,),
             Divider(),
