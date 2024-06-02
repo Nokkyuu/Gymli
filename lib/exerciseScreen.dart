@@ -493,7 +493,7 @@ enum ExerciseDevice { dumbbell, barbell20, barbellhome }
 class _WeightConfigurator extends State<WeightConfigurator> {
   double itemHeight = 50.0;
   double itemWidth = 30.0;
-  ExerciseDevice selectedDevice = ExerciseDevice.dumbbell;
+  ExerciseDevice selectedDevice = ExerciseDevice.barbell20;
 
   List<TextEditingController> kg_controller = [];
   late List<int> kg_counter = [];
@@ -533,6 +533,7 @@ class _WeightConfigurator extends State<WeightConfigurator> {
     currentWeight *= 2.0;
     List<double> adds = [2.3, 20.0, 8.6];
     currentWeight += adds[selectedDevice.index];
+    currentWeight = 70;
     weightText = "Stacked weight: $currentWeight kg";
   }
 
@@ -558,7 +559,7 @@ class _WeightConfigurator extends State<WeightConfigurator> {
               ),
             ]),
             const Spacer(),
-            Text(weightText, style: const TextStyle(fontSize: 10),),
+            Text(weightText, style: const TextStyle(fontSize: 20),),
             const SizedBox(height: 20.0),
             SegmentedButton<ExerciseDevice>(
                   showSelectedIcon: false,
@@ -584,11 +585,58 @@ class _WeightConfigurator extends State<WeightConfigurator> {
             Text("Pick weights on one side"),
             SizedBox(height: 10.0),
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text("1",
-                style: TextStyle(backgroundColor: Colors.blue)),
-                Text("1"),
+                RotatedBox(
+                  quarterTurns: 1, child:
+                  Container(
+                    color: Colors.black45, width: 95, alignment: Alignment.center, padding: EdgeInsets.all(2),
+                    child: Text('5 kg', style: TextStyle(color: Colors.white,fontSize: 15.0)),
+                  ),
+                ),
+                Padding(padding:EdgeInsets.all(1), child:
+                  RotatedBox(
+                  quarterTurns: 1, child:
+                  Container(
+                    color: Colors.black45, width: 110, alignment: Alignment.center, padding: EdgeInsets.all(2),
+                    child: const Text('10 kg', style: TextStyle(color: Colors.white,fontSize: 15.0)),
+                  ),
+                  ),
+                ),
+                RotatedBox(
+                  quarterTurns: 1, child:
+                  Container(
+                    color: Colors.black45, width: 110, alignment: Alignment.center, padding: EdgeInsets.all(2),
+                    child: Text('10 kg', style: TextStyle(color: Colors.white,fontSize: 15.0)),
+                  ),
+                ),
+                Container(
+                    color: Colors.black54, width: 100, alignment: Alignment.center,
+                    child: Text('bar', style: TextStyle(color: Colors.white, fontSize: 10.0)),
+                  ),
+                RotatedBox(
+                  quarterTurns: 1, child:
+                  Container(
+                    color: Colors.black45, width: 110, alignment: Alignment.center, padding: EdgeInsets.all(2),
+                    child: Text('10 kg', style: TextStyle(color: Colors.white,fontSize: 15.0)),
+                  ),
+                ),
+                Padding(padding:EdgeInsets.all(1), child:
+                  RotatedBox(
+                  quarterTurns: 1, child:
+                  Container(
+                    color: Colors.black45, width: 110, alignment: Alignment.center, padding: EdgeInsets.all(2),
+                    child: Text('10 kg', style: TextStyle(color: Colors.white,fontSize: 15.0)),
+                  ),
+                  ),
+                ),
+                RotatedBox(
+                  quarterTurns: 1, child:
+                  Container(
+                    color: Colors.black45, width: 95, alignment: Alignment.center, padding: EdgeInsets.all(2),
+                    child: Text('5 kg', style: TextStyle(color: Colors.white,fontSize: 15.0)),
+                  ),
+                ),
               ]
             ),
             // Row(

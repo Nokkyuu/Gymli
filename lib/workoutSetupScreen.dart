@@ -173,6 +173,16 @@ class _WorkoutSetupScreenState extends State<WorkoutSetupScreen> {
                 width: MediaQuery.of(context).size.width * 0.7,
                 //initialSelection: ExerciseList.Benchpress,
                 controller: exerciseController,
+                menuHeight: 500, 
+                inputDecorationTheme: InputDecorationTheme(
+                  isDense: true,
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                  constraints: BoxConstraints.tight(
+                    const Size.fromHeight(40)),
+                    border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
                 requestFocusOnTap: true,
                 label: const Text('Exercises'),
                 onSelected: (selectExercises) {

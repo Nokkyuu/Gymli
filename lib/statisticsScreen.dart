@@ -161,12 +161,32 @@ class _StatisticsScreen extends State<StatisticsScreen> {
               label: const Text("Start"),
               onSelected: (String? date) { updateView(); },
               dropdownMenuEntries: trainingDates.map<DropdownMenuEntry<String>>((String name) { return DropdownMenuEntry<String>(value: name, label: name); }).toList(),
+              menuHeight: 200, 
+              inputDecorationTheme: InputDecorationTheme(
+                isDense: true,
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                constraints: BoxConstraints.tight(
+                  const Size.fromHeight(40)),
+                  border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
             ),
             const Spacer(),
             DropdownMenu<String>(
               label: const Text("End"),
               onSelected: (String? date) { updateView(); },
               dropdownMenuEntries: trainingDates.map<DropdownMenuEntry<String>>((String name) { return DropdownMenuEntry<String>(value: name, label: name); }).toList(),
+              menuHeight: 200, 
+              inputDecorationTheme: InputDecorationTheme(
+                isDense: true,
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                constraints: BoxConstraints.tight(
+                  const Size.fromHeight(40)),
+                  border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
             ),
             const Spacer(),
           ]

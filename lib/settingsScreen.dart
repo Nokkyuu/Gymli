@@ -150,7 +150,6 @@ class _SettingsScreen extends State<SettingsScreen> {
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     wakeUpTimeController.text = "${globals.idleTimerWakeup}";
     // equationController.text = "w * ((r-b)/(m-b)) * r";
