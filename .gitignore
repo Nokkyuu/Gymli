@@ -15,8 +15,8 @@ build/
 develop-eggs/
 dist/
 ios/
-#macos/
-#android/
+macos/
+android/
 downloads/
 eggs/
 .eggs/
