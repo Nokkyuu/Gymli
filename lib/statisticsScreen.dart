@@ -269,54 +269,7 @@ class _StatisticsScreen extends State<StatisticsScreen> {
           title: const Text("Statistics"),
         ),
         body: ListView(children: <Widget>[
-          Stack(
-            children: [
-              SizedBox(
-                //width: MediaQuery.of(context).size.width,
-                height: MediaQuery.of(context).size.height * 0.7,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Transform.scale(
-                      scaleX: -1,
-                      child: const Image(
-                          fit: BoxFit.fill,
-                          image: AssetImage('images/muscles/Front_bg.png')),
-                    ),
-                    const Image(
-                        fit: BoxFit.fill,
-                        image: AssetImage('images/muscles/Back_bg.png')),
-                  ],
-                ),
-              ),
-
-              //for (var i in [0,1])
-              // Pectoralis major - x: 100, y: 450
-// Trapezius - x: 300, y: 480
-// Biceps - x: 150, y: 410
-// Abdominals - x: 100, y: 380
-// Deltoids - x: 145, y: 460,
-// Latissimus dorsi - x: 290, y: 380,
-// Triceps - x: 240, y: 395
-// Gluteus maximus - x: 290, y: 300
-// Hamstrings - x: 280, y: 220
-// Quadriceps - x: 115, y: 230
-// Forearms - x: 160, y: 350
-// Calves - x: 270, y: 120
-//dia min: 50 max: 100
-// opa min: 100 max 200
-//lerp min 0 max 1
-              for (var i in List.generate(heatMapMulti.length, (int i) => i))
-                //heatDot(x: heatMapCood[i][0]-((30+(50*heatMapMulti[i]))/2), y: heatMapCood[i][1]-((30+(50*heatMapMulti[i]))/2), dia: 30+(50*heatMapMulti[i]), opa: heatMapMulti[i] == 0 ? 0 : (50 + 150*heatMapMulti[i]).toInt(), lerp: heatMapMulti[i]),
-                heatDot(
-                    text: (heatMapMulti[i] * 100).round().toString() + "%",
-                    x: heatMapCood[i][0] - ((30 + (50 * heatMapMulti[i])) / 2),
-                    y: heatMapCood[i][1] - ((30 + (50 * heatMapMulti[i])) / 2),
-                    dia: 30 + (50 * heatMapMulti[i]),
-                    opa: heatMapMulti[i] == 0 ? 0 : 200,
-                    lerp: heatMapMulti[i]),
-            ],
-          ),
+          
 
           Text("Selected Training Interval", style: subStyle),
           const SizedBox(height: 5),
@@ -367,7 +320,7 @@ class _StatisticsScreen extends State<StatisticsScreen> {
           Text("Number of training days: $numberOfTrainingDays"),
           Text(trainingDuration),
           const Divider(),
-          Text("Number of Trainings per Week", style: subStyle),
+          Text("Number of Trainings per Week", style: subStyle, textAlign: TextAlign.center,),
           SizedBox(
               width: MediaQuery.of(context).size.width,
               height: MediaQuery.of(context).size.height * 0.15,
@@ -387,7 +340,7 @@ class _StatisticsScreen extends State<StatisticsScreen> {
                     maxY: 4)),
               )),
           const SizedBox(height: 20),
-          Text("Muscle usage per workout", style: subStyle),
+          Text("Muscle usage per Exercise", style: subStyle, textAlign: TextAlign.center,),
           const SizedBox(height: 5),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -466,94 +419,146 @@ class _StatisticsScreen extends State<StatisticsScreen> {
             })(),
           ),
           const SizedBox(
-            height: 100,
+            height: 20,
           ),
-          SizedBox(
-            width: MediaQuery.of(context).size.width,
-            height: MediaQuery.of(context).size.height * 0.15,
-            child: PieChart(
-              PieChartData(
-                pieTouchData: PieTouchData(
-                  touchCallback: (FlTouchEvent event, pieTouchResponse) {
-                    setState(() {
-                      if (!event.isInterestedForInteractions ||
-                          pieTouchResponse == null ||
-                          pieTouchResponse.touchedSection == null) {
-                        return;
-                      }
-                    });
-                  },
+          Text("Heatmap: relative to most used muscle", style: subStyle, textAlign: TextAlign.center,),
+                    const SizedBox(
+            height: 20,
+          ),
+          // SizedBox(
+          //   width: MediaQuery.of(context).size.width,
+          //   height: MediaQuery.of(context).size.height * 0.15,
+          //   child: PieChart(
+          //     PieChartData(
+          //       pieTouchData: PieTouchData(
+          //         touchCallback: (FlTouchEvent event, pieTouchResponse) {
+          //           setState(() {
+          //             if (!event.isInterestedForInteractions ||
+          //                 pieTouchResponse == null ||
+          //                 pieTouchResponse.touchedSection == null) {
+          //               return;
+          //             }
+          //           });
+          //         },
+          //       ),
+          //       borderData: FlBorderData(
+          //         show: false,
+          //       ),
+          //       sectionsSpace: 0,
+          //       centerSpaceRadius: 40,
+          //       sections: List.generate(4, (i) {
+          //         // final isTouched = i == touchedIndex;
+          //         final isTouched = false;
+          //         final fontSize = isTouched ? 25.0 : 16.0;
+          //         final radius = isTouched ? 60.0 : 50.0;
+          //         const shadows = [Shadow(color: Colors.black, blurRadius: 2)];
+          //         switch (i) {
+          //           case 0:
+          //             return PieChartSectionData(
+          //               color: barChartMuscleColors[0],
+          //               value: 40,
+          //               title: '40%',
+          //               radius: radius,
+          //               titleStyle: TextStyle(
+          //                 fontSize: fontSize,
+          //                 fontWeight: FontWeight.bold,
+          //                 color: barChartMuscleColors[1],
+          //                 shadows: shadows,
+          //               ),
+          //             );
+          //           case 1:
+          //             return PieChartSectionData(
+          //               color: barChartMuscleColors[2],
+          //               value: 30,
+          //               title: '30%',
+          //               radius: radius,
+          //               titleStyle: TextStyle(
+          //                 fontSize: fontSize,
+          //                 fontWeight: FontWeight.bold,
+          //                 color: barChartMuscleColors[3],
+          //                 shadows: shadows,
+          //               ),
+          //             );
+          //           case 2:
+          //             return PieChartSectionData(
+          //               color: barChartMuscleColors[4],
+          //               value: 15,
+          //               title: '15%',
+          //               radius: radius,
+          //               titleStyle: TextStyle(
+          //                 fontSize: fontSize,
+          //                 fontWeight: FontWeight.bold,
+          //                 color: barChartMuscleColors[5],
+          //                 shadows: shadows,
+          //               ),
+          //             );
+          //           case 3:
+          //             return PieChartSectionData(
+          //               color: barChartMuscleColors[6],
+          //               value: 15,
+          //               title: '15%',
+          //               radius: radius,
+          //               titleStyle: TextStyle(
+          //                 fontSize: fontSize,
+          //                 fontWeight: FontWeight.bold,
+          //                 color: barChartMuscleColors[7],
+          //                 shadows: shadows,
+          //               ),
+          //             );
+          //           default:
+          //             throw Error();
+          //         }
+          //       }),
+          //     ),
+          //   ),
+          // ),
+          Stack(
+            children: [
+              SizedBox(
+                //width: MediaQuery.of(context).size.width,
+                height: MediaQuery.of(context).size.height * 0.7,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Transform.scale(
+                      scaleX: -1,
+                      child: const Image(
+                          fit: BoxFit.fill,
+                          image: AssetImage('images/muscles/Front_bg.png')),
+                    ),
+                    const Image(
+                        fit: BoxFit.fill,
+                        image: AssetImage('images/muscles/Back_bg.png')),
+                  ],
                 ),
-                borderData: FlBorderData(
-                  show: false,
-                ),
-                sectionsSpace: 0,
-                centerSpaceRadius: 40,
-                sections: List.generate(4, (i) {
-                  // final isTouched = i == touchedIndex;
-                  final isTouched = false;
-                  final fontSize = isTouched ? 25.0 : 16.0;
-                  final radius = isTouched ? 60.0 : 50.0;
-                  const shadows = [Shadow(color: Colors.black, blurRadius: 2)];
-                  switch (i) {
-                    case 0:
-                      return PieChartSectionData(
-                        color: barChartMuscleColors[0],
-                        value: 40,
-                        title: '40%',
-                        radius: radius,
-                        titleStyle: TextStyle(
-                          fontSize: fontSize,
-                          fontWeight: FontWeight.bold,
-                          color: barChartMuscleColors[1],
-                          shadows: shadows,
-                        ),
-                      );
-                    case 1:
-                      return PieChartSectionData(
-                        color: barChartMuscleColors[2],
-                        value: 30,
-                        title: '30%',
-                        radius: radius,
-                        titleStyle: TextStyle(
-                          fontSize: fontSize,
-                          fontWeight: FontWeight.bold,
-                          color: barChartMuscleColors[3],
-                          shadows: shadows,
-                        ),
-                      );
-                    case 2:
-                      return PieChartSectionData(
-                        color: barChartMuscleColors[4],
-                        value: 15,
-                        title: '15%',
-                        radius: radius,
-                        titleStyle: TextStyle(
-                          fontSize: fontSize,
-                          fontWeight: FontWeight.bold,
-                          color: barChartMuscleColors[5],
-                          shadows: shadows,
-                        ),
-                      );
-                    case 3:
-                      return PieChartSectionData(
-                        color: barChartMuscleColors[6],
-                        value: 15,
-                        title: '15%',
-                        radius: radius,
-                        titleStyle: TextStyle(
-                          fontSize: fontSize,
-                          fontWeight: FontWeight.bold,
-                          color: barChartMuscleColors[7],
-                          shadows: shadows,
-                        ),
-                      );
-                    default:
-                      throw Error();
-                  }
-                }),
               ),
-            ),
+
+              //for (var i in [0,1])
+              // Pectoralis major - x: 100, y: 450
+// Trapezius - x: 300, y: 480
+// Biceps - x: 150, y: 410
+// Abdominals - x: 100, y: 380
+// Deltoids - x: 145, y: 460,
+// Latissimus dorsi - x: 290, y: 380,
+// Triceps - x: 240, y: 395
+// Gluteus maximus - x: 290, y: 300
+// Hamstrings - x: 280, y: 220
+// Quadriceps - x: 115, y: 230
+// Forearms - x: 160, y: 350
+// Calves - x: 270, y: 120
+//dia min: 50 max: 100
+// opa min: 100 max 200
+//lerp min 0 max 1
+              for (var i in List.generate(heatMapMulti.length, (int i) => i))
+                //heatDot(x: heatMapCood[i][0]-((30+(50*heatMapMulti[i]))/2), y: heatMapCood[i][1]-((30+(50*heatMapMulti[i]))/2), dia: 30+(50*heatMapMulti[i]), opa: heatMapMulti[i] == 0 ? 0 : (50 + 150*heatMapMulti[i]).toInt(), lerp: heatMapMulti[i]),
+                heatDot(
+                    text: (heatMapMulti[i] * 100).round().toString() + "%",
+                    x: heatMapCood[i][0] - ((30 + (50 * heatMapMulti[i])) / 2),
+                    y: heatMapCood[i][1] - ((30 + (50 * heatMapMulti[i])) / 2),
+                    dia: 30 + (50 * heatMapMulti[i]),
+                    opa: heatMapMulti[i] == 0 ? 0 : 200,
+                    lerp: heatMapMulti[i]),
+            ],
           ),
           // Spacer(),
           // for (var i in List.generate(15, (i) => i))
