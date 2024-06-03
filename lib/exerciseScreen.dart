@@ -261,7 +261,7 @@ class _ExerciseScreen extends State<ExerciseScreen> {
           children: <Widget>[
             SizedBox(
                 width: MediaQuery.of(context).size.width,
-                height: MediaQuery.of(context).size.height * 0.20,
+                height: MediaQuery.of(context).size.height * 0.25,
                 child: Padding(
                   padding: const EdgeInsets.all(10.0),
                   child: Padding(
