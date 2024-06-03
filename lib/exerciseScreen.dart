@@ -114,6 +114,11 @@ class _ExerciseScreen extends State<ExerciseScreen> {
   DateTime fictiveStart = DateTime.now();
   DateTime workoutStartTime = DateTime.now();
 
+  Text warmText = Text('Warm');
+  Text workText = Text('Work');
+  Text dropText = Text('Drop');
+  late int numWarmUps, numWorkSets, numDropSets;
+
   late InputFields inputFieldAccessor = InputFields(
       weightDg: weightDg, weightKg: weightKg, repetitions: repetitions);
   Set<ExerciseType> _selected = {ExerciseType.work};
@@ -191,8 +196,20 @@ class _ExerciseScreen extends State<ExerciseScreen> {
       maxHistoryDistance = min(trainingGraphs[0][0].x*-1, maxHistoryDistance);
 
     }
+    var tokens = widget.workoutDescription.split(":");
+    numWarmUps = int.parse(tokens[1].split(",")[0]);
+    numWorkSets = int.parse(tokens[2].split(",")[0]);
+    numDropSets = int.parse(tokens[3]);
+    updateTexts();
   }
-
+  void updateTexts() {
+    
+    setState(() {
+      warmText = numWarmUps > 0 ? Text("${numWarmUps}x Warm") : const Text("Warm");
+      workText = numWorkSets > 0 ? Text("${numWorkSets}x Work") : const Text("Work");
+      dropText = numDropSets > 0 ? Text("${numDropSets}x Drop") : const Text("Drop");
+    });;
+  }
   @override
   Widget build(BuildContext context) {
     WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
@@ -291,19 +308,19 @@ class _ExerciseScreen extends State<ExerciseScreen> {
                     const SizedBox(height: 10),
                     SegmentedButton<ExerciseType>(
                       showSelectedIcon: false,
-                      segments: const <ButtonSegment<ExerciseType>>[
+                      segments: <ButtonSegment<ExerciseType>>[
                         ButtonSegment<ExerciseType>(
                             value: ExerciseType.warmup,
-                            label: Text('Warm'),
-                            icon: Icon(Icons.local_fire_department)),
+                            label: warmText,
+                            icon: const Icon(Icons.local_fire_department)),
                         ButtonSegment<ExerciseType>(
                             value: ExerciseType.work,
-                            label: Text('Work'),
-                            icon: FaIcon(FontAwesomeIcons.handFist)),
+                            label: workText,
+                            icon: const FaIcon(FontAwesomeIcons.handFist)),
                         ButtonSegment<ExerciseType>(
                             value: ExerciseType.dropset,
-                            label: Text('Drop'),
-                            icon: Icon(Icons.south_east)),
+                            label: dropText,
+                            icon: const Icon(Icons.south_east)),
                       ],
                       selected: _selected,
                       onSelectionChanged: updateSelected,
@@ -321,7 +338,14 @@ class _ExerciseScreen extends State<ExerciseScreen> {
               () {
                 double new_weight = inputFieldAccessor.weightKg.toDouble() +
                     inputFieldAccessor.weightDg.toDouble() / 100.0;
-                
+                if (_selected.first.index == 0) {
+                  numWarmUps -= 1;
+                } else if (_selected.first.index == 1) {
+                  numWorkSets -= 1;
+                } else {
+                  numDropSets -= 1;
+                }
+                updateTexts();
                 addSet(
                     widget.exerciseName,
                     new_weight,
