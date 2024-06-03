@@ -210,8 +210,13 @@ class _WorkoutSetupScreenState extends State<WorkoutSetupScreen> {
                 onPressed:  () {
                   setState(() {
                     if (selectedExercise != null){
-                    addedExercises.add(WorkoutUnit(exercise: selectedExercise!.name, warmups: warmUpS, worksets: workS, dropsets: dropS, type: selectedExercise!.type));
-                    addRemEx.value = !addRemEx.value;
+                      for (int i = 0; i < addedExercises.length; ++i) {
+                        if (addedExercises[i].exercise == selectedExercise!.name) {
+                          return;
+                        }
+                      }
+                      addedExercises.add(WorkoutUnit(exercise: selectedExercise!.name, warmups: warmUpS, worksets: workS, dropsets: dropS, type: selectedExercise!.type));
+                      addRemEx.value = !addRemEx.value;
                     }else{return;}
                   });
                 },
