@@ -129,4 +129,4 @@ Tuple2<double, int> getLastTrainingInfo(String exercise) {
   return Tuple2<double, int>(best_weight, best_reps);
 }
 
-  
+  List<List> muscleHistoryScore = [];
