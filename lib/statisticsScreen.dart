@@ -279,7 +279,7 @@ print(heatMapMulti);
 //lerp min 0 max 1
             for (var i in List.generate(heatMapMulti.length, (int i) => i))
             //heatDot(x: heatMapCood[i][0]-((30+(50*heatMapMulti[i]))/2), y: heatMapCood[i][1]-((30+(50*heatMapMulti[i]))/2), dia: 30+(50*heatMapMulti[i]), opa: heatMapMulti[i] == 0 ? 0 : (50 + 150*heatMapMulti[i]).toInt(), lerp: heatMapMulti[i]),
-            heatDot(x: heatMapCood[i][0]-((30+(50*heatMapMulti[i]))/2), y: heatMapCood[i][1]-((30+(50*heatMapMulti[i]))/2), dia: 30+(50*heatMapMulti[i]), opa: 180, lerp: heatMapMulti[i]),
+            heatDot(text: (heatMapMulti[i]*100).round().toString() +"%",x: heatMapCood[i][0]-((30+(50*heatMapMulti[i]))/2), y: heatMapCood[i][1]-((30+(50*heatMapMulti[i]))/2), dia: 30+(50*heatMapMulti[i]), opa: heatMapMulti[i] == 0 ? 0 : 200, lerp: heatMapMulti[i]),
             ],
           ),
 
@@ -536,6 +536,7 @@ class heatDot extends StatelessWidget {
     required this.dia,
     required this.opa,
     required this.lerp,
+    required this.text,
   });
 
   final double y;
@@ -543,6 +544,7 @@ class heatDot extends StatelessWidget {
   final double dia;
   final int opa;
   final double lerp;
+  final String text;
 
   @override
   Widget build(BuildContext context) {
@@ -552,10 +554,13 @@ class heatDot extends StatelessWidget {
       child: Container(
         width: dia,
         height: dia,
+        alignment: Alignment.center,
+        child: Text(text, textAlign: TextAlign.center, ),
         decoration: BoxDecoration(
             shape: BoxShape.circle,
             color: Color.lerp(Color.fromARGB(opa, 255, 200, 50),
                 Color.fromARGB(opa, 255, 30, 50), lerp)),
+              
       ),
     );
   }
