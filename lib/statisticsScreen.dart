@@ -57,7 +57,32 @@ class _StatisticsScreen extends State<StatisticsScreen> {
   List<Text> exerciseDetails = [];
   List<double> heatMapMulti = [];
   final TextEditingController MuscleController = TextEditingController();
-  List<List<double>> heatMapCood = [[100, 450], [300, 480], [150,410],[145,460],[290,380], [240,395], [290,300],[280,220], [115,230], [160,350],[270,120] ];
+  // Pectoralis major - x: 100, y: 450
+// Trapezius - x: 300, y: 480
+// Biceps - x: 150, y: 410
+// Abdominals - x: 100, y: 380
+// Deltoids - x: 145, y: 460,
+// Latissimus dorsi - x: 290, y: 380,
+// Triceps - x: 240, y: 395
+// Gluteus maximus - x: 290, y: 300
+// Hamstrings - x: 280, y: 220
+// Quadriceps - x: 115, y: 230
+// Forearms - x: 160, y: 350
+// Calves - x: 270, y: 120
+  List<List<double>> heatMapCood = [
+    [100, 450],
+    [300, 480],
+    [150, 410],
+    [100, 380],
+    [145, 460],
+    [290, 380],
+    [240, 395],
+    [290, 300],
+    [280, 220],
+    [115, 230],
+    [160, 350],
+    [270, 120]
+  ];
 
   void updateView() {}
 
@@ -180,11 +205,8 @@ class _StatisticsScreen extends State<StatisticsScreen> {
       }
       globals.muscleHistoryScore = muscleHistoryScore;
 
-      
       //print(heatMapMulti);
       //zero points
-
-
 
       //  Map<String, double> muscleHeatMapping = {
       //     "Pectoralis major": 1.0,
@@ -201,32 +223,32 @@ class _StatisticsScreen extends State<StatisticsScreen> {
       //     "Calves": 0.0
       //   };
     });
-  
   }
-
 
   @override
   Widget build(BuildContext context) {
-  List<List> muscleHistoryScore = globals.muscleHistoryScore;
+    List<List> muscleHistoryScore = globals.muscleHistoryScore;
 
-  List<double> muscleHistoryScoreCum = [];
-      for (var i in List.generate(muscleHistoryScore[0].length, (int x) => x)) {
-        double item = 0;
-        for (var j in List.generate(muscleHistoryScore.length, (int x) => x)) {
-          item = item + muscleHistoryScore[j][i]; //adds all values from all the lists in the list.
-        }
-        muscleHistoryScoreCum.add(item);
+    List<double> muscleHistoryScoreCum = [];
+    for (var i in List.generate(muscleHistoryScore[0].length, (int x) => x)) {
+      double item = 0;
+      for (var j in List.generate(muscleHistoryScore.length, (int x) => x)) {
+        item = item +
+            muscleHistoryScore[j]
+                [i]; //adds all values from all the lists in the list.
       }
-      var highestValue = muscleHistoryScoreCum.reduce(max);
-      List<double> heatMapMulti = [];
-      for (var i
-          in (List.generate(muscleHistoryScoreCum.length, (int x) => x))) {
-        heatMapMulti.add(muscleHistoryScoreCum[i] / highestValue); //percentage of muscle usage in relation to highest for the heatmap.
-      }
-  
+      muscleHistoryScoreCum.add(item);
+    }
+    var highestValue = muscleHistoryScoreCum.reduce(max);
+    List<double> heatMapMulti = [];
+    for (var i in (List.generate(muscleHistoryScoreCum.length, (int x) => x))) {
+      heatMapMulti.add(muscleHistoryScoreCum[i] /
+          highestValue); //percentage of muscle usage in relation to highest for the heatmap.
+    }
+
     //print(highestValue);
-print(heatMapCood);
-print(heatMapMulti);
+    print(heatMapCood);
+    print(heatMapMulti);
     return Scaffold(
         appBar: AppBar(
           leading: InkWell(
@@ -261,8 +283,8 @@ print(heatMapMulti);
                 ),
               ),
 
-            //for (var i in [0,1])
-            // Pectoralis major - x: 100, y: 450
+              //for (var i in [0,1])
+              // Pectoralis major - x: 100, y: 450
 // Trapezius - x: 300, y: 480
 // Biceps - x: 150, y: 410
 // Abdominals - x: 100, y: 380
@@ -277,9 +299,15 @@ print(heatMapMulti);
 //dia min: 50 max: 100
 // opa min: 100 max 200
 //lerp min 0 max 1
-            for (var i in List.generate(heatMapMulti.length, (int i) => i))
-            //heatDot(x: heatMapCood[i][0]-((30+(50*heatMapMulti[i]))/2), y: heatMapCood[i][1]-((30+(50*heatMapMulti[i]))/2), dia: 30+(50*heatMapMulti[i]), opa: heatMapMulti[i] == 0 ? 0 : (50 + 150*heatMapMulti[i]).toInt(), lerp: heatMapMulti[i]),
-            heatDot(text: (heatMapMulti[i]*100).round().toString() +"%",x: heatMapCood[i][0]-((30+(50*heatMapMulti[i]))/2), y: heatMapCood[i][1]-((30+(50*heatMapMulti[i]))/2), dia: 30+(50*heatMapMulti[i]), opa: heatMapMulti[i] == 0 ? 0 : 200, lerp: heatMapMulti[i]),
+              for (var i in List.generate(heatMapMulti.length, (int i) => i))
+                //heatDot(x: heatMapCood[i][0]-((30+(50*heatMapMulti[i]))/2), y: heatMapCood[i][1]-((30+(50*heatMapMulti[i]))/2), dia: 30+(50*heatMapMulti[i]), opa: heatMapMulti[i] == 0 ? 0 : (50 + 150*heatMapMulti[i]).toInt(), lerp: heatMapMulti[i]),
+                heatDot(
+                    text: (heatMapMulti[i] * 100).round().toString() + "%",
+                    x: heatMapCood[i][0] - ((30 + (50 * heatMapMulti[i])) / 2),
+                    y: heatMapCood[i][1] - ((30 + (50 * heatMapMulti[i])) / 2),
+                    dia: 30 + (50 * heatMapMulti[i]),
+                    opa: heatMapMulti[i] == 0 ? 0 : 200,
+                    lerp: heatMapMulti[i]),
             ],
           ),
 
@@ -555,12 +583,14 @@ class heatDot extends StatelessWidget {
         width: dia,
         height: dia,
         alignment: Alignment.center,
-        child: Text(text, textAlign: TextAlign.center, ),
+        child: Text(
+          text,
+          textAlign: TextAlign.center,
+        ),
         decoration: BoxDecoration(
             shape: BoxShape.circle,
             color: Color.lerp(Color.fromARGB(opa, 255, 200, 50),
                 Color.fromARGB(opa, 255, 30, 50), lerp)),
-              
       ),
     );
   }
