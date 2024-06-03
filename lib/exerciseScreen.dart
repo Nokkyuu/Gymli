@@ -94,7 +94,8 @@ Future<int> addSet(String exerciseName, double weight, int repetitions,
 
 class ExerciseScreen extends StatefulWidget {
   final String exerciseName;
-  const ExerciseScreen(this.exerciseName, {super.key});
+  final String workoutDescription;
+  const ExerciseScreen(this.exerciseName, this.workoutDescription, {super.key});
 
   @override
   State<ExerciseScreen> createState() => _ExerciseScreen();
@@ -211,7 +212,6 @@ class _ExerciseScreen extends State<ExerciseScreen> {
     weightKg = latestTrainingInfo.item1.toInt();
     weightDg = (latestTrainingInfo.item1 * 100.0).toInt() % 100;
     repetitions = latestTrainingInfo.item2;
-
     for (var i = 0; i < 4; ++i) {
       for (var d in trainingGraphs[i]) {
         minScore = min(minScore, d.y);
@@ -283,6 +283,7 @@ class _ExerciseScreen extends State<ExerciseScreen> {
                       ))),
                 )),
             const Divider(),
+            widget.workoutDescription != "" ? Text(widget.workoutDescription) : const SizedBox.shrink(),
             Padding(
                 padding: const EdgeInsets.only(left: 30, right: 30, bottom: 10),
                 child: Column(

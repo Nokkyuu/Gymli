@@ -216,6 +216,10 @@ class _LandingScreenState extends State<LandingScreen> {
                         itemBuilder: (context, index) {
                           final currentData = items[index];
                           final meta = metainfo[index];
+                          String description = "";
+                          if (meta.split(":")[0] == "Warm") {
+                            description = meta;
+                          }
                           final exerciseType = currentData.type;
                           final itemList = [
                             FontAwesomeIcons.dumbbell,
@@ -240,7 +244,7 @@ class _LandingScreenState extends State<LandingScreen> {
                                     context,
                                     MaterialPageRoute(
                                         builder: (context) =>
-                                            ExerciseScreen(currentData.name))).then((value) => _reload(value));
+                                            ExerciseScreen(currentData.name, description))).then((value) => _reload(value));
                               });
                         });
                   } else {
