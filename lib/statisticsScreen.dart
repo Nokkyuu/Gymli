@@ -278,7 +278,7 @@ print(heatMapMulti);
 // opa min: 100 max 200
 //lerp min 0 max 1
             for (var i in List.generate(heatMapMulti.length, (int i) => i))
-            heatDot(x: heatMapCood[i][0]-((50+(50*heatMapMulti[i]))/2), y: heatMapCood[i][1]-((50+(50*heatMapMulti[i]))/2), dia: 50+(50*heatMapMulti[i]), opa: heatMapMulti[i] == 0 ? 0 : (50 + 150*heatMapMulti[i]).toInt(), lerp: heatMapMulti[i]),
+            heatDot(x: heatMapCood[i][0]-((30+(50*heatMapMulti[i]))/2), y: heatMapCood[i][1]-((30+(50*heatMapMulti[i]))/2), dia: 30+(50*heatMapMulti[i]), opa: heatMapMulti[i] == 0 ? 0 : (50 + 150*heatMapMulti[i]).toInt(), lerp: heatMapMulti[i]),
             ],
           ),
 
@@ -553,8 +553,8 @@ class heatDot extends StatelessWidget {
         height: dia,
         decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: Color.lerp(Color.fromARGB(opa, 255, 255, 0),
-                Color.fromARGB(opa, 255, 40, 0), lerp)),
+            color: Color.lerp(Color.fromARGB(opa, 0, 80, 155),
+                Color.fromARGB(opa, 255, 80, 0), lerp)),
       ),
     );
   }
