@@ -20,8 +20,8 @@ class StatisticsScreen extends StatefulWidget {
 }
 
 const List<String> barChartMuscleNames = [
-  "Other",
   "Pecs",
+  "Trapz",
   "Biceps",
   "Abs",
   "Delts",
@@ -29,19 +29,24 @@ const List<String> barChartMuscleNames = [
   "Triceps",
   "Glutes",
   "Hams",
-  "Quads"
+  "Quads",
+  "Arms",
+  "Calves"
 ];
+
 const List<Color> barChartMuscleColors = [
-  Colors.grey,
-  Color.fromARGB(255, 166, 206, 227),
-  Color.fromARGB(255, 31, 120, 180),
-  Color.fromARGB(255, 178, 223, 138),
-  Color.fromARGB(255, 51, 160, 44),
-  Color.fromARGB(255, 251, 154, 153),
-  Color.fromARGB(255, 227, 26, 28),
-  Color.fromARGB(255, 253, 191, 111),
-  Color.fromARGB(255, 255, 127, 0),
-  Color.fromARGB(255, 202, 178, 214)
+  Color.fromARGB(255, 166,206,227), 
+  Color.fromARGB(255, 202,178,214), 
+  Color.fromARGB(255, 178,223,138), 
+  Color.fromARGB(255, 51,160,44), 
+  Color.fromARGB(255, 251,154,153), 
+  Color.fromARGB(255, 31,120,180), 
+  Color.fromARGB(255, 227,26,28), 
+  Color.fromARGB(255, 255,127,0), 
+  Color.fromARGB(255, 253,191,111), 
+  Color.fromARGB(255, 106,61,154), 
+  Color.fromARGB(255, 255,255,153), 
+  Color.fromARGB(255, 177,89,40), 
 ];
 
 TextStyle subStyle =
@@ -143,8 +148,8 @@ class _StatisticsScreen extends State<StatisticsScreen> {
       // final musGroups = ["Pectoralis major", "Biceps", "Abdominals", "Deltoids", "Latissimus dorsi", "Triceps", "Gluteus maximus", "Hamstrings", "Quadriceps"];
       // determine mapping of muscle groups to scores
       Map<String, int> muscleMapping = {
-        "Pectoralis major": 1,
-        "Trapezius": 0,
+        "Pectoralis major": 0,
+        "Trapezius": 1,
         "Biceps": 2,
         "Abdominals": 3,
         "Deltoids": 4,
@@ -153,8 +158,8 @@ class _StatisticsScreen extends State<StatisticsScreen> {
         "Gluteus maximus": 7,
         "Hamstrings": 8,
         "Quadriceps": 9,
-        "Forearms": 0,
-        "Calves": 0
+        "Forearms": 10,
+        "Calves": 11
       };
 
       var ebox = Hive.box<Exercise>("Exercises");
@@ -173,6 +178,8 @@ class _StatisticsScreen extends State<StatisticsScreen> {
       for (var day in _trainingDates) {
         var trainings = globals.getTrainings(day);
         List<double> dailyMuscleScores = [
+          0.0,
+          0.0,
           0.0,
           0.0,
           0.0,
