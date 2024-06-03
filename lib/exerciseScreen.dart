@@ -283,6 +283,57 @@ class _ExerciseScreen extends State<ExerciseScreen> {
                       ))),
                 )),
             const Divider(),
+            Padding(
+                padding: const EdgeInsets.only(left: 30, right: 30, bottom: 10),
+                child: Column(
+                  children: [
+                    const SizedBox(height: 10),
+                    SegmentedButton<ExerciseType>(
+                      showSelectedIcon: false,
+                      segments: const <ButtonSegment<ExerciseType>>[
+                        ButtonSegment<ExerciseType>(
+                            value: ExerciseType.warmup,
+                            label: Text('Warm'),
+                            icon: Icon(Icons.local_fire_department)),
+                        ButtonSegment<ExerciseType>(
+                            value: ExerciseType.work,
+                            label: Text('Work'),
+                            icon: FaIcon(FontAwesomeIcons.handFist)),
+                        ButtonSegment<ExerciseType>(
+                            value: ExerciseType.dropset,
+                            label: Text('Drop'),
+                            icon: Icon(Icons.south_east)),
+                      ],
+                      selected: _selected,
+                      onSelectionChanged: updateSelected,
+                    ),
+                    const SizedBox(height: 10),
+                    inputFieldAccessor,
+                  ],
+                )),
+            ElevatedButton.icon(
+              style: const ButtonStyle(),
+              label: const Text('Submit'),
+              icon: const Icon(Icons.send),
+              onPressed: 
+              
+              () {
+                double new_weight = inputFieldAccessor.weightKg.toDouble() +
+                    inputFieldAccessor.weightDg.toDouble() / 100.0;
+                
+                addSet(
+                    widget.exerciseName,
+                    new_weight,
+                    inputFieldAccessor.repetitions,
+                    _selected.first.index,
+                    dateInputController.text);
+                _newData = max(_newData, new_weight);
+                updateGraph();
+                fictiveStart = DateTime.now();
+              }
+              
+            ),
+            const Divider(),
             Expanded(
                 child: ValueListenableBuilder(
                     valueListenable:
@@ -340,58 +391,7 @@ class _ExerciseScreen extends State<ExerciseScreen> {
                         );
                       }
                     })),
-            const Divider(),
-            Padding(
-                padding: const EdgeInsets.only(left: 30, right: 30, bottom: 10),
-                child: Column(
-                  children: [
-                    const SizedBox(height: 10),
-                    SegmentedButton<ExerciseType>(
-                      showSelectedIcon: false,
-                      segments: const <ButtonSegment<ExerciseType>>[
-                        ButtonSegment<ExerciseType>(
-                            value: ExerciseType.warmup,
-                            label: Text('Warm'),
-                            icon: Icon(Icons.local_fire_department)),
-                        ButtonSegment<ExerciseType>(
-                            value: ExerciseType.work,
-                            label: Text('Work'),
-                            icon: FaIcon(FontAwesomeIcons.handFist)),
-                        ButtonSegment<ExerciseType>(
-                            value: ExerciseType.dropset,
-                            label: Text('Drop'),
-                            icon: Icon(Icons.south_east)),
-                      ],
-                      selected: _selected,
-                      onSelectionChanged: updateSelected,
-                    ),
-                    const SizedBox(height: 10),
-                    inputFieldAccessor,
-                  ],
-                )),
-            ElevatedButton.icon(
-              style: const ButtonStyle(),
-              label: const Text('Submit'),
-              icon: const Icon(Icons.send),
-              onPressed: 
-              
-              () {
-                double new_weight = inputFieldAccessor.weightKg.toDouble() +
-                    inputFieldAccessor.weightDg.toDouble() / 100.0;
-                
-                addSet(
-                    widget.exerciseName,
-                    new_weight,
-                    inputFieldAccessor.repetitions,
-                    _selected.first.index,
-                    dateInputController.text);
-                _newData = max(_newData, new_weight);
-                updateGraph();
-                fictiveStart = DateTime.now();
-              }
-              
-            ),
-            const SizedBox(height: 40),
+            const SizedBox(height: 20),
           ]),
     );
   }
