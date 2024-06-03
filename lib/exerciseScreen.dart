@@ -52,14 +52,13 @@ List<FlSpot> getTrainingScores(String exercise, int set) {
   //var i = 0;
   for (var d in trainingDates) {
     final dayDiff = d.difference(DateTime.now()).inDays;
-
     if (dayDiff > -(globals.graphNumberOfDays)) {
       var subTrainings = trainings
           .where((item) =>
               item.date.day == d.day &&
               item.date.month == d.month &&
-              item.date.year == d.year)
-          .toList();
+              item.date.year == d.year).toList();
+      subTrainings = subTrainings.where((item) => item.setType > 0).toList();
       if (subTrainings.length > set + 1) {
         var s = subTrainings[set];
         var score = s.weight +
@@ -69,6 +68,7 @@ List<FlSpot> getTrainingScores(String exercise, int set) {
       }
     }
   }
+  print("---");
   return scores;
 }
 
