@@ -196,14 +196,17 @@ class _ExerciseScreen extends State<ExerciseScreen> {
       maxHistoryDistance = min(trainingGraphs[0][0].x*-1, maxHistoryDistance);
 
     }
-    var tokens = widget.workoutDescription.split(":");
-    numWarmUps = int.parse(tokens[1].split(",")[0]);
-    numWorkSets = int.parse(tokens[2].split(",")[0]);
-    numDropSets = int.parse(tokens[3]);
+    if (widget.workoutDescription != "") {
+      var tokens = widget.workoutDescription.split(":");
+      numWarmUps = int.parse(tokens[1].split(",")[0]);
+      numWorkSets = int.parse(tokens[2].split(",")[0]);
+      numDropSets = int.parse(tokens[3]);
+    } else {
+      numWarmUps = numWorkSets = numDropSets = 0;
+    }
     updateTexts();
   }
   void updateTexts() {
-    
     setState(() {
       warmText = numWarmUps > 0 ? Text("${numWarmUps}x Warm") : const Text("Warm");
       workText = numWorkSets > 0 ? Text("${numWorkSets}x Work") : const Text("Work");
@@ -300,9 +303,8 @@ class _ExerciseScreen extends State<ExerciseScreen> {
                       ))),
                 )),
             const Divider(),
-            widget.workoutDescription != "" ? Text(widget.workoutDescription) : const SizedBox.shrink(),
             Padding(
-                padding: const EdgeInsets.only(left: 30, right: 30, bottom: 10),
+                padding: const EdgeInsets.only(left: 20, right: 20, bottom: 10),
                 child: Column(
                   children: [
                     const SizedBox(height: 10),
