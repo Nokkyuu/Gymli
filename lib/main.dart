@@ -145,15 +145,13 @@ class _MainAppState extends State<MainApp> {
         padding: EdgeInsets.zero,
         children: [
           DrawerHeader(
-              decoration: const BoxDecoration(
-                //color: Colors.blueAccent
-              ),
               child: Image(image: AssetImage(
                   isDarkMode
                     ? 'images/Icon-App_3_Darkmode.png'
                     : 'images/Icon-App_3.png',
                 )),
             ),
+            Text("Gymli Gainson", textAlign: TextAlign.center, style: TextStyle(fontFamily: "Times New Roman", fontSize: 30)),
           ListTile(
             title: const Text('Exercise Setup'),
             onTap: () {

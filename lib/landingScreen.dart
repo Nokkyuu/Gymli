@@ -151,10 +151,11 @@ class _LandingScreenState extends State<LandingScreen> {
             ],
           ),
           Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
+              Spacer(),
               DropdownMenu<Workout>(
-                width: MediaQuery.of(context).size.width * 0.5,
+                width: MediaQuery.of(context).size.width * 0.45,
                 enabled: true,
                 key: UniqueKey(),
                 //initialSelection: WorkoutList.Push,
@@ -168,6 +169,14 @@ class _LandingScreenState extends State<LandingScreen> {
                     selectedWorkout = workout;
                   });
                 },
+                inputDecorationTheme: InputDecorationTheme(
+                  isDense: true,
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                  constraints: BoxConstraints.tight(const Size.fromHeight(40)),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
                 dropdownMenuEntries: availableWorkouts
                     .map<DropdownMenuEntry<Workout>>((Workout workout) {
                   return DropdownMenuEntry<Workout>(
@@ -181,8 +190,9 @@ class _LandingScreenState extends State<LandingScreen> {
                   );
                 }).toList(),
               ),
+              Spacer(),
               DropdownMenu<MuscleList>(
-                width: MediaQuery.of(context).size.width * 0.5,
+                width: MediaQuery.of(context).size.width * 0.45,
                 enabled: true,
                 //initialSelection: MuscleList.Pectoralis_major,
                 controller: MuscleController,
@@ -196,6 +206,14 @@ class _LandingScreenState extends State<LandingScreen> {
                     selectedMuscle = name;
                   });
                 },
+                inputDecorationTheme: InputDecorationTheme(
+                  isDense: true,
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                  constraints: BoxConstraints.tight(const Size.fromHeight(40)),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
                 dropdownMenuEntries: MuscleList.values
                     .map<DropdownMenuEntry<MuscleList>>((MuscleList name) {
                   return DropdownMenuEntry<MuscleList>(
@@ -204,6 +222,7 @@ class _LandingScreenState extends State<LandingScreen> {
                   );
                 }).toList(),
               ),
+              Spacer(),
             ],
           ),
           const Divider(),
