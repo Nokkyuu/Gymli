@@ -49,7 +49,7 @@ import 'package:intl/intl.dart';
   };
 
   List<String> exerciseList = [];
-
+  List<Exercise> exerciseListEx = []; // for importing runtime update
 
 Exercise get_exercise(String exerciseName) {
   var box = Hive.box<Exercise>('Exercises');

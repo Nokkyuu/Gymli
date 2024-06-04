@@ -57,8 +57,19 @@ class _LandingScreenState extends State<LandingScreen> {
   List<String> metainfo = [];
 
   void updateAllExercises() {
-    allExercises = Hive.box<Exercise>('Exercises').values.toList();
-    filterApplied.value = !filterApplied.value;
+    //print(globals.exerciseListEx);
+    if (globals.exerciseListEx == [])
+    {
+      allExercises = Hive.box<Exercise>('Exercises').values.toList();
+      //print (allExercises);
+       filterApplied.value = !filterApplied.value;
+
+    } else {
+      allExercises = globals.exerciseListEx;
+      filterApplied.value = !filterApplied.value;
+      globals.exerciseListEx = [];
+    }
+    
   }
 
   void workoutFilterList(Workout workout) {

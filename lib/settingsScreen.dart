@@ -15,6 +15,7 @@ import 'globals.dart' as globals;
 import 'package:shared_preferences/shared_preferences.dart';
 
 enum DisplayMode { light, dark }
+List<Exercise> exerciseList = [];
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -137,7 +138,11 @@ void restoreExLoad(myData){
       }
     }
     exerciseBox.add(Exercise(name: row[0], type: int.parse(row[1]), muscleGroups: muscleGroups, muscleIntensities: muscleIntensities, defaultRepBase: int.parse(row[4]), defaultRepMax: int.parse(row[5]), defaultIncrement: double.parse(row[6])));
+    exerciseList.add(Exercise(name: row[0], type: int.parse(row[1]), muscleGroups: muscleGroups, muscleIntensities: muscleIntensities, defaultRepBase: int.parse(row[4]), defaultRepMax: int.parse(row[5]), defaultIncrement: double.parse(row[6])));
+    //filling global variable for runtime update of landing screen after import, otherwise restart is necessary for unknown reasons.
   }
+  globals.exerciseListEx = exerciseList;
+  
 } 
 
 
