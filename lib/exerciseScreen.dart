@@ -207,11 +207,24 @@ class _ExerciseScreen extends State<ExerciseScreen> {
     updateTexts();
   }
   void updateTexts() {
+    var box = Hive.box<TrainingSet>('TrainingSets');
+    var items = box.values.where((item) => item.exercise == widget.exerciseName).toList();
+    var today = DateTime.now();
+    items = items.where((item) =>item.date.day == today.day &&item.date.month == today.month &&item.date.year == today.year).toList();
+    for (var i in items) {
+      if (i.setType == 0) {
+        numWarmUps -= 1;
+      } else if (i.setType == 1) {
+        numWorkSets -= 1;
+      } else {
+        numDropSets -=1;
+      }
+    }
     setState(() {
       warmText = numWarmUps > 0 ? Text("${numWarmUps}x Warm") : const Text("Warm");
       workText = numWorkSets > 0 ? Text("${numWorkSets}x Work") : const Text("Work");
       dropText = numDropSets > 0 ? Text("${numDropSets}x Drop") : const Text("Drop");
-    });;
+    });
   }
   @override
   Widget build(BuildContext context) {
