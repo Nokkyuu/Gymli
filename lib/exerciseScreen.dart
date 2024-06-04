@@ -34,15 +34,6 @@ final workIcons = [
   FontAwesomeIcons.arrowDown
 ];
 
-void get_exercise_list() async {
-  final box = await Hive.openBox<Exercise>('Exercises');
-  var boxmap = box.values.toList();
-  List<String> exerciseList = [];
-  for (var e in boxmap) {
-    exerciseList.add(e.name);
-  }
-  globals.exerciseList = exerciseList;
-}
 
 List<FlSpot> getTrainingScores(String exercise, int set) {
   List<FlSpot> scores = [];
@@ -58,7 +49,7 @@ List<FlSpot> getTrainingScores(String exercise, int set) {
               item.date.day == d.day &&
               item.date.month == d.month &&
               item.date.year == d.year).toList();
-      subTrainings = subTrainings.where((item) => item.setType > 0).toList();
+      // subTrainings = subTrainings.where((item) => item.setType > 0).toList();
       if (subTrainings.length > set + 1) {
         var s = subTrainings[set];
         var score = s.weight +
@@ -68,29 +59,9 @@ List<FlSpot> getTrainingScores(String exercise, int set) {
       }
     }
   }
-  print("---");
   return scores;
 }
 
-Future<int> addSet(String exerciseName, double weight, int repetitions,
-    int setType, String when) async {
-  var box = Hive.box<TrainingSet>('TrainingSets');
-  var theDate = DateTime.parse(when);
-  // TrainingSet ({required this.id, required this.exercise, required this.date, required this.weight, required this.repetitions, required this.setType, required this.baseReps, required this.maxReps, required this.increment, required this.machineName});
-  var exercise = globals.get_exercise(exerciseName);
-
-  box.add(TrainingSet(
-      exercise: exerciseName,
-      date: theDate,
-      setType: setType,
-      weight: weight,
-      repetitions: repetitions,
-      baseReps: exercise.defaultRepBase,
-      maxReps: exercise.defaultRepMax,
-      increment: exercise.defaultIncrement,
-      machineName: ""));
-  return 0;
-}
 
 class ExerciseScreen extends StatefulWidget {
   final String exerciseName;
@@ -111,7 +82,7 @@ class _ExerciseScreen extends State<ExerciseScreen> {
   late Timer timer;
   List<LineChartBarData> barData = [];
   Text timerText = const Text("Workout: 00:42:21 - Idle: 00:03:45");
-  DateTime fictiveStart = DateTime.now();
+  DateTime lastActivity = DateTime.now();
   DateTime workoutStartTime = DateTime.now();
 
   Text warmText = Text('Warm');
@@ -119,12 +90,19 @@ class _ExerciseScreen extends State<ExerciseScreen> {
   Text dropText = Text('Drop');
   late int numWarmUps, numWorkSets, numDropSets;
 
-  late InputFields inputFieldAccessor = InputFields(
-      weightDg: weightDg, weightKg: weightKg, repetitions: repetitions);
+  late InputFields inputFieldAccessor = InputFields(weightDg: weightDg, weightKg: weightKg, repetitions: repetitions);
   Set<ExerciseType> _selected = {ExerciseType.work};
-  var _newData = 0.0;
+
   List<List<FlSpot>> trainingGraphs = [[], [], [], []];
   List<List<FlSpot>> additionalGraphs = [[], [], [], []];
+
+
+  Future<int> addSet(String exerciseName, double weight, int repetitions, int setType, String when) async {
+    var box = Hive.box<TrainingSet>('TrainingSets');
+    var exercise = globals.get_exercise(exerciseName);
+    int a = await box.add(TrainingSet(exercise: exerciseName,date: DateTime.parse(when),setType: setType,weight: weight,repetitions: repetitions,baseReps: exercise.defaultRepBase,maxReps: exercise.defaultRepMax,increment: exercise.defaultIncrement,machineName: ""));
+    return 0;
+  }
 
   void updateSelected(Set<ExerciseType> newSelection) async {
     setState(() {
@@ -133,26 +111,29 @@ class _ExerciseScreen extends State<ExerciseScreen> {
     updateGraph();
   }
 
-  void updateGraph() async {
+  void updateGraph() {
     setState(() {
-      if (trainingGraphs[0].isNotEmpty && trainingGraphs[0].last.x == 0) {
-        trainingGraphs[0].removeLast();
-      }
-      if (_newData > 0.0) {
-        trainingGraphs[0].add(FlSpot(0, _newData));
+      for (var i = 0; i < 4; ++i) {
+        trainingGraphs[i] = getTrainingScores(widget.exerciseName, i);
+        print("$i ${trainingGraphs[i]}");
       }
     });
   }
 
-  _scrollToBottom() {
-    _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
-  }
+  _scrollToBottom() { _scrollController.jumpTo(_scrollController.position.maxScrollExtent); }
 
  @override
   void dispose() {
-    // Cancel the timer when the state is disposed
-    timer.cancel();
+    timer.cancel(); // Cancel the timer when the state is disposed
     super.dispose();
+  }
+
+  void notifyIdle() {
+    int numberOfNotifies = 3;
+    Timer.periodic(const Duration(milliseconds: 1000), (timer) {
+      HapticFeedback.vibrate();
+      if (--numberOfNotifies == 0) { timer.cancel(); }
+    });
   }
 
   @override
@@ -161,41 +142,34 @@ class _ExerciseScreen extends State<ExerciseScreen> {
     var trainings = globals.getTrainings(DateTime.now());
     if (trainings.isNotEmpty) {
       workoutStartTime = trainings[0].date;
-      fictiveStart = trainings.last.date;
+      lastActivity = trainings.last.date;
     }
-    var duration = DateTime.now().difference(fictiveStart);
+    var duration = DateTime.now().difference(lastActivity);
     var workoutDuration = DateTime.now().difference(workoutStartTime);
     timerText = Text("Working out: ${workoutDuration.toString().split(".")[0]} - Idle: ${duration.toString().split(".")[0]}");
 
     timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       setState(() {
-        var duration = DateTime.now().difference(fictiveStart);
-        int secondsSince = duration.inSeconds;
-        if (secondsSince >= globals.idleTimerWakeup && secondsSince <= globals.idleTimerWakeup+3) {
-          HapticFeedback.vibrate();
-        }
+        var duration = DateTime.now().difference(lastActivity);
+        if (duration.inSeconds == globals.idleTimerWakeup) { notifyIdle(); }
         var workoutDuration = DateTime.now().difference(workoutStartTime);
         String workoutString = workoutDuration.toString().split(".")[0]; // ewwww, nasty
         workoutString = workoutString.split(":")[0] + ":" + workoutString.split(":")[1];
-
         timerText = Text("Working out: ${workoutString} - Idle: ${duration.toString().split(".")[0]}");
-        // timerText = Text("ASD");
       });
-    // timer.cancel();
     });
 
-    for (var i = 3; i >= 0; --i) {
-      trainingGraphs[i] = getTrainingScores(widget.exerciseName, i);
-      if (trainingGraphs[i].isNotEmpty) {
-        barData.add(LineChartBarData(
-            spots: trainingGraphs[i],
-            color: graphColors[i]));
+    updateGraph();
+    trainingGraphs[0].removeLast();
+    for (int i = 0; i < trainingGraphs.length; ++i) {
+    if (trainingGraphs[i].isNotEmpty) {
+        barData.add(LineChartBarData(spots: trainingGraphs[i],color: graphColors[i]));
       }
     }
     if (trainingGraphs[0].isNotEmpty) {
       maxHistoryDistance = min(trainingGraphs[0][0].x*-1, maxHistoryDistance);
-
     }
+
     if (widget.workoutDescription != "") {
       var tokens = widget.workoutDescription.split(":");
       numWarmUps = int.parse(tokens[1].split(",")[0]);
@@ -206,19 +180,16 @@ class _ExerciseScreen extends State<ExerciseScreen> {
     }
     updateTexts();
   }
-  void updateTexts() {
+  
+  void updateTexts() async {
     var box = Hive.box<TrainingSet>('TrainingSets');
     var items = box.values.where((item) => item.exercise == widget.exerciseName).toList();
     var today = DateTime.now();
     items = items.where((item) =>item.date.day == today.day &&item.date.month == today.month &&item.date.year == today.year).toList();
     for (var i in items) {
-      if (i.setType == 0) {
-        numWarmUps -= 1;
-      } else if (i.setType == 1) {
-        numWorkSets -= 1;
-      } else {
-        numDropSets -=1;
-      }
+      if (i.setType == 0) { numWarmUps -= 1; }
+      else if (i.setType == 1) { numWorkSets -= 1; }
+      else { numDropSets -=1; }
     }
     setState(() {
       warmText = numWarmUps > 0 ? Text("${numWarmUps}x Warm") : const Text("Warm");
@@ -348,50 +319,30 @@ class _ExerciseScreen extends State<ExerciseScreen> {
               style: const ButtonStyle(),
               label: const Text('Submit'),
               icon: const Icon(Icons.send),
-              onPressed: 
-              
-              () {
-                double new_weight = inputFieldAccessor.weightKg.toDouble() +
-                    inputFieldAccessor.weightDg.toDouble() / 100.0;
-                if (_selected.first.index == 0) {
-                  numWarmUps -= 1;
-                } else if (_selected.first.index == 1) {
-                  numWorkSets -= 1;
-                } else {
-                  numDropSets -= 1;
-                }
+              onPressed: () {
+                double new_weight = inputFieldAccessor.weightKg.toDouble() + inputFieldAccessor.weightDg.toDouble() / 100.0;
+                if (_selected.first.index == 0) { numWarmUps -= 1; }
+                else if (_selected.first.index == 1) { numWorkSets -= 1; }
+                else { numDropSets -= 1; }
                 updateTexts();
-                addSet(
-                    widget.exerciseName,
-                    new_weight,
-                    inputFieldAccessor.repetitions,
-                    _selected.first.index,
-                    dateInputController.text);
-                _newData = max(_newData, new_weight);
-                updateGraph();
-                fictiveStart = DateTime.now();
+                addSet(widget.exerciseName, new_weight, inputFieldAccessor.repetitions, _selected.first.index, dateInputController.text)
+                .then((void a) {
+                  updateGraph();
+                });
+                lastActivity = DateTime.now();
               }
               
             ),
             const Divider(),
             Expanded(
                 child: ValueListenableBuilder(
-                    valueListenable:
-                        Hive.box<TrainingSet>('TrainingSets').listenable(),
+                    valueListenable: Hive.box<TrainingSet>('TrainingSets').listenable(),
                     builder: (context, Box<TrainingSet> box, _) {
-                      var items = box.values
-                          .where((item) => item.exercise == widget.exerciseName)
-                          .toList();
+                      var items = box.values.where((item) => item.exercise == widget.exerciseName).toList();
                       var today = DateTime.now();
-                      items = items
-                          .where((item) =>
-                              item.date.day == today.day &&
-                              item.date.month == today.month &&
-                              item.date.year == today.year)
-                          .toList();
+                      items = items.where((item) => item.date.day == today.day && item.date.month == today.month && item.date.year == today.year).toList();
                       if (items.isNotEmpty) {
                         return ListView.builder(
-                            //reverse: true,
                             controller: _scrollController,
                             itemCount: items.length,
                             itemBuilder: (context, index) {
@@ -404,23 +355,19 @@ class _ExerciseScreen extends State<ExerciseScreen> {
                                     ),
                                   ),
                                   dense: true,
-                                  visualDensity: const VisualDensity(
-                                      vertical: -3), // to compact
-                                  title: Text(
-                                      "${item.weight}kg for ${item.repetitions} reps"),
-                                  subtitle: Text(
-                                      "${item.date.hour}:${item.date.minute}:${item.date.second}"),
-                                  trailing: IconButton(
-                                      icon: const Icon(Icons.delete),
-                                      onPressed: () => {box.delete(item.key)}),
-                                  onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                          builder: (context) =>
-                                              ExerciseListScreen(title)),
-                                    );
-                                  });
+                                  visualDensity: const VisualDensity(vertical: -3),
+                                  title: Text("${item.weight}kg for ${item.repetitions} reps"),
+                                  subtitle: Text("${item.date.hour}:${item.date.minute}:${item.date.second}"),
+                                  trailing: IconButton(icon: const Icon(Icons.delete), onPressed: () => {box.delete(item.key)}),
+                                  // onTap: () {
+                                  //   Navigator.push(
+                                  //     context,
+                                  //     MaterialPageRoute(
+                                  //         builder: (context) =>
+                                  //             ExerciseListScreen(title)),
+                                  //   );
+                                  // }
+                                  );
                             });
                       } else {
                         return ListView(
@@ -551,7 +498,6 @@ class _WeightConfigurator extends State<WeightConfigurator> {
   List<String> kg_texts = [" 1", "1¼", " 2", "2½", " 5", "10", "20", "25"];
 
   void addWeight(String txt) {
-    print(txt);
     rightContainers.add(RotatedBox(
                 quarterTurns: 1, child:
                 Container(

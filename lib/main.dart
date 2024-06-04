@@ -13,20 +13,6 @@ import 'globals.dart' as globals;
 import 'package:shared_preferences/shared_preferences.dart';
 bool state = false;
 
-// Pectoralis major
-// Trapezius
-// Biceps
-// Abdominals
-// Front Deltoids
-// Side Deltoids
-// Rear Deltoids
-// Latissimus dorsi
-// Triceps
-// Gluteus maximus
-// Hamstrings
-// Quadriceps
-// Forearms
-// Calves
 void get_exercise_list() async {
   final box = await Hive.openBox<Exercise>('Exercises');
   var boxmap = box.values.toList();
