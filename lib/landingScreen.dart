@@ -57,23 +57,19 @@ class _LandingScreenState extends State<LandingScreen> {
   List<String> metainfo = [];
 
   void updateAllExercises() {
-    //print(globals.exerciseListEx);
       allExercises = Hive.box<Exercise>('Exercises').values.toList();
-      //print (allExercises);
-       filterApplied.value = !filterApplied.value;
-
-
-    
+      allExercises.sort((a, b) => a.name.compareTo(b.name));
+      filterApplied.value = !filterApplied.value;
   }
 
   void workoutFilterList(Workout workout) {
-
     var filterMask = [];
     for (var e in workout.units) {
       filterMask.add(e.exercise);
     }
     filteredExercises = [];
     metainfo = [];
+    filteredExercises.sort((a, b) => a.name.compareTo(b.name));
     for (var ex in allExercises) {
       if (filterMask.contains(ex.name)) {
         filteredExercises.add(ex);
@@ -87,6 +83,7 @@ class _LandingScreenState extends State<LandingScreen> {
 
   void showAllExercises() {
     filteredExercises = allExercises;
+    filteredExercises.sort((a, b) => a.name.compareTo(b.name));
     metainfo = [];
     for (var ex in filteredExercises) {
       var lastTraining = globals.getLastTrainingDay(ex.name);
