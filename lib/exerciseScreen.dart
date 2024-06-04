@@ -13,14 +13,16 @@ import 'package:tuple/tuple.dart';
 import 'package:Gymli/exerciseSetupScreen.dart';
 import 'globals.dart' as globals;
 import 'package:flutter/services.dart';
+import "package:collection/collection.dart";
 
 enum ExerciseType { warmup, work, dropset }
 
 const List<Color> graphColors = [
-Color.fromARGB(255, 5,112,176),
-Color.fromARGB(255, 116,169,207),
-Color.fromARGB(255, 189,201,225),
-Color.fromARGB(255, 241,238,246)];
+Color.fromARGB(255, 0,109,44),
+Color.fromARGB(255, 44,162,95),
+Color.fromARGB(255, 102,194,164),
+Color.fromARGB(255, 153,216,201),
+];
 
 const List<Color> twinColors = [
 Color.fromARGB(255, 254,240,217),
@@ -34,34 +36,9 @@ final workIcons = [
   FontAwesomeIcons.arrowDown
 ];
 
-
-List<FlSpot> getTrainingScores(String exercise, int set) {
-  List<FlSpot> scores = [];
-  var trainings = Hive.box<TrainingSet>('TrainingSets').values.toList();
-  trainings = trainings.where((item) => item.exercise == exercise).toList();
-  var trainingDates = globals.getTrainingDates(exercise);
-  //var i = 0;
-  for (var d in trainingDates) {
-    final dayDiff = d.difference(DateTime.now()).inDays;
-    if (dayDiff > -(globals.graphNumberOfDays)) {
-      var subTrainings = trainings
-          .where((item) =>
-              item.date.day == d.day &&
-              item.date.month == d.month &&
-              item.date.year == d.year).toList();
-      // subTrainings = subTrainings.where((item) => item.setType > 0).toList();
-      if (subTrainings.length > set + 1) {
-        var s = subTrainings[set];
-        var score = s.weight +
-            ((s.repetitions - s.baseReps) / (s.maxReps - s.baseReps)) *
-                s.increment;
-        scores.add(FlSpot((dayDiff).toDouble(), score));
-      }
-    }
-  }
-  return scores;
+double calculateScore(TrainingSet s) {
+  return s.weight + ((s.repetitions - s.baseReps) / (s.maxReps - s.baseReps)) * s.increment;
 }
-
 
 class ExerciseScreen extends StatefulWidget {
   final String exerciseName;
@@ -85,9 +62,9 @@ class _ExerciseScreen extends State<ExerciseScreen> {
   DateTime lastActivity = DateTime.now();
   DateTime workoutStartTime = DateTime.now();
 
-  Text warmText = Text('Warm');
-  Text workText = Text('Work');
-  Text dropText = Text('Drop');
+  Text warmText = const Text('Warm');
+  Text workText = const Text('Work');
+  Text dropText = const Text('Drop');
   late int numWarmUps, numWorkSets, numDropSets;
 
   late InputFields inputFieldAccessor = InputFields(weightDg: weightDg, weightKg: weightKg, repetitions: repetitions);
@@ -100,22 +77,35 @@ class _ExerciseScreen extends State<ExerciseScreen> {
   Future<int> addSet(String exerciseName, double weight, int repetitions, int setType, String when) async {
     var box = Hive.box<TrainingSet>('TrainingSets');
     var exercise = globals.get_exercise(exerciseName);
-    int a = await box.add(TrainingSet(exercise: exerciseName,date: DateTime.parse(when),setType: setType,weight: weight,repetitions: repetitions,baseReps: exercise.defaultRepBase,maxReps: exercise.defaultRepMax,increment: exercise.defaultIncrement,machineName: ""));
+    box.add(TrainingSet(exercise: exerciseName,date: DateTime.parse(when),setType: setType,weight: weight,repetitions: repetitions,baseReps: exercise.defaultRepBase,maxReps: exercise.defaultRepMax,increment: exercise.defaultIncrement,machineName: ""));
     return 0;
   }
 
-  void updateSelected(Set<ExerciseType> newSelection) async {
-    setState(() {
-      _selected = newSelection;
-    });
-    updateGraph();
+
+  Map<int, List<TrainingSet>> get_exercises() {
+    Map<int, List<TrainingSet>> data = {};
+    List<TrainingSet> trainings = globals.getExerciseTrainings(widget.exerciseName);
+    trainings = trainings.where((t) => DateTime.now().difference(t.date).inDays < globals.graphNumberOfDays && t.setType > 0).toList();
+    for (var t in trainings) {
+      int diff = DateTime.now().difference(t.date).inDays;
+      if (!data.containsKey(diff)) { data[diff] = []; }
+      data[diff]!.add(t);
+    }
+    return data;
   }
 
   void updateGraph() {
+    for (var t in trainingGraphs) { t.clear(); }
     setState(() {
-      for (var i = 0; i < 4; ++i) {
-        trainingGraphs[i] = getTrainingScores(widget.exerciseName, i);
-        print("$i ${trainingGraphs[i]}");
+      var dat = get_exercises();
+      for (var k in dat.keys) {
+        for (var i = 0; i < 4; ++i) {
+          if (i >= dat[k]!.length) {
+            trainingGraphs[i].add(FlSpot.nullSpot);
+          } else {
+            trainingGraphs[i].add(FlSpot(-k.toDouble(), calculateScore(dat[k]![i])));
+          }
+        }
       }
     });
   }
@@ -134,6 +124,13 @@ class _ExerciseScreen extends State<ExerciseScreen> {
       HapticFeedback.vibrate();
       if (--numberOfNotifies == 0) { timer.cancel(); }
     });
+  }
+
+  void updateLastWeightSetting() {
+    Tuple2<double, int> latestTrainingInfo = globals.getLastTrainingInfo(widget.exerciseName);
+    weightKg = latestTrainingInfo.item1.toInt();
+    weightDg = (latestTrainingInfo.item1 * 100.0).toInt() % 100;
+    repetitions = latestTrainingInfo.item2;
   }
 
   @override
@@ -159,11 +156,15 @@ class _ExerciseScreen extends State<ExerciseScreen> {
       });
     });
 
+
+    
     updateGraph();
-    trainingGraphs[0].removeLast();
     for (int i = 0; i < trainingGraphs.length; ++i) {
-    if (trainingGraphs[i].isNotEmpty) {
-        barData.add(LineChartBarData(spots: trainingGraphs[i],color: graphColors[i]));
+      if (trainingGraphs[i].isNotEmpty) {
+        barData.add(LineChartBarData(
+          spots: trainingGraphs[i],
+          color: graphColors[i])
+          );
       }
     }
     if (trainingGraphs[0].isNotEmpty) {
@@ -179,13 +180,14 @@ class _ExerciseScreen extends State<ExerciseScreen> {
       numWarmUps = numWorkSets = numDropSets = 0;
     }
     updateTexts();
+    updateLastWeightSetting();
   }
   
   void updateTexts() async {
     var box = Hive.box<TrainingSet>('TrainingSets');
     var items = box.values.where((item) => item.exercise == widget.exerciseName).toList();
     var today = DateTime.now();
-    items = items.where((item) =>item.date.day == today.day &&item.date.month == today.month &&item.date.year == today.year).toList();
+    items = items.where((item) => item.date.day == today.day &&item.date.month == today.month &&item.date.year == today.year).toList();
     for (var i in items) {
       if (i.setType == 0) { numWarmUps -= 1; }
       else if (i.setType == 1) { numWorkSets -= 1; }
@@ -200,26 +202,17 @@ class _ExerciseScreen extends State<ExerciseScreen> {
   @override
   Widget build(BuildContext context) {
     WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
-    var title = widget.exerciseName;
-
     TextEditingController dateInputController = TextEditingController(text: DateTime.now().toString());
 
 
-    // for (int i = 0; i < globals.exercise_twins[widget.exerciseName]!.length; i++) {
-    //   additionalGraphs[i] = getTrainingScores(globals.exercise_twins[widget.exerciseName]![i], 0);
-    // }
-
     var minScore = 1e6;
     var maxScore = 0.0;
-    Tuple2<double, int> latestTrainingInfo = globals.getLastTrainingInfo(widget.exerciseName);
-
-    weightKg = latestTrainingInfo.item1.toInt();
-    weightDg = (latestTrainingInfo.item1 * 100.0).toInt() % 100;
-    repetitions = latestTrainingInfo.item2;
     for (var i = 0; i < 4; ++i) {
       for (var d in trainingGraphs[i]) {
-        minScore = min(minScore, d.y);
-        maxScore = max(maxScore, d.y);
+        if (!d.y.isNaN) {
+          minScore = min(minScore, d.y);
+          maxScore = max(maxScore, d.y);
+        }
       }
     }
 
@@ -233,30 +226,14 @@ class _ExerciseScreen extends State<ExerciseScreen> {
               Icons.arrow_back_ios,
             ),
           ),
-          title: Text(title),
-          bottom: PreferredSize(
-            preferredSize: Size.zero,
-            child: timerText
-          ),
+          title: Text(widget.exerciseName),
+          bottom: PreferredSize(preferredSize: Size.zero, child: timerText),
           actions: [
             IconButton(
-                onPressed: () {
-                  get_exercise_list();
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => ExerciseSetupScreen(title)),
-                  );
-                },
+                onPressed: () { Navigator.push(context, MaterialPageRoute( builder: (context) => ExerciseSetupScreen(widget.exerciseName))); },
                 icon: const Icon(Icons.edit)),
             IconButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => ExerciseListScreen(title)),
-                  );
-                },
+                onPressed: () { Navigator.push(context, MaterialPageRoute(builder: (context) => ExerciseListScreen(widget.exerciseName))); },
                 icon: const Icon(Icons.list))
           ]),
       body: Column(
@@ -280,10 +257,8 @@ class _ExerciseScreen extends State<ExerciseScreen> {
                         ),
                         clipData: const FlClipData.all(),
                         lineBarsData: barData,
-                        minY: minScore - 5.0,
-                        maxY: maxScore + 5.0,
-                        minX: -maxHistoryDistance - 1.0,
-                        maxX: 1.0,
+                        minY: minScore - 5.0, maxY: maxScore + 5.0,
+                        minX: -maxHistoryDistance, maxX: 1.0,
                       ))),
                 )),
             const Divider(),
@@ -309,7 +284,7 @@ class _ExerciseScreen extends State<ExerciseScreen> {
                             icon: const Icon(Icons.south_east)),
                       ],
                       selected: _selected,
-                      onSelectionChanged: updateSelected,
+                      onSelectionChanged: (newSelection){ setState(() { _selected = newSelection;}); },
                     ),
                     const SizedBox(height: 10),
                     inputFieldAccessor,
@@ -348,26 +323,16 @@ class _ExerciseScreen extends State<ExerciseScreen> {
                             itemBuilder: (context, index) {
                               final item = items[index];
                               return ListTile(
-                                  leading: CircleAvatar(
-                                    radius: 17.5,
-                                    child: FaIcon(
-                                      workIcons[item.setType],
-                                    ),
-                                  ),
-                                  dense: true,
-                                  visualDensity: const VisualDensity(vertical: -3),
-                                  title: Text("${item.weight}kg for ${item.repetitions} reps"),
-                                  subtitle: Text("${item.date.hour}:${item.date.minute}:${item.date.second}"),
-                                  trailing: IconButton(icon: const Icon(Icons.delete), onPressed: () => {box.delete(item.key)}),
-                                  // onTap: () {
-                                  //   Navigator.push(
-                                  //     context,
-                                  //     MaterialPageRoute(
-                                  //         builder: (context) =>
-                                  //             ExerciseListScreen(title)),
-                                  //   );
-                                  // }
-                                  );
+                                leading: CircleAvatar(radius: 17.5, child: FaIcon(workIcons[item.setType])),
+                                dense: true,
+                                visualDensity: const VisualDensity(vertical: -3),
+                                title: Text("${item.weight}kg for ${item.repetitions} reps"),
+                                subtitle: Text("${item.date.hour}:${item.date.minute}:${item.date.second}"),
+                                trailing: IconButton(icon: const Icon(Icons.delete), onPressed: () {
+                                  box.delete(item.key);
+                                  updateGraph();
+                                }),
+                              );
                             });
                       } else {
                         return ListView(
