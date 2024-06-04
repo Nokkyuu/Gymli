@@ -30,15 +30,7 @@ Color.fromARGB(255, 253,204,138),
 Color.fromARGB(255, 252,141,89),
 Color.fromARGB(255, 215,48,31)];
 
-final workIcons = [
-  FontAwesomeIcons.fire,
-  FontAwesomeIcons.handFist,
-  FontAwesomeIcons.arrowDown
-];
-
-double calculateScore(TrainingSet s) {
-  return s.weight + ((s.repetitions - s.baseReps) / (s.maxReps - s.baseReps)) * s.increment;
-}
+final workIcons = [FontAwesomeIcons.fire, FontAwesomeIcons.handFist, FontAwesomeIcons.arrowDown];
 
 class ExerciseScreen extends StatefulWidget {
   final String exerciseName;
@@ -103,7 +95,7 @@ class _ExerciseScreen extends State<ExerciseScreen> {
           if (i >= dat[k]!.length) {
             trainingGraphs[i].add(FlSpot.nullSpot);
           } else {
-            trainingGraphs[i].add(FlSpot(-k.toDouble(), calculateScore(dat[k]![i])));
+            trainingGraphs[i].add(FlSpot(-k.toDouble(), globals.calculateScore(dat[k]![i])));
           }
         }
       }
@@ -155,8 +147,6 @@ class _ExerciseScreen extends State<ExerciseScreen> {
         timerText = Text("Working out: ${workoutString} - Idle: ${duration.toString().split(".")[0]}");
       });
     });
-
-
     
     updateGraph();
     for (int i = 0; i < trainingGraphs.length; ++i) {
@@ -299,11 +289,9 @@ class _ExerciseScreen extends State<ExerciseScreen> {
                 if (_selected.first.index == 0) { numWarmUps -= 1; }
                 else if (_selected.first.index == 1) { numWorkSets -= 1; }
                 else { numDropSets -= 1; }
+                addSet(widget.exerciseName, new_weight, inputFieldAccessor.repetitions, _selected.first.index, dateInputController.text);
                 updateTexts();
-                addSet(widget.exerciseName, new_weight, inputFieldAccessor.repetitions, _selected.first.index, dateInputController.text)
-                .then((void a) {
-                  updateGraph();
-                });
+                updateGraph(); 
                 lastActivity = DateTime.now();
               }
               

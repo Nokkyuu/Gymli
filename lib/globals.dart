@@ -68,6 +68,10 @@ List<TrainingSet> getTrainings(DateTime day) {
   return items.where((item) => item.date.day == day.day &&item.date.month == day.month &&item.date.year == day.year).toList();
 }
 
+double calculateScore(TrainingSet s) {
+  return s.weight + ((s.repetitions - s.baseReps) / (s.maxReps - s.baseReps)) * s.increment;
+}
+
 List<DateTime> getTrainingDates(String exercise) {
   var box = Hive.box<TrainingSet>('TrainingSets');
   var items = box.values;
