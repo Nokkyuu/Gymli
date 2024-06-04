@@ -58,17 +58,11 @@ class _LandingScreenState extends State<LandingScreen> {
 
   void updateAllExercises() {
     //print(globals.exerciseListEx);
-    if (globals.exerciseListEx == [])
-    {
       allExercises = Hive.box<Exercise>('Exercises').values.toList();
       //print (allExercises);
        filterApplied.value = !filterApplied.value;
 
-    } else {
-      allExercises = globals.exerciseListEx;
-      filterApplied.value = !filterApplied.value;
-      globals.exerciseListEx = [];
-    }
+
     
   }
 
