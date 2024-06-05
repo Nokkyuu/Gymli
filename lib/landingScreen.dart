@@ -10,6 +10,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:Gymli/workoutSetupScreen.dart';
 import 'globals.dart' as globals;
+import 'database.dart' as db;
 
 
 enum MuscleList {
@@ -86,7 +87,7 @@ class _LandingScreenState extends State<LandingScreen> {
     filteredExercises.sort((a, b) => a.name.compareTo(b.name));
     metainfo = [];
     for (var ex in filteredExercises) {
-      var lastTraining = globals.getLastTrainingDay(ex.name);
+      var lastTraining = db.getLastTrainingDay(ex.name);
       var dayDiff = DateTime.now().difference(lastTraining).inDays;
       String dayInfo =  dayDiff > 0 ? "$dayDiff days ago" : "today";
       metainfo.add('${ex.defaultRepBase}-${ex.defaultRepMax}@${ex.defaultIncrement}kg $dayInfo');

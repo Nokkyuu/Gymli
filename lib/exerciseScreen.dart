@@ -12,6 +12,7 @@ import 'package:numberpicker/numberpicker.dart';
 import 'package:tuple/tuple.dart';
 import 'package:Gymli/exerciseSetupScreen.dart';
 import 'globals.dart' as globals;
+import 'database.dart' as db;
 import 'package:flutter/services.dart';
 import "package:collection/collection.dart";
 
@@ -68,7 +69,7 @@ class _ExerciseScreen extends State<ExerciseScreen> {
 
   Future<int> addSet(String exerciseName, double weight, int repetitions, int setType, String when) async {
     var box = Hive.box<TrainingSet>('TrainingSets');
-    var exercise = globals.get_exercise(exerciseName);
+    var exercise = db.get_exercise(exerciseName);
     box.add(TrainingSet(exercise: exerciseName,date: DateTime.parse(when),setType: setType,weight: weight,repetitions: repetitions,baseReps: exercise.defaultRepBase,maxReps: exercise.defaultRepMax,increment: exercise.defaultIncrement,machineName: ""));
     return 0;
   }
@@ -76,7 +77,7 @@ class _ExerciseScreen extends State<ExerciseScreen> {
 
   Map<int, List<TrainingSet>> get_exercises() {
     Map<int, List<TrainingSet>> data = {};
-    List<TrainingSet> trainings = globals.getExerciseTrainings(widget.exerciseName);
+    List<TrainingSet> trainings = db.getExerciseTrainings(widget.exerciseName);
     trainings = trainings.where((t) => DateTime.now().difference(t.date).inDays < globals.graphNumberOfDays && t.setType > 0).toList();
     for (var t in trainings) {
       int diff = DateTime.now().difference(t.date).inDays;
@@ -119,7 +120,7 @@ class _ExerciseScreen extends State<ExerciseScreen> {
   }
 
   void updateLastWeightSetting() {
-    Tuple2<double, int> latestTrainingInfo = globals.getLastTrainingInfo(widget.exerciseName);
+    Tuple2<double, int> latestTrainingInfo = db.getLastTrainingInfo(widget.exerciseName);
     weightKg = latestTrainingInfo.item1.toInt();
     weightDg = (latestTrainingInfo.item1 * 100.0).toInt() % 100;
     repetitions = latestTrainingInfo.item2;
@@ -128,7 +129,7 @@ class _ExerciseScreen extends State<ExerciseScreen> {
   @override
   void initState() {
     super.initState();
-    var trainings = globals.getTrainings(DateTime.now());
+    var trainings = db.getTrainings(DateTime.now());
     if (trainings.isNotEmpty) {
       workoutStartTime = trainings[0].date;
       lastActivity = trainings.last.date;
