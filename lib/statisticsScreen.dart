@@ -11,6 +11,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:Gymli/DataModels.dart';
 import 'package:tuple/tuple.dart';
 import 'dart:math';
+import 'database.dart' as db;
 
 class StatisticsScreen extends StatefulWidget {
   const StatisticsScreen({super.key});
@@ -124,7 +125,7 @@ class _StatisticsScreen extends State<StatisticsScreen> {
   @override
   void initState() {
     super.initState();
-    List<DateTime> _trainingDates = globals.getTrainingDates("");
+    List<DateTime> _trainingDates = db.getTrainingDates("");
     setState(() {
       numberOfTrainingDays = _trainingDates.length;
       // var timeDiff = _trainingDates.first.difference(_trainingDates.last).inDays;
@@ -181,21 +182,8 @@ class _StatisticsScreen extends State<StatisticsScreen> {
 
       List<List<double>> muscleHistoryScore = [];
       for (var day in _trainingDates) {
-        var trainings = globals.getTrainings(day);
-        List<double> dailyMuscleScores = [
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0
-        ]; // very static and nasty
+        var trainings = db.getTrainings(day);
+        List<double> dailyMuscleScores = [0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0]; // very static and nasty
         for (var exerciseSet in trainings) {
           String exerciseName = exerciseSet.exercise;
           List<Tuple2<int, double>> muscleInvolved =
