@@ -395,10 +395,11 @@ class _BottomSheetState extends State<BottomSheet> {
     }
     return op;
   }
-  
+  Key parent = Key("parent");
   @override
   Widget build(BuildContext context) {
     return SizedBox.expand(
+      key: parent,
       child: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -409,83 +410,101 @@ class _BottomSheetState extends State<BottomSheet> {
               child: const Text('Close'),
               onPressed: () => Navigator.pop(context),
             ),
-            Row(
-              children: [
-                SizedBox(
-                  width: MediaQuery.of(context).size.width * 0.5,
-                  height: MediaQuery.of(context).size.height * 0.7,
-                  child: Transform.scale(
-                      scaleX: -1,
-                      child: Stack(children: [
-                        const Image(
-                          fit: BoxFit.scaleDown,
-                          image: AssetImage('images/muscles/Front_bg.png'),
-                        ),
-                        
-                        for (var i in frontImages)
-                        Image(
-                          fit: BoxFit.scaleDown,
-                          image: AssetImage(
-                              i[0]),
-                          opacity: AlwaysStoppedAnimation(
-                              globals.muscle_val[i[1]]!),
-                        ),
-                        for (var i in frontButtons)
-                        FractionallySizedBox(
-                            alignment: Alignment.bottomRight,
-                            heightFactor: i[0],
-                            widthFactor: i[1],
-                            child: Stack(
-                              alignment: AlignmentDirectional.bottomEnd,
-                              children: [
-                                TextButton(
-                                    onPressed: () => setState(() {
-                                          globals.muscle_val[i[2]] =
-                                              opacity_change(globals
-                                                  .muscle_val[i[2]]!);
-                                        }),
-                                    child: Transform.scale(
-                                        scaleX: -1,
-                                        child:Text(i[2])))
-                              ],
-                            )),
-                      ])),
-                ),
-                SizedBox(
-                    width: MediaQuery.of(context).size.width * 0.5,
-                    height: MediaQuery.of(context).size.height * 0.7,
-                    child: Stack(children: [
-                      const Image(
-                          fit: BoxFit.scaleDown,
-                          image: AssetImage('images/muscles/Back_bg.png')),
-                          for (var i in backImages)
-                      Image(
-                        fit: BoxFit.scaleDown,
-                        image:
-                            AssetImage(i[0]),
-                        opacity: AlwaysStoppedAnimation(
-                            globals.muscle_val[i[1]]!),
-                      ),
-                      for (var i in backButtons)
-                      FractionallySizedBox(
-                          alignment: Alignment.bottomRight,
-                          heightFactor: i[0],
-                          widthFactor: i[1],
+            LayoutBuilder(
+              builder: (context, constraints) {
+                return Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    SizedBox(
+                      width: constraints.maxWidth/2 ,
+                      height: MediaQuery.of(context).size.height * 0.7,
+                      child: Transform.scale(
+                          scaleX: -1,
                           child: Stack(
-                            alignment: AlignmentDirectional.bottomEnd,
+                            
                             children: [
-                              TextButton(
-                                  onPressed: () => setState(() {
-                                        globals.muscle_val[i[2]] =
-                                            opacity_change(
-                                                globals.muscle_val[i[2]]!);
-                                      }),
-                                  child: Text(i[2]))
-                            ],
-                          )),
-                      
-                    ]))
-              ],
+                            Image(
+                              width: constraints.maxWidth/2,
+                              fit: BoxFit.fill,
+                              image: AssetImage('images/muscles/Front_bg.png'),
+                            ),
+                            
+                            for (var i in frontImages)
+                            Image(
+                              fit: BoxFit.fill,
+                              width: constraints.maxWidth/2,
+                              image: AssetImage(
+                                  i[0]),
+                              opacity: AlwaysStoppedAnimation(
+                                  globals.muscle_val[i[1]]!),
+                            ),
+                            for (var i in frontButtons)
+                            FractionallySizedBox(
+                                alignment: Alignment.bottomRight,
+                                heightFactor: i[0],
+                                widthFactor: i[1],
+                                child: Stack(
+                                  alignment: AlignmentDirectional.bottomEnd,
+                                  children: [
+                                    TextButton(
+                          
+                                        onPressed: () => setState(() {
+                                              globals.muscle_val[i[2]] =
+                                                  opacity_change(globals
+                                                      .muscle_val[i[2]]!);
+                                            }),
+                                        child: Transform.scale(
+                                            scaleX: -1,
+                                            child: Text(((globals
+                                                      .muscle_val[i[2]]!*100).round().toString()+"%"),
+                                                      maxLines: 1,
+                                                      overflow: TextOverflow.visible,)))
+                                  ],
+                                )),
+                          ])),
+                    ),
+                    SizedBox(
+                        width: constraints.maxWidth/2 ,
+                        height: MediaQuery.of(context).size.height * 0.7,
+                        child: Stack(children: [
+                          Image(
+                              fit: BoxFit.fill,
+                              width: constraints.maxWidth/2,
+                              image: AssetImage('images/muscles/Back_bg.png')),
+                              for (var i in backImages)
+                          Image(
+                            fit: BoxFit.fill,
+                            width: constraints.maxWidth/2,
+                            image:
+                                AssetImage(i[0]),
+                            opacity: AlwaysStoppedAnimation(
+                                globals.muscle_val[i[1]]!),
+                          ),
+                          for (var i in backButtons)
+                          FractionallySizedBox(
+                              alignment: Alignment.bottomRight,
+                              heightFactor: i[0],
+                              widthFactor: i[1],
+                              child: Stack(
+                                alignment: AlignmentDirectional.bottomEnd,
+                                children: [
+                                  TextButton(
+                                      onPressed: () => setState(() {
+                                            globals.muscle_val[i[2]] =
+                                                opacity_change(
+                                                    globals.muscle_val[i[2]]!);
+                                          }),
+                                      child: Text(((globals
+                                                      .muscle_val[i[2]]!*100).round().toString()+"%"),
+                                                      maxLines: 1,
+                                                      overflow: TextOverflow.visible,))
+                                ],
+                              )),
+                          
+                        ]))
+                  ],
+                );
+              }
             ),
           ],
         ),

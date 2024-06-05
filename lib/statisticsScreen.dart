@@ -19,6 +19,8 @@ class StatisticsScreen extends StatefulWidget {
   State<StatisticsScreen> createState() => _StatisticsScreen();
 }
 
+      
+
 const List<String> barChartMuscleNames = [
   "Pecs",
   "Trapz",
@@ -62,6 +64,22 @@ class _StatisticsScreen extends State<StatisticsScreen> {
   List<Text> exerciseDetails = [];
   List<double> heatMapMulti = [];
   final TextEditingController MuscleController = TextEditingController();
+  List<List<double>> heatMapCood = [
+    [0.25, 0.53], //pectoralis
+    [0.75, 0.57], // trapezius
+    [0.37, 0.48], // biceps
+    [0.25, 0.44], // abs
+    [0.36, 0.54], //delts
+    [0.74, 0.45], //latiss
+    [0.61, 0.49], //tri
+    [0.74, 0.34], //glut
+    [0.71, 0.27], //ham
+    [0.29, 0.28], //quad
+    [0.4, 0.40], //fore
+    [0.31, 0.15] //calv
+  ];
+  
+  
   // Pectoralis major - x: 100, y: 450
 // Trapezius - x: 300, y: 480
 // Biceps - x: 150, y: 410
@@ -74,20 +92,7 @@ class _StatisticsScreen extends State<StatisticsScreen> {
 // Quadriceps - x: 115, y: 230
 // Forearms - x: 160, y: 350
 // Calves - x: 270, y: 120
-  List<List<double>> heatMapCood = [
-    [100, 450],
-    [300, 480],
-    [150, 410],
-    [100, 380],
-    [145, 460],
-    [290, 380],
-    [240, 395],
-    [290, 300],
-    [280, 220],
-    [115, 230],
-    [160, 350],
-    [270, 120]
-  ];
+
 
   void updateView() {}
 
@@ -211,35 +216,18 @@ class _StatisticsScreen extends State<StatisticsScreen> {
             .add(generateBars(i, accumulatedScore, barChartMuscleColors));
       }
       globals.muscleHistoryScore = muscleHistoryScore;
-
-      //print(heatMapMulti);
-      //zero points
-
-      //  Map<String, double> muscleHeatMapping = {
-      //     "Pectoralis major": 1.0,
-      //     "Trapezius": 0.0,
-      //     "Biceps": 2.0,
-      //     "Abdominals": 3.0,
-      //     "Deltoids": 4.0,
-      //     "Latissimus dorsi": 5.0,
-      //     "Triceps": 6.0,
-      //     "Gluteus maximus": 7.0,
-      //     "Hamstrings": 8.0,
-      //     "Quadriceps": 9.0,
-      //     "Forearms": 0.0,
-      //     "Calves": 0.0
-      //   };
     });
   }
 
   @override
   Widget build(BuildContext context) {
+
     List<List> muscleHistoryScore = globals.muscleHistoryScore;
 
     List<double> muscleHistoryScoreCum = [];
-    for (var i in List.generate(muscleHistoryScore[0].length, (int x) => x)) {
+    for (int i = 0 ; i < muscleHistoryScore[0].length; i++) {
       double item = 0;
-      for (var j in List.generate(muscleHistoryScore.length, (int x) => x)) {
+      for (int j = 0 ; j < muscleHistoryScore.length; j++) {
         item = item +
             muscleHistoryScore[j]
                 [i]; //adds all values from all the lists in the list.
@@ -248,12 +236,13 @@ class _StatisticsScreen extends State<StatisticsScreen> {
     }
     var highestValue = muscleHistoryScoreCum.reduce(max);
     List<double> heatMapMulti = [];
-    for (var i in (List.generate(muscleHistoryScoreCum.length, (int x) => x))) {
+    for (int i =0; i < muscleHistoryScoreCum.length ; i++) {
       heatMapMulti.add(muscleHistoryScoreCum[i] /
           highestValue); //percentage of muscle usage in relation to highest for the heatmap.
     }
 
     //print(highestValue);
+    print(globals.muscleHistoryScore);
     print(heatMapCood);
     print(heatMapMulti);
     return Scaffold(
@@ -512,26 +501,33 @@ class _StatisticsScreen extends State<StatisticsScreen> {
           //     ),
           //   ),
           // ),
-          Stack(
-            children: [
-              SizedBox(
+          SizedBox(
+            height: MediaQuery.of(context).size.height * 0.7,
+            width: 100,
+            child: 
+              Stack(
                 //width: MediaQuery.of(context).size.width,
-                height: MediaQuery.of(context).size.height * 0.7,
-                child: Row(
+                fit: StackFit.expand,
+                // width: MediaQuery.of(context).size.width,
+                children: [Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Transform.scale(
                       scaleX: -1,
-                      child: const Image(
-                          fit: BoxFit.fill,
+                      child:  Image(
+                        fit: BoxFit.fill,
+                          width: MediaQuery.of(context).size.width*0.35,
+                          // height: MediaQuery.of(context).size.height * 0.7,
                           image: AssetImage('images/muscles/Front_bg.png')),
                     ),
-                    const Image(
-                        fit: BoxFit.fill,
+                     Image(
+                      fit: BoxFit.fill,
+                        width: MediaQuery.of(context).size.width*0.35,
+                        //   height: MediaQuery.of(context).size.height * 0.7,
                         image: AssetImage('images/muscles/Back_bg.png')),
                   ],
                 ),
-              ),
+              
 
               //for (var i in [0,1])
               // Pectoralis major - x: 100, y: 450
@@ -549,17 +545,17 @@ class _StatisticsScreen extends State<StatisticsScreen> {
 //dia min: 50 max: 100
 // opa min: 100 max 200
 //lerp min 0 max 1
-              for (var i in List.generate(heatMapMulti.length, (int i) => i))
+              for (int i = 0; i < heatMapMulti.length; i++)
                 //heatDot(x: heatMapCood[i][0]-((30+(50*heatMapMulti[i]))/2), y: heatMapCood[i][1]-((30+(50*heatMapMulti[i]))/2), dia: 30+(50*heatMapMulti[i]), opa: heatMapMulti[i] == 0 ? 0 : (50 + 150*heatMapMulti[i]).toInt(), lerp: heatMapMulti[i]),
                 heatDot(
                     text: (heatMapMulti[i] * 100).round().toString() + "%",
-                    x: heatMapCood[i][0] - ((30 + (50 * heatMapMulti[i])) / 2),
-                    y: heatMapCood[i][1] - ((30 + (50 * heatMapMulti[i])) / 2),
+                    x: (MediaQuery.of(context).size.width*heatMapCood[i][0]) - ((30 + (50 * heatMapMulti[i])) / 2),
+                    y: (MediaQuery.of(context).size.height*heatMapCood[i][1]) - ((30 + (50 * heatMapMulti[i])) / 2),
                     dia: 30 + (50 * heatMapMulti[i]),
                     opa: heatMapMulti[i] == 0 ? 0 : 200,
                     lerp: heatMapMulti[i]),
-            ],
-          ),
+          ],
+          )),
           // Spacer(),
           // for (var i in List.generate(15, (i) => i))
           //   Text("bla"),]
