@@ -424,7 +424,7 @@ class _BottomSheetState extends State<BottomSheet> {
                             
                             children: [
                             Image(
-                              width: constraints.maxWidth/2,
+                              width: constraints.maxWidth/3,
                               fit: BoxFit.fill,
                               image: AssetImage('images/muscles/Front_bg.png'),
                             ),
@@ -432,7 +432,7 @@ class _BottomSheetState extends State<BottomSheet> {
                             for (var i in frontImages)
                             Image(
                               fit: BoxFit.fill,
-                              width: constraints.maxWidth/2,
+                              width: constraints.maxWidth/3,
                               image: AssetImage(
                                   i[0]),
                               opacity: AlwaysStoppedAnimation(
@@ -458,6 +458,7 @@ class _BottomSheetState extends State<BottomSheet> {
                                             child: Text(((globals
                                                       .muscle_val[i[2]]!*100).round().toString()+"%"),
                                                       maxLines: 1,
+                                                      style: Theme.of(context).textTheme.bodyLarge,
                                                       overflow: TextOverflow.visible,)))
                                   ],
                                 )),
@@ -469,12 +470,12 @@ class _BottomSheetState extends State<BottomSheet> {
                         child: Stack(children: [
                           Image(
                               fit: BoxFit.fill,
-                              width: constraints.maxWidth/2,
+                              width: constraints.maxWidth/3,
                               image: AssetImage('images/muscles/Back_bg.png')),
                               for (var i in backImages)
                           Image(
                             fit: BoxFit.fill,
-                            width: constraints.maxWidth/2,
+                            width: constraints.maxWidth/3,
                             image:
                                 AssetImage(i[0]),
                             opacity: AlwaysStoppedAnimation(
@@ -497,6 +498,7 @@ class _BottomSheetState extends State<BottomSheet> {
                                       child: Text(((globals
                                                       .muscle_val[i[2]]!*100).round().toString()+"%"),
                                                       maxLines: 1,
+                                                      style: Theme.of(context).textTheme.bodyLarge,
                                                       overflow: TextOverflow.visible,))
                                 ],
                               )),
