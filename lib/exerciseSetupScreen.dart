@@ -29,7 +29,7 @@ void get_exercise_list() async {
 }
 
 void add_exercise(String exerciseName, ExerciseDevice chosenDevice, int minRep,
-    int repRange, double weightInc) async {
+    int maxRep, double weightInc) async {
   final box = await Hive.openBox<Exercise>('Exercises');
   int exerciseType = chosenDevice.index;
   var boxmap = box.values.toList();
@@ -57,7 +57,7 @@ void add_exercise(String exerciseName, ExerciseDevice chosenDevice, int minRep,
         type: exerciseType,
         muscleGroups: muscleGroups,
         defaultRepBase: minRep,
-        defaultRepMax: repRange,
+        defaultRepMax: maxRep,
         defaultIncrement: weightInc,
         muscleIntensities: muscleIntensities));
   } else {
@@ -68,7 +68,7 @@ void add_exercise(String exerciseName, ExerciseDevice chosenDevice, int minRep,
             type: exerciseType,
             muscleGroups: muscleGroups,
             defaultRepBase: minRep,
-            defaultRepMax: repRange,
+            defaultRepMax: maxRep,
             defaultIncrement: weightInc,
             muscleIntensities: muscleIntensities));
   }
@@ -76,9 +76,10 @@ void add_exercise(String exerciseName, ExerciseDevice chosenDevice, int minRep,
 
 class _ExerciseSetupScreenState extends State<ExerciseSetupScreen> {
   ExerciseDevice chosenDevice = ExerciseDevice.free;
-  double boxSpace = 10;
+  double boxSpace = 20;
   double minRep = 10;
-  double repRange = 15;
+  double maxRep = 15;
+  RangeValues repRange = RangeValues(10, 20);
   double weightInc = 2.5;
   List<String> muscleGroups = [];
   List<double> muscleIntensities = [];
@@ -96,7 +97,7 @@ class _ExerciseSetupScreenState extends State<ExerciseSetupScreen> {
     setState(() {
       chosenDevice = exerciseMap[currentExercise!.type];
       minRep = currentExercise!.defaultRepBase.toDouble();
-      repRange = currentExercise!.defaultRepMax.toDouble();
+     maxRep = currentExercise!.defaultRepMax.toDouble();
       weightInc = currentExercise!.defaultIncrement;
       for (var m in muscleGroupNames) {
         globals.muscle_val[m] = 0.0;
@@ -114,6 +115,7 @@ class _ExerciseSetupScreenState extends State<ExerciseSetupScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
+          
           leading: InkWell(
             onTap: () { Navigator.pop(context); },
             child: const Icon( Icons.arrow_back_ios ),
@@ -156,7 +158,10 @@ class _ExerciseSetupScreenState extends State<ExerciseSetupScreen> {
                 ),
               ),
               SizedBox(height: boxSpace),
-              const HeadCard(headline: "Exercise Utility"),
+              SizedBox(height: boxSpace),
+              SizedBox(height: boxSpace),
+              const Text("Exercise Utility"),
+              SizedBox(height: boxSpace),
               SegmentedButton<ExerciseDevice>(
                   showSelectedIcon: false,
                   segments: const <ButtonSegment<ExerciseDevice>>[
@@ -185,35 +190,31 @@ class _ExerciseSetupScreenState extends State<ExerciseSetupScreen> {
                     });
                   }),
               SizedBox(height: boxSpace),
-              const HeadCard(headline: "Minimum Repetitions To Achieve"),
-              Slider(
-                value: minRep,
-                min: 1,
-                max: 20,
-                divisions: 19,
-                label: minRep.toString(),
-                onChanged: (double value) {
-                  setState(() {
-                    minRep = value;
-                  });
-                },
-              ),
               SizedBox(height: boxSpace),
-              const HeadCard(headline: "Reps To Add Till Weight Increase"),
-              Slider(
-                value: repRange,
-                min: 1,
-                max: 20,
-                divisions: 19,
-                label: repRange.toString(),
-                onChanged: (double value) {
-                  setState(() {
-                    repRange = value;
-                  });
-                },
-              ),
               SizedBox(height: boxSpace),
-              const HeadCard(headline: "Weight Increase Increments"),
+              const Text("Repetition Range"),
+              SizedBox(height: boxSpace),
+              RangeSlider(
+      values: repRange,
+      max: 30,
+      min: 1,
+      divisions: 29,
+      labels: RangeLabels(
+        repRange.start.round().toString(),
+        repRange.end.round().toString(),
+      ),
+      onChanged: (RangeValues values) {
+        setState(() {
+          repRange = values;
+          minRep = values.start;
+          maxRep = values.end;
+        });
+      },
+    ),
+              
+              SizedBox(height: boxSpace),
+              const Text("Weight Increase Increments"),
+              SizedBox(height: boxSpace),
               Slider(
                 value: weightInc,
                 min: 1,
@@ -246,92 +247,96 @@ class _ExerciseSetupScreenState extends State<ExerciseSetupScreen> {
                 },
               ),
               SizedBox(height: boxSpace),
-              IconButton(
-                icon: const Icon(Icons.check),
-                iconSize: 40,
-                tooltip: 'Confirm',
-                onPressed: () => showDialog<String>(
-                  context: context,
-                  builder: (BuildContext context) => Dialog(
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: <Widget>[
-                          () {
-                            if (!globals.exerciseList
-                                .contains(exerciseTitleController.text)) {
-                              get_exercise_list(); //important redundancy if you dont leave the screen after saving
-                              return Text('Save Exercise:\n', style: Theme.of(context).textTheme.titleLarge,);
-                            }
-                            return Text(
-                              'Attention! \nOverwriting Exercise:\n',
-                              textAlign: TextAlign.center,
-                              style: Theme.of(context).textTheme.titleLarge
-                            );
-                          }(),
-                          Card(elevation: 5.0,child: Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text('${exerciseTitleController.text}\n',style: Theme.of(context).textTheme.titleMedium),
-                                Text(chosenDevice.name),
-                            Text('${minRep.toInt()} to ${minRep.toInt() + repRange.toInt()} reps'),
-                            Text('$weightInc kg increments'),
-                              ],
-                            ),
-                          )),
-                          
-                          const SizedBox(height: 15),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              TextButton(
-                                onPressed: () {
-                                  add_exercise(
-                                      exerciseTitleController.text,
-                                      chosenDevice,
-                                      minRep.toInt(),
-                                      repRange.toInt(),
-                                      weightInc);
-                                  setState(() {});
-                                  int count = 0;
-                                  Navigator.of(context).popUntil((_) => count++ >= 2);
-                                },
-                                child: const Text('Confirm'),
-                              ),
-                              TextButton(
-                                onPressed: () {
-                                  int count = 0;
-                                  Navigator.of(context).popUntil((_) => count++ >= 2);
-
-                                },
-                                child: const Text('Cancel'),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                )
-
-                // add_exercise(
-                //     exerciseTitleController.text,
-                //     chosenDevice,
-                //     minRep.toInt(),
-                //     repRange.toInt(),
-                //     weightInc,
-                //     muscleGroups);
-                // setState(() {});
-                // Navigator.pop(context);
-                ,
-              ),
+              ConfirmButton(context),
             ],
           ),
         ));
+  }
+
+  IconButton ConfirmButton(BuildContext context) {
+    return IconButton(
+              icon: const Icon(Icons.check),
+              iconSize: 40,
+              tooltip: 'Confirm',
+              onPressed: () => showDialog<String>(
+                context: context,
+                builder: (BuildContext context) => Dialog(
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: <Widget>[
+                        () {
+                          if (!globals.exerciseList
+                              .contains(exerciseTitleController.text)) {
+                            get_exercise_list(); //important redundancy if you dont leave the screen after saving
+                            return Text('Save Exercise:\n', style: Theme.of(context).textTheme.titleLarge,);
+                          }
+                          return Text(
+                            'Attention! \nOverwriting Exercise:\n',
+                            textAlign: TextAlign.center,
+                            style: Theme.of(context).textTheme.titleLarge
+                          );
+                        }(),
+                        Card(elevation: 5.0,child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text('${exerciseTitleController.text}\n',style: Theme.of(context).textTheme.titleMedium),
+                              Text(chosenDevice.name),
+                          Text('${minRep.toInt()} to ${minRep.toInt() + maxRep.toInt()} reps'),
+                          Text('$weightInc kg increments'),
+                            ],
+                          ),
+                        )),
+                        
+                        const SizedBox(height: 15),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            TextButton(
+                              onPressed: () {
+                                add_exercise(
+                                    exerciseTitleController.text,
+                                    chosenDevice,
+                                    minRep.toInt(),
+                                   maxRep.toInt(),
+                                    weightInc);
+                                setState(() {});
+                                int count = 0;
+                                Navigator.of(context).popUntil((_) => count++ >= 2);
+                              },
+                              child: const Text('Confirm'),
+                            ),
+                            TextButton(
+                              onPressed: () {
+                                int count = 0;
+                                Navigator.of(context).popUntil((_) => count++ >= 2);
+
+                              },
+                              child: const Text('Cancel'),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              )
+
+              // add_exercise(
+              //     exerciseTitleController.text,
+              //     chosenDevice,
+              //     minRep.toInt(),
+              //     maxRep.toInt(),
+              //     weightInc,
+              //     muscleGroups);
+              // setState(() {});
+              // Navigator.pop(context);
+              ,
+            );
   }
 }
 

@@ -90,7 +90,7 @@ class _LandingScreenState extends State<LandingScreen> {
       var lastTraining = db.getLastTrainingDay(ex.name);
       var dayDiff = DateTime.now().difference(lastTraining).inDays;
       String dayInfo =  dayDiff > 0 ? "$dayDiff days ago" : "today";
-      metainfo.add('${ex.defaultRepBase}-${ex.defaultRepBase + ex.defaultRepMax}@${ex.defaultIncrement}kg $dayInfo');
+      metainfo.add('${ex.defaultRepBase}-${ex.defaultRepMax}@${ex.defaultIncrement}kg $dayInfo');
     }
     filterApplied.value = !filterApplied.value;
   }
@@ -108,7 +108,7 @@ class _LandingScreenState extends State<LandingScreen> {
     }
     for (var ex in filteredExercises) {
       metainfo.add(
-          'Reps: ${ex.defaultRepBase} to ${ex.defaultRepBase + ex.defaultRepMax} Weight Incr.: ${ex.defaultIncrement}');
+          'Reps: ${ex.defaultRepBase} to ${ex.defaultRepMax} Weight Incr.: ${ex.defaultIncrement}');
     }
 
     filterApplied.value = !filterApplied.value;
