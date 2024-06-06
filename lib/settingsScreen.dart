@@ -20,7 +20,6 @@ List<Exercise> exerciseList = [];
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
-
   @override
   State<SettingsScreen> createState() => _SettingsScreen();
 }
@@ -45,80 +44,53 @@ void backup<T>(String dataName) async {
   await FlutterFileDialog.saveFile(params: params);
 }
 
-void restoreSetData(context) async {
+
+void triggerLoad<T>(context, dataname) async {
+  String importData;
   if (kIsWeb) {
-    //print("bla");
-    var filePath = 'csv/set.csv';
-    final myData = await rootBundle.loadString(filePath);
-    //print(myData);
-    restoreSetLoad(myData);
+    String filePath = dataname == "Exercises" ? 'csv/ex.csv' : 'csv/set.csv';
+    importData = await rootBundle.loadString(filePath);
   } else {
-  final filePath = await FlutterFileDialog.pickFile(params: const OpenFileDialogParams(dialogType: OpenFileDialogType.document, sourceType: SourceType.savedPhotosAlbum));
-  if (filePath != null){
-  File file = File(filePath); 
-  final myData =  await file.readAsString();
-  restoreSetLoad(myData);
+    final filePath = await FlutterFileDialog.pickFile(params: const OpenFileDialogParams(dialogType: OpenFileDialogType.document, sourceType: SourceType.savedPhotosAlbum));
+    if (filePath == null) { return; }
+    importData =  await File(filePath).readAsString();
   }
-  
-  else{return;}
-  }
+  restoreData(dataname, importData);
+
 }
 
-void restoreSetLoad(myData) {
-  List<List<String>> csvTable = const CsvToListConverter(shouldParseNumbers: false).convert(myData);
-  final setBox = Hive.box<TrainingSet>('TrainingSets');
-  setBox.clear();
-  for (List<String> row in csvTable) {
-    //print(row);
-    setBox.add(TrainingSet(exercise: row[0], date: DateTime.parse(row[1]), weight: double.parse(row[2]), repetitions: int.parse(row[3]), setType: int.parse(row[4]), baseReps: int.parse(row[5]), maxReps: int.parse(row[6]), increment: double.parse(row[7]), machineName: row[7]));
-  }
-}
-
-void restoreExercises(context) async {
-  if (kIsWeb) {
-    //print("bla");
-    var filePath = 'csv/ex.csv';
-    final myData = await rootBundle.loadString(filePath);
-    restoreExLoad(myData);
-  } else {
-  final filePath = await FlutterFileDialog.pickFile(params: const OpenFileDialogParams(dialogType: OpenFileDialogType.document, sourceType: SourceType.savedPhotosAlbum));
-  if (filePath != null){
-  File file = File(filePath); 
-  final myData =  await file.readAsString();
-  restoreExLoad(myData);
-  }
-  
-  else{return;}
-  }
-}
-  
-void restoreExLoad(myData){
-  //print(myData);
-  final exerciseBox = Hive.box<Exercise>('Exercises');
-  exerciseBox.clear();
-  List<List<String>> csvTable = const CsvToListConverter(shouldParseNumbers: false).convert(myData);
-  for (List<String> row in csvTable) {
-    List<String> muscleGroups = [];
-    List<double> muscleIntensities = [];
-    for (String e in row[2].split(";")) {
-      if (e != "") { muscleGroups.add(e); }
-    }
-    for (String e in row[3].split(";")) {
-      if (e != "") { muscleIntensities.add(double.parse(e)); }
-    }
-    if (muscleGroups.length > muscleIntensities.length) {
-      muscleIntensities = [];
-      for (var i = 0; i < muscleGroups.length; ++i) {
-        muscleIntensities.add(1.0);
+void restoreData<T>(String dataName, String data) async {
+  List<List<String>> csvTable = const CsvToListConverter(shouldParseNumbers: false).convert(data);
+  if (dataName == "TrainingSets") {  // can't imagine this is less ugly than template specilization
+    final setBox = Hive.box<TrainingSet>(dataName);
+    setBox.clear();
+    for (List<String> row in csvTable) { setBox.add(TrainingSet(exercise: row[0], date: DateTime.parse(row[1]), weight: double.parse(row[2]), repetitions: int.parse(row[3]), setType: int.parse(row[4]), baseReps: int.parse(row[5]), maxReps: int.parse(row[6]), increment: double.parse(row[7]), machineName: row[7])); }
+  } else if (dataName == "Exercises") {
+    final exerciseBox = Hive.box<Exercise>('Exercises');
+    exerciseBox.clear();
+    for (List<String> row in csvTable) {
+      List<String> muscleGroups = [];
+      for (String e in row[2].split(";")) {
+        if (e != "") { muscleGroups.add(e); }
       }
+      List<double> muscleIntensities = [];
+      for (String e in row[3].split(";")) {
+        if (e != "") { muscleIntensities.add(double.parse(e)); }
+      }
+      if (muscleGroups.length > muscleIntensities.length) {
+        muscleIntensities = [];
+        for (var i = 0; i < muscleGroups.length; ++i) {
+          muscleIntensities.add(1.0);
+        }
+      }
+      exerciseBox.add(Exercise(name: row[0], type: int.parse(row[1]), muscleGroups: muscleGroups, muscleIntensities: muscleIntensities, defaultRepBase: int.parse(row[4]), defaultRepMax: int.parse(row[5]), defaultIncrement: double.parse(row[6])));
+      exerciseList.add(Exercise(name: row[0], type: int.parse(row[1]), muscleGroups: muscleGroups, muscleIntensities: muscleIntensities, defaultRepBase: int.parse(row[4]), defaultRepMax: int.parse(row[5]), defaultIncrement: double.parse(row[6])));
     }
-    exerciseBox.add(Exercise(name: row[0], type: int.parse(row[1]), muscleGroups: muscleGroups, muscleIntensities: muscleIntensities, defaultRepBase: int.parse(row[4]), defaultRepMax: int.parse(row[5]), defaultIncrement: double.parse(row[6])));
-    exerciseList.add(Exercise(name: row[0], type: int.parse(row[1]), muscleGroups: muscleGroups, muscleIntensities: muscleIntensities, defaultRepBase: int.parse(row[4]), defaultRepMax: int.parse(row[5]), defaultIncrement: double.parse(row[6])));
-    //filling global variable for runtime update of landing screen after import, otherwise restart is necessary for unknown reasons.
+    globals.exerciseListEx = exerciseList;
+  } else if (dataName == "Workouts") {
+    print("Missing!");
   }
-  globals.exerciseListEx = exerciseList;
-  
-} 
+}
 
 
 class _SettingsScreen extends State<SettingsScreen> {
@@ -289,7 +261,7 @@ class _SettingsScreen extends State<SettingsScreen> {
                 label: const Text('Trainings'),
                 icon: const FaIcon(FontAwesomeIcons.chartLine, size: 13),
                 onPressed: () {
-                  backup<TrainingSet>("Trainings");
+                  backup<TrainingSet>("TrainingSets");
                 },
               ),
               TextButton.icon(
@@ -318,7 +290,7 @@ class _SettingsScreen extends State<SettingsScreen> {
                 label: const Text('Trainings'),
                 icon: const FaIcon(FontAwesomeIcons.chartLine, size: 13),
                 onPressed: () {
-                  wipe<TrainingSet>(context, "Trainings");
+                  wipe<TrainingSet>(context, "TrainingSets");
                 },
               ),
               TextButton.icon(
@@ -347,7 +319,7 @@ class _SettingsScreen extends State<SettingsScreen> {
                   label: const Text('Training Sets'),
                   icon: const FaIcon(FontAwesomeIcons.chartLine, size: 13),
                   onPressed: () {
-                    restoreSetData(context);
+                    triggerLoad<TrainingSet>(context, "TrainingSets");
                     Hive.box<Exercise>('Exercises').watch();
                     setState(() {});
                     Navigator.pop(context);
@@ -358,7 +330,7 @@ class _SettingsScreen extends State<SettingsScreen> {
                   label: const Text('Exercises List'),
                   icon: const FaIcon(FontAwesomeIcons.list, size: 13),
                   onPressed: () {
-                    restoreExercises(context);
+                    triggerLoad<Exercise>(context, "Exercises");
                     setState(() {});
                     Navigator.pop(context);
                     
