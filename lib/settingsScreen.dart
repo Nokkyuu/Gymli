@@ -13,6 +13,7 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'globals.dart' as globals;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 enum DisplayMode { light, dark }
 List<Exercise> exerciseList = [];
@@ -24,50 +25,24 @@ class SettingsScreen extends StatefulWidget {
   State<SettingsScreen> createState() => _SettingsScreen();
 }
 
-void wipeExercises(context) async {
+void wipe<T>(context, String dataName) async {
   if (await confirm(context)) {
-    var exerciseBox = Hive.box<Exercise>('Exercises');
-    exerciseBox.clear();
-  }
-}
-void wipeTrainingSets(context) async {
-  if (await confirm(context)) {
-  var trainingBox = Hive.box<TrainingSet>('TrainingSets');
-  trainingBox.clear();
+    var box = Hive.box<T>(dataName);
+    box.clear();
   }
 }
 
-
-
-void backupExercises(context) async {
-  List<List<String>> exercisedata = [];
-  var trainings = Hive.box<Exercise>('Exercises').values.toList();
-  for (var t in trainings) {
-    exercisedata.add(t.toCSVString());
-  }
-
-  String csvData = const ListToCsvConverter().convert(exercisedata);
+void backup<T>(String dataName) async {
+  List<List<String>> datalist = [];
+  List<T> data = Hive.box<T>(dataName).values.toList();
+  for (var t in data) { datalist.add((t as DataClass).toCSVString()); }
+  String csvData = const ListToCsvConverter().convert(datalist);
   final String directory = (await getApplicationSupportDirectory()).path;
-  final path = "$directory/exercises_${DateFormat('yyyy-MM-dd').format(DateTime.now())}.csv";
+  final path = "$directory/${dataName}_${DateFormat('yyyy-MM-dd').format(DateTime.now())}.csv";
   final File file = File(path);
   await file.writeAsString(csvData);
   final params = SaveFileDialogParams(sourceFilePath: path);
-  final filePath = await FlutterFileDialog.saveFile(params: params);  
-}
-
-void backupSetState(context) async {
-  List<List<String>> trainingSetData = [];
-  var trainings = Hive.box<TrainingSet>('TrainingSets').values.toList();
-  for (var t in trainings) {
-    trainingSetData.add(t.toCSVString());
-  }
-
-  String csvData = const ListToCsvConverter().convert(trainingSetData);
-  final String directory = (await getApplicationSupportDirectory()).path;
-  final path = "$directory/trainingsets_${DateFormat('yyyy-MM-dd').format(DateTime.now())}.csv";
-  final File file = File(path);
-  await file.writeAsString(csvData);
-  final filePath = await FlutterFileDialog.saveFile(params: SaveFileDialogParams(sourceFilePath: path));
+  await FlutterFileDialog.saveFile(params: params);
 }
 
 void restoreSetData(context) async {
@@ -305,62 +280,72 @@ class _SettingsScreen extends State<SettingsScreen> {
             ],),
             const Spacer(flex: 3,),
             const Divider(),
-            const Text("Export App-Data"),
+            const Row(mainAxisAlignment: MainAxisAlignment.center, children: [Text("Export App-Data "), FaIcon(FontAwesomeIcons.list, size: 13)]),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
               TextButton.icon(
                 style: const ButtonStyle(),
-                label: const Text('Training Sets'),
-                icon: const Icon(Icons.save),
+                label: const Text('Trainings'),
+                icon: const FaIcon(FontAwesomeIcons.chartLine, size: 13),
                 onPressed: () {
-                  backupSetState(context);
+                  backup<TrainingSet>("Trainings");
                 },
               ),
               TextButton.icon(
                 style: const ButtonStyle(),
-                label: const Text('Exercises List'),
-                icon: const Icon(Icons.save),
+                label: const Text('Exercises'),
+                icon: const FaIcon(FontAwesomeIcons.list, size: 13),
                 onPressed: () {
-                  backupExercises(context);
+                  backup<Exercise>("Exercises");
+                },
+              ),
+              TextButton.icon(
+                style: const ButtonStyle(),
+                label: const Text('Workouts'),
+                icon: const FaIcon(FontAwesomeIcons.clipboardList, size: 13),
+                onPressed: () {
+                  backup<Workout>("Workouts");
                 },
               ),
             ]),
-            const Divider(),
-            const Spacer(),
-            const Divider(),
-            const Text("Wipe App-Data"),
+            const Row(mainAxisAlignment: MainAxisAlignment.center, children: [Text("Wipe App-Data "), Icon(Icons.delete_forever, size: 13)]),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
               TextButton.icon(
                 style: const ButtonStyle(),
-                label: const Text('Training Sets'),
-                icon: const Icon(Icons.delete_forever),
+                label: const Text('Trainings'),
+                icon: const FaIcon(FontAwesomeIcons.chartLine, size: 13),
                 onPressed: () {
-                  wipeTrainingSets(context);
+                  wipe<TrainingSet>(context, "Trainings");
                 },
               ),
               TextButton.icon(
                 style: const ButtonStyle(),
-                label: const Text('Exercise List'),
-                icon: const Icon(Icons.delete_forever),
+                label: const Text('Exercises'),
+                icon: const FaIcon(FontAwesomeIcons.list, size: 13),
                 onPressed: () {
-                  wipeExercises(context);
+                  wipe<Exercise>(context, "Exercises");
+                }
+              ),
+              TextButton.icon(
+                style: const ButtonStyle(),
+                label: const Text('Workouts'),
+                icon: const FaIcon(FontAwesomeIcons.clipboardList, size: 13),
+                onPressed: () {
+                  wipe<Workout>(context, "Workouts");
                 }
               ),
               ]),
-            const Divider(),
-            const Spacer(),
-            const Divider(),
-            const Text("Restore App-Data"),
+            const Row(mainAxisAlignment: MainAxisAlignment.center, children: [Text("Restore App-Data "), Icon(Icons.restore_page, size: 13)]),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 TextButton.icon(
                   style: const ButtonStyle(),
                   label: const Text('Training Sets'),
-                  icon: const Icon(Icons.restore_page),
+                  icon: const FaIcon(FontAwesomeIcons.chartLine, size: 13),
                   onPressed: () {
                     restoreSetData(context);
                     Hive.box<Exercise>('Exercises').watch();
@@ -371,7 +356,7 @@ class _SettingsScreen extends State<SettingsScreen> {
                   TextButton.icon(
                   style: const ButtonStyle(),
                   label: const Text('Exercises List'),
-                  icon: const Icon(Icons.restore_page),
+                  icon: const FaIcon(FontAwesomeIcons.list, size: 13),
                   onPressed: () {
                     restoreExercises(context);
                     setState(() {});

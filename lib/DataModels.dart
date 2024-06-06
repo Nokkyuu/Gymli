@@ -8,8 +8,12 @@ final exerciseTypeNames = ["Free", "Machine", "Cable", "Body"];
 final muscleGroupNames = ["Pectoralis major", "Trapezius", "Biceps", "Abdominals", "Deltoids", "Latissimus dorsi", "Triceps", "Gluteus maximus", "Hamstrings", "Quadriceps", "Forearms", "Calves"];
 final setTypeNames = ["Warm", "Work", "Drop"];
 
+abstract class DataClass extends HiveObject {
+  List<String> toCSVString();
+}
+
 @HiveType(typeId: 1)
-class Exercise extends HiveObject {
+class Exercise extends DataClass {
   Exercise ({ required this.name, required this.type, required this.muscleGroups, required this.muscleIntensities, required this.defaultRepBase, required this.defaultRepMax, required this.defaultIncrement });
   @HiveField(0)
   String name = "";
@@ -26,6 +30,7 @@ class Exercise extends HiveObject {
   @HiveField(6)
   List<double> muscleIntensities = [];
 
+  @override
   List<String> toCSVString() {
     String muscleString = "";
     String intensitiesString = "";
@@ -41,7 +46,7 @@ class Exercise extends HiveObject {
 }
 
 @HiveType(typeId: 2)
-class TrainingSet extends HiveObject {
+class TrainingSet extends DataClass {
   TrainingSet ({required this.exercise, required this.date, required this.weight, required this.repetitions, required this.setType, required this.baseReps, required this.maxReps, required this.increment, required this.machineName});
   @HiveField(0)
   String exercise = "";
@@ -62,7 +67,7 @@ class TrainingSet extends HiveObject {
   @HiveField(8)
   String machineName = "";
 
-
+  @override
   List<String> toCSVString() {
     return [exercise, date.toString(), "$weight", "$repetitions", "$setType", "$baseReps", "$maxReps", "$increment", machineName];
   }
@@ -85,10 +90,18 @@ class WorkoutUnit extends HiveObject {
 }
 
 @HiveType(typeId: 4)
-class Workout extends HiveObject {
+class Workout extends DataClass {
   Workout({required this.name, required this.units});
   @HiveField(0)
   String name = "";
   @HiveField(1)
   List<WorkoutUnit> units = [];
+
+
+  @override
+  List<String> toCSVString() {
+    List<String> row = [name];
+    for (WorkoutUnit unit in units) { row.add("${unit.exercise}, ${unit.warmups}, ${unit.worksets}, ${unit.dropsets}, ${unit.type}"); }
+    return row;
+  }
 }
