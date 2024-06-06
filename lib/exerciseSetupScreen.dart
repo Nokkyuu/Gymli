@@ -97,7 +97,8 @@ class _ExerciseSetupScreenState extends State<ExerciseSetupScreen> {
     setState(() {
       chosenDevice = exerciseMap[currentExercise!.type];
       minRep = currentExercise!.defaultRepBase.toDouble();
-     maxRep = currentExercise!.defaultRepMax.toDouble();
+      maxRep = currentExercise!.defaultRepMax.toDouble();
+      repRange = RangeValues(minRep, maxRep);
       weightInc = currentExercise!.defaultIncrement;
       for (var m in muscleGroupNames) {
         globals.muscle_val[m] = 0.0;
