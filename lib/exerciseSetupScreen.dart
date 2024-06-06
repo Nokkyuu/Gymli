@@ -206,9 +206,10 @@ class _ExerciseSetupScreenState extends State<ExerciseSetupScreen> {
       ),
       onChanged: (RangeValues values) {
         setState(() {
-          repRange = values;
-          minRep = values.start;
-          maxRep = values.end;
+          RangeValues newValues = RangeValues(values.start, values.start == values.end ? values.end +1 : values.end);
+          repRange = newValues;
+          minRep = newValues.start;
+          maxRep = newValues.end;
         });
       },
     ),
