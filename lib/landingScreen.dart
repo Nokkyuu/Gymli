@@ -9,7 +9,6 @@ import 'package:Gymli/DataModels.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:Gymli/workoutSetupScreen.dart';
-import 'globals.dart' as globals;
 import 'database.dart' as db;
 
 

@@ -42,13 +42,11 @@ void main() async {
   Hive.registerAdapter(TrainingSetAdapter());
   Hive.registerAdapter(WorkoutAdapter());
   Hive.registerAdapter(WorkoutUnitAdapter());
-
   getPreferences();
-
-  // populateExercises();
+  // preopen all boxes
   await Hive.openBox<TrainingSet>('TrainingSets');
   await Hive.openBox<Exercise>('Exercises');
-  var box = await Hive.openBox<Workout>('Workouts');
+  await Hive.openBox<Workout>('Workouts');
   runApp(const MainApp()
   );
 }

@@ -16,7 +16,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 enum DisplayMode { light, dark }
-List<Exercise> exerciseList = [];
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -55,7 +54,7 @@ void triggerLoad<T>(context, dataname) async {
     if (filePath == null) { return; }
     importData =  await File(filePath).readAsString();
   }
-  restoreData(dataname, importData);
+  restoreData<T>(dataname, importData);
 
 }
 List<T> stringToList<T>(String str) {
@@ -77,9 +76,7 @@ void restoreData<T>(String dataName, String data) async {
     exerciseBox .clear();
     for (List<String> row in csvTable) {
       exerciseBox.add(Exercise(name: row[0], type: int.parse(row[1]), muscleGroups: stringToList<String>(row[2]), muscleIntensities: stringToList<double>(row[3]), defaultRepBase: int.parse(row[4]), defaultRepMax: int.parse(row[5]), defaultIncrement: double.parse(row[6])));
-      exerciseList.add(Exercise(name: row[0], type: int.parse(row[1]), muscleGroups: stringToList<String>(row[2]), muscleIntensities: stringToList<double>(row[3]), defaultRepBase: int.parse(row[4]), defaultRepMax: int.parse(row[5]), defaultIncrement: double.parse(row[6])));
     }
-    globals.exerciseListEx = exerciseList;
   } else if (dataName == "Workouts") {
     print("Missing!");
   }

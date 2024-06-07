@@ -243,10 +243,7 @@ class _ExerciseScreen extends State<ExerciseScreen> {
                 child: Padding(
                   padding: const EdgeInsets.all(10.0),
                   child: Padding(
-                      padding: const EdgeInsets.only(
-                          right: 10.0,
-                          top: 10.0,
-                          left: 0.0), // Hier das Padding rechts hinzufügen
+                      padding: const EdgeInsets.only(right: 10.0, top: 10.0, left: 0.0),
                       child: LineChart(LineChartData(
                         titlesData: const FlTitlesData(
                           topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
@@ -283,7 +280,6 @@ class _ExerciseScreen extends State<ExerciseScreen> {
                       selected: _selected,
                       onSelectionChanged: (newSelection){
                         setState(() {
-
                           // updateLastWeightSetting();
                           _selected = newSelection;
                         }
@@ -292,12 +288,6 @@ class _ExerciseScreen extends State<ExerciseScreen> {
                     const SizedBox(height: 10),
                     Row(
                       children: [
-                        IconButton(
-                          icon: const Icon(FontAwesomeIcons.calculator),
-                          onPressed: () { setState(() {
-                            showModalBottomSheet<dynamic>(context: context, builder: (BuildContext context) { return const WeightConfigurator(); },
-                          ); }); },
-                        ),
                         const Spacer(),
                         NumberPicker(
                           value: weightKg,
@@ -324,7 +314,6 @@ class _ExerciseScreen extends State<ExerciseScreen> {
                           onChanged: (value) => setState(() => repetitions = value),
                         ),
                         const Text("Reps."),
-                        const Spacer(),
                         const Spacer()
                       ]
                     )
@@ -383,300 +372,6 @@ class _ExerciseScreen extends State<ExerciseScreen> {
                     })),
             const SizedBox(height: 20),
           ]),
-    );
-  }
-}
-
-
-class WeightConfigurator extends StatefulWidget {
-  const WeightConfigurator({
-    super.key,
-  });
-
-  @override
-  State<WeightConfigurator> createState() => _WeightConfigurator();
-}
-
-enum ExerciseDevice { dumbbell, barbell20, barbellhome }
-class _WeightConfigurator extends State<WeightConfigurator> {
-  double itemHeight = 50.0;
-  double itemWidth = 30.0;
-  ExerciseDevice selectedDevice = ExerciseDevice.barbell20;
-  List<Widget> rightContainers = [];
-  late Container acceptRow;
-  late DragTarget<Text> accepter ;
-
-  List<TextEditingController> kg_controller = [];
-  late List<int> kg_counter = [];
-
-  List<double> kgs = [1, 1.25, 2, 2.5, 5, 10, 20, 25];
-  List<String> kg_texts = [" 1", "1¼", " 2", "2½", " 5", "10", "20", "25"];
-
-  void addWeight(String txt) {
-    rightContainers.add(RotatedBox(
-                quarterTurns: 1, child:
-                Container(
-                  color: Colors.black45, width: 110, alignment: Alignment.center, padding: const EdgeInsets.all(2),
-                  child: Text("10", style: const TextStyle(color: Colors.white,fontSize: 15.0)),
-                ),
-              ),);
-    
-  }
-  @override
-  void initState() {
-    super.initState();
-    for (int i = 0; i < kg_texts.length; ++i) {
-      kg_controller.add(TextEditingController());
-      kg_controller.last.text = "0";
-      kg_counter.add(0);
-    }
-    updateWeight();
-
-    acceptRow = Container(width: 100, height: 100, color: Colors.black87.withOpacity(0.3), child: 
-      Row(children: rightContainers,
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,)
-    );
-    accepter = DragTarget<Text>(
-            onAcceptWithDetails: (text) {
-                setState(() {
-                  addWeight(text.data.data!);
-                });
-            },
-            builder: (context, accepted, rejected) {
-              return acceptRow;
-            });
-    addWeight("20");
-  }
-
-  void increase(int i) {
-    kg_counter[i] += 1;
-    kg_controller[i].text = kg_counter[i].toString();
-    updateWeight();
-  }
-  void decrease(int i) {
-    kg_counter[i] -= kg_counter[i] > 0 ? 1 : 0;
-    kg_controller[i].text = kg_counter[i].toString();
-    updateWeight();
-  }
-
-  String weightText = "";
-
-  void updateWeight() {
-    double currentWeight = 0.0;
-    for (int i = 0; i < kgs.length; ++i) {
-      currentWeight += kgs[i]*kg_counter[i];
-    }
-    currentWeight *= 2.0;
-    List<double> adds = [2.3, 20.0, 8.6];
-    currentWeight += adds[selectedDevice.index];
-    currentWeight = 70;
-    weightText = "Stacked weight: $currentWeight kg";
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox.expand(
-      child: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            const SizedBox(height: 20.0),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-              ElevatedButton(
-                child: const Text('Escape'),
-                onPressed: () => Navigator.pop(context),
-              ),
-              ElevatedButton(
-                child: const Text('Take weight'),
-                onPressed: () => Navigator.pop(context),
-              ),
-            ]),
-            const Spacer(),
-            Text(weightText, style: const TextStyle(fontSize: 20),),
-            const SizedBox(height: 20.0),
-            SegmentedButton<ExerciseDevice>(
-                  showSelectedIcon: false,
-                  segments: const <ButtonSegment<ExerciseDevice>>[
-                    ButtonSegment<ExerciseDevice>(
-                        value: ExerciseDevice.dumbbell,
-                        label: Text('Dumbbell')),
-                    ButtonSegment<ExerciseDevice>(
-                        value: ExerciseDevice.barbell20,
-                        label: Text('Barbell Gym')),
-                    ButtonSegment<ExerciseDevice>(
-                        value: ExerciseDevice.barbellhome,
-                        label: Text('Barbell Home'))
-                  ],
-                  selected: <ExerciseDevice>{selectedDevice},
-                  onSelectionChanged: (Set<ExerciseDevice> newSelection) {
-                    setState(() {
-                      selectedDevice = newSelection.first;
-                      updateWeight();
-                    });
-                  }),
-            const Spacer(),
-            const Text("Pick weights on one side"),
-            const SizedBox(height: 10.0),
-            Wrap(alignment: WrapAlignment.center,
-            children: (() {
-                List<Widget> widgets = [];
-                for (int i = 0; i < kg_texts.length; ++i) {
-                  widgets.add(Draggable<Text>(
-                  data: Text(kg_texts[i]),
-                  feedback: Container(
-                    width: 50, height: 30, 
-                    color: Colors.black45.withOpacity(0.5),
-                    child: Center(child: Text(kg_texts[i], style: TextStyle(color: Colors.white, fontSize: 10.0)),),
-                  ),
-                  child: Padding(padding: EdgeInsets.only(left: 1, right: 1.0), child: Container(
-                    width: 40, height: 30, color: Colors.black45,
-                    child: Center(child: Text(kg_texts[i], style: TextStyle(color: Colors.white, fontSize: 14.0)),),
-                  ))
-                ));
-                }
-                return widgets;
-              })(),
-            ),
-            SizedBox(height: 10),
-            TextButton.icon(
-                icon: const Icon(Icons.add),
-                label: const Text("Add Exercise") ,
-                onPressed:  () {
-                  setState(() {
-                    addWeight("20");
-                  });
-                },
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // accepter,
-
-                // RotatedBox(
-                //   quarterTurns: 1, child:
-                //   Container(
-                //     width: 95, alignment: Alignment.center, padding: const EdgeInsets.all(2),
-                //     child: const Text('5 kg', style: TextStyle(color: Colors.white,fontSize: 15.0)),
-                //     decoration: BoxDecoration(
-                //       borderRadius: BorderRadius.all(Radius.circular(6.0)),
-                //       color: Colors.black45, 
-                //     ),
-                //   ),
-                // ),
-                // Padding(padding:const EdgeInsets.all(1), child:
-                //   RotatedBox(
-                //   quarterTurns: 1, child:
-                //   Container(
-                //     color: Colors.black45, width: 110, alignment: Alignment.center, padding: const EdgeInsets.all(2),
-                //     child: const Text('10 kg', style: TextStyle(color: Colors.white,fontSize: 15.0)),
-                //   ),
-                //   ),
-                // ),
-                // RotatedBox(
-                //   quarterTurns: 1, child:
-                //   Container(
-                //     color: Colors.black45, width: 110, alignment: Alignment.center, padding: const EdgeInsets.all(2),
-                //     child: const Text('10 kg', style: TextStyle(color: Colors.white,fontSize: 15.0)),
-                //   ),
-                // ),
-                Container(
-                    color: Colors.black54, width: 100, alignment: Alignment.center,
-                    child: const Text('bar', style: TextStyle(color: Colors.white, fontSize: 10.0)),
-                  ),
-                accepter
-                // RotatedBox(
-                //   quarterTurns: 1, child:
-                //   Container(
-                //     color: Colors.black45, width: 110, alignment: Alignment.center, padding: const EdgeInsets.all(2),
-                //     child: const Text('10 kg', style: TextStyle(color: Colors.white,fontSize: 15.0)),
-                //   ),
-                // ),
-                // Padding(padding:const EdgeInsets.all(1), child:
-                //   RotatedBox(
-                //   quarterTurns: 1, child:
-                //   Container(
-                //     color: Colors.black45, width: 110, alignment: Alignment.center, padding: const EdgeInsets.all(2),
-                //     child: const Text('10 kg', style: TextStyle(color: Colors.white,fontSize: 15.0)),
-                //   ),
-                //   ),
-                // ),
-                // RotatedBox(
-                //   quarterTurns: 1, child:
-                //   Container(
-                //     color: Colors.black45, width: 95, alignment: Alignment.center, padding: const EdgeInsets.all(2),
-                //     child: const Text('5 kg', style: TextStyle(color: Colors.white,fontSize: 15.0)),
-                //   ),
-                // ),
-              ]
-            ),
-            // Row(
-            //   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            //   children: (() {
-            //     List<Widget> widgets = [];
-            //     for (var variable in kg_texts) {
-            //       widgets.add(Text("$variable", style: TextStyle(fontFamily: "Courier New")));
-            //     }
-            //     return widgets;
-            //   })(),
-            // ),
-            // Row(
-            //   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            //   children: (() {
-            //     List<Widget> widgets = [];
-            //     for (int i = 0; i < kg_controller.length; ++i) {
-            //       widgets.add(SizedBox(
-            //     width: 40,
-            //     child: TextFormField(
-            //       controller: kg_controller[i],
-            //       // enabled: false,
-            //       decoration: InputDecoration(
-            //         labelText: kg_texts[i],
-            //         alignLabelWithHint: true, 
-            //         labelStyle: const TextStyle(fontSize: 14.0),
-            //         border: const OutlineInputBorder(),
-            //       ),
-            //       textAlign: TextAlign.center,
-            //     )));
-            //     }
-            //     return widgets;
-            //     })(),
-            // ),
-            // Row(
-            //   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            //   children: (() {
-            //     List<Widget> widgets = [];
-            //     for (int i = 0; i < kg_counter.length; ++i) {
-            //       widgets.add(
-            //         Column(
-            //           children: [
-            //             IconButton(
-            //             icon: const Icon(FontAwesomeIcons.plus),
-            //             onPressed: () {
-            //               setState(() {
-            //                 increase(i);
-            //               });
-            //             }),
-            //             IconButton(
-            //             icon: const Icon(FontAwesomeIcons.minus),
-            //             onPressed: () {
-            //               setState(() {
-            //                 decrease(i);
-            //               });
-            //             }),
-            //           ]
-            //         )
-            //       );
-            //     }
-            //     return widgets;
-            //     })(),
-            // ),
-            const Spacer(),
-          ],
-        ),
-      ),
     );
   }
 }
