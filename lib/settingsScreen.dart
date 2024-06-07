@@ -14,7 +14,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'globals.dart' as globals;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-
+import 'package:Gymli/landingScreen.dart';
 enum DisplayMode { light, dark }
 
 class SettingsScreen extends StatefulWidget {

@@ -9,6 +9,7 @@ import 'package:Gymli/DataModels.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:Gymli/workoutSetupScreen.dart';
+import 'globals.dart' as globals;
 import 'database.dart' as db;
 
 
@@ -52,8 +53,7 @@ class _LandingScreenState extends State<LandingScreen> {
 
   //List<Exercise> filteredExercises = Hive.box<Exercise>('Exercises').values.toList();
   ValueNotifier<bool> filterApplied = ValueNotifier<bool>(true);
-  List<Exercise> filteredExercises =
-      Hive.box<Exercise>('Exercises').values.toList();
+  List<Exercise> filteredExercises = Hive.box<Exercise>('Exercises').values.toList();
   List<String> metainfo = [];
 
   void updateAllExercises() {
@@ -89,7 +89,7 @@ class _LandingScreenState extends State<LandingScreen> {
       var lastTraining = db.getLastTrainingDay(ex.name);
       var dayDiff = DateTime.now().difference(lastTraining).inDays;
       String dayInfo =  dayDiff > 0 ? "$dayDiff days ago" : "today";
-      metainfo.add('${ex.defaultRepBase}-${ex.defaultRepMax}@${ex.defaultIncrement}kg $dayInfo');
+      metainfo.add('${ex.defaultRepBase}-${ex.defaultRepMax} Reps @ ${ex.defaultIncrement}kg - $dayInfo');
     }
     filterApplied.value = !filterApplied.value;
   }
@@ -98,18 +98,14 @@ class _LandingScreenState extends State<LandingScreen> {
     var muscle = muscleName.muscleName;
     filteredExercises = [];
     metainfo = [];
-    //print(muscle);
     for (var ex in allExercises) {
-      //print(ex.muscleGroups);
       if (ex.muscleGroups.contains(muscle)) {
         filteredExercises.add(ex);
       }
     }
     for (var ex in filteredExercises) {
-      metainfo.add(
-          'Reps: ${ex.defaultRepBase} to ${ex.defaultRepMax} Weight Incr.: ${ex.defaultIncrement}');
+      metainfo.add('Reps: ${ex.defaultRepBase} to ${ex.defaultRepMax} Weight Incr.: ${ex.defaultIncrement}');
     }
-
     filterApplied.value = !filterApplied.value;
   }
 
@@ -121,6 +117,7 @@ class _LandingScreenState extends State<LandingScreen> {
   @override
   void initState() {
     super.initState();
+    updateAllExercises();
     setState(() {
       MuscleController.value = TextEditingValue.empty;
       WorkoutController.value = TextEditingValue.empty;
@@ -130,7 +127,6 @@ class _LandingScreenState extends State<LandingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    updateAllExercises();
     return Column(
         mainAxisAlignment: MainAxisAlignment.center,
         mainAxisSize: MainAxisSize.max,

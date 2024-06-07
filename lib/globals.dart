@@ -49,6 +49,7 @@ var exercise_twins = {
 };
 
 List<String> exerciseList = [];
+List<Exercise> exerciseListEx = []; // for importing runtime update
 
 double calculateScore(TrainingSet s) {
   return s.weight + ((s.repetitions - s.baseReps) / (s.maxReps - s.baseReps)) * s.increment;

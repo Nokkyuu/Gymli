@@ -49,6 +49,8 @@ class _ExerciseScreen extends State<ExerciseScreen> {
   int weightKg = 40;
   int weightDg = 0;
   int repetitions = 10;
+  var minScore = 1e6;
+  var maxScore = 0.0;
   double maxHistoryDistance = globals.graphNumberOfDays.toDouble();
   late Timer timer;
   List<LineChartBarData> barData = [];
@@ -65,7 +67,8 @@ class _ExerciseScreen extends State<ExerciseScreen> {
 
   List<List<FlSpot>> trainingGraphs = [[], [], [], []];
   List<List<FlSpot>> additionalGraphs = [[], [], [], []];
-
+  // List<LineTooltipItem> graphToolTip = [];
+  Map<int, List<String>> graphToolTip = {};
 
   Future<int> addSet(String exerciseName, double weight, int repetitions, int setType, String when) async {
     var box = Hive.box<TrainingSet>('TrainingSets');
@@ -92,13 +95,17 @@ class _ExerciseScreen extends State<ExerciseScreen> {
     setState(() {
       var dat = get_exercises();
       for (var k in dat.keys) {
+        List<String> tips = [];
         for (var i = 0; i < 4; ++i) {
           if (i >= dat[k]!.length) {
             trainingGraphs[i].add(FlSpot.nullSpot);
           } else {
             trainingGraphs[i].add(FlSpot(-k.toDouble(), globals.calculateScore(dat[k]![i])));
+            tips.add("${dat[k]![i].weight}kg @ ${dat[k]![i].repetitions}reps");
           }
         }
+        graphToolTip[-k] = tips;
+        // graphToolTip.add(LineTooltipItem(local_toolTip, const TextStyle(fontSize: 10)));
       }
     });
   }
@@ -157,14 +164,43 @@ class _ExerciseScreen extends State<ExerciseScreen> {
         timerText = Text("Working out: ${workoutString} - Idle: ${duration.toString().split(".")[0]}");
       });
     });
-    
+
+
+    // String _getTooltipText(String dateString, int index) {
+    //   return "$dateString\r\n sales";
+    // }
+    // List<LineTooltipItem?> _buildTooltip(List<LineBarSpot> spots) {
+    //   // this is the position of the spot where the tooltip should appear
+    //   final index = spots.first.spotIndex;
+
+    //   // find the matching date description for the value
+    //   // we just create all axis titles again and grab the one at the correct index
+    //   // final allDateStrings = ChartUtils.getMonths(widget.data.length);
+    //   // final dateString = allDateStrings.isEmpty ? "" : allDateStrings[index];
+
+    //   return [
+    //     LineTooltipItem(
+    //         _getTooltipText("a", index))
+    //   ];
+    // }
+
+    // LineTouchData lineTouchDataContainer = LineTouchData();
     updateGraph();
     for (int i = 0; i < trainingGraphs.length; ++i) {
       if (trainingGraphs[i].isNotEmpty) {
         barData.add(LineChartBarData(
           spots: trainingGraphs[i],
-          color: graphColors[i])
+          color: graphColors[i]),
           );
+      }
+    }
+
+    for (var i = 0; i < 4; ++i) {
+      for (var d in trainingGraphs[i]) {
+        if (!d.y.isNaN) {
+          minScore = min(minScore, d.y);
+          maxScore = max(maxScore, d.y);
+        }
       }
     }
     if (trainingGraphs[0].isNotEmpty) {
@@ -205,16 +241,7 @@ class _ExerciseScreen extends State<ExerciseScreen> {
     TextEditingController dateInputController = TextEditingController(text: DateTime.now().toString());
 
 
-    var minScore = 1e6;
-    var maxScore = 0.0;
-    for (var i = 0; i < 4; ++i) {
-      for (var d in trainingGraphs[i]) {
-        if (!d.y.isNaN) {
-          minScore = min(minScore, d.y);
-          maxScore = max(maxScore, d.y);
-        }
-      }
-    }
+
 
     return Scaffold(
       appBar: AppBar(
@@ -254,6 +281,16 @@ class _ExerciseScreen extends State<ExerciseScreen> {
                         ),
                         clipData: const FlClipData.all(),
                         lineBarsData: barData,
+                        lineTouchData: LineTouchData(
+                          touchTooltipData: LineTouchTooltipData(
+                            tooltipRoundedRadius: 0.0,
+                            showOnTopOfTheChartBoxArea: false,
+                            fitInsideVertically: true,
+                            tooltipMargin: 0,
+                            getTooltipItems: (value) {return value.map((e) {
+                              return LineTooltipItem(graphToolTip[e.x.toInt()]![e.barIndex], const TextStyle(fontSize: 10, color: Colors.white,));
+                              }).toList(); },
+                          )),
                         minY: minScore - 5.0, maxY: maxScore + 5.0,
                         minX: -maxHistoryDistance, maxX: 1.0,
                       ))),
