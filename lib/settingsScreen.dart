@@ -252,6 +252,7 @@ class _SettingsScreen extends State<SettingsScreen> {
             ],),
             const Spacer(flex: 3,),
             const Divider(),
+            const SizedBox(height: 10),
             const Row(mainAxisAlignment: MainAxisAlignment.center, children: [FaIcon(FontAwesomeIcons.list, size: 13), SizedBox(width: 10), Text("Export App-Data")]),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -281,6 +282,35 @@ class _SettingsScreen extends State<SettingsScreen> {
                 },
               ),
             ]),
+            const SizedBox(height: 10),
+            const Row(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(Icons.restore_page, size: 13), SizedBox(width: 10), Text(" Restore App-Data")]),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                TextButton.icon(
+                  style: const ButtonStyle(),
+                  label: const Text('Training Sets'),
+                  icon: const FaIcon(FontAwesomeIcons.chartLine, size: 13),
+                  onPressed: () {
+                    triggerLoad<TrainingSet>(context, "TrainingSets");
+                    Hive.box<Exercise>('Exercises').watch();
+                    setState(() {});
+                    Navigator.pop(context);
+                  },
+                ),
+                  TextButton.icon(
+                  style: const ButtonStyle(),
+                  label: const Text('Exercises List'),
+                  icon: const FaIcon(FontAwesomeIcons.list, size: 13),
+                  onPressed: () {
+                    triggerLoad<Exercise>(context, "Exercises");
+                    setState(() {});
+                    Navigator.pop(context);
+                    
+                  },
+                ),
+            ]),
+            const SizedBox(height: 10),
             const Row(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(Icons.delete_forever, size: 13), SizedBox(width: 10), Text(" Wipe App-Data")]),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -310,34 +340,6 @@ class _SettingsScreen extends State<SettingsScreen> {
                 }
               ),
               ]),
-            const Row(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(Icons.restore_page, size: 13), SizedBox(width: 10), Text(" Restore App-Data")]),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                TextButton.icon(
-                  style: const ButtonStyle(),
-                  label: const Text('Training Sets'),
-                  icon: const FaIcon(FontAwesomeIcons.chartLine, size: 13),
-                  onPressed: () {
-                    triggerLoad<TrainingSet>(context, "TrainingSets");
-                    Hive.box<Exercise>('Exercises').watch();
-                    setState(() {});
-                    Navigator.pop(context);
-                  },
-                ),
-                  TextButton.icon(
-                  style: const ButtonStyle(),
-                  label: const Text('Exercises List'),
-                  icon: const FaIcon(FontAwesomeIcons.list, size: 13),
-                  onPressed: () {
-                    triggerLoad<Exercise>(context, "Exercises");
-                    setState(() {});
-                    Navigator.pop(context);
-                    
-                  },
-                ),
-            ]),
-            const Divider(),
             const Spacer(),
           ]
         ),
