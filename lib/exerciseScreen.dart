@@ -41,7 +41,8 @@ class ExerciseScreen extends StatefulWidget {
   @override
   State<ExerciseScreen> createState() => _ExerciseScreen();
 }
-
+double itemHeight = 35.0;
+double itemWidth = 50.0;
 class _ExerciseScreen extends State<ExerciseScreen> {
   //final String exerciseName;
   final ScrollController _scrollController = ScrollController();
@@ -51,7 +52,7 @@ class _ExerciseScreen extends State<ExerciseScreen> {
   double maxHistoryDistance = globals.graphNumberOfDays.toDouble();
   late Timer timer;
   List<LineChartBarData> barData = [];
-  Text timerText = const Text("Workout: 00:42:21 - Idle: 00:03:45");
+  Text timerText = const Text("");
   DateTime lastActivity = DateTime.now();
   DateTime workoutStartTime = DateTime.now();
 
@@ -60,7 +61,6 @@ class _ExerciseScreen extends State<ExerciseScreen> {
   Text dropText = const Text('Drop');
   late int numWarmUps, numWorkSets, numDropSets;
 
-  late InputFields inputFieldAccessor = InputFields(weightDg: weightDg, weightKg: weightKg, repetitions: repetitions);
   Set<ExerciseType> _selected = {ExerciseType.work};
 
   List<List<FlSpot>> trainingGraphs = [[], [], [], []];
@@ -120,17 +120,12 @@ class _ExerciseScreen extends State<ExerciseScreen> {
   }
 
   void updateLastWeightSetting() {
-    print("jo");
     Tuple2<double, int> latestTrainingInfo = db.getLastTrainingInfo(widget.exerciseName);
     double weight = latestTrainingInfo.item1;
-    if (_selected == ExerciseType.warmup) {
-      weight /= 2.0;
-    }
+    // if (_selected.first == ExerciseType.warmup) { // not the nicest solution
+    //   weight /= 2.0;
+    // }
     setState(() {
-      // TODO: is redundant, aye
-      inputFieldAccessor.weightKg = weight.toInt();
-      inputFieldAccessor.weightDg = (weight * 100.0).toInt() % 100;
-      inputFieldAccessor.repetitions = latestTrainingInfo.item2;
       weightKg = weight.toInt();
       weightDg = (weight * 100.0).toInt() % 100;
       repetitions = latestTrainingInfo.item2;
@@ -288,13 +283,51 @@ class _ExerciseScreen extends State<ExerciseScreen> {
                       selected: _selected,
                       onSelectionChanged: (newSelection){
                         setState(() {
+
+                          // updateLastWeightSetting();
                           _selected = newSelection;
-                          updateLastWeightSetting();
                         }
                         );},
                     ),
                     const SizedBox(height: 10),
-                    inputFieldAccessor,
+                    Row(
+                      children: [
+                        IconButton(
+                          icon: const Icon(FontAwesomeIcons.calculator),
+                          onPressed: () { setState(() {
+                            showModalBottomSheet<dynamic>(context: context, builder: (BuildContext context) { return const WeightConfigurator(); },
+                          ); }); },
+                        ),
+                        const Spacer(),
+                        NumberPicker(
+                          value: weightKg,
+                          minValue: -70, maxValue: 250,
+                          haptics: true,
+                          itemHeight: itemHeight, itemWidth: itemWidth,
+                          onChanged: (value) => setState(() => weightKg = value),
+                        ),
+                        const Text(","),
+                        NumberPicker(
+                          value: weightDg,
+                          minValue: 0, maxValue: 95, step: 5,
+                          haptics: true,
+                          itemHeight: itemHeight, itemWidth: itemWidth,
+                          onChanged: (value) => setState(() => weightDg = value),
+                        ),
+                        const Text("kg"),
+                        const Spacer(),
+                        NumberPicker(
+                          value: repetitions,
+                          minValue: 1, maxValue: 25,
+                          haptics: true,
+                          itemHeight: itemHeight, itemWidth: itemWidth,
+                          onChanged: (value) => setState(() => repetitions = value),
+                        ),
+                        const Text("Reps."),
+                        const Spacer(),
+                        const Spacer()
+                      ]
+                    )
                   ],
                 )),
             ElevatedButton.icon(
@@ -302,11 +335,11 @@ class _ExerciseScreen extends State<ExerciseScreen> {
               label: const Text('Submit'),
               icon: const Icon(Icons.send),
               onPressed: () {
-                double new_weight = inputFieldAccessor.weightKg.toDouble() + inputFieldAccessor.weightDg.toDouble() / 100.0;
+                double new_weight = weightKg.toDouble() + weightDg.toDouble() / 100.0;
                 if (_selected.first.index == 0) { numWarmUps -= 1; }
                 else if (_selected.first.index == 1) { numWorkSets -= 1; }
                 else { numDropSets -= 1; }
-                addSet(widget.exerciseName, new_weight, inputFieldAccessor.repetitions, _selected.first.index, dateInputController.text);
+                addSet(widget.exerciseName, new_weight, repetitions, _selected.first.index, dateInputController.text);
                 updateTexts();
                 updateGraph(); 
                 lastActivity = DateTime.now();
@@ -353,102 +386,6 @@ class _ExerciseScreen extends State<ExerciseScreen> {
     );
   }
 }
-
-// ignore: must_be_immutable
-class InputFields extends StatefulWidget {
-  // final String exerciseName;
-  // const InputFields({super.key});
-  int weightKg;
-  int weightDg;
-  int repetitions;
-  InputFields({
-    super.key,
-    required this.weightKg,
-    required this.weightDg,
-    required this.repetitions,
-  });
-
-  @override
-  State<InputFields> createState() => _InputFields();
-}
-
-class _InputFields extends State<InputFields> {
-  double itemHeight = 35.0;
-  double itemWidth = 50.0;
-
-  void update(int kg, int dg, int rep) {
-    setState(() {
-
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        mainAxisSize: MainAxisSize.max,
-        children: <Widget>[
-          Column(
-            children: [
-              IconButton(
-                icon: const Icon(FontAwesomeIcons.calculator),
-                onPressed: () {
-                  setState(() {
-                    showModalBottomSheet<dynamic>(
-                    // isScrollControlled: true,
-                    context: context,
-                    sheetAnimationStyle: AnimationStyle(
-                      duration: const Duration(milliseconds: 0),
-                      reverseDuration: const Duration(milliseconds: 0),
-                    ),
-                    builder: (BuildContext context) {
-                      return const WeightConfigurator();
-                    },
-                  );
-                  });
-                },
-              ),
-            ]
-          ),
-          const Spacer(),
-          NumberPicker(
-            value: widget.weightKg,
-            minValue: -70,
-            maxValue: 250,
-            haptics: true,
-            itemHeight: itemHeight,
-            itemWidth: itemWidth,
-            onChanged: (value) => setState(() => widget.weightKg = value),
-          ),
-          const Text(","),
-          NumberPicker(
-            value: widget.weightDg,
-            minValue: 0,
-            maxValue: 95,
-            haptics: true,
-            step: 5,
-            itemHeight: itemHeight,
-            itemWidth: itemWidth,
-            onChanged: (value) => setState(() => widget.weightDg = value),
-          ),
-          const Text("kg"),
-          const Spacer(),
-          NumberPicker(
-            value: widget.repetitions,
-            minValue: 1,
-            haptics: true,
-            maxValue: 25,
-            itemHeight: itemHeight,
-            itemWidth: itemWidth,
-            onChanged: (value) => setState(() => widget.repetitions = value),
-          ),
-          const Text("Reps"),
-          const Spacer(),
-          const Spacer()
-        ]);
-  }
-}
-
 
 
 class WeightConfigurator extends StatefulWidget {
