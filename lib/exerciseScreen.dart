@@ -120,10 +120,21 @@ class _ExerciseScreen extends State<ExerciseScreen> {
   }
 
   void updateLastWeightSetting() {
+    print("jo");
     Tuple2<double, int> latestTrainingInfo = db.getLastTrainingInfo(widget.exerciseName);
-    weightKg = latestTrainingInfo.item1.toInt();
-    weightDg = (latestTrainingInfo.item1 * 100.0).toInt() % 100;
-    repetitions = latestTrainingInfo.item2;
+    double weight = latestTrainingInfo.item1;
+    if (_selected == ExerciseType.warmup) {
+      weight /= 2.0;
+    }
+    setState(() {
+      // TODO: is redundant, aye
+      inputFieldAccessor.weightKg = weight.toInt();
+      inputFieldAccessor.weightDg = (weight * 100.0).toInt() % 100;
+      inputFieldAccessor.repetitions = latestTrainingInfo.item2;
+      weightKg = weight.toInt();
+      weightDg = (weight * 100.0).toInt() % 100;
+      repetitions = latestTrainingInfo.item2;
+    });
   }
 
   @override
@@ -275,7 +286,12 @@ class _ExerciseScreen extends State<ExerciseScreen> {
                             icon: const Icon(Icons.south_east)),
                       ],
                       selected: _selected,
-                      onSelectionChanged: (newSelection){ setState(() { _selected = newSelection;}); },
+                      onSelectionChanged: (newSelection){
+                        setState(() {
+                          _selected = newSelection;
+                          updateLastWeightSetting();
+                        }
+                        );},
                     ),
                     const SizedBox(height: 10),
                     inputFieldAccessor,
@@ -351,6 +367,7 @@ class InputFields extends StatefulWidget {
     required this.weightDg,
     required this.repetitions,
   });
+
   @override
   State<InputFields> createState() => _InputFields();
 }
@@ -358,6 +375,13 @@ class InputFields extends StatefulWidget {
 class _InputFields extends State<InputFields> {
   double itemHeight = 35.0;
   double itemWidth = 50.0;
+
+  void update(int kg, int dg, int rep) {
+    setState(() {
+
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Row(

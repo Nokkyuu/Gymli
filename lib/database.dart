@@ -27,7 +27,7 @@ List<DateTime> getTrainingDates(String exercise) {
   var box = Hive.box<TrainingSet>('TrainingSets');
   var items = box.values;
   if (exercise != "") {
-    items = items.where((item) => item.exercise == exercise).toList();
+    items = items.where((item) => item.exercise == exercise && item.setType > 0).toList();
   }
   final dates = items
       .map((e) => DateFormat('yyyy-MM-dd').format(e.date))
