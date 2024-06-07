@@ -252,7 +252,7 @@ class _SettingsScreen extends State<SettingsScreen> {
             ],),
             const Spacer(flex: 3,),
             const Divider(),
-            const Row(mainAxisAlignment: MainAxisAlignment.center, children: [Text("Export App-Data "), FaIcon(FontAwesomeIcons.list, size: 13)]),
+            const Row(mainAxisAlignment: MainAxisAlignment.center, children: [FaIcon(FontAwesomeIcons.list, size: 13), SizedBox(width: 10), Text("Export App-Data")]),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -281,7 +281,7 @@ class _SettingsScreen extends State<SettingsScreen> {
                 },
               ),
             ]),
-            const Row(mainAxisAlignment: MainAxisAlignment.center, children: [Text("Wipe App-Data "), Icon(Icons.delete_forever, size: 13)]),
+            const Row(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(Icons.delete_forever, size: 13), SizedBox(width: 10), Text(" Wipe App-Data")]),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -310,7 +310,7 @@ class _SettingsScreen extends State<SettingsScreen> {
                 }
               ),
               ]),
-            const Row(mainAxisAlignment: MainAxisAlignment.center, children: [Text("Restore App-Data "), Icon(Icons.restore_page, size: 13)]),
+            const Row(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(Icons.restore_page, size: 13), SizedBox(width: 10), Text(" Restore App-Data")]),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
