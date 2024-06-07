@@ -49,10 +49,6 @@ void main() async {
   await Hive.openBox<TrainingSet>('TrainingSets');
   await Hive.openBox<Exercise>('Exercises');
   var box = await Hive.openBox<Workout>('Workouts');
-  // box.clear();
-  // var unit = WorkoutUnit(exercise: "Benchpress", warmups: 0, worksets: 2, dropsets: 1, type: 1);
-  // var workout = Workout(name: "Test", units: [unit]);
-  // box.add(workout);
   runApp(const MainApp()
   );
 }
