@@ -58,6 +58,13 @@ void triggerLoad<T>(context, dataname) async {
   restoreData(dataname, importData);
 
 }
+List<T> stringToList<T>(String str) {
+  List<T> values = [];
+  for (String e in str.split(";")) {
+    if (e != "") { values.add((T == double ? double.parse(e) : e) as T); }
+  }
+  return values;
+}
 
 void restoreData<T>(String dataName, String data) async {
   List<List<String>> csvTable = const CsvToListConverter(shouldParseNumbers: false).convert(data);
@@ -67,24 +74,10 @@ void restoreData<T>(String dataName, String data) async {
     for (List<String> row in csvTable) { setBox.add(TrainingSet(exercise: row[0], date: DateTime.parse(row[1]), weight: double.parse(row[2]), repetitions: int.parse(row[3]), setType: int.parse(row[4]), baseReps: int.parse(row[5]), maxReps: int.parse(row[6]), increment: double.parse(row[7]), machineName: row[7])); }
   } else if (dataName == "Exercises") {
     final exerciseBox = Hive.box<Exercise>('Exercises');
-    exerciseBox.clear();
+    exerciseBox .clear();
     for (List<String> row in csvTable) {
-      List<String> muscleGroups = [];
-      for (String e in row[2].split(";")) {
-        if (e != "") { muscleGroups.add(e); }
-      }
-      List<double> muscleIntensities = [];
-      for (String e in row[3].split(";")) {
-        if (e != "") { muscleIntensities.add(double.parse(e)); }
-      }
-      if (muscleGroups.length > muscleIntensities.length) {
-        muscleIntensities = [];
-        for (var i = 0; i < muscleGroups.length; ++i) {
-          muscleIntensities.add(1.0);
-        }
-      }
-      exerciseBox.add(Exercise(name: row[0], type: int.parse(row[1]), muscleGroups: muscleGroups, muscleIntensities: muscleIntensities, defaultRepBase: int.parse(row[4]), defaultRepMax: int.parse(row[5]), defaultIncrement: double.parse(row[6])));
-      exerciseList.add(Exercise(name: row[0], type: int.parse(row[1]), muscleGroups: muscleGroups, muscleIntensities: muscleIntensities, defaultRepBase: int.parse(row[4]), defaultRepMax: int.parse(row[5]), defaultIncrement: double.parse(row[6])));
+      exerciseBox.add(Exercise(name: row[0], type: int.parse(row[1]), muscleGroups: stringToList<String>(row[2]), muscleIntensities: stringToList<double>(row[3]), defaultRepBase: int.parse(row[4]), defaultRepMax: int.parse(row[5]), defaultIncrement: double.parse(row[6])));
+      exerciseList.add(Exercise(name: row[0], type: int.parse(row[1]), muscleGroups: stringToList<String>(row[2]), muscleIntensities: stringToList<double>(row[3]), defaultRepBase: int.parse(row[4]), defaultRepMax: int.parse(row[5]), defaultIncrement: double.parse(row[6])));
     }
     globals.exerciseListEx = exerciseList;
   } else if (dataName == "Workouts") {
@@ -210,11 +203,9 @@ class _SettingsScreen extends State<SettingsScreen> {
                       segments: const <ButtonSegment<DisplayMode>>[
                         ButtonSegment<DisplayMode>(
                             value: DisplayMode.light,
-                            //label: Text('Free'),
                             icon: Icon(Icons.light_mode)),
                         ButtonSegment<DisplayMode>(
                             value: DisplayMode.dark,
-                            //label: Text('Machine',softWrap: false, overflow: TextOverflow.fade),
                             icon: Icon(Icons.dark_mode)),
                         ],
                   selected: <DisplayMode>{selectedMode},
@@ -258,28 +249,19 @@ class _SettingsScreen extends State<SettingsScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
               TextButton.icon(
-                style: const ButtonStyle(),
                 label: const Text('Trainings'),
                 icon: const FaIcon(FontAwesomeIcons.chartLine, size: 13),
-                onPressed: () {
-                  backup<TrainingSet>("TrainingSets");
-                },
+                onPressed: () {  backup<TrainingSet>("TrainingSets"); },
               ),
               TextButton.icon(
-                style: const ButtonStyle(),
                 label: const Text('Exercises'),
                 icon: const FaIcon(FontAwesomeIcons.list, size: 13),
-                onPressed: () {
-                  backup<Exercise>("Exercises");
-                },
+                onPressed: () { backup<Exercise>("Exercises"); },
               ),
               TextButton.icon(
-                style: const ButtonStyle(),
                 label: const Text('Workouts'),
                 icon: const FaIcon(FontAwesomeIcons.clipboardList, size: 13),
-                onPressed: () {
-                  backup<Workout>("Workouts");
-                },
+                onPressed: () { backup<Workout>("Workouts"); },
               ),
             ]),
             const SizedBox(height: 10),
@@ -288,33 +270,19 @@ class _SettingsScreen extends State<SettingsScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 TextButton.icon(
-                  style: const ButtonStyle(),
                   label: const Text('Trainings'),
                   icon: const FaIcon(FontAwesomeIcons.chartLine, size: 13),
-                  onPressed: () {
-                    triggerLoad<TrainingSet>(context, "TrainingSets");
-                    Hive.box<Exercise>('Exercises').watch();
-                    setState(() {});
-                    Navigator.pop(context);
-                  },
+                  onPressed: () { triggerLoad<TrainingSet>(context, "TrainingSets"); Navigator.pop(context); },
                 ),
                   TextButton.icon(
-                  style: const ButtonStyle(),
                   label: const Text('Exercises'),
                   icon: const FaIcon(FontAwesomeIcons.list, size: 13),
-                  onPressed: () {
-                    triggerLoad<Exercise>(context, "Exercises");
-                    setState(() {});
-                    Navigator.pop(context);
-                  },
+                  onPressed: () { triggerLoad<Exercise>(context, "Exercises"); Navigator.pop(context); },
                 ),
                 TextButton.icon(
-                    style: const ButtonStyle(),
                     label: const Text('Workouts'),
                     icon: const FaIcon(FontAwesomeIcons.clipboardList, size: 13),
-                    onPressed: () {
-                      backup<Workout>("Workouts");
-                    },
+                    onPressed: () { triggerLoad<Workout>(context, "Workouts"); },
                   ),
             ]),
             const SizedBox(height: 10),
@@ -323,28 +291,19 @@ class _SettingsScreen extends State<SettingsScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
               TextButton.icon(
-                style: const ButtonStyle(),
                 label: const Text('Trainings'),
                 icon: const FaIcon(FontAwesomeIcons.chartLine, size: 13),
-                onPressed: () {
-                  wipe<TrainingSet>(context, "TrainingSets");
-                },
+                onPressed: () { wipe<TrainingSet>(context, "TrainingSets"); },
               ),
               TextButton.icon(
-                style: const ButtonStyle(),
                 label: const Text('Exercises'),
                 icon: const FaIcon(FontAwesomeIcons.list, size: 13),
-                onPressed: () {
-                  wipe<Exercise>(context, "Exercises");
-                }
+                onPressed: () { wipe<Exercise>(context, "Exercises"); }
               ),
               TextButton.icon(
-                style: const ButtonStyle(),
                 label: const Text('Workouts'),
                 icon: const FaIcon(FontAwesomeIcons.clipboardList, size: 13),
-                onPressed: () {
-                  wipe<Workout>(context, "Workouts");
-                }
+                onPressed: () { wipe<Workout>(context, "Workouts"); }
               ),
               ]),
             const Spacer(),
