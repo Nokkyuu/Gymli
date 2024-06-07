@@ -121,10 +121,13 @@ class _ExerciseScreen extends State<ExerciseScreen> {
 
   void updateLastWeightSetting() {
     Tuple2<double, int> latestTrainingInfo = db.getLastTrainingInfo(widget.exerciseName);
+    Exercise exercise = db.get_exercise(widget.exerciseName);
+    double increment = exercise.defaultIncrement;
     double weight = latestTrainingInfo.item1;
-    // if (_selected.first == ExerciseType.warmup) { // not the nicest solution
-    //   weight /= 2.0;
-    // }
+    if (_selected.first == ExerciseType.warmup) { // not the nicest solution
+      weight /= 2.0;
+      weight = (weight / increment).round() * increment;
+    }
     setState(() {
       weightKg = weight.toInt();
       weightDg = (weight * 100.0).toInt() % 100;
@@ -280,7 +283,10 @@ class _ExerciseScreen extends State<ExerciseScreen> {
                       selected: _selected,
                       onSelectionChanged: (newSelection){
                         setState(() {
-                          // updateLastWeightSetting();
+                          if (_selected.first == ExerciseType.warmup || newSelection.first == ExerciseType.warmup) {
+                            _selected = newSelection;
+                            updateLastWeightSetting();
+                          }
                           _selected = newSelection;
                         }
                         );},
