@@ -145,7 +145,7 @@ class _MainAppState extends State<MainApp> {
                     : 'images/Icon-App_3.png',
                 )),
             ),
-            Text("Gymli Gainson", textAlign: TextAlign.center, style: TextStyle(fontFamily: "Times New Roman", fontSize: 30)),
+            const Text("Gymli Gainson", textAlign: TextAlign.center, style: TextStyle(fontFamily: "Times New Roman", fontSize: 30)),
           ListTile(
             title: const Text('Exercise Setup'),
             onTap: () {
@@ -161,7 +161,7 @@ class _MainAppState extends State<MainApp> {
             onTap: () {
               setState(() {
                 Navigator.pop(context);
-             Navigator.push(context, MaterialPageRoute(builder: (context) =>  WorkoutSetupScreen("")));
+             Navigator.push(context, MaterialPageRoute(builder: (context) =>  const WorkoutSetupScreen("")));
             });},
           
           ),

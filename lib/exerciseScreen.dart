@@ -14,7 +14,6 @@ import 'package:Gymli/exerciseSetupScreen.dart';
 import 'globals.dart' as globals;
 import 'database.dart' as db;
 import 'package:flutter/services.dart';
-import "package:collection/collection.dart";
 
 enum ExerciseType { warmup, work, dropset }
 
@@ -160,8 +159,8 @@ class _ExerciseScreen extends State<ExerciseScreen> {
         if (duration.inSeconds == globals.idleTimerWakeup) { notifyIdle(); }
         var workoutDuration = DateTime.now().difference(workoutStartTime);
         String workoutString = workoutDuration.toString().split(".")[0]; // ewwww, nasty
-        workoutString = workoutString.split(":")[0] + ":" + workoutString.split(":")[1];
-        timerText = Text("Working out: ${workoutString} - Idle: ${duration.toString().split(".")[0]}");
+        workoutString = "${workoutString.split(":")[0]}:${workoutString.split(":")[1]}";
+        timerText = Text("Working out: $workoutString - Idle: ${duration.toString().split(".")[0]}");
       });
     });
 

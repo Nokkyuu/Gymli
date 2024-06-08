@@ -9,7 +9,6 @@ import 'package:Gymli/DataModels.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:Gymli/workoutSetupScreen.dart';
-import 'globals.dart' as globals;
 import 'database.dart' as db;
 
 
@@ -149,7 +148,7 @@ class _LandingScreenState extends State<LandingScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Spacer(),
+              const Spacer(),
               DropdownMenu<Workout>(
                 width: MediaQuery.of(context).size.width * 0.45,
                 enabled: true,
@@ -186,7 +185,7 @@ class _LandingScreenState extends State<LandingScreen> {
                   );
                 }).toList(),
               ),
-              Spacer(),
+              const Spacer(),
               DropdownMenu<MuscleList>(
                 width: MediaQuery.of(context).size.width * 0.45,
                 enabled: true,
@@ -218,7 +217,7 @@ class _LandingScreenState extends State<LandingScreen> {
                   );
                 }).toList(),
               ),
-              Spacer(),
+              const Spacer(),
             ],
           ),
           const Divider(),

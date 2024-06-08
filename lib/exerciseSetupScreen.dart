@@ -79,7 +79,7 @@ class _ExerciseSetupScreenState extends State<ExerciseSetupScreen> {
   double boxSpace = 20;
   double minRep = 10;
   double maxRep = 15;
-  RangeValues repRange = RangeValues(10, 20);
+  RangeValues repRange = const RangeValues(10, 20);
   double weightInc = 2.5;
   List<String> muscleGroups = [];
   List<double> muscleIntensities = [];
@@ -402,7 +402,7 @@ class _BottomSheetState extends State<BottomSheet> {
     }
     return op;
   }
-  Key parent = Key("parent");
+  Key parent = const Key("parent");
   @override
   Widget build(BuildContext context) {
     return SizedBox.expand(
@@ -433,7 +433,7 @@ class _BottomSheetState extends State<BottomSheet> {
                             Image(
                               width: constraints.maxWidth/3,
                               fit: BoxFit.fill,
-                              image: AssetImage('images/muscles/Front_bg.png'),
+                              image: const AssetImage('images/muscles/Front_bg.png'),
                             ),
                             
                             for (var i in frontImages)
@@ -462,8 +462,8 @@ class _BottomSheetState extends State<BottomSheet> {
                                             }),
                                         child: Transform.scale(
                                             scaleX: -1,
-                                            child: Text(((globals
-                                                      .muscle_val[i[2]]!*100).round().toString()+"%"),
+                                            child: Text(("${(globals
+                                                      .muscle_val[i[2]]!*100).round()}%"),
                                                       maxLines: 1,
                                                       style: Theme.of(context).textTheme.bodyLarge,
                                                       overflow: TextOverflow.visible,)))
@@ -478,7 +478,7 @@ class _BottomSheetState extends State<BottomSheet> {
                           Image(
                               fit: BoxFit.fill,
                               width: constraints.maxWidth/3,
-                              image: AssetImage('images/muscles/Back_bg.png')),
+                              image: const AssetImage('images/muscles/Back_bg.png')),
                               for (var i in backImages)
                           Image(
                             fit: BoxFit.fill,
@@ -502,8 +502,8 @@ class _BottomSheetState extends State<BottomSheet> {
                                                 opacity_change(
                                                     globals.muscle_val[i[2]]!);
                                           }),
-                                      child: Text(((globals
-                                                      .muscle_val[i[2]]!*100).round().toString()+"%"),
+                                      child: Text(("${(globals
+                                                      .muscle_val[i[2]]!*100).round()}%"),
                                                       maxLines: 1,
                                                       style: Theme.of(context).textTheme.bodyLarge,
                                                       overflow: TextOverflow.visible,))

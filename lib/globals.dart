@@ -1,9 +1,8 @@
 // ignore_for_file: non_constant_identifier_names
 library my_prj.globals;
 import 'package:Gymli/DataModels.dart';
-import 'package:hive_flutter/hive_flutter.dart';
+// ignore: unused_import
 import 'package:tuple/tuple.dart';
-import 'package:intl/intl.dart';
 
 int idleTimerWakeup = 90;
 int graphNumberOfDays = 40;

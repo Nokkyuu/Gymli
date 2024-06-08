@@ -1,5 +1,4 @@
 // ignore_for_file: file_names
-import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -64,6 +63,7 @@ class _StatisticsScreen extends State<StatisticsScreen> {
   List<BarChartGroupData> barChartStatistics = [];
   List<Text> exerciseDetails = [];
   List<double> heatMapMulti = [];
+  // ignore: non_constant_identifier_names
   final TextEditingController MuscleController = TextEditingController();
   List<List<double>> heatMapCood = [
     [0.25, 0.53], //pectoralis
@@ -125,6 +125,7 @@ class _StatisticsScreen extends State<StatisticsScreen> {
   @override
   void initState() {
     super.initState();
+    // ignore: no_leading_underscores_for_local_identifiers
     List<DateTime> _trainingDates = db.getTrainingDates("");
     setState(() {
       numberOfTrainingDays = _trainingDates.length;
@@ -230,9 +231,9 @@ class _StatisticsScreen extends State<StatisticsScreen> {
     }
 
     //print(highestValue);
-    print(globals.muscleHistoryScore);
-    print(heatMapCood);
-    print(heatMapMulti);
+    //print(globals.muscleHistoryScore);
+    //print(heatMapCood);
+    //print(heatMapMulti);
     return Scaffold(
         appBar: AppBar(
           leading: InkWell(
@@ -342,7 +343,7 @@ class _StatisticsScreen extends State<StatisticsScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: (() {
               List<Widget> widgets = [];
-              for (int i = (barChartMuscleColors.length / 2).toInt();
+              for (int i = barChartMuscleColors.length ~/ 2;
                   i < barChartMuscleColors.length;
                   i++) {
                 widgets.add(Wrap(children: [
@@ -506,13 +507,13 @@ class _StatisticsScreen extends State<StatisticsScreen> {
                         fit: BoxFit.fill,
                           width: MediaQuery.of(context).size.width*0.35,
                           // height: MediaQuery.of(context).size.height * 0.7,
-                          image: AssetImage('images/muscles/Front_bg.png')),
+                          image: const AssetImage('images/muscles/Front_bg.png')),
                     ),
                      Image(
                       fit: BoxFit.fill,
                         width: MediaQuery.of(context).size.width*0.35,
                         //   height: MediaQuery.of(context).size.height * 0.7,
-                        image: AssetImage('images/muscles/Back_bg.png')),
+                        image: const AssetImage('images/muscles/Back_bg.png')),
                   ],
                 ),
               
@@ -536,7 +537,7 @@ class _StatisticsScreen extends State<StatisticsScreen> {
               for (int i = 0; i < heatMapMulti.length; i++)
                 //heatDot(x: heatMapCood[i][0]-((30+(50*heatMapMulti[i]))/2), y: heatMapCood[i][1]-((30+(50*heatMapMulti[i]))/2), dia: 30+(50*heatMapMulti[i]), opa: heatMapMulti[i] == 0 ? 0 : (50 + 150*heatMapMulti[i]).toInt(), lerp: heatMapMulti[i]),
                 heatDot(
-                    text: (heatMapMulti[i] * 100).round().toString() + "%",
+                    text: "${(heatMapMulti[i] * 100).round()}%",
                     x: (MediaQuery.of(context).size.width*heatMapCood[i][0]) - ((30 + (50 * heatMapMulti[i])) / 2),
                     y: (MediaQuery.of(context).size.height*heatMapCood[i][1]) - ((30 + (50 * heatMapMulti[i])) / 2),
                     dia: 30 + (50 * heatMapMulti[i]),
@@ -552,6 +553,7 @@ class _StatisticsScreen extends State<StatisticsScreen> {
   }
 }
 
+// ignore: camel_case_types
 class heatDot extends StatelessWidget {
   const heatDot({
     super.key,
@@ -579,14 +581,14 @@ class heatDot extends StatelessWidget {
         width: dia,
         height: dia,
         alignment: Alignment.center,
-        child: Text(
-          text,
-          textAlign: TextAlign.center,
-        ),
         decoration: BoxDecoration(
             shape: BoxShape.circle,
             color: Color.lerp(Color.fromARGB(opa, 255, 200, 50),
                 Color.fromARGB(opa, 255, 30, 50), lerp)),
+        child: Text(
+          text,
+          textAlign: TextAlign.center,
+        ),
       ),
     );
   }
