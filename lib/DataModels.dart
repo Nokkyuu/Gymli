@@ -6,7 +6,7 @@ part 'DataModels.g.dart';
 
 // regenerate flutter pub run build_runner build
 final exerciseTypeNames = ["Free", "Machine", "Cable", "Body"];
-final muscleGroupNames = ["Pectoralis major", "Trapezius", "Biceps", "Abdominals", "Deltoids", "Latissimus dorsi", "Triceps", "Gluteus maximus", "Hamstrings", "Quadriceps", "Forearms", "Calves"];
+final muscleGroupNames = ["Pectoralis major", "Trapezius", "Biceps", "Abdominals", "Front Delts",  "Deltoids", "Back Delts", "Latissimus dorsi", "Triceps", "Gluteus maximus", "Hamstrings", "Quadriceps", "Forearms", "Calves"];
 final setTypeNames = ["Warm", "Work", "Drop"];
 
 abstract class DataClass extends HiveObject {

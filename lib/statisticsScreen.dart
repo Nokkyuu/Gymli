@@ -26,14 +26,16 @@ const List<String> barChartMuscleNames = [
   "Trapz",
   "Biceps",
   "Abs",
+  "Front-D",
   "Delts",
+  "Back-D",
   "Lats",
   "Triceps",
   "Glutes",
   "Hams",
   "Quads",
   "Arms",
-  "Calves"
+  "Calves",
 ];
 
 const List<Color> barChartMuscleColors = [
@@ -41,6 +43,8 @@ const List<Color> barChartMuscleColors = [
   Color.fromARGB(255, 202,178,214), 
   Color.fromARGB(255, 178,223,138), 
   Color.fromARGB(255, 51,160,44), 
+  Color.fromARGB(255, 251,154,153),
+  Color.fromARGB(255, 251,154,153), 
   Color.fromARGB(255, 251,154,153), 
   Color.fromARGB(255, 31,120,180), 
   Color.fromARGB(255, 227,26,28), 
@@ -70,14 +74,16 @@ class _StatisticsScreen extends State<StatisticsScreen> {
     [0.75, 0.57], // trapezius
     [0.37, 0.48], // biceps
     [0.25, 0.44], // abs
-    [0.36, 0.54], //delts
+    [0.36, 0.54], //Front delts
+    [0.64, 0.59], //Side Delts
+    [0.64, 0.53], //Back Delts
     [0.74, 0.45], //latiss
-    [0.61, 0.49], //tri
+    [0.61, 0.48], //tri
     [0.74, 0.34], //glut
     [0.71, 0.27], //ham
     [0.29, 0.28], //quad
     [0.4, 0.40], //fore
-    [0.31, 0.15] //calv
+    [0.31, 0.15], //calv
   ];
   
 
@@ -140,14 +146,17 @@ class _StatisticsScreen extends State<StatisticsScreen> {
         "Trapezius": 1,
         "Biceps": 2,
         "Abdominals": 3,
-        "Deltoids": 4,
-        "Latissimus dorsi": 5,
-        "Triceps": 6,
-        "Gluteus maximus": 7,
-        "Hamstrings": 8,
-        "Quadriceps": 9,
-        "Forearms": 10,
-        "Calves": 11
+        "Front Delts": 4,
+        "Deltoids": 5,
+        "Back Delts": 6,
+        "Latissimus dorsi": 7,
+        "Triceps": 8,
+        "Gluteus maximus": 9,
+        "Hamstrings": 10,
+        "Quadriceps": 11,
+        "Forearms": 12,
+        "Calves": 13,
+        
       };
 
       var ebox = Hive.box<Exercise>("Exercises");
@@ -165,7 +174,7 @@ class _StatisticsScreen extends State<StatisticsScreen> {
       List<List<double>> muscleHistoryScore = [];
       for (var day in _trainingDates) {
         var trainings = db.getTrainings(day);
-        List<double> dailyMuscleScores = [0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0]; // very static and nasty
+        List<double> dailyMuscleScores = [0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0]; // very static and nasty
         for (var exerciseSet in trainings) {
           String exerciseName = exerciseSet.exercise;
           List<Tuple2<int, double>> muscleInvolved =
