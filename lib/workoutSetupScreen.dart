@@ -232,23 +232,11 @@ class _WorkoutSetupScreenState extends State<WorkoutSetupScreen> {
                         itemCount: items.length,
                         itemBuilder: (context, index) {
                           final item = items[index];
-                          //final currentData = items[index];
-                          //final meta = metainfo[index];
                           final exerciseType = item.type;
-                          //final repBase = currentData.defaultRepBase;
-                          //final repMax = currentData.defaultRepMax;
-                          //final increment = currentData.defaultIncrement;
-                          // final itemList = [
-                          //   FontAwesomeIcons.dumbbell,
-                          //   Icons.forklift,
-                          //   Icons.cable,
-                          //   Icons.sports_martial_arts
-                          // ];
                           final currentIcon = itemList[exerciseType];
                           return ExerciseTile(exerciseName: item.exercise, warmUpS: item.warmups, workS: item.worksets, dropS: item.dropsets, icon: currentIcon, remo: remExercise, item: item);
                         });
                   } else {
-                    //Hive.box<Exercise>('Exercises').watch();
                     return const Text("No exercises yet");
                   }
                 }),

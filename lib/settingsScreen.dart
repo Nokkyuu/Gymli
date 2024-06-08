@@ -77,7 +77,19 @@ void restoreData<T>(String dataName, String data) async {
       exerciseBox.add(Exercise(name: row[0], type: int.parse(row[1]), muscleGroups: stringToList<String>(row[2]), muscleIntensities: stringToList<double>(row[3]), defaultRepBase: int.parse(row[4]), defaultRepMax: int.parse(row[5]), defaultIncrement: double.parse(row[6])));
     }
   } else if (dataName == "Workouts") {
-    print("Missing!");
+    final workoutBox = Hive.box<Workout>("Workouts");
+    workoutBox.clear();
+    WorkoutUnit? unit;
+    List<String> unitStr = [];
+    for (List<String> row in csvTable) {  
+      List<WorkoutUnit> units = [];   
+      for (int i = 1; i < row.length;i++){
+        unitStr = row[i].split(", ");
+        unit = WorkoutUnit(exercise: unitStr[0], warmups: int.parse(unitStr[1]), worksets: int.parse(unitStr[2]), dropsets: int.parse(unitStr[3]), type: int.parse(unitStr[4]));
+        units.add(unit);
+      }
+      workoutBox.add(Workout(name: row[0], units: units));
+    }
   }
 }
 
