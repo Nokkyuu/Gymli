@@ -402,7 +402,7 @@ class _BottomSheetState extends State<BottomSheet> {
     if (op >= 1.0) {
       op = 0.0;
     } else {
-      op += 0.5;
+      op += 1/4;
     }
     return op;
   }
