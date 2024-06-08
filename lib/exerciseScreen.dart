@@ -24,8 +24,7 @@ Color.fromARGB(255, 102,194,164),
 Color.fromARGB(255, 153,216,201),
 ];
 
-const List<Color> twinColors = [
-Color.fromARGB(255, 254,240,217),
+const List<Color> additionalColors = [
 Color.fromARGB(255, 253,204,138),
 Color.fromARGB(255, 252,141,89),
 Color.fromARGB(255, 215,48,31)];
@@ -65,8 +64,9 @@ class _ExerciseScreen extends State<ExerciseScreen> {
   Set<ExerciseType> _selected = {ExerciseType.work};
 
   List<List<FlSpot>> trainingGraphs = [[], [], [], []];
-  List<List<FlSpot>> additionalGraphs = [[], [], [], []];
+  List<List<FlSpot>> additionalGraphs = [];
   // List<LineTooltipItem> graphToolTip = [];
+  List<String> groupExercises = [];
   Map<int, List<String>> graphToolTip = {};
 
   Future<int> addSet(String exerciseName, double weight, int repetitions, int setType, String when) async {
@@ -91,6 +91,7 @@ class _ExerciseScreen extends State<ExerciseScreen> {
 
   void updateGraph() {
     for (var t in trainingGraphs) { t.clear(); }
+    var defaultList = List.filled(groupExercises.length + 4, "");
     setState(() {
       var dat = get_exercises();
       for (var k in dat.keys) {
@@ -104,7 +105,23 @@ class _ExerciseScreen extends State<ExerciseScreen> {
           }
         }
         graphToolTip[-k] = tips;
-        // graphToolTip.add(LineTooltipItem(local_toolTip, const TextStyle(fontSize: 10)));
+      }
+
+      for (int i = 0; i < groupExercises.length; ++i) {
+        var additionalExercise = groupExercises[i];
+        Map<int, List<TrainingSet>> data = {};
+        List<TrainingSet> trainings = db.getExerciseTrainings(additionalExercise);
+        trainings = trainings.where((item) => item.setType > 0).toList();
+        for (var t in trainings) {
+          int diff = DateTime.now().difference(t.date).inDays;
+          if (!data.containsKey(diff)) { data[diff] = []; }
+          data[diff]!.add(t);
+        }
+        for (var k in data.keys) {
+          additionalGraphs[i].add(FlSpot(-k.toDouble(), globals.calculateScore(data[k]![0])));
+          defaultList.last = "${data[k]![0].weight}kg @ ${data[k]![0].repetitions}reps";
+          graphToolTip[-k] = graphToolTip[-k] != null ? graphToolTip[-k]! : defaultList;
+        }
       }
     });
   }
@@ -164,32 +181,25 @@ class _ExerciseScreen extends State<ExerciseScreen> {
       });
     });
 
+    // Graph stuff
+    List<Group> groups = Hive.box<Group>("Groups").values.toList().where((item) => item.exercises.contains(widget.exerciseName)).toList();
+    groupExercises = groups.isNotEmpty ? groups.first.exercises.where((item) => item != widget.exerciseName).toList() : [];
+    additionalGraphs = List.filled(groupExercises.length, []);
 
-    // String _getTooltipText(String dateString, int index) {
-    //   return "$dateString\r\n sales";
-    // }
-    // List<LineTooltipItem?> _buildTooltip(List<LineBarSpot> spots) {
-    //   // this is the position of the spot where the tooltip should appear
-    //   final index = spots.first.spotIndex;
-
-    //   // find the matching date description for the value
-    //   // we just create all axis titles again and grab the one at the correct index
-    //   // final allDateStrings = ChartUtils.getMonths(widget.data.length);
-    //   // final dateString = allDateStrings.isEmpty ? "" : allDateStrings[index];
-
-    //   return [
-    //     LineTooltipItem(
-    //         _getTooltipText("a", index))
-    //   ];
-    // }
-
-    // LineTouchData lineTouchDataContainer = LineTouchData();
     updateGraph();
     for (int i = 0; i < trainingGraphs.length; ++i) {
       if (trainingGraphs[i].isNotEmpty) {
         barData.add(LineChartBarData(
           spots: trainingGraphs[i],
           color: graphColors[i]),
+          );
+      }
+    }
+    for (int i = 0; i < additionalGraphs.length; ++i) {
+      if (additionalGraphs[i].isNotEmpty) {
+        barData.add(LineChartBarData(
+          spots: additionalGraphs[i],
+          color: additionalColors[i]),
           );
       }
     }
@@ -294,6 +304,28 @@ class _ExerciseScreen extends State<ExerciseScreen> {
                         minX: -maxHistoryDistance, maxX: 1.0,
                       ))),
                 )),
+            Row(
+              // mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: (() {
+                var boxdim = 8.0;
+                List<Widget> widgets = [const SizedBox(width: 20), const Text("Sets", style: const TextStyle(fontSize: 8.0)),const SizedBox(width: 10)];
+                for (int i = 0; i < 4; i++) {
+                  widgets.add(Wrap(crossAxisAlignment: WrapCrossAlignment.center, children: [
+                    Container(width: boxdim,height: boxdim,color: graphColors[i]),
+                    Text("  $i", style: const TextStyle(fontSize: 8.0)),
+                    const SizedBox(width: 10)
+                  ]));
+                }
+                for (int i = 0; i < groupExercises.length; ++i) {
+                  widgets.add(Wrap(crossAxisAlignment: WrapCrossAlignment.center, children: [
+                    Container(width: boxdim,height: boxdim,color: additionalColors[i]),
+                    Text("  ${groupExercises[i]}", style: const TextStyle(fontSize: 8.0)),
+                    const SizedBox(width: 10)
+                  ]));
+                }
+                return widgets;
+              })(),
+            ),
             const Divider(),
             Padding(
                 padding: const EdgeInsets.only(left: 20, right: 20, bottom: 10),
