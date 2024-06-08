@@ -14,7 +14,6 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'globals.dart' as globals;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:Gymli/landingScreen.dart';
 enum DisplayMode { light, dark }
 
 class SettingsScreen extends StatefulWidget {
@@ -144,7 +143,7 @@ class _SettingsScreen extends State<SettingsScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-              Text("Graph days"),
+              const Text("Graph days"),
               SizedBox(
                 width: 100,
                 child: 
@@ -169,7 +168,7 @@ class _SettingsScreen extends State<SettingsScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-              Text("Graph days"),
+              const Text("Graph days"),
               SizedBox(
                 width: 100,
                 child: 
@@ -262,7 +261,7 @@ class _SettingsScreen extends State<SettingsScreen> {
               ),
             ]),
             const SizedBox(height: 10),
-            const Row(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(Icons.restore_page, size: 13), SizedBox(width: 10), Text(" Restore App-Data")]),
+            const Row(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(Icons.restore_page, size: 13), SizedBox(width: 10), Text("Import App-Data")]),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
