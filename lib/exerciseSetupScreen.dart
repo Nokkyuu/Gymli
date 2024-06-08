@@ -355,7 +355,7 @@ class _BottomSheetState extends State<BottomSheet> {
   final List<List<String>> frontImages = 
   [['images/muscles/Front_biceps.png', 'Biceps'],
   ['images/muscles/Front_calves.png', 'Calves' ], 
-  ['images/muscles/Front_delts.png', 'Deltoids'], 
+  ['images/muscles/Front_Front_delts.png', 'Front Delts'], 
   ['images/muscles/Front_forearms.png', 'Forearms'], 
   ['images/muscles/Front_pecs.png', 'Pectoralis major'], 
   ['images/muscles/Front_quads.png', 'Quadriceps'], 
@@ -365,7 +365,10 @@ class _BottomSheetState extends State<BottomSheet> {
   ['images/muscles/Front_abs.png', 'Abdominals']];
   final List<List<String>> backImages = 
   [['images/muscles/Back_calves.png', 'Calves'],
-  ['images/muscles/Back_delts.png', 'Deltoids' ], 
+  ['images/muscles/Back_Back_delts.png', 'Back Delts' ], 
+  ['images/muscles/Back_Back_delts2.png', 'Back Delts' ],
+  ['images/muscles/Back_Front_delts.png', 'Front Delts' ], 
+  ['images/muscles/Back_Side_delts.png', 'Deltoids' ], 
   ['images/muscles/Back_forearms.png', 'Forearms'], 
   ['images/muscles/Back_glutes.png', 'Gluteus maximus'], 
   ['images/muscles/Back_hamstrings.png', 'Hamstrings'], 
@@ -374,24 +377,25 @@ class _BottomSheetState extends State<BottomSheet> {
   ['images/muscles/Back_triceps.png', 'Triceps'],
 ];
   final List<List> frontButtons = [
-    [0.35,0.4,'Biceps'],
-    [0.46,0.4,'Forearms'],
-    [0.25,0.4,'Deltoids'],
-    [0.28,0.7,'Pectoralis major'],
-    [0.4,0.7,'Abdominals'],
-    [0.2,0.7,'Trapezius'],
-    [0.6,0.62,'Quadriceps'],
-    [0.8,0.58, 'Calves'],
+    [0.35,0.4,'Biceps'], //Biceps
+    [0.46,0.4,'Forearms'], //Forearms
+    [0.25,0.4,'Front Delts'], //Front Delts
+    [0.28,0.7,'Pectoralis major'], // Pectoralis major
+    [0.4,0.7,'Abdominals'], //abdominals
+    [0.2,0.7,'Trapezius'], //Trapezius
+    [0.6,0.62,'Quadriceps'], //Quadriceps
+    [0.8,0.58, 'Calves'], //Calves
   ];
     final List<List> backButtons = [
-    [0.82,0.6,'Calves'],
-    [0.25,0.4,'Deltoids'],
-    [0.5,0.4,'Forearms'],
-    [0.55,0.7,'Gluteus maximus'],
-    [0.68,0.6,'Hamstrings'],
-    [0.4,0.7,'Latissimus dorsi'],
-    [0.2,0.7,'Trapezius'],
-    [0.35,0.4, 'Triceps'],
+    [0.82,0.6,'Calves'], //Calves
+    [0.2,0.45,'Deltoids'], //Side Delts
+    [0.26,0.38,'Back Delts'], // Back Delts
+    [0.5,0.4,'Forearms'], // Forearms
+    [0.55,0.7,'Gluteus maximus'], // Gluteus
+    [0.68,0.6,'Hamstrings'], // Hamstrings
+    [0.4,0.7,'Latissimus dorsi'], //Latissimus dorsi
+    [0.2,0.7,'Trapezius'], // Trapezius
+    [0.35,0.4, 'Triceps'], //Triceps
   ];
 
   opacity_change(double op) {
@@ -419,33 +423,77 @@ class _BottomSheetState extends State<BottomSheet> {
             ),
             LayoutBuilder(
               builder: (context, constraints) {
-                return Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    SizedBox(
-                      width: constraints.maxWidth/2 ,
-                      height: MediaQuery.of(context).size.height * 0.7,
-                      child: Transform.scale(
-                          scaleX: -1,
-                          child: Stack(
+                return Stack(
+                  children: [Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      SizedBox(
+                        width: constraints.maxWidth/2 ,
+                        height: MediaQuery.of(context).size.height * 0.7,
+                        child: Transform.scale(
+                            scaleX: -1,
+                            child: Stack(
+                              
+                              children: [
+                              Image(
+                                width: constraints.maxWidth/3,
+                                fit: BoxFit.fill,
+                                image: const AssetImage('images/muscles/Front_bg.png'),
+                              ),
+                              
+                              for (var i in frontImages)
+                              Image(
+                                fit: BoxFit.fill,
+                                width: constraints.maxWidth/3,
+                                image: AssetImage(
+                                    i[0]),
+                                opacity: AlwaysStoppedAnimation(
+                                    globals.muscle_val[i[1]]!),
+                              ),
+                              for (var i in frontButtons)
+                              FractionallySizedBox(
+                                  alignment: Alignment.bottomRight,
+                                  heightFactor: i[0],
+                                  widthFactor: i[1],
+                                  child: Stack(
+                                    alignment: AlignmentDirectional.bottomEnd,
+                                    children: [
+                                      TextButton(
                             
-                            children: [
+                                          onPressed: () => setState(() {
+                                                globals.muscle_val[i[2]] =
+                                                    opacity_change(globals
+                                                        .muscle_val[i[2]]!);
+                                              }),
+                                          child: Transform.scale(
+                                              scaleX: -1,
+                                              child: Text(("${(globals
+                                                        .muscle_val[i[2]]!*100).round()}%"),
+                                                        maxLines: 1,
+                                                        style: Theme.of(context).textTheme.bodyLarge,
+                                                        overflow: TextOverflow.visible,)))
+                                    ],
+                                  )),
+                            ])),
+                      ),
+                      SizedBox(
+                          width: constraints.maxWidth/2 ,
+                          height: MediaQuery.of(context).size.height * 0.7,
+                          child: Stack(children: [
                             Image(
-                              width: constraints.maxWidth/3,
-                              fit: BoxFit.fill,
-                              image: const AssetImage('images/muscles/Front_bg.png'),
-                            ),
-                            
-                            for (var i in frontImages)
+                                fit: BoxFit.fill,
+                                width: constraints.maxWidth/3,
+                                image: const AssetImage('images/muscles/Back_bg.png')),
+                                for (var i in backImages)
                             Image(
                               fit: BoxFit.fill,
                               width: constraints.maxWidth/3,
-                              image: AssetImage(
-                                  i[0]),
+                              image:
+                                  AssetImage(i[0]),
                               opacity: AlwaysStoppedAnimation(
                                   globals.muscle_val[i[1]]!),
                             ),
-                            for (var i in frontButtons)
+                            for (var i in backButtons)
                             FractionallySizedBox(
                                 alignment: Alignment.bottomRight,
                                 heightFactor: i[0],
@@ -454,64 +502,31 @@ class _BottomSheetState extends State<BottomSheet> {
                                   alignment: AlignmentDirectional.bottomEnd,
                                   children: [
                                     TextButton(
-                          
                                         onPressed: () => setState(() {
                                               globals.muscle_val[i[2]] =
-                                                  opacity_change(globals
-                                                      .muscle_val[i[2]]!);
+                                                  opacity_change(
+                                                      globals.muscle_val[i[2]]!);
                                             }),
-                                        child: Transform.scale(
-                                            scaleX: -1,
-                                            child: Text(("${(globals
-                                                      .muscle_val[i[2]]!*100).round()}%"),
-                                                      maxLines: 1,
-                                                      style: Theme.of(context).textTheme.bodyLarge,
-                                                      overflow: TextOverflow.visible,)))
+                                        child: Text(("${(globals
+                                                        .muscle_val[i[2]]!*100).round()}%"),
+                                                        maxLines: 1,
+                                                        style: Theme.of(context).textTheme.bodyLarge,
+                                                        overflow: TextOverflow.visible,))
                                   ],
                                 )),
-                          ])),
-                    ),
-                    SizedBox(
-                        width: constraints.maxWidth/2 ,
-                        height: MediaQuery.of(context).size.height * 0.7,
-                        child: Stack(children: [
-                          Image(
-                              fit: BoxFit.fill,
-                              width: constraints.maxWidth/3,
-                              image: const AssetImage('images/muscles/Back_bg.png')),
-                              for (var i in backImages)
-                          Image(
-                            fit: BoxFit.fill,
-                            width: constraints.maxWidth/3,
-                            image:
-                                AssetImage(i[0]),
-                            opacity: AlwaysStoppedAnimation(
-                                globals.muscle_val[i[1]]!),
-                          ),
-                          for (var i in backButtons)
-                          FractionallySizedBox(
-                              alignment: Alignment.bottomRight,
-                              heightFactor: i[0],
-                              widthFactor: i[1],
-                              child: Stack(
-                                alignment: AlignmentDirectional.bottomEnd,
-                                children: [
-                                  TextButton(
-                                      onPressed: () => setState(() {
-                                            globals.muscle_val[i[2]] =
-                                                opacity_change(
-                                                    globals.muscle_val[i[2]]!);
-                                          }),
-                                      child: Text(("${(globals
-                                                      .muscle_val[i[2]]!*100).round()}%"),
-                                                      maxLines: 1,
-                                                      style: Theme.of(context).textTheme.bodyLarge,
-                                                      overflow: TextOverflow.visible,))
-                                ],
-                              )),
-                          
-                        ]))
-                  ],
+                            
+                          ]))
+                    ],
+                  ),
+                  //             Positioned(
+                  //   left: constraints.maxWidth/3,
+                  //   child: Image(
+                  //                 width: constraints.maxWidth/3,
+                  //                 fit: BoxFit.fill,
+                  //                 image: const AssetImage('images/muscles/sideview.png'),
+                  //               ),
+                  // ),
+                  ]
                 );
               }
             ),
