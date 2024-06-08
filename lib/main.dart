@@ -1,5 +1,6 @@
 // ignore_for_file: non_constant_identifier_names
 
+import 'package:Gymli/groupScreen.dart';
 import 'package:flutter/material.dart';
 import 'package:Gymli/landingScreen.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -42,11 +43,13 @@ void main() async {
   Hive.registerAdapter(TrainingSetAdapter());
   Hive.registerAdapter(WorkoutAdapter());
   Hive.registerAdapter(WorkoutUnitAdapter());
+  Hive.registerAdapter(GroupAdapter());
   getPreferences();
   // preopen all boxes
   await Hive.openBox<TrainingSet>('TrainingSets');
   await Hive.openBox<Exercise>('Exercises');
   await Hive.openBox<Workout>('Workouts');
+  await Hive.openBox<Group>('Groups');
   runApp(const MainApp()
   );
 }
@@ -101,15 +104,15 @@ class _MainAppState extends State<MainApp> {
       home: Scaffold(
     appBar: AppBar(
     leading: Builder(
-      
-    builder: (context) {
-      return IconButton(
-        icon: const Icon(Icons.menu),
-        onPressed: () {
-          Scaffold.of(context).openDrawer();
-        },
-      );
-    },
+        
+      builder: (context) {
+        return IconButton(
+          icon: const Icon(Icons.menu),
+          onPressed: () {
+            Scaffold.of(context).openDrawer();
+          },
+        );
+      },
     ),
     title: Row(//alignment: Alignment.center,
               //mainAxisAlignment: MainAxisAlignment.center,
@@ -163,7 +166,14 @@ class _MainAppState extends State<MainApp> {
                 Navigator.pop(context);
              Navigator.push(context, MaterialPageRoute(builder: (context) =>  const WorkoutSetupScreen("")));
             });},
-          
+          ),
+          ListTile(
+            title: const Text('Group Setup'),
+            onTap: () {
+              setState(() {
+                Navigator.pop(context);
+             Navigator.push(context, MaterialPageRoute(builder: (context) =>  const GroupScreen()));
+            });},
           ),
           ListTile(
             title: const Text('Statistics'),

@@ -4,6 +4,7 @@ import 'package:hive/hive.dart';
 part 'DataModels.g.dart';
 
 
+// regenerate flutter pub run build_runner build
 final exerciseTypeNames = ["Free", "Machine", "Cable", "Body"];
 final muscleGroupNames = ["Pectoralis major", "Trapezius", "Biceps", "Abdominals", "Deltoids", "Latissimus dorsi", "Triceps", "Gluteus maximus", "Hamstrings", "Quadriceps", "Forearms", "Calves"];
 final setTypeNames = ["Warm", "Work", "Drop"];
@@ -104,4 +105,21 @@ class Workout extends DataClass {
     for (WorkoutUnit unit in units) { row.add("${unit.exercise}, ${unit.warmups}, ${unit.worksets}, ${unit.dropsets}, ${unit.type}"); }
     return row;
   }
+}
+
+
+@HiveType(typeId: 5)
+class Group extends DataClass {
+  Group({required this.name, required this.exercises});
+  @HiveField(0)
+  String name = "";
+  @HiveField(1)
+  List<String> exercises = [];
+
+  List<String> toCSVString() {
+    List<String> row = [name];
+    for (String unit in exercises) { row.add("${unit}"); }
+    return row;
+  }
+
 }
