@@ -181,7 +181,7 @@ class _WorkoutSetupScreenState extends State<WorkoutSetupScreen> {
                     borderRadius: BorderRadius.circular(8),
                   ),
                 ),
-                requestFocusOnTap: true,
+                requestFocusOnTap: false,
                 label: const Text('Exercises'),
                 onSelected: (selectExercises) {
                   setState(() {

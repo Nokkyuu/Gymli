@@ -1,8 +1,3 @@
-// ignore: file_names
-// ignore_for_file: file_names, duplicate_ignore, constant_identifier_names, non_constant_identifier_names
-
-//import 'dart:ffi';
-
 import 'package:flutter/material.dart';
 import 'package:Gymli/exerciseScreen.dart';
 import 'package:Gymli/DataModels.dart';
