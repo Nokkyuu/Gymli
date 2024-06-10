@@ -53,6 +53,7 @@ class _LandingScreenState extends State<LandingScreen> {
   void updateAllExercises() {
       allExercises = Hive.box<Exercise>('Exercises').values.toList();
       allExercises.sort((a, b) => a.name.compareTo(b.name));
+      // metainfo = [for (var e in allExercises) metainfo[mappings[e.name]!]];
       filterApplied.value = !filterApplied.value;
   }
 
@@ -62,22 +63,26 @@ class _LandingScreenState extends State<LandingScreen> {
       filterMask.add(e.exercise);
     }
     filteredExercises = [];
-    metainfo = [];
     filteredExercises.sort((a, b) => a.name.compareTo(b.name));
     for (var ex in allExercises) {
       if (filterMask.contains(ex.name)) {
         filteredExercises.add(ex);
       }
     }
+    metainfo = List.filled(allExercises.length, "");
     for (var e in workout.units) {
-      metainfo.add('Warm: ${e.warmups}, Work: ${e.worksets}, Drop: ${e.dropsets}');
+      for (int i = 0; i < filteredExercises.length; ++i) {
+        if (filteredExercises[i].name == e.exercise) {
+          metainfo[i] = 'Warm: ${e.warmups}, Work: ${e.worksets}, Drop: ${e.dropsets}';
+        }
+      }
     }
     filterApplied.value = !filterApplied.value;
   }
 
   void showAllExercises() {
     filteredExercises = allExercises;
-    filteredExercises.sort((a, b) => a.name.compareTo(b.name));
+    // filteredExercises.sort((a, b) => a.name.compareTo(b.name));
     metainfo = [];
     for (var ex in filteredExercises) {
       var lastTraining = db.getLastTrainingDay(ex.name);
