@@ -493,10 +493,19 @@ class _WeightConfigurator extends State<WeightConfigurator> {
     
     if (selectedDevice == ExerciseDevice.dumbbell) {
       List<double> matches = globals.mappableWeightsDumb;
-      double workWeight = widget.weight - 2.3;
+      double workWeight = widget.weight;
       workWeight /= 2.0;
-      final bestWeight = matches.isEmpty ? null : matches.reduce((a, b) => (a-workWeight).abs() <= (b -workWeight).abs() ? a : b);
-      List<double> bestSet = globals.weightCombinationsDumb[matches.indexOf(bestWeight!)];
+      workWeight -= 2.3;
+      int bestIndex = 0;
+      double bestDistance = 999;
+      for (int i = 0; i < matches.length; ++i) {
+        if ((matches[i]-workWeight).abs() < bestDistance) {
+          bestDistance = (matches[i]-workWeight).abs();
+          bestIndex = i;
+        }
+      }
+      // double bestWeight = matches[bestIndex];
+      List<double> bestSet = globals.weightCombinationsDumb[bestIndex];
       leftWeight = "";
       rightWeight = "";
       setState(() {
@@ -520,14 +529,26 @@ class _WeightConfigurator extends State<WeightConfigurator> {
       List<double> matches = globals.mappableWeightsBar;
       double workWeight = widget.weight - 8.6;
       workWeight /= 2;
-      final bestWeight = matches.isEmpty ? null : matches.reduce((a, b) => (a-workWeight).abs() <= (b -workWeight).abs() ? a : b);
-      List<double> bestSet = globals.weightCombinationsBar[matches.indexOf(bestWeight!)];
+      int bestIndex = 0;
+      double bestDistance = 999;
+      for (int i = 0; i < matches.length; ++i) {
+        if ((matches[i]-workWeight).abs() < bestDistance) {
+          bestDistance = (matches[i]-workWeight).abs();
+          bestIndex = i;
+        }
+      }
+      // double bestWeight = matches[bestIndex];
+      List<double> bestSet = globals.weightCombinationsBar[bestIndex];
 
       setState(() {
         leftWeight = "";
         rightWeight = "";
         for (int i = 0; i < bestSet.length; ++i) {
-          leftWeight = leftWeight + "-" + "[" + bestSet[i].toString() + "]";
+          if (leftWeight != "") {
+            leftWeight = leftWeight + "-"+ "[" + bestSet[i].toString() + "]";
+          } else {
+            leftWeight = "[" + bestSet[i].toString() + "]";
+          }
         }
         for (int i = bestSet.length-1; i >= 0; --i) {
           rightWeight = rightWeight + "-" + "[" + bestSet[i].toString() + "]";
@@ -536,7 +557,7 @@ class _WeightConfigurator extends State<WeightConfigurator> {
         sum *= 2.0;
         sum += 8.6;
         weightText = "Best match: $sum kg";
-        midWeight = "-(8.6)-";
+        midWeight = "--(8.6)-";
       });
     }
 
@@ -547,8 +568,7 @@ class _WeightConfigurator extends State<WeightConfigurator> {
     super.initState();
 
     acceptRow = Container(width: 100, height: 100, color: Colors.black87.withOpacity(0.3), child: 
-      Row(children: rightContainers,
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,)
+      Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: rightContainers)
     );
     accepter = DragTarget<Text>(
             onAcceptWithDetails: (text) {
@@ -577,14 +597,10 @@ class _WeightConfigurator extends State<WeightConfigurator> {
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
             const SizedBox(height: 20.0),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-              ElevatedButton(
-                child: const Text('Escape'),
-                onPressed: () => Navigator.pop(context),
-              ),
-            ]),
+            ElevatedButton(
+              child: const Text('x'),
+              onPressed: () => Navigator.pop(context),
+            ),
             const Spacer(),
             Text(weightText, style: const TextStyle(fontSize: 20),),
             const SizedBox(height: 20.0),

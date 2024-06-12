@@ -66,6 +66,8 @@ class _StatisticsScreen extends State<StatisticsScreen> {
   List<LineChartBarData> trainingsPerWeekChart = [];
   List<BarChartGroupData> barChartStatistics = [];
   List<Text> exerciseDetails = [];
+  String? startingDate;
+  String? endingDate;
   List<double> heatMapMulti = [];
   // ignore: non_constant_identifier_names
   final TextEditingController MuscleController = TextEditingController();
@@ -109,34 +111,7 @@ class _StatisticsScreen extends State<StatisticsScreen> {
     return BarChartGroupData(x: x, groupVertically: true, barRods: bars);
   }
 
-  @override
-  void initState() {
-    super.initState();
-    // ignore: no_leading_underscores_for_local_identifiers
-    List<DateTime> _trainingDates = db.getTrainingDates("");
-    setState(() {
-      numberOfTrainingDays = _trainingDates.length;
-      // var timeDiff = _trainingDates.first.difference(_trainingDates.last).inDays;
-      Period diff = LocalDate.dateTime(_trainingDates.last)
-          .periodSince(LocalDate.dateTime(_trainingDates.first));
-      trainingDuration =
-          "Over the period of ${diff.months} month and ${diff.days} days";
-      var firstWeek = weekNumber(_trainingDates.first);
-      var lastWeek = weekNumber(_trainingDates.last);
-      List<int> trainingsPerWeek = [];
-      for (int i = firstWeek; i < lastWeek + 1; ++i) {
-        trainingsPerWeek.add(0);
-      }
-      for (var d in _trainingDates) {
-        trainingDates.add(DateFormat('dd-MM-yyyy').format(d));
-        trainingsPerWeek[weekNumber(d) - firstWeek] += 1;
-      }
-      List<FlSpot> spots = [];
-      for (int i = 0; i < trainingsPerWeek.length; ++i) {
-        spots.add(
-            FlSpot((i + firstWeek).toDouble(), trainingsPerWeek[i].toDouble()));
-      }
-      trainingsPerWeekChart.add(LineChartBarData(spots: spots));
+    void updateBarStatistics() {
 
       // calculate portions of training
       // final musGroups = ["Pectoralis major", "Biceps", "Abdominals", "Deltoids", "Latissimus dorsi", "Triceps", "Gluteus maximus", "Hamstrings", "Quadriceps"];
@@ -170,7 +145,20 @@ class _StatisticsScreen extends State<StatisticsScreen> {
         }
         exerciseMapping[e.name] = intermediateMap;
       }
-
+    barChartStatistics.clear();
+    List<DateTime> _trainingDates = db.getTrainingDates("");
+    if (startingDate != null) {
+      var tokens = startingDate!.split("-");
+      String _startingDateString = "${tokens[2]}-${tokens[1]}-${tokens[0]}T00:00:00";
+      DateTime _start = DateTime.parse(_startingDateString!);
+      _trainingDates = _trainingDates.where((d) => _start.isBefore(d)).toList();
+    }
+    if (endingDate != null) {
+      var tokens = endingDate!.split("-");
+      String _endingDateString = "${tokens[2]}-${tokens[1]}-${tokens[0]}T00:00:00";
+      DateTime _end = DateTime.parse(_endingDateString!);
+      _trainingDates = _trainingDates.where((d) => _end.isAfter(d)).toList();
+    }
       List<List<double>> muscleHistoryScore = [];
       for (var day in _trainingDates) {
         var trainings = db.getTrainings(day);
@@ -195,7 +183,43 @@ class _StatisticsScreen extends State<StatisticsScreen> {
             .add(generateBars(i, accumulatedScore, barChartMuscleColors));
       }
       globals.muscleHistoryScore = muscleHistoryScore;
+    }
+
+  @override
+  void initState() {
+    super.initState();
+    // ignore: no_leading_underscores_for_local_identifiers
+    List<DateTime> _trainingDates = db.getTrainingDates("");
+    setState(() {
+      numberOfTrainingDays = _trainingDates.length;
+      if (numberOfTrainingDays == 0) {
+        return;
+      }
+      // var timeDiff = _trainingDates.first.difference(_trainingDates.last).inDays;
+      Period diff = LocalDate.dateTime(_trainingDates.last)
+          .periodSince(LocalDate.dateTime(_trainingDates.first));
+      trainingDuration =
+          "Over the period of ${diff.months} month and ${diff.days} days";
+      var firstWeek = weekNumber(_trainingDates.first);
+      var lastWeek = weekNumber(_trainingDates.last);
+      List<int> trainingsPerWeek = [];
+      for (int i = firstWeek; i < lastWeek + 1; ++i) {
+        trainingsPerWeek.add(0);
+      }
+      for (var d in _trainingDates) {
+        trainingDates.add(DateFormat('dd-MM-yyyy').format(d));
+        trainingsPerWeek[weekNumber(d) - firstWeek] += 1;
+      }
+      List<FlSpot> spots = [];
+      for (int i = 0; i < trainingsPerWeek.length; ++i) {
+        spots.add(
+            FlSpot((i + firstWeek).toDouble(), trainingsPerWeek[i].toDouble()));
+      }
+      trainingsPerWeekChart.add(LineChartBarData(spots: spots));
+
+      updateBarStatistics();
     });
+
   }
 
   @override
@@ -204,22 +228,23 @@ class _StatisticsScreen extends State<StatisticsScreen> {
     List<List> muscleHistoryScore = globals.muscleHistoryScore;
 
     List<double> muscleHistoryScoreCum = [];
-    for (int i = 0 ; i < muscleHistoryScore[0].length; i++) {
-      double item = 0;
-      for (int j = 0 ; j < muscleHistoryScore.length; j++) {
-        item = item +
-            muscleHistoryScore[j]
-                [i]; //adds all values from all the lists in the list.
+    if (muscleHistoryScore.isNotEmpty) {
+      for (int i = 0 ; i < muscleHistoryScore[0].length; i++) {
+        double item = 0;
+        for (int j = 0 ; j < muscleHistoryScore.length; j++) {
+          item = item +
+              muscleHistoryScore[j]
+                  [i]; //adds all values from all the lists in the list.
+        }
+        muscleHistoryScoreCum.add(item);
       }
-      muscleHistoryScoreCum.add(item);
+      var highestValue = muscleHistoryScoreCum.reduce(max);
+      List<double> heatMapMulti = [];
+      for (int i =0; i < muscleHistoryScoreCum.length ; i++) {
+        heatMapMulti.add(muscleHistoryScoreCum[i] /
+            highestValue); //percentage of muscle usage in relation to highest for the heatmap.
+      }
     }
-    var highestValue = muscleHistoryScoreCum.reduce(max);
-    List<double> heatMapMulti = [];
-    for (int i =0; i < muscleHistoryScoreCum.length ; i++) {
-      heatMapMulti.add(muscleHistoryScoreCum[i] /
-          highestValue); //percentage of muscle usage in relation to highest for the heatmap.
-    }
-
     //print(highestValue);
     //print(globals.muscleHistoryScore);
     //print(heatMapCood);
@@ -246,7 +271,8 @@ class _StatisticsScreen extends State<StatisticsScreen> {
             DropdownMenu<String>(
               label: const Text("Start"),
               onSelected: (String? date) {
-                updateView();
+                startingDate = date!;
+                updateBarStatistics();
               },
               dropdownMenuEntries:
                   trainingDates.map<DropdownMenuEntry<String>>((String name) {
@@ -266,7 +292,8 @@ class _StatisticsScreen extends State<StatisticsScreen> {
             DropdownMenu<String>(
               label: const Text("End"),
               onSelected: (String? date) {
-                updateView();
+                endingDate = date!;
+                updateBarStatistics();
               },
               dropdownMenuEntries:
                   trainingDates.map<DropdownMenuEntry<String>>((String name) {
@@ -361,14 +388,10 @@ class _StatisticsScreen extends State<StatisticsScreen> {
                 BarChartData(
                   alignment: BarChartAlignment.spaceBetween,
                   titlesData: const FlTitlesData(
-                    topTitles:
-                        AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                    rightTitles:
-                        AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                    bottomTitles:
-                        AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                    leftTitles:
-                        AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                    topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                    rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                    // bottomTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                    leftTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
                   ),
                   barGroups: barChartStatistics,
                 ),
