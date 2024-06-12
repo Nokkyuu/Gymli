@@ -363,6 +363,12 @@ class _ExerciseScreen extends State<ExerciseScreen> {
                     Row(
                       children: [
                         const Spacer(),
+                        IconButton(
+                          icon: const Icon(FontAwesomeIcons.calculator),
+                          onPressed: () { setState(() {
+                            showModalBottomSheet<dynamic>(context: context, builder: (BuildContext context) { return WeightConfigurator(weightKg.toDouble() + weightDg.toDouble() / 100.0); },
+                          ); }); },
+                        ),
                         NumberPicker(
                           value: weightKg,
                           minValue: -70, maxValue: 250,
@@ -388,6 +394,7 @@ class _ExerciseScreen extends State<ExerciseScreen> {
                           onChanged: (value) => setState(() => repetitions = value),
                         ),
                         const Text("Reps."),
+                        const Spacer(),
                         const Spacer()
                       ]
                     )
@@ -446,6 +453,183 @@ class _ExerciseScreen extends State<ExerciseScreen> {
                     })),
             const SizedBox(height: 20),
           ]),
+    );
+  }
+}
+class WeightConfigurator extends StatefulWidget {
+  WeightConfigurator(this.weight, {super.key});
+  double weight;
+  @override
+  State<WeightConfigurator> createState() => _WeightConfigurator();
+}
+
+enum ExerciseDevice { dumbbell, barbell20, barbellhome }
+class _WeightConfigurator extends State<WeightConfigurator> {
+  double itemHeight = 50.0;
+  double itemWidth = 30.0;
+  ExerciseDevice selectedDevice = ExerciseDevice.dumbbell;
+  List<Widget> rightContainers = [];
+  late Container acceptRow;
+  late DragTarget<Text> accepter ;
+
+  List<TextEditingController> kg_controller = [];
+  late String weightText;
+  late String leftWeight;
+  late String midWeight;
+  late String rightWeight;
+
+  void addWeight(String txt) {
+    rightContainers.add(RotatedBox(
+      quarterTurns: 1, child:
+      Container(
+        color: Colors.black45, width: 110, alignment: Alignment.center, padding: const EdgeInsets.all(2),
+        child: Text("10", style: const TextStyle(color: Colors.white,fontSize: 15.0))),
+    ),);
+
+  }
+
+  void updateWeight() {
+    
+    
+    if (selectedDevice == ExerciseDevice.dumbbell) {
+      List<double> matches = globals.mappableWeightsDumb;
+      double workWeight = widget.weight - 2.3;
+      workWeight /= 2.0;
+      final bestWeight = matches.isEmpty ? null : matches.reduce((a, b) => (a-workWeight).abs() <= (b -workWeight).abs() ? a : b);
+      List<double> bestSet = globals.weightCombinationsDumb[matches.indexOf(bestWeight!)];
+      leftWeight = "";
+      rightWeight = "";
+      setState(() {
+        for (int i = 0; i < bestSet.length; ++i) {
+          String item = "[" + bestSet[i].toString() + "]";
+          if (i%2 == 0) {
+            leftWeight = item + "-" + leftWeight;
+          } else {
+            rightWeight = rightWeight + "-" + item;
+          }
+        }
+        midWeight = "-(2.3)-";
+        double sum = bestSet.reduce((a, b) => a + b);
+        sum += 2.3;
+        double all = sum * 2;
+        weightText = "Best match: $sum kg ea. ($all)";
+      });
+
+    }
+    if (selectedDevice == ExerciseDevice.barbellhome) {
+      List<double> matches = globals.mappableWeightsBar;
+      double workWeight = widget.weight - 8.6;
+      workWeight /= 2;
+      final bestWeight = matches.isEmpty ? null : matches.reduce((a, b) => (a-workWeight).abs() <= (b -workWeight).abs() ? a : b);
+      List<double> bestSet = globals.weightCombinationsBar[matches.indexOf(bestWeight!)];
+
+      setState(() {
+        leftWeight = "";
+        rightWeight = "";
+        for (int i = 0; i < bestSet.length; ++i) {
+          leftWeight = leftWeight + "-" + "[" + bestSet[i].toString() + "]";
+        }
+        for (int i = bestSet.length-1; i >= 0; --i) {
+          rightWeight = rightWeight + "-" + "[" + bestSet[i].toString() + "]";
+        }
+        double sum = bestSet.reduce((a, b) => a + b);
+        sum *= 2.0;
+        sum += 8.6;
+        weightText = "Best match: $sum kg";
+        midWeight = "-(8.6)-";
+      });
+    }
+
+  }
+
+  @override
+  void initState() {
+    super.initState();
+
+    acceptRow = Container(width: 100, height: 100, color: Colors.black87.withOpacity(0.3), child: 
+      Row(children: rightContainers,
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,)
+    );
+    accepter = DragTarget<Text>(
+            onAcceptWithDetails: (text) {
+                setState(() {
+                  addWeight(text.data.data!);
+                });
+            },
+            builder: (context, accepted, rejected) {
+              return acceptRow;
+            });
+    addWeight("20");
+    weightText = "Stacked weight: ${widget.weight} kg";
+    leftWeight = "0";
+    rightWeight = "0";
+    midWeight = "--0--";
+    updateWeight();
+  }
+
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox.expand(
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            const SizedBox(height: 20.0),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+              ElevatedButton(
+                child: const Text('Escape'),
+                onPressed: () => Navigator.pop(context),
+              ),
+            ]),
+            const Spacer(),
+            Text(weightText, style: const TextStyle(fontSize: 20),),
+            const SizedBox(height: 20.0),
+            SegmentedButton<ExerciseDevice>(
+                  showSelectedIcon: false,
+                  segments: const <ButtonSegment<ExerciseDevice>>[
+                    ButtonSegment<ExerciseDevice>(
+                        value: ExerciseDevice.dumbbell,
+                        label: Text('Dumbbell')),
+                    ButtonSegment<ExerciseDevice>(
+                        value: ExerciseDevice.barbellhome,
+                        label: Text('Barbell Home')),
+                    ButtonSegment<ExerciseDevice>(
+                        value: ExerciseDevice.barbell20,
+                        label: Text('Barbell Gym'))
+                  ],
+                  selected: <ExerciseDevice>{selectedDevice},
+                  onSelectionChanged: (Set<ExerciseDevice> newSelection) {
+                    setState(() {
+                      selectedDevice = newSelection.first;
+                      updateWeight();
+                    });
+                  }),
+            const Spacer(),
+            const SizedBox(height: 10),
+            Row(mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(leftWeight),
+                Text(midWeight),
+                Text(rightWeight),
+            ]),
+            // Row(
+            //   mainAxisAlignment: MainAxisAlignment.center,
+            //   children: [
+            //     Container(
+            //         color: Colors.black54, width: 100, alignment: Alignment.center,
+            //         child: const Text('bar', style: TextStyle(color: Colors.white, fontSize: 10.0)),
+            //       ),
+            //     accepter
+            //   ]
+            // ),
+            const Spacer(),
+          ],
+        ),
+      ),
     );
   }
 }
