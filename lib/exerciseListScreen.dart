@@ -20,29 +20,25 @@ class ExerciseListScreen extends StatefulWidget {
 }
 
 class _ExerciseListScreenState extends State<ExerciseListScreen> {
-  late ValueNotifier<List<TrainingSet>> exerciseNotifier;
-
+  late ValueNotifier<bool> exerciseNotifier;
+  bool updated = false;
   List<TrainingSet> items = [];
   late Box<TrainingSet> box;
   @override
   void initState() {
     super.initState();
     box = Hive.box<TrainingSet>("TrainingSets");
-    items = box.values.toList();
-    items = items.where((item) => item.exercise == widget.exercise).toList().reversed.toList();
-    exerciseNotifier = ValueNotifier(items);
-
+    items = box.values.toList().where((item) => item.exercise == widget.exercise).toList().reversed.toList();
+    exerciseNotifier = ValueNotifier(updated);
   }
 
   void delete(TrainingSet item) async {
     await box.delete(item.key).then((futureValue) {
-        setState(() {
-          print("Update");
-          items = box.values.toList();
-          items = items.where((item) => item.exercise == widget.exercise).toList().reversed.toList();
-        });
-      }
-    );
+      setState(() {
+        items = box.values.toList().where((item) => item.exercise == widget.exercise).toList().reversed.toList();
+        updated = !updated;
+      });
+    });
   }
 
   @override
@@ -58,65 +54,31 @@ class _ExerciseListScreenState extends State<ExerciseListScreen> {
       body: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         mainAxisSize: MainAxisSize.max,
-        children: <Widget>[
-          Expanded(
-            child:
-            ValueListenableBuilder(
-              valueListenable: exerciseNotifier,
-              builder: (context, List<TrainingSet> items, _) {
-                List<Widget> widgets = [];
-                String lastDate = "";
-                for (int i = 0; i < items.length; ++i) {
-                  var item = items[i];
-                  String currentDate = item.date.toString().split(" ")[0];
-                  if (lastDate != currentDate) {
-                    widgets.add(ListTile(title: Text(currentDate), tileColor: Theme.of(context).colorScheme.onSecondary));
-                    lastDate = currentDate;
-                  }
-                  widgets.add(
-                    ListTile(
-                      leading: CircleAvatar(radius: 17.5, child: FaIcon(workIcons[item.setType])),
-                      title: Text("${item.weight}kg for ${item.repetitions} reps"),
-                      subtitle: Text("${item.date}"),
-                      trailing: IconButton(icon: const Icon(Icons.delete), onPressed: () => { delete(item) })
-                    )
-                  );
+        children: <Widget>[Expanded(
+          child:
+          ValueListenableBuilder(
+            valueListenable: exerciseNotifier,
+            builder: (context, bool updated, _) {
+              List<Widget> widgets = [];
+              String lastDate = "";
+              for (int i = 0; i < items.length; ++i) {
+                var item = items[i];
+                String currentDate = item.date.toString().split(" ")[0];
+                if (lastDate != currentDate) {
+                  widgets.add(ListTile(title: Text(currentDate), tileColor: Theme.of(context).colorScheme.onSecondary));
+                  lastDate = currentDate;
                 }
-                return ListView(children: widgets);
+                widgets.add(ListTile(
+                    leading: CircleAvatar(radius: 17.5, child: FaIcon(workIcons[item.setType])),
+                    title: Text("${item.weight}kg for ${item.repetitions} reps"),
+                    subtitle: Text("${item.date}"),
+                    trailing: IconButton(icon: const Icon(Icons.delete), onPressed: () => { delete(item) })
+                ));
               }
-            )
+              return ListView(children: widgets);
+            }
           )
-              // ValueListenableBuilder(
-              //     valueListenable: exerciseNotifier,
-              //     builder: (context, List<TrainingSet> items, _) {
-              //       List<Widget> widgets = [];
-              //       String lastDate = "";
-              //       for (int i = 0; i < items.length; ++i) {
-              //         var item = items[i];
-              //         String currentDate = item.date.toString().split(" ")[0];
-              //         if (lastDate != currentDate) {
-              //           widgets.add(
-              //             ListTile(
-              //               title: Text(currentDate),
-              //               tileColor: Theme.of(context).colorScheme.onSecondary,
-              //             )
-              //           );
-              //           lastDate = currentDate;
-              //         }
-              //         widgets.add(
-              //           ListTile(
-              //             leading: CircleAvatar(radius: 17.5, child: FaIcon(workIcons[item.setType])),
-              //             title: Text("${item.weight}kg for ${item.repetitions} reps"),
-              //             subtitle: Text("${item.date}"),
-              //             trailing: IconButton(
-              //               icon: const Icon(Icons.delete),
-              //               onPressed: () => { box.delete(item.key) }
-              //             )
-              //           )
-              //         );
-              //         return Row(children: widgets);
-              //     }
-              //     });
+        )
       ]),
     );
   }
