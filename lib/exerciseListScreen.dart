@@ -20,6 +20,8 @@ class ExerciseListScreen extends StatefulWidget {
 }
 
 class _ExerciseListScreenState extends State<ExerciseListScreen> {
+  late ValueNotifier<List<TrainingSet>> exerciseNotifier;
+
   List<TrainingSet> items = [];
   late Box<TrainingSet> box;
   @override
@@ -28,6 +30,19 @@ class _ExerciseListScreenState extends State<ExerciseListScreen> {
     box = Hive.box<TrainingSet>("TrainingSets");
     items = box.values.toList();
     items = items.where((item) => item.exercise == widget.exercise).toList().reversed.toList();
+    exerciseNotifier = ValueNotifier(items);
+
+  }
+
+  void delete(TrainingSet item) async {
+    await box.delete(item.key).then((futureValue) {
+        setState(() {
+          print("Update");
+          items = box.values.toList();
+          items = items.where((item) => item.exercise == widget.exercise).toList().reversed.toList();
+        });
+      }
+    );
   }
 
   @override
@@ -46,20 +61,16 @@ class _ExerciseListScreenState extends State<ExerciseListScreen> {
         children: <Widget>[
           Expanded(
             child:
-            ListView(
-              children: (() {
+            ValueListenableBuilder(
+              valueListenable: exerciseNotifier,
+              builder: (context, List<TrainingSet> items, _) {
                 List<Widget> widgets = [];
                 String lastDate = "";
                 for (int i = 0; i < items.length; ++i) {
                   var item = items[i];
                   String currentDate = item.date.toString().split(" ")[0];
                   if (lastDate != currentDate) {
-                    widgets.add(
-                      ListTile(
-                        title: Text(currentDate),
-                        tileColor: Theme.of(context).colorScheme.onSecondary,
-                      )
-                    );
+                    widgets.add(ListTile(title: Text(currentDate), tileColor: Theme.of(context).colorScheme.onSecondary));
                     lastDate = currentDate;
                   }
                   widgets.add(
@@ -67,18 +78,46 @@ class _ExerciseListScreenState extends State<ExerciseListScreen> {
                       leading: CircleAvatar(radius: 17.5, child: FaIcon(workIcons[item.setType])),
                       title: Text("${item.weight}kg for ${item.repetitions} reps"),
                       subtitle: Text("${item.date}"),
-                      trailing: IconButton(
-                        icon: const Icon(Icons.delete),
-                        onPressed: () => { box.delete(item.key) }
-                      )
+                      trailing: IconButton(icon: const Icon(Icons.delete), onPressed: () => { delete(item) })
                     )
                   );
                 }
-                return widgets;
-              })()
+                return ListView(children: widgets);
+              }
             )
           )
-        ]),
+              // ValueListenableBuilder(
+              //     valueListenable: exerciseNotifier,
+              //     builder: (context, List<TrainingSet> items, _) {
+              //       List<Widget> widgets = [];
+              //       String lastDate = "";
+              //       for (int i = 0; i < items.length; ++i) {
+              //         var item = items[i];
+              //         String currentDate = item.date.toString().split(" ")[0];
+              //         if (lastDate != currentDate) {
+              //           widgets.add(
+              //             ListTile(
+              //               title: Text(currentDate),
+              //               tileColor: Theme.of(context).colorScheme.onSecondary,
+              //             )
+              //           );
+              //           lastDate = currentDate;
+              //         }
+              //         widgets.add(
+              //           ListTile(
+              //             leading: CircleAvatar(radius: 17.5, child: FaIcon(workIcons[item.setType])),
+              //             title: Text("${item.weight}kg for ${item.repetitions} reps"),
+              //             subtitle: Text("${item.date}"),
+              //             trailing: IconButton(
+              //               icon: const Icon(Icons.delete),
+              //               onPressed: () => { box.delete(item.key) }
+              //             )
+              //           )
+              //         );
+              //         return Row(children: widgets);
+              //     }
+              //     });
+      ]),
     );
   }
 }
