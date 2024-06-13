@@ -456,6 +456,8 @@ class _ExerciseScreen extends State<ExerciseScreen> {
     );
   }
 }
+
+
 class WeightConfigurator extends StatefulWidget {
   WeightConfigurator(this.weight, {super.key});
   double weight;
@@ -468,9 +470,9 @@ class _WeightConfigurator extends State<WeightConfigurator> {
   double itemHeight = 50.0;
   double itemWidth = 30.0;
   ExerciseDevice selectedDevice = ExerciseDevice.dumbbell;
-  List<Widget> rightContainers = [];
-  late Container acceptRow;
-  late DragTarget<Text> accepter ;
+  List<String> leftContainer = [];
+  List<String> rightContainer = [];
+  late ValueNotifier<List<String>> leftNotifier, rightNotifier;
 
   List<TextEditingController> kg_controller = [];
   late String weightText;
@@ -478,19 +480,11 @@ class _WeightConfigurator extends State<WeightConfigurator> {
   late String midWeight;
   late String rightWeight;
 
-  void addWeight(String txt) {
-    rightContainers.add(RotatedBox(
-      quarterTurns: 1, child:
-      Container(
-        color: Colors.black45, width: 110, alignment: Alignment.center, padding: const EdgeInsets.all(2),
-        child: Text("10", style: const TextStyle(color: Colors.white,fontSize: 15.0))),
-    ),);
-
-  }
 
   void updateWeight() {
-    
-    
+    setState(() {
+    leftContainer.clear();
+    rightContainer.clear();
     if (selectedDevice == ExerciseDevice.dumbbell) {
       List<double> matches = globals.mappableWeightsDumb;
       double workWeight = widget.weight;
@@ -508,21 +502,20 @@ class _WeightConfigurator extends State<WeightConfigurator> {
       List<double> bestSet = globals.weightCombinationsDumb[bestIndex];
       leftWeight = "";
       rightWeight = "";
-      setState(() {
-        for (int i = 0; i < bestSet.length; ++i) {
-          String item = "[" + bestSet[i].toString() + "]";
-          if (i%2 == 0) {
-            leftWeight = item + "-" + leftWeight;
-          } else {
-            rightWeight = rightWeight + "-" + item;
-          }
-        }
-        midWeight = "-(2.3)-";
-        double sum = bestSet.reduce((a, b) => a + b);
-        sum += 2.3;
-        double all = sum * 2;
+      for (int i = 0; i < bestSet.length; i += 2) {
+        rightContainer.add(bestSet[i].toString());
+      }
+      var rights = [];
+      for (int i = 1; i < bestSet.length; i += 2) {
+        rights.add(bestSet[i]);
+      }
+      for (var r in rights.reversed) {
+        leftContainer.add(r.toString());
+      }
+      double sum = bestSet.reduce((a, b) => a + b);
+      sum += 2.3;
+      double all = sum * 2;
         weightText = "Best match: $sum kg ea. ($all)";
-      });
 
     }
     if (selectedDevice == ExerciseDevice.barbellhome) {
@@ -540,26 +533,18 @@ class _WeightConfigurator extends State<WeightConfigurator> {
       // double bestWeight = matches[bestIndex];
       List<double> bestSet = globals.weightCombinationsBar[bestIndex];
 
-      setState(() {
-        leftWeight = "";
-        rightWeight = "";
-        for (int i = 0; i < bestSet.length; ++i) {
-          if (leftWeight != "") {
-            leftWeight = leftWeight + "-"+ "[" + bestSet[i].toString() + "]";
-          } else {
-            leftWeight = "[" + bestSet[i].toString() + "]";
-          }
-        }
-        for (int i = bestSet.length-1; i >= 0; --i) {
-          rightWeight = rightWeight + "-" + "[" + bestSet[i].toString() + "]";
-        }
-        double sum = bestSet.reduce((a, b) => a + b);
-        sum *= 2.0;
-        sum += 8.6;
+      for (int i = 0; i < bestSet.length; ++i) {
+        rightContainer.add(bestSet[i].toString());
+      }
+      for (int i = bestSet.length-1; i >= 0; --i) {
+        leftContainer.add(bestSet[i].toString());
+      }
+      double sum = bestSet.reduce((a, b) => a + b);
+      sum *= 2.0;
+      sum += 8.6;
         weightText = "Best match: $sum kg";
-        midWeight = "--(8.6)-";
-      });
     }
+    });
 
   }
 
@@ -567,24 +552,11 @@ class _WeightConfigurator extends State<WeightConfigurator> {
   void initState() {
     super.initState();
 
-    acceptRow = Container(width: 100, height: 100, color: Colors.black87.withOpacity(0.3), child: 
-      Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: rightContainers)
-    );
-    accepter = DragTarget<Text>(
-            onAcceptWithDetails: (text) {
-                setState(() {
-                  addWeight(text.data.data!);
-                });
-            },
-            builder: (context, accepted, rejected) {
-              return acceptRow;
-            });
-    addWeight("20");
+    leftNotifier = ValueNotifier(leftContainer);
+    rightNotifier = ValueNotifier(rightContainer);
     weightText = "Stacked weight: ${widget.weight} kg";
-    leftWeight = "0";
-    rightWeight = "0";
-    midWeight = "--0--";
     updateWeight();
+    setState(() {});
   }
 
 
@@ -625,23 +597,71 @@ class _WeightConfigurator extends State<WeightConfigurator> {
                     });
                   }),
             const Spacer(),
-            const SizedBox(height: 10),
-            Row(mainAxisAlignment: MainAxisAlignment.center,
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(leftWeight),
-                Text(midWeight),
-                Text(rightWeight),
-            ]),
-            // Row(
-            //   mainAxisAlignment: MainAxisAlignment.center,
-            //   children: [
-            //     Container(
-            //         color: Colors.black54, width: 100, alignment: Alignment.center,
-            //         child: const Text('bar', style: TextStyle(color: Colors.white, fontSize: 10.0)),
-            //       ),
-            //     accepter
-            //   ]
-            // ),
+                ValueListenableBuilder(
+                  valueListenable: rightNotifier,
+                  builder: (context, List<String> weights, _) {
+                    List<Widget> discs = [];
+                    for (var txt in weights) {
+                      discs.add(RotatedBox(
+                      quarterTurns: 1, child:
+                      Container(
+                        color: Colors.black45, width: 110 - (10.0-double.parse(txt))*5.0, alignment: Alignment.center, padding: const EdgeInsets.all(1),
+                        child: Text(txt, style: const TextStyle(color: Colors.white,fontSize: 10.0))),
+                      ));
+                    }
+                  return Row(children: discs);
+                }),
+                Container(
+                    color: Colors.black54, width: 50, alignment: Alignment.center,
+                    child: const Text('bar', style: TextStyle(color: Colors.white, fontSize: 10.0)),
+                  ),
+                // acceptRow2,
+                ValueListenableBuilder(
+                  valueListenable: leftNotifier,
+                  builder: (context, List<String> weights, _) {
+                    List<Widget> discs = [];
+                    for (var txt in weights) {
+                      discs.add(RotatedBox(
+                      quarterTurns: 1, child:
+                      Container(
+                        color: Colors.black45, width: 110 - (10.0-double.parse(txt))*5.0, alignment: Alignment.center, padding: const EdgeInsets.all(1),
+                        child: Text(txt, style: const TextStyle(color: Colors.white,fontSize: 10.0))),
+                      ));
+                    }
+                  return Row(children: discs);
+                })
+                // child: ValueListenableBuilder(
+                //     valueListenable:
+                //         Hive.box<TrainingSet>('TrainingSets').listenable(),
+                //     builder: (context, Box<TrainingSet> box, _) {
+                //       var items = box.values.toList();
+                //       if (items.isNotEmpty) {
+                //         return ListView.builder(
+                //             itemCount: items.length,
+                //             itemBuilder: (context, index) {
+                //               final item = items[index];
+                //               return ListTile(
+                //                   leading: CircleAvatar(
+                //                       radius: 17.5,
+                //                       child: FaIcon(workIcons[item.setType])),
+                //                   title: Text(
+                //                       "${item.weight}kg for ${item.repetitions} reps"),
+                //                   subtitle: Text("${item.date}"),
+                //                   trailing: IconButton(
+                //                       icon: const Icon(Icons.delete),
+                //                       onPressed: () => {
+                //                             box.delete(item.key)
+                //                           }));
+                //             });
+                //       } else {
+                //         return const Text("None");
+                //       }
+                //     })
+              ]
+            ),
             const Spacer(),
           ],
         ),

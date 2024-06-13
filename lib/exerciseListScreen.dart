@@ -20,62 +20,65 @@ class ExerciseListScreen extends StatefulWidget {
 }
 
 class _ExerciseListScreenState extends State<ExerciseListScreen> {
-  
+  List<TrainingSet> items = [];
+  late Box<TrainingSet> box;
+  @override
+  void initState() {
+    super.initState();
+    box = Hive.box<TrainingSet>("TrainingSets");
+    items = box.values.toList();
+    items = items.where((item) => item.exercise == widget.exercise).toList().reversed.toList();
+  }
+
   @override
   Widget build(BuildContext context) {
-    var exercise = widget.exercise;
-    const title = 'Set Archive';
     return Scaffold(
       appBar: AppBar(
         leading: InkWell(
-          onTap: () {
-            Navigator.pop(context);
-          },
-          child: const Icon(
-            Icons.arrow_back_ios,
-          ),
+          onTap: () { Navigator.pop(context); },
+          child: const Icon(Icons.arrow_back_ios),
         ),
-        title: const Text(title),
+        title: Text('Set Archive ${widget.exercise}'),
       ),
       body: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          mainAxisSize: MainAxisSize.max,
-          children: <Widget>[
-            Expanded(
-                child: ValueListenableBuilder(
-                    valueListenable:
-                        Hive.box<TrainingSet>('TrainingSets').listenable(),
-                    builder: (context, Box<TrainingSet> box, _) {
-                      var items = box.values.toList();
-                      items = box.values
-                          .where((item) => item.exercise == exercise)
-                          .toList()
-                          .reversed
-                          .toList();
-                      if (items.isNotEmpty) {
-                        return ListView.builder(
-                            itemCount: items.length,
-                            itemBuilder: (context, index) {
-                              final item = items[index];
-                              return ListTile(
-                                  leading: CircleAvatar(
-                                      radius: 17.5,
-                                      child: FaIcon(workIcons[item.setType])),
-                                  title: Text(
-                                      "${item.weight}kg for ${item.repetitions} reps"),
-                                  subtitle: Text("${item.date}"),
-                                  trailing: IconButton(
-                                      icon: const Icon(Icons.delete),
-                                      onPressed: () => {
-                                            box.delete(item.key)
-                                          }));
-                            });
-                      } else {
-                        return const Text("None");
-                      }
-                    })
-                  )
-          ]),
+        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.max,
+        children: <Widget>[
+          Expanded(
+            child:
+            ListView(
+              children: (() {
+                List<Widget> widgets = [];
+                String lastDate = "";
+                for (int i = 0; i < items.length; ++i) {
+                  var item = items[i];
+                  String currentDate = item.date.toString().split(" ")[0];
+                  if (lastDate != currentDate) {
+                    widgets.add(
+                      ListTile(
+                        title: Text(currentDate),
+                        tileColor: Theme.of(context).colorScheme.onSecondary,
+                      )
+                    );
+                    lastDate = currentDate;
+                  }
+                  widgets.add(
+                    ListTile(
+                      leading: CircleAvatar(radius: 17.5, child: FaIcon(workIcons[item.setType])),
+                      title: Text("${item.weight}kg for ${item.repetitions} reps"),
+                      subtitle: Text("${item.date}"),
+                      trailing: IconButton(
+                        icon: const Icon(Icons.delete),
+                        onPressed: () => { box.delete(item.key) }
+                      )
+                    )
+                  );
+                }
+                return widgets;
+              })()
+            )
+          )
+        ]),
     );
   }
 }
