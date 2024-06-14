@@ -239,11 +239,12 @@ class _StatisticsScreen extends State<StatisticsScreen> {
         muscleHistoryScoreCum.add(item);
       }
       var highestValue = muscleHistoryScoreCum.reduce(max);
-      //List<double> heatMapMulti = [];
+      heatMapMulti = [];
       for (int i =0; i < muscleHistoryScoreCum.length ; i++) {
         heatMapMulti.add(muscleHistoryScoreCum[i] /
             highestValue); //percentage of muscle usage in relation to highest for the heatmap.
       }
+      //print(heatMapMulti);
     }
     //print(highestValue);
     //print(globals.muscleHistoryScore);
