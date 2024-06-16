@@ -5,7 +5,7 @@ import 'package:Gymli/DataModels.dart';
 import 'package:tuple/tuple.dart';
 
 int idleTimerWakeup = 90;
-int graphNumberOfDays = 40;
+int graphNumberOfDays = 300;
 
 var muscle_val = {
   "Pectoralis major": 0.0,

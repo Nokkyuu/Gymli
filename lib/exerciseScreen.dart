@@ -81,8 +81,10 @@ class _ExerciseScreen extends State<ExerciseScreen> {
     Map<int, List<TrainingSet>> data = {};
     List<TrainingSet> trainings = db.getExerciseTrainings(widget.exerciseName);
     trainings = trainings.where((t) => DateTime.now().difference(t.date).inDays < globals.graphNumberOfDays && t.setType > 0).toList();
+    print("Insgesamt ${trainings.length}");
     for (var t in trainings) {
       int diff = DateTime.now().difference(t.date).inDays;
+      print(diff);
       if (!data.containsKey(diff)) { data[diff] = []; }
       data[diff]!.add(t);
     }
@@ -91,20 +93,22 @@ class _ExerciseScreen extends State<ExerciseScreen> {
 
   void updateGraph() {
     for (var t in trainingGraphs) { t.clear(); }
-    var defaultList = List.filled(groupExercises.length + 4, "");
+    var defaultList = List.filled(groupExercises.length + 6, "");
     setState(() {
       var dat = get_exercises();
+      var ii = dat.keys.length;
       for (var k in dat.keys) {
-        List<String> tips = [];
+        List<String> tips = List.filled(groupExercises.length + 6, "");
         for (var i = 0; i < 4; ++i) {
           if (i >= dat[k]!.length) {
             trainingGraphs[i].add(FlSpot.nullSpot);
           } else {
-            trainingGraphs[i].add(FlSpot(-k.toDouble(), globals.calculateScore(dat[k]![i])));
-            tips.add("${dat[k]![i].weight}kg @ ${dat[k]![i].repetitions}reps");
+            trainingGraphs[i].add(FlSpot(-ii.toDouble(), globals.calculateScore(dat[k]![i])));
+            tips[i] = "${dat[k]![i].weight}kg @ ${dat[k]![i].repetitions}reps";
           }
         }
-        graphToolTip[-k] = tips;
+        graphToolTip[-ii] = tips;
+        ii -= 1;
       }
 
       for (int i = 0; i < groupExercises.length; ++i) {
@@ -117,10 +121,12 @@ class _ExerciseScreen extends State<ExerciseScreen> {
           if (!data.containsKey(diff)) { data[diff] = []; }
           data[diff]!.add(t);
         }
+        var ii = data.length;
         for (var k in data.keys) {
-          additionalGraphs[i].add(FlSpot(-k.toDouble(), globals.calculateScore(data[k]![0])));
+          additionalGraphs[i].add(FlSpot(-ii.toDouble(), globals.calculateScore(data[k]![0])));
           defaultList.last = "${data[k]![0].weight}kg @ ${data[k]![0].repetitions}reps";
-          graphToolTip[-k] = graphToolTip[-k] != null ? graphToolTip[-k]! : defaultList;
+          graphToolTip[-ii] = graphToolTip[-ii] != null ? graphToolTip[-ii]! : defaultList;
+          ii -= 1;
         }
       }
     });
@@ -189,10 +195,16 @@ class _ExerciseScreen extends State<ExerciseScreen> {
     updateGraph();
     for (int i = 0; i < trainingGraphs.length; ++i) {
       if (trainingGraphs[i].isNotEmpty) {
+        bool allNan = true;
+        for (var t in trainingGraphs[i]) {
+          if (!t.x.isNaN) { allNan = false; }
+        }
+        if (!allNan) {
         barData.add(LineChartBarData(
           spots: trainingGraphs[i],
           color: graphColors[i]),
           );
+        }
       }
     }
     for (int i = 0; i < additionalGraphs.length; ++i) {
