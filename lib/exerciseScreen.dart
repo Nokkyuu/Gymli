@@ -418,9 +418,9 @@ class _ExerciseScreen extends State<ExerciseScreen> {
               icon: const Icon(Icons.send),
               onPressed: () {
                 double new_weight = weightKg.toDouble() + weightDg.toDouble() / 100.0;
-                if (_selected.first.index == 0) { numWarmUps -= 1; }
-                else if (_selected.first.index == 1) { numWorkSets -= 1; }
-                else { numDropSets -= 1; }
+                // if (_selected.first.index == 0) { numWarmUps -= 1; }
+                // else if (_selected.first.index == 1) { numWorkSets -= 1; }
+                // else { numDropSets -= 1; }
                 addSet(widget.exerciseName, new_weight, repetitions, _selected.first.index, dateInputController.text);
                 updateTexts();
                 updateGraph(); 
