@@ -24,6 +24,7 @@ void get_exercise_list() async {
   }
   globals.exerciseList = exerciseList;
 }
+
 Future<void> getPreferences() async {
   Future<SharedPreferences> prefs0 = SharedPreferences.getInstance();
   final SharedPreferences prefs = await prefs0;
@@ -33,7 +34,9 @@ Future<void> getPreferences() async {
   }
   if (prefs.getInt('graphNumberOfDays') != null) {
     globals.graphNumberOfDays = prefs.getInt('graphNumberOfDays')!;
-
+  }
+  if (prefs.getBool('detailedGraph') != null) {
+    globals.detailedGraph = prefs.getBool('detailedGraph')!;
   }
   // print(prefs.getInt('counter'));
 }
@@ -74,10 +77,10 @@ class _MainAppState extends State<MainApp> {
     super.initState();
     isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
-  if (kIsWeb) {
-    triggerLoad<TrainingSet>(context, "Trainings");
-    triggerLoad<Exercise>(context, "Exercises");
-  }
+  // if (kIsWeb) {
+  //   triggerLoad<TrainingSet>(context, "TrainingSets");
+  //   triggerLoad<Exercise>(context, "Exercises");
+  // }
 
   }
 

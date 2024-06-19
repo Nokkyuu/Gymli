@@ -6,6 +6,7 @@ import 'package:tuple/tuple.dart';
 
 int idleTimerWakeup = 90;
 int graphNumberOfDays = 300;
+bool detailedGraph = false;
 
 var muscle_val = {
   "Pectoralis major": 0.0,

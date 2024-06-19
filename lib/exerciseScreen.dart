@@ -77,14 +77,12 @@ class _ExerciseScreen extends State<ExerciseScreen> {
   }
 
 
-  Map<int, List<TrainingSet>> get_exercises() {
+  Map<int, List<TrainingSet>> get_trainingsets() {
     Map<int, List<TrainingSet>> data = {};
     List<TrainingSet> trainings = db.getExerciseTrainings(widget.exerciseName);
     trainings = trainings.where((t) => DateTime.now().difference(t.date).inDays < globals.graphNumberOfDays && t.setType > 0).toList();
-    print("Insgesamt ${trainings.length}");
     for (var t in trainings) {
       int diff = DateTime.now().difference(t.date).inDays;
-      print(diff);
       if (!data.containsKey(diff)) { data[diff] = []; }
       data[diff]!.add(t);
     }
@@ -94,38 +92,59 @@ class _ExerciseScreen extends State<ExerciseScreen> {
   void updateGraph() {
     for (var t in trainingGraphs) { t.clear(); }
     var defaultList = List.filled(groupExercises.length + 6, "");
+
     setState(() {
-      var dat = get_exercises();
-      var ii = dat.keys.length;
-      for (var k in dat.keys) {
-        List<String> tips = List.filled(groupExercises.length + 6, "");
-        for (var i = 0; i < 4; ++i) {
-          if (i >= dat[k]!.length) {
-            trainingGraphs[i].add(FlSpot.nullSpot);
-          } else {
-            trainingGraphs[i].add(FlSpot(-ii.toDouble(), globals.calculateScore(dat[k]![i])));
-            tips[i] = "${dat[k]![i].weight}kg @ ${dat[k]![i].repetitions}reps";
+      if (globals.detailedGraph) {
+
+        var dat = get_trainingsets();
+        var ii = dat.keys.length;
+        for (var k in dat.keys) {
+          List<String> tips = List.filled(groupExercises.length + 6, "");
+          for (var i = 0; i < 4; ++i) {
+            if (i >= dat[k]!.length) {
+              trainingGraphs[i].add(FlSpot.nullSpot);
+            } else {
+              trainingGraphs[i].add(FlSpot(-ii.toDouble(), globals.calculateScore(dat[k]![i])));
+              tips[i] = "${dat[k]![i].weight}kg @ ${dat[k]![i].repetitions}reps";
+            }
+          }
+          graphToolTip[-ii] = tips;
+          ii -= 1;
+        }
+
+        for (int i = 0; i < groupExercises.length; ++i) {
+          var additionalExercise = groupExercises[i];
+          Map<int, List<TrainingSet>> data = {};
+          List<TrainingSet> trainings = db.getExerciseTrainings(additionalExercise);
+          trainings = trainings.where((item) => item.setType > 0).toList();
+          for (var t in trainings) {
+            int diff = DateTime.now().difference(t.date).inDays;
+            if (!data.containsKey(diff)) { data[diff] = []; }
+            data[diff]!.add(t);
+          }
+          var ii = data.length;
+          for (var k in data.keys) {
+            additionalGraphs[i].add(FlSpot(-ii.toDouble(), globals.calculateScore(data[k]![0])));
+            defaultList.last = "${data[k]![0].weight}kg @ ${data[k]![0].repetitions}reps";
+            graphToolTip[-ii] = graphToolTip[-ii] != null ? graphToolTip[-ii]! : defaultList;
+            ii -= 1;
           }
         }
-        graphToolTip[-ii] = tips;
-        ii -= 1;
-      }
-
-      for (int i = 0; i < groupExercises.length; ++i) {
-        var additionalExercise = groupExercises[i];
-        Map<int, List<TrainingSet>> data = {};
-        List<TrainingSet> trainings = db.getExerciseTrainings(additionalExercise);
-        trainings = trainings.where((item) => item.setType > 0).toList();
-        for (var t in trainings) {
-          int diff = DateTime.now().difference(t.date).inDays;
-          if (!data.containsKey(diff)) { data[diff] = []; }
-          data[diff]!.add(t);
-        }
-        var ii = data.length;
-        for (var k in data.keys) {
-          additionalGraphs[i].add(FlSpot(-ii.toDouble(), globals.calculateScore(data[k]![0])));
-          defaultList.last = "${data[k]![0].weight}kg @ ${data[k]![0].repetitions}reps";
-          graphToolTip[-ii] = graphToolTip[-ii] != null ? graphToolTip[-ii]! : defaultList;
+      } else {
+        var dat = get_trainingsets();
+        var ii = dat.keys.length;
+        for (var k in dat.keys) {
+          // List<String> tips = List.filled(groupExercises.length + 6, "");
+          double maxScore = 0.0;
+          int reps = 0;
+          double weight = 0;
+          for (var i = 0; i < dat[k]!.length; ++i) {
+            maxScore = max(maxScore, globals.calculateScore(dat[k]![i]));
+            reps = dat[k]![i].repetitions;
+            weight = dat[k]![i].weight;
+          }
+          trainingGraphs[0].add(FlSpot(-ii.toDouble(), maxScore));
+          graphToolTip[-ii] = ["${weight}kg @ ${reps}reps"];
           ii -= 1;
         }
       }

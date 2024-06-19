@@ -15,6 +15,7 @@ import 'globals.dart' as globals;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 enum DisplayMode { light, dark }
+enum GraphMode { simple, detailed }
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -100,6 +101,7 @@ class _SettingsScreen extends State<SettingsScreen> {
   // final equationController = TextEditingController();
   final Future<SharedPreferences> _preferences = SharedPreferences.getInstance();
   DisplayMode selectedMode = DisplayMode.light;
+  GraphMode selectedGraphMode = globals.detailedGraph ? GraphMode.detailed : GraphMode.simple;
 
   @override
   void initState() {
@@ -202,6 +204,35 @@ class _SettingsScreen extends State<SettingsScreen> {
                 ),
               ),
             ],),
+            const SizedBox(height: 10),
+
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                const Text("Graph display"),
+                SegmentedButton<GraphMode>(
+                      showSelectedIcon: false,
+                      segments: const <ButtonSegment<GraphMode>>[
+                    ButtonSegment<GraphMode>(
+                        value: GraphMode.simple,
+                        label: Text('Simple (max)'),
+                        icon: FaIcon(FontAwesomeIcons.arrowTrendUp)),
+                    ButtonSegment<GraphMode>(
+                        value: GraphMode.detailed,
+                        label: Text('Detailed'),
+                        icon: FaIcon(FontAwesomeIcons.chartColumn))
+                      ],
+                  selected: <GraphMode>{selectedGraphMode},
+                  onSelectionChanged: (Set<GraphMode> s) async {
+                      setState(() {
+                        selectedGraphMode = s.first;
+                      });
+                      final SharedPreferences prefs = await _preferences;
+                      globals.detailedGraph =  s.first == GraphMode.simple ? false : true;
+                      prefs.setBool('detailedGraph', s.first == GraphMode.simple ? false : true);
+                  }),
+              ]),
+            const SizedBox(height: 10),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
@@ -223,6 +254,7 @@ class _SettingsScreen extends State<SettingsScreen> {
                     });
                   }),
               ]),
+            const SizedBox(height: 10),
                Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
