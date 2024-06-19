@@ -12,6 +12,7 @@ import 'package:Gymli/workoutSetupScreen.dart';
 import 'package:Gymli/statisticsScreen.dart';
 import 'globals.dart' as globals;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 bool state = false;
 
 void get_exercise_list() async {
@@ -72,6 +73,11 @@ class _MainAppState extends State<MainApp> {
   void initState() {
     super.initState();
     isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
+  if (kIsWeb) {
+    triggerLoad<TrainingSet>(context, "Trainings");
+    triggerLoad<Exercise>(context, "Exercises");
+  }
 
   }
 
