@@ -61,6 +61,8 @@ class _ExerciseScreen extends State<ExerciseScreen> {
   Text dropText = const Text('Drop');
   late int numWarmUps, numWorkSets, numDropSets;
 
+  String hintText = "Only 1 more Rep until weight increase!";
+
   Set<ExerciseType> _selected = {ExerciseType.work};
 
   List<List<FlSpot>> trainingGraphs = [[], [], [], []];
@@ -96,16 +98,14 @@ class _ExerciseScreen extends State<ExerciseScreen> {
     setState(() {
       if (globals.detailedGraph) {
 
-        var dat = get_trainingsets();
-        var ii = dat.keys.length;
-        for (var k in dat.keys) {
+        var data = get_trainingsets();
+        var ii = data.keys.length;
+        for (var k in data.keys) {
           List<String> tips = List.filled(groupExercises.length + 6, "");
           for (var i = 0; i < 4; ++i) {
-            if (i >= dat[k]!.length) {
-              trainingGraphs[i].add(FlSpot.nullSpot);
-            } else {
-              trainingGraphs[i].add(FlSpot(-ii.toDouble(), globals.calculateScore(dat[k]![i])));
-              tips[i] = "${dat[k]![i].weight}kg @ ${dat[k]![i].repetitions}reps";
+            if (i < data[k]!.length) {
+              trainingGraphs[i].add(FlSpot(-ii.toDouble(), globals.calculateScore(data[k]![i])));
+              tips[i] = "${data[k]![i].weight}kg @ ${data[k]![i].repetitions}reps";
             }
           }
           graphToolTip[-ii] = tips;
@@ -309,7 +309,7 @@ class _ExerciseScreen extends State<ExerciseScreen> {
           children: <Widget>[
             SizedBox(
                 width: MediaQuery.of(context).size.width,
-                height: MediaQuery.of(context).size.height * 0.25,
+                height: MediaQuery.of(context).size.height * 0.20,
                 child: Padding(
                   padding: const EdgeInsets.all(10.0),
                   child: Padding(
@@ -332,7 +332,7 @@ class _ExerciseScreen extends State<ExerciseScreen> {
                               }).toList(); },
                           )),
                         minY: minScore - 5.0, maxY: maxScore + 5.0,
-                        minX: -maxHistoryDistance, maxX: 1.0,
+                        minX: -maxHistoryDistance, maxX: 0,
                       ))),
                 )),
             Row(
@@ -356,6 +356,17 @@ class _ExerciseScreen extends State<ExerciseScreen> {
                 }
                 return widgets;
               })(),
+            ),
+            const Divider(),
+            Row(mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Image.asset('images/fairy.png',
+                  fit: BoxFit.contain,
+                  height: 18,
+                  ),
+                  const SizedBox(width: 10),
+                  Text(hintText),
+              ],
             ),
             const Divider(),
             Padding(
