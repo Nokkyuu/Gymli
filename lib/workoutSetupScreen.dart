@@ -60,7 +60,18 @@ class _WorkoutSetupScreenState extends State<WorkoutSetupScreen> {
 
   void addWorkout(String name, List<WorkoutUnit> units) {
     var box = Hive.box<Workout>("Workouts");
-    box.add(Workout(name: name, units: units));
+    List<String> workoutlist = [];
+    for (var e in box.values.toList()) {
+      workoutlist.add(e.name);
+    }
+    if (!workoutlist.contains(name)) {
+      box.add(Workout(name: name, units: units));
+    } else {
+     box.putAt(
+        workoutlist.indexOf(name),
+        Workout(name: name, units: units));
+  }
+
     Navigator.pop(context);
   }
 
