@@ -183,7 +183,7 @@ class _ExerciseScreen extends State<ExerciseScreen> {
  
     var data = get_trainingsets();
     if (data.isNotEmpty) {
-      var last = data[0]!.last;
+      var last = data[data.keys.last]!.last;
       for (int i = last.baseReps; i <= last.maxReps; ++i) {
         _colorMap[i] = Colors.red;
       }
