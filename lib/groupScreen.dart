@@ -79,6 +79,7 @@ class _GroupScreen extends State<GroupScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       appBar: AppBar(
         leading: InkWell(
           onTap: () { Navigator.pop(context); },

@@ -28,13 +28,11 @@ void get_exercise_list() async {
 Future<void> getPreferences() async {
   Future<SharedPreferences> prefs0 = SharedPreferences.getInstance();
   final SharedPreferences prefs = await prefs0;
-  // prefs.setInt('idleWakeTime', 90);
   if (prefs.getInt('idleWakeTime') != null) {
     globals.idleTimerWakeup = prefs.getInt('idleWakeTime')!;
   }
   if (prefs.getInt('graphNumberOfDays') != null) {
     globals.graphNumberOfDays = prefs.getInt('graphNumberOfDays')!;
-    // globals.graphNumberOfDays = 180;
   }
   if (prefs.getBool('detailedGraph') != null) {
     globals.detailedGraph = prefs.getBool('detailedGraph')!;

@@ -81,6 +81,8 @@ class _WorkoutSetupScreenState extends State<WorkoutSetupScreen> {
     const title = 'Workout Editor';
 
     return Scaffold(
+        resizeToAvoidBottomInset: false,
+
           appBar: AppBar(
             leading: InkWell(
               onTap: () {Navigator.pop(context); },

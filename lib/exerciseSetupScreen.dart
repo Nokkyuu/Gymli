@@ -115,8 +115,8 @@ class _ExerciseSetupScreenState extends State<ExerciseSetupScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: false,
         appBar: AppBar(
-          
           leading: InkWell(
             onTap: () { Navigator.pop(context); },
             child: const Icon( Icons.arrow_back_ios ),
