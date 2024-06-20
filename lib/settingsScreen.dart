@@ -172,38 +172,14 @@ class _SettingsScreen extends State<SettingsScreen> {
                   onChanged: (String s) async {
                     if (double.tryParse(s) != null) {
                       final SharedPreferences prefs = await _preferences;
-                      globals.idleTimerWakeup = int.parse(s);
+                      globals.graphNumberOfDays = int.parse(s);
                       prefs.setInt('graphNumberOfDays', globals.graphNumberOfDays);
                     }
                   }
                 ),
               ),
             ],),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-              const Text("Graph days"),
-              SizedBox(
-                width: 100,
-                child: 
-              TextField(
-                  textAlign: TextAlign.center,
-                  controller: graphNumberOfDays,
-                  obscureText: false,
-                  decoration: const InputDecoration(
-                    border: UnderlineInputBorder(),
-                    //alignLabelWithHint: true
-                  ),
-                  onChanged: (String s) async {
-                    if (double.tryParse(s) != null) {
-                      final SharedPreferences prefs = await _preferences;
-                      globals.idleTimerWakeup = int.parse(s);
-                      prefs.setInt('graphNumberOfDays', globals.graphNumberOfDays);
-                    }
-                  }
-                ),
-              ),
-            ],),
+            
             const SizedBox(height: 10),
 
             Row(

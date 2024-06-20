@@ -34,6 +34,7 @@ Future<void> getPreferences() async {
   }
   if (prefs.getInt('graphNumberOfDays') != null) {
     globals.graphNumberOfDays = prefs.getInt('graphNumberOfDays')!;
+    // globals.graphNumberOfDays = 180;
   }
   if (prefs.getBool('detailedGraph') != null) {
     globals.detailedGraph = prefs.getBool('detailedGraph')!;
