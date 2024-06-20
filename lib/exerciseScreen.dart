@@ -48,6 +48,10 @@ class _ExerciseScreen extends State<ExerciseScreen> {
   int weightDg = 0;
   int repetitions = 10;
   var minScore = 1e6;
+  int _currentValue = 1;
+
+  final List<int> _values = List<int>.generate(30, (i) => i + 1);
+  Map<int, Color> _colorMap = {};
   var maxScore = 0.0;
   double maxHistoryDistance = globals.graphNumberOfDays.toDouble();
   late Timer timer;
@@ -176,6 +180,17 @@ class _ExerciseScreen extends State<ExerciseScreen> {
       weight /= 2.0;
       weight = (weight / increment).round() * increment;
     }
+ 
+    var data = get_trainingsets();
+    if (data.isNotEmpty) {
+      var last = data[0]!.last;
+      for (int i = last.baseReps; i <= last.maxReps; ++i) {
+        _colorMap[i] = Colors.red;
+      }
+    }
+
+  
+
     setState(() {
       weightKg = weight.toInt();
       weightDg = (weight * 100.0).toInt() % 100;
@@ -280,10 +295,8 @@ class _ExerciseScreen extends State<ExerciseScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
     TextEditingController dateInputController = TextEditingController(text: DateTime.now().toString());
 
-
-
-
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       appBar: AppBar(
           leading: InkWell(
             onTap: () {
@@ -428,13 +441,46 @@ class _ExerciseScreen extends State<ExerciseScreen> {
                         ),
                         const Text("kg"),
                         const Spacer(),
-                        NumberPicker(
-                          value: repetitions,
-                          minValue: 1, maxValue: 25,
-                          haptics: true,
-                          itemHeight: itemHeight, itemWidth: itemWidth,
-                          onChanged: (value) => setState(() => repetitions = value),
-                        ),
+                        // NumberPicker(
+                        //   value: repetitions,
+                        //   minValue: 1, maxValue: 30,
+                          
+                        //   haptics: true,
+                        //   itemHeight: itemHeight, itemWidth: itemWidth,
+                        //   onChanged: (value) => setState(() => repetitions = value),
+                        // ),
+                        Container(
+          height: 100,
+          width: 100,
+          child: ListWheelScrollView.useDelegate(
+            controller: FixedExtentScrollController(initialItem: repetitions),
+            itemExtent: 40,
+            physics: const FixedExtentScrollPhysics(),
+            useMagnifier: true,
+            magnification: 1.4,
+            onSelectedItemChanged: (index) {
+              setState(() {
+                repetitions = _values[index];
+                HapticFeedback.selectionClick();
+                // print(_currentValue);
+              });
+            },
+            childDelegate: ListWheelChildBuilderDelegate(
+              builder: (context, index) {
+                final value = _values[index];
+                final color = _colorMap.containsKey(value) ? _colorMap[value] : Colors.black;
+                return Center(
+                  child: Text(
+                    value.toString(),
+                    style: TextStyle(color: color, fontSize: 20, fontFamily: 'Roboto'),
+                    
+                  ),
+                );
+              },
+              childCount: _values.length,
+            ),
+          ),
+        ),
                         const Text("Reps."),
                         const Spacer(),
                         const Spacer()
