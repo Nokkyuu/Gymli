@@ -453,7 +453,7 @@ class _ExerciseScreen extends State<ExerciseScreen> {
           height: 100,
           width: 100,
           child: ListWheelScrollView.useDelegate(
-            controller: FixedExtentScrollController(initialItem: repetitions),
+            controller: FixedExtentScrollController(initialItem: repetitions-1),
             itemExtent: 40,
             physics: const FixedExtentScrollPhysics(),
             useMagnifier: true,
