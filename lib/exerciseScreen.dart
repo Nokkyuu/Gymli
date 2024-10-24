@@ -425,6 +425,7 @@ class _ExerciseScreen extends State<ExerciseScreen> {
                           ); }); },
                         ),
                         NumberPicker(
+                          //selectedTextStyle: TextStyle(color: Colors.black),
                           value: weightKg,
                           minValue: -70, maxValue: 250,
                           haptics: true,

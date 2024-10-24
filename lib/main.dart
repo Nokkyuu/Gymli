@@ -67,7 +67,7 @@ class MainApp extends StatefulWidget {
 
 class _MainAppState extends State<MainApp> {
   Brightness mode =  Brightness.light;
-  Color themecolor = Colors.orange;
+  Color themecolor = Color(0xE6FF6A00);
   bool isDarkMode = false;
   
 
@@ -95,6 +95,41 @@ class _MainAppState extends State<MainApp> {
         colorScheme: ColorScheme.fromSeed(
           seedColor: themecolor,
           brightness: mode,
+          primary: Color(0xE6FF6A00) , 
+          primaryContainer: Color(0xE6FF6A00),
+          onPrimary: Colors.white,
+          onPrimaryContainer: Colors.white,
+          secondary: Color(0xE6FF6A00),
+          secondaryContainer: Color(0xE6FF6A00),
+          onSecondary: Colors.white,
+          onSecondaryContainer: Colors.white,
+          tertiary: Color(0xE6FF6A00),
+          tertiaryContainer: Color(0xE6FF6A00),
+          onTertiary: Colors.white,
+          onTertiaryContainer: Colors.white,
+          error: Colors.red,
+          errorContainer: Colors.white,
+          onError: Colors.white,
+          onErrorContainer: Colors.white,
+          surface: Colors.white,
+          onSurface: Colors.black,
+          surfaceContainerHighest: Colors.white,
+          onSurfaceVariant: Colors.black,
+          outline: Colors.black,
+          shadow: Colors.black,
+          inverseSurface: Colors.black,
+          onInverseSurface: Colors.white,
+          inversePrimary: Colors.white,
+          surfaceContainer: Colors.white,
+          surfaceContainerHigh: Colors.white,
+          surfaceContainerLow: Colors.white,
+          surfaceContainerLowest: Colors.white,
+          surfaceTint: Colors.white,
+          surfaceBright: Colors.white,
+          surfaceDim: Colors.white,
+          
+          
+          
         ),
         textTheme: TextTheme(
           displayLarge: const TextStyle(
@@ -147,10 +182,13 @@ class _MainAppState extends State<MainApp> {
     drawer: Builder(
       builder: (context) {
         return Drawer(
+                
                 child: ListView(
         padding: EdgeInsets.zero,
         children: [
           DrawerHeader(
+            decoration: const BoxDecoration(color: Color(0xE6FF6A00),
+            ),
               child: Image(image: AssetImage(
                   isDarkMode
                     ? 'images/Icon-App_3_Darkmode.png'
