@@ -370,17 +370,17 @@ class _ExerciseScreen extends State<ExerciseScreen> {
                 return widgets;
               })(),
             ),
-            const Divider(),
-            Row(mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Image.asset('images/fairy.png',
-                  fit: BoxFit.contain,
-                  height: 18,
-                  ),
-                  const SizedBox(width: 10),
-                  Text(hintText),
-              ],
-            ),
+            // const Divider(),
+            // Row(mainAxisAlignment: MainAxisAlignment.center,
+            //   children: [
+            //     Image.asset('images/fairy.png',
+            //       fit: BoxFit.contain,
+            //       height: 18,
+            //       ),
+            //       const SizedBox(width: 10),
+            //       Text(hintText),
+            //   ],
+            // ),
             const Divider(),
             Padding(
                 padding: const EdgeInsets.only(left: 20, right: 20, bottom: 10),
@@ -434,7 +434,7 @@ class _ExerciseScreen extends State<ExerciseScreen> {
                         const Text(","),
                         NumberPicker(
                           value: weightDg,
-                          minValue: 0, maxValue: 95, step: 5,
+                          minValue: 0, maxValue: 75, step: 25,
                           haptics: true,
                           itemHeight: itemHeight, itemWidth: itemWidth,
                           onChanged: (value) => setState(() => weightDg = value),
