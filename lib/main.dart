@@ -15,11 +15,7 @@ import 'globals.dart' as globals;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:auth0_flutter/auth0_flutter.dart';
-
-final auth0 = Auth0(
-  'dev-aqz5a2g54oer01tk.us.auth0.com',
-  'MAxJUti2T7TkLagzT7SdeEzCTZsHyuOa',
-);
+import 'package:auth0_flutter/auth0_flutter_web.dart';
 
 bool state = false;
 
@@ -77,35 +73,20 @@ class _MainAppState extends State<MainApp> {
   Brightness mode = Brightness.light;
   Color themecolor = Color(0xE6FF6A00);
   bool isDarkMode = false;
-
-  void login() async {
-    try {
-      final result = await auth0
-          .webAuthentication()
-          .login(); // This should return a Credentials object
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('accessToken', result.accessToken);
-      await prefs.setString('idToken', result.idToken);
-      final user = result.user;
-      await prefs.setString('userName', user?.name ?? '');
-      print("User: ${user?.name}");
-    } catch (e) {
-      print("Login error: $e");
-    }
-  }
-
-  void logout() async {
-    await auth0.webAuthentication().logout();
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('accessToken');
-    await prefs.remove('idToken');
-    await prefs.remove('userName');
-  }
+  Credentials? _credentials;
+  late Auth0Web auth0;
 
   @override
   void initState() {
     super.initState();
     isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
+    auth0 = Auth0Web('dev-aqz5a2g54oer01tk.us.auth0.com',
+        'MAxJUti2T7TkLagzT7SdeEzCTZsHyuOa');
+
+    auth0.onLoad().then((final credentials) => setState(() {
+          _credentials = credentials;
+        }));
 
     // if (kIsWeb) {
     //   triggerLoad<TrainingSet>(context, "TrainingSets");
@@ -316,20 +297,29 @@ class _MainAppState extends State<MainApp> {
                     });
                   },
                 ),
-                ListTile(
-                  title: const Text('Login'),
-                  onTap: () {
-                    Navigator.pop(context);
-                    login();
-                  },
-                ),
-                ListTile(
-                  title: const Text('Logout'),
-                  onTap: () {
-                    Navigator.pop(context);
-                    logout();
-                  },
-                ),
+                if (_credentials == null)
+                  ListTile(
+                    title: const Text('Login'),
+                    onTap: () {
+                      setState(() {
+                        Navigator.pop(context);
+                        auth0.loginWithRedirect(
+                            redirectUrl:
+                                'https://gymli.brgmnn.de/'); // Call the function directly
+                      });
+                    },
+                  )
+                else
+                  ListTile(
+                    title: const Text('Logout'),
+                    onTap: () async {
+                      // Make the onTap callback async
+                      Navigator.pop(context); // Pop the drawer immediately
+                      await auth0.logout(
+                          // Await the logout operation
+                          returnToUrl: 'https://gymli.brgmnn.de/');
+                    },
+                  ),
               ],
             ),
           );
