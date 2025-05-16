@@ -12,7 +12,6 @@ class ProfileView extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         if (user.name != null) Text(user.name!),
-        if (user.email != null) Text(user.email!)
       ],
     );
   }
