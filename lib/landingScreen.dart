@@ -1,3 +1,24 @@
+/**
+ * Landing Screen - Main Application Dashboard
+ * 
+ * This is the primary dashboard screen of the Gymli fitness application,
+ * providing quick access to workouts, exercise browsing, and muscle group
+ * specific training programs.
+ * 
+ * Key features:
+ * - Exercise browse functionality with muscle group filtering
+ * - Quick workout access and recent exercise display
+ * - Muscle group specific workout recommendations
+ * - Exercise search and filtering capabilities
+ * - Recent training history overview
+ * - Navigation hub to other application sections
+ * - Real-time exercise data loading and display
+ * - Integration with workout setup and exercise screens
+ * 
+ * The screen serves as the main entry point for users to access all
+ * fitness tracking and workout management features of the application.
+ */
+
 import 'package:flutter/material.dart';
 import 'package:Gymli/exerciseScreen.dart';
 import 'user_service.dart';

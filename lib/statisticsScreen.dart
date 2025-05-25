@@ -1,3 +1,26 @@
+/**
+ * Statistics Screen - Workout Analytics and Progress Visualization
+ * 
+ * This screen provides comprehensive workout analytics and progress tracking
+ * through various charts, graphs, and statistical visualizations using fl_chart.
+ * 
+ * Key features:
+ * - Muscle group activation bar charts and heatmaps
+ * - Training volume analysis over time
+ * - One Rep Max (1RM) progression tracking
+ * - Exercise-specific performance metrics
+ * - Weekly/monthly workout frequency analysis
+ * - Visual progress indicators and trend analysis
+ * - Customizable date ranges for data analysis
+ * - Interactive charts with detailed data points
+ * - Muscle group balance assessment
+ * - Training load distribution visualization
+ * 
+ * The screen helps users understand their training patterns, identify
+ * imbalances, track progress, and make data-driven decisions about their
+ * fitness routines through comprehensive visual analytics.
+ */
+
 // ignore_for_file: file_names
 
 import 'package:flutter/material.dart';

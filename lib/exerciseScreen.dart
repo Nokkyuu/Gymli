@@ -1,3 +1,25 @@
+/**
+ * Exercise Screen - Main Workout Interface
+ * 
+ * This is the primary workout interface where users perform exercises and
+ * log their training sets. It provides comprehensive workout management
+ * with real-time progress tracking and interactive controls.
+ * 
+ * Key features:
+ * - Interactive exercise performance logging (weight, reps, RPE)
+ * - Real-time progress visualization with fl_chart graphs
+ * - Exercise history display and comparison
+ * - Timer functionality for rest periods
+ * - Set management (warmup vs work sets)
+ * - One Rep Max (1RM) calculations and tracking
+ * - Exercise configuration and setup options
+ * - Visual feedback with color-coded performance indicators
+ * - Integration with global muscle activation tracking
+ * 
+ * The screen serves as the core workout experience, combining data entry,
+ * progress visualization, and workout guidance in a single interface.
+ */
+
 // ignore_for_file: file_names, non_constant_identifier_names
 
 import 'package:flutter/material.dart';

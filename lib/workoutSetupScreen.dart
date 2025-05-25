@@ -1,3 +1,26 @@
+/**
+ * Workout Setup Screen - Workout Planning and Configuration
+ * 
+ * This screen provides comprehensive workout planning and configuration
+ * capabilities, allowing users to create, edit, and manage custom workout
+ * routines with multiple exercises and training parameters.
+ * 
+ * Key features:
+ * - Custom workout creation and management
+ * - Exercise selection and ordering within workouts
+ * - Set and rep configuration for each exercise
+ * - Workout template saving and loading
+ * - Exercise parameter customization (warmup, work sets, drop sets)
+ * - Interactive workout builder interface
+ * - Real-time workout preview and validation
+ * - Integration with exercise database
+ * - Workout metadata management (name, description, tags)
+ * 
+ * The screen enables users to design structured workout routines that can
+ * be saved as templates and executed during training sessions, providing
+ * a foundation for consistent and progressive training programs.
+ */
+
 // ignore_for_file: file_names, constant_identifier_names
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:flutter/material.dart';

@@ -1,3 +1,25 @@
+/**
+ * Settings Screen - Application Configuration and Data Management
+ * 
+ * This screen provides comprehensive application settings, user preferences,
+ * and data management capabilities for the Gymli fitness application.
+ * 
+ * Key features:
+ * - User authentication management (login/logout)
+ * - Display mode configuration (light/dark theme)
+ * - Graph visualization preferences (simple/detailed)
+ * - Data export functionality (CSV format)
+ * - Data import capabilities from CSV files
+ * - Training data management (clear/wipe options)
+ * - Application preferences persistence
+ * - File system operations for data backup/restore
+ * - User account information display
+ * - Confirmation dialogs for destructive operations
+ * 
+ * The screen serves as the central hub for customizing the application
+ * experience and managing user data across different devices and sessions.
+ */
+
 // ignore_for_file: file_names
 import 'package:flutter/material.dart';
 import 'package:Gymli/user_service.dart';
@@ -8,7 +30,7 @@ import 'dart:io';
 import 'package:flutter_file_dialog/flutter_file_dialog.dart';
 import 'package:intl/intl.dart';
 import 'package:confirm_dialog/confirm_dialog.dart';
-//import 'package:file_picker/file_picker.dart';
+//import 'package/file_picker/file_picker.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'globals.dart' as globals;

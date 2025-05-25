@@ -1,13 +1,36 @@
+/**
+ * API Service Classes for Gymli Application
+ * 
+ * This file contains all the HTTP API service classes that handle communication
+ * with the Gymli backend server. Each service class manages CRUD operations
+ * for its respective entity type.
+ * 
+ * Services included:
+ * - AnimalService: For animal data (testing/demo purposes)
+ * - ExerciseService: For exercise definitions and management
+ * - WorkoutService: For workout templates and management
+ * - TrainingSetService: For individual training set records
+ * - WorkoutUnitService: For workout unit associations
+ */
+
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
-// Main API base URL (update as needed)
+// Main API base URL - Azure hosted backend service
 const String baseUrl =
     'https://gymliapi-gyg0ardqh5dadaba.germanywestcentral-01.azurewebsites.net/';
 
 //----------------- Animals Service -----------------//
 
+/**
+ * AnimalService - Demo/test service for API testing
+ * 
+ * This service provides basic CRUD operations for animal entities.
+ * It's primarily used for testing API connectivity and functionality.
+ */
 class AnimalService {
+  /// Retrieves all animals from the API
+  /// Returns a list of animal objects
   Future<List<dynamic>> getAnimals() async {
     final response = await http.get(Uri.parse('$baseUrl/animals'));
     if (response.statusCode == 200) {
@@ -17,6 +40,9 @@ class AnimalService {
     }
   }
 
+  /// Retrieves a specific animal by its ID
+  /// [id] - The unique identifier of the animal
+  /// Returns a map containing animal details
   Future<Map<String, dynamic>> getAnimalById(int id) async {
     final response = await http.get(Uri.parse('$baseUrl/animals/$id'));
     if (response.statusCode == 200) {
@@ -26,6 +52,9 @@ class AnimalService {
     }
   }
 
+  /// Creates a new animal record
+  /// [name] - The name of the animal
+  /// [sound] - The sound the animal makes
   Future<void> createAnimal(String name, String sound) async {
     final response = await http.post(
       Uri.parse('$baseUrl/animals'),
@@ -37,6 +66,9 @@ class AnimalService {
     }
   }
 
+  /// Updates an existing animal record
+  /// [id] - The unique identifier of the animal to update
+  /// [data] - Map containing the fields to update
   Future<void> updateAnimal(int id, Map<String, dynamic> data) async {
     final response = await http.put(
       Uri.parse('$baseUrl/animals/$id'),
@@ -48,6 +80,8 @@ class AnimalService {
     }
   }
 
+  /// Deletes an animal record
+  /// [id] - The unique identifier of the animal to delete
   Future<void> deleteAnimal(int id) async {
     final response = await http.delete(Uri.parse('$baseUrl/animals/$id'));
     if (response.statusCode != 200 && response.statusCode != 204) {
@@ -58,7 +92,16 @@ class AnimalService {
 
 //----------------- Exercise Service -----------------//
 
+/**
+ * ExerciseService - Manages exercise definitions and data
+ * 
+ * This service handles all CRUD operations for exercises, which are used
+ * in workout planning and tracking.
+ */
 class ExerciseService {
+  /// Retrieves all exercises for a user
+  /// [userName] - The username to fetch exercises for
+  /// Returns a list of exercise objects
   Future<List<dynamic>> getExercises({required String userName}) async {
     final response =
         await http.get(Uri.parse('$baseUrl/exercises?user_name=$userName'));
@@ -69,6 +112,9 @@ class ExerciseService {
     }
   }
 
+  /// Retrieves a specific exercise by its ID
+  /// [id] - The unique identifier of the exercise
+  /// Returns a map containing exercise details
   Future<Map<String, dynamic>> getExerciseById(int id) async {
     final response = await http.get(Uri.parse('$baseUrl/exercises/$id'));
     if (response.statusCode == 200) {
@@ -78,6 +124,26 @@ class ExerciseService {
     }
   }
 
+  /// Creates a new exercise record
+  /// [userName] - The username associated with the exercise
+  /// [name] - The name of the exercise
+  /// [type] - The type/category of the exercise
+  /// [defaultRepBase] - Default base repetitions
+  /// [defaultRepMax] - Default maximum repetitions
+  /// [defaultIncrement] - Default increment value for progression
+  /// [pectoralisMajor] - Targeting pectoralis major muscle (percentage)
+  /// [trapezius] - Targeting trapezius muscle (percentage)
+  /// [biceps] - Targeting biceps muscle (percentage)
+  /// [abdominals] - Targeting abdominals muscle (percentage)
+  /// [frontDelts] - Targeting front deltoids muscle (percentage)
+  /// [deltoids] - Targeting deltoids muscle (percentage)
+  /// [backDelts] - Targeting rear deltoids muscle (percentage)
+  /// [latissimusDorsi] - Targeting latissimus dorsi muscle (percentage)
+  /// [triceps] - Targeting triceps muscle (percentage)
+  /// [gluteusMaximus] - Targeting gluteus maximus muscle (percentage)
+  /// [hamstrings] - Targeting hamstrings muscle (percentage)
+  /// [quadriceps] - Targeting quadriceps muscle (percentage)
+  /// [calves] - Targeting calves muscle (percentage)
   Future<void> createExercise({
     required String userName,
     required String name,
@@ -129,6 +195,9 @@ class ExerciseService {
     }
   }
 
+  /// Updates an existing exercise record
+  /// [id] - The unique identifier of the exercise to update
+  /// [data] - Map containing the fields to update
   Future<void> updateExercise(int id, Map<String, dynamic> data) async {
     final response = await http.put(
       Uri.parse('$baseUrl/exercises/$id'),
@@ -140,6 +209,8 @@ class ExerciseService {
     }
   }
 
+  /// Deletes an exercise record
+  /// [id] - The unique identifier of the exercise to delete
   Future<void> deleteExercise(int id) async {
     final response = await http.delete(Uri.parse('$baseUrl/exercises/$id'));
     if (response.statusCode != 200 && response.statusCode != 204) {
@@ -150,7 +221,16 @@ class ExerciseService {
 
 //----------------- Workout Service -----------------//
 
+/**
+ * WorkoutService - Manages workout templates and data
+ * 
+ * This service handles all CRUD operations for workouts, which are templates
+ * for user training sessions.
+ */
 class WorkoutService {
+  /// Retrieves all workouts for a user
+  /// [userName] - The username to fetch workouts for
+  /// Returns a list of workout objects
   Future<List<dynamic>> getWorkouts({required String userName}) async {
     final response =
         await http.get(Uri.parse('$baseUrl/workouts?user_name=$userName'));
@@ -161,6 +241,9 @@ class WorkoutService {
     }
   }
 
+  /// Retrieves a specific workout by its ID
+  /// [id] - The unique identifier of the workout
+  /// Returns a map containing workout details
   Future<Map<String, dynamic>> getWorkoutById(int id) async {
     final response = await http.get(Uri.parse('$baseUrl/workouts/$id'));
     if (response.statusCode == 200) {
@@ -170,6 +253,9 @@ class WorkoutService {
     }
   }
 
+  /// Creates a new workout record
+  /// [userName] - The username associated with the workout
+  /// [name] - The name of the workout
   Future<void> createWorkout({
     required String userName,
     required String name,
@@ -189,6 +275,9 @@ class WorkoutService {
     }
   }
 
+  /// Updates an existing workout record
+  /// [id] - The unique identifier of the workout to update
+  /// [data] - Map containing the fields to update
   Future<void> updateWorkout(int id, Map<String, dynamic> data) async {
     final response = await http.put(
       Uri.parse('$baseUrl/workouts/$id'),
@@ -200,6 +289,8 @@ class WorkoutService {
     }
   }
 
+  /// Deletes a workout record
+  /// [id] - The unique identifier of the workout to delete
   Future<void> deleteWorkout(int id) async {
     final response = await http.delete(Uri.parse('$baseUrl/workouts/$id'));
     if (response.statusCode != 200 && response.statusCode != 204) {
@@ -210,7 +301,16 @@ class WorkoutService {
 
 //----------------- Training Set Service -----------------//
 
+/**
+ * TrainingSetService - Manages individual training set records
+ * 
+ * This service handles all CRUD operations for training sets, which are records
+ * of individual exercise instances within a workout.
+ */
 class TrainingSetService {
+  /// Retrieves all training sets for a user
+  /// [userName] - The username to fetch training sets for
+  /// Returns a list of training set objects
   Future<List<dynamic>> getTrainingSets({required String userName}) async {
     final response =
         await http.get(Uri.parse('$baseUrl/training_sets?user_name=$userName'));
@@ -221,6 +321,9 @@ class TrainingSetService {
     }
   }
 
+  /// Retrieves a specific training set by its ID
+  /// [id] - The unique identifier of the training set
+  /// Returns a map containing training set details
   Future<Map<String, dynamic>> getTrainingSetById(int id) async {
     final response = await http.get(Uri.parse('$baseUrl/training_sets/$id'));
     if (response.statusCode == 200) {
@@ -230,6 +333,17 @@ class TrainingSetService {
     }
   }
 
+  /// Creates a new training set record
+  /// [userName] - The username associated with the training set
+  /// [exerciseId] - The ID of the exercise
+  /// [date] - The date of the training session
+  /// [weight] - The weight used in the training set
+  /// [repetitions] - The number of repetitions
+  /// [setType] - The type of set (e.g., warm-up, working set)
+  /// [baseReps] - Base number of repetitions for the set
+  /// [maxReps] - Maximum number of repetitions for the set
+  /// [increment] - Increment value for progression
+  /// [machineName] - Optional machine name used for the exercise
   Future<void> createTrainingSet({
     required String userName,
     required int exerciseId,
@@ -263,6 +377,9 @@ class TrainingSetService {
     }
   }
 
+  /// Updates an existing training set record
+  /// [id] - The unique identifier of the training set to update
+  /// [data] - Map containing the fields to update
   Future<void> updateTrainingSet(int id, Map<String, dynamic> data) async {
     final response = await http.put(
       Uri.parse('$baseUrl/training_sets/$id'),
@@ -274,6 +391,8 @@ class TrainingSetService {
     }
   }
 
+  /// Deletes a training set record
+  /// [id] - The unique identifier of the training set to delete
   Future<void> deleteTrainingSet(int id) async {
     final response = await http.delete(Uri.parse('$baseUrl/training_sets/$id'));
     if (response.statusCode != 200 && response.statusCode != 204) {
@@ -284,7 +403,16 @@ class TrainingSetService {
 
 //----------------- Workout Unit Service -----------------//
 
+/**
+ * WorkoutUnitService - Manages workout unit associations
+ * 
+ * This service handles all CRUD operations for workout units, which link exercises
+ * to workouts and define their order and type within the workout.
+ */
 class WorkoutUnitService {
+  /// Retrieves all workout units for a user
+  /// [userName] - The username to fetch workout units for
+  /// Returns a list of workout unit objects
   Future<List<dynamic>> getWorkoutUnits({required String userName}) async {
     final response =
         await http.get(Uri.parse('$baseUrl/workout_units?user_name=$userName'));
@@ -295,6 +423,9 @@ class WorkoutUnitService {
     }
   }
 
+  /// Retrieves a specific workout unit by its ID
+  /// [id] - The unique identifier of the workout unit
+  /// Returns a map containing workout unit details
   Future<Map<String, dynamic>> getWorkoutUnitById(int id) async {
     final response = await http.get(Uri.parse('$baseUrl/workout_units/$id'));
     if (response.statusCode == 200) {
@@ -304,6 +435,13 @@ class WorkoutUnitService {
     }
   }
 
+  /// Creates a new workout unit record
+  /// [userName] - The username associated with the workout unit
+  /// [workoutId] - The ID of the workout
+  /// [exerciseId] - The ID of the exercise
+  /// [warmups] - The number of warm-up sets
+  /// [worksets] - The number of work sets
+  /// [type] - The type of workout unit (e.g., exercise, rest)
   Future<void> createWorkoutUnit({
     required String userName,
     required int workoutId,
@@ -329,6 +467,9 @@ class WorkoutUnitService {
     }
   }
 
+  /// Updates an existing workout unit record
+  /// [id] - The unique identifier of the workout unit to update
+  /// [data] - Map containing the fields to update
   Future<void> updateWorkoutUnit(int id, Map<String, dynamic> data) async {
     final response = await http.put(
       Uri.parse('$baseUrl/workout_units/$id'),
@@ -340,6 +481,8 @@ class WorkoutUnitService {
     }
   }
 
+  /// Deletes a workout unit record
+  /// [id] - The unique identifier of the workout unit to delete
   Future<void> deleteWorkoutUnit(int id) async {
     final response = await http.delete(Uri.parse('$baseUrl/workout_units/$id'));
     if (response.statusCode != 200 && response.statusCode != 204) {

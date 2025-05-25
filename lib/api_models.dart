@@ -1,25 +1,51 @@
+/**
+ * API Data Models for Gymli Application
+ * 
+ * This file contains all the data model classes used for API communication
+ * and data storage. It defines the structure of exercises, workouts, training sets,
+ * workout units, and groups used throughout the application.
+ * 
+ * Key features:
+ * - Type-safe data models with validation
+ * - JSON serialization/deserialization
+ * - Muscle group and exercise type definitions
+ * - Comprehensive exercise metadata structure
+ */
+
 // ignore_for_file: file_names
 
 // Data models for API-based storage
+
+// Exercise type constants - defines the equipment/method categories
 final exerciseTypeNames = ["Free", "Machine", "Cable", "Body"];
+
+// Muscle group names - comprehensive list of targeted muscle groups
 final muscleGroupNames = [
-  "Pectoralis major",
-  "Trapezius",
-  "Biceps",
-  "Abdominals",
-  "Front Delts",
-  "Deltoids",
-  "Back Delts",
-  "Latissimus dorsi",
-  "Triceps",
-  "Gluteus maximus",
-  "Hamstrings",
-  "Quadriceps",
-  "Forearms",
-  "Calves"
+  "Pectoralis major", // Chest
+  "Trapezius", // Upper back/neck
+  "Biceps", // Front of upper arm
+  "Abdominals", // Core/abs
+  "Front Delts", // Front shoulder
+  "Deltoids", // Main shoulder
+  "Back Delts", // Rear shoulder
+  "Latissimus dorsi", // Back/lats
+  "Triceps", // Back of upper arm
+  "Gluteus maximus", // Glutes
+  "Hamstrings", // Back of thigh
+  "Quadriceps", // Front of thigh
+  "Forearms", // Lower arm
+  "Calves" // Lower leg
 ];
+
+// Training set type constants - categorizes different set purposes
 final setTypeNames = ["Warm", "Work", "Drop"];
 
+/**
+ * ApiExercise - Represents an exercise entity with comprehensive metadata
+ * 
+ * Contains all information about an exercise including muscle activation
+ * percentages, default repetition ranges, and user associations.
+ */
 class ApiExercise {
   final int? id;
   final String userName;
@@ -162,6 +188,12 @@ class ApiExercise {
   }
 }
 
+/**
+ * ApiTrainingSet - Represents a single training session entry for an exercise
+ * 
+ * Contains details about the performance of an exercise in a workout, including
+ * weights, repetitions, and set types.
+ */
 class ApiTrainingSet {
   final int? id;
   final String userName;
@@ -242,6 +274,12 @@ class ApiTrainingSet {
   }
 }
 
+/**
+ * ApiWorkoutUnit - Represents a unit of workout consisting of an exercise and its set details
+ * 
+ * Contains information about the exercise performed, including the number of warm-up,
+ * work, and drop sets, as well as the type of the workout unit.
+ */
 class ApiWorkoutUnit {
   final int? id;
   final String userName;
@@ -296,6 +334,12 @@ class ApiWorkoutUnit {
   String get exercise => exerciseName;
 }
 
+/**
+ * ApiWorkout - Represents a workout consisting of multiple workout units
+ * 
+ * Contains the details of a workout session, including the user, workout name,
+ * and the units (exercises) included in the workout.
+ */
 class ApiWorkout {
   final int? id;
   final String userName;
@@ -339,6 +383,12 @@ class ApiWorkout {
   }
 }
 
+/**
+ * ApiGroup - Represents a collection of exercises grouped together
+ * 
+ * Contains details about a group of exercises, including the user, group name,
+ * and the list of exercises in the group.
+ */
 class ApiGroup {
   final int? id;
   final String userName;

@@ -1,11 +1,30 @@
-import 'package:flutter/material.dart';
+/**
+ * Theme Colors and Styling for Gymli Application
+ * 
+ * This file defines the color palette and theme configuration for the app.
+ * It includes both light and dark theme support with custom color definitions
+ * and Material 3 design system integration.
+ */
 
+import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-const Color colorOrange = Color(0xE6FF6A00);
-const Color colorWhite = Colors.white;
-const Color colorBlack = Color.fromARGB(255, 18, 25, 36);
+// Primary application colors
+const Color colorOrange = Color(0xE6FF6A00); // Main brand orange color
+const Color colorWhite = Colors.white; // Standard white
+const Color colorBlack =
+    Color.fromARGB(255, 18, 25, 36); // Dark theme background
 
+/**
+ * Builds the application theme based on brightness mode
+ * 
+ * Creates a comprehensive Material 3 theme with custom color scheme
+ * that adapts to both light and dark modes while maintaining
+ * the orange brand identity.
+ * 
+ * [mode] - Brightness.light or Brightness.dark
+ * Returns a configured ThemeData object
+ */
 ThemeData buildAppTheme(Brightness mode) {
   return ThemeData(
     useMaterial3: true,

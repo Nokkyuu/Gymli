@@ -1,3 +1,26 @@
+/**
+ * API Test Screen - Development and Testing Interface
+ * 
+ * This screen provides a comprehensive testing interface for all API
+ * endpoints and services within the Gymli application. It's primarily
+ * used for development, debugging, and validation of API functionality.
+ * 
+ * Key features:
+ * - Complete API endpoint testing capabilities
+ * - Real-time API response display and validation
+ * - CRUD operations testing for all data models
+ * - Service integration testing (Animals, Exercises, Workouts, etc.)
+ * - Error handling and response validation
+ * - Mock data generation and testing scenarios
+ * - API performance monitoring and debugging
+ * - Interactive interface for manual API testing
+ * - Data model validation and schema testing
+ * 
+ * This screen is essential for developers to verify API functionality,
+ * test edge cases, and ensure proper data flow between the frontend
+ * and backend services during development and maintenance.
+ */
+
 // ignore_for_file: file_names
 
 import 'package:flutter/material.dart';

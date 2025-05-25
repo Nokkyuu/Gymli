@@ -1,3 +1,23 @@
+/**
+ * User Service for Authentication and Data Management
+ * 
+ * This service manages user authentication using Auth0 and provides
+ * data persistence capabilities for both authenticated and anonymous users.
+ * 
+ * Key features:
+ * - Auth0 integration for secure user authentication
+ * - Singleton pattern for global access across the application
+ * - In-memory data storage for non-authenticated users
+ * - Real-time authentication state notifications
+ * - User data synchronization between local and cloud storage
+ * 
+ * The service handles:
+ * - Login/logout operations
+ * - User credential management
+ * - Data persistence (exercises, workouts, training sets)
+ * - Authentication state broadcasting
+ */
+
 // ignore_for_file: non_constant_identifier_names
 
 import 'package:auth0_flutter/auth0_flutter.dart';

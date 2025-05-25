@@ -1,3 +1,20 @@
+/**
+ * Exercise List Screen - Training History Display
+ * 
+ * This screen displays the complete training history for a specific exercise,
+ * showing all past training sets with performance metrics and visual indicators.
+ * 
+ * Features:
+ * - Chronological list of all training sets for an exercise
+ * - Visual workout intensity indicators using FontAwesome icons
+ * - Performance metrics display (weight, reps, calculated 1RM)
+ * - Loading states and error handling
+ * - Interactive list with detailed training set information
+ * 
+ * The screen helps users track their progress over time for individual
+ * exercises and analyze their training patterns and improvements.
+ */
+
 // ignore_for_file: file_names
 
 import 'package:flutter/material.dart';
