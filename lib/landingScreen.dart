@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:Gymli/exerciseScreen.dart';
-import 'package:Gymli/DataModels.dart';
-import 'package:hive_flutter/hive_flutter.dart';
+import 'user_service.dart';
+import 'api_models.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:Gymli/workoutSetupScreen.dart';
 import 'database.dart' as db;
-
 
 enum MuscleList {
   Pectoralis_major("Pectoralis major"),
@@ -27,7 +26,7 @@ enum MuscleList {
 
 class LandingScreen extends StatefulWidget {
   const LandingScreen({super.key});
-  
+
   @override
   State<LandingScreen> createState() {
     return _LandingScreenState();
@@ -38,29 +37,35 @@ class _LandingScreenState extends State<LandingScreen> {
   final TextEditingController WorkoutController = TextEditingController();
   final TextEditingController MuscleController = TextEditingController();
 
-  Workout? selectedWorkout;
+  ApiWorkout? selectedWorkout;
   MuscleList? selectedMuscle;
-  var box = Hive.box<Exercise>('Exercises');
-  List<Exercise> allExercises = Hive.box<Exercise>('Exercises').values.toList();
-
-  var availableWorkouts = Hive.box<Workout>('Workouts').values.toList();
-
-  //List<Exercise> filteredExercises = Hive.box<Exercise>('Exercises').values.toList();
+  final UserService userService = UserService();
+  List<ApiExercise> allExercises = [];
+  List<ApiWorkout> availableWorkouts = [];
+  List<ApiExercise> filteredExercises = [];
   ValueNotifier<bool> filterApplied = ValueNotifier<bool>(true);
-  List<Exercise> filteredExercises = Hive.box<Exercise>('Exercises').values.toList();
   List<String> metainfo = [];
+  bool _isLoading = true;
 
-  void updateAllExercises() {
-      allExercises = Hive.box<Exercise>('Exercises').values.toList();
+  Future<void> updateAllExercises() async {
+    try {
+      final exercises = await userService.getExercises();
+      allExercises = exercises.map((e) => ApiExercise.fromJson(e)).toList();
       allExercises.sort((a, b) => a.name.compareTo(b.name));
-      // metainfo = [for (var e in allExercises) metainfo[mappings[e.name]!]];
       filterApplied.value = !filterApplied.value;
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error loading exercises: $e')),
+        );
+      }
+    }
   }
 
-  void workoutFilterList(Workout workout) {
+  void workoutFilterList(ApiWorkout workout) {
     var filterMask = [];
     for (var e in workout.units) {
-      filterMask.add(e.exercise);
+      filterMask.add(e.exerciseName);
     }
     filteredExercises = [];
     filteredExercises.sort((a, b) => a.name.compareTo(b.name));
@@ -72,23 +77,25 @@ class _LandingScreenState extends State<LandingScreen> {
     metainfo = List.filled(allExercises.length, "");
     for (var e in workout.units) {
       for (int i = 0; i < filteredExercises.length; ++i) {
-        if (filteredExercises[i].name == e.exercise) {
-          metainfo[i] = 'Warm: ${e.warmups}, Work: ${e.worksets}, Drop: ${e.dropsets}';
+        if (filteredExercises[i].name == e.exerciseName) {
+          metainfo[i] =
+              'Warm: ${e.warmups}, Work: ${e.worksets}, Drop: ${e.dropsets}';
         }
       }
     }
     filterApplied.value = !filterApplied.value;
   }
 
-  void showAllExercises() {
+  Future<void> showAllExercises() async {
     filteredExercises = allExercises;
     // filteredExercises.sort((a, b) => a.name.compareTo(b.name));
     metainfo = [];
     for (var ex in filteredExercises) {
-      var lastTraining = db.getLastTrainingDay(ex.name);
+      var lastTraining = await db.getLastTrainingDay(ex.name);
       var dayDiff = DateTime.now().difference(lastTraining).inDays;
-      String dayInfo =  dayDiff > 0 ? "$dayDiff days ago" : "today";
-      metainfo.add('${ex.defaultRepBase}-${ex.defaultRepMax} Reps @ ${ex.defaultIncrement}kg - $dayInfo');
+      String dayInfo = dayDiff > 0 ? "$dayDiff days ago" : "today";
+      metainfo.add(
+          '${ex.defaultRepBase}-${ex.defaultRepMax} Reps @ ${ex.defaultIncrement}kg - $dayInfo');
     }
     filterApplied.value = !filterApplied.value;
   }
@@ -103,29 +110,102 @@ class _LandingScreenState extends State<LandingScreen> {
       }
     }
     for (var ex in filteredExercises) {
-      metainfo.add('Reps: ${ex.defaultRepBase} to ${ex.defaultRepMax} Weight Incr.: ${ex.defaultIncrement}');
+      metainfo.add(
+          'Reps: ${ex.defaultRepBase} to ${ex.defaultRepMax} Weight Incr.: ${ex.defaultIncrement}');
     }
     filterApplied.value = !filterApplied.value;
   }
 
   Future<void> _reload(var value) async {
-    setState(() {
-      availableWorkouts = Hive.box<Workout>('Workouts').values.toList();
-    });
+    try {
+      final workouts = await userService.getWorkouts();
+      setState(() {
+        availableWorkouts =
+            workouts.map((w) => ApiWorkout.fromJson(w)).toList();
+      });
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error loading workouts: $e')),
+        );
+      }
+    }
   }
+
   @override
   void initState() {
     super.initState();
-    updateAllExercises();
+    _loadData();
+
+    // Listen to authentication state changes
+    userService.authStateNotifier.addListener(_onAuthStateChanged);
+  }
+
+  @override
+  void dispose() {
+    userService.authStateNotifier.removeListener(_onAuthStateChanged);
+    super.dispose();
+  }
+
+  void _onAuthStateChanged() {
+    // Reload data when authentication state changes
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
     setState(() {
-      MuscleController.value = TextEditingValue.empty;
-      WorkoutController.value = TextEditingValue.empty;
-      showAllExercises();
+      _isLoading = true;
     });
+
+    try {
+      // Show current user info while loading
+      print('Loading data for user: ${userService.userName}');
+
+      await updateAllExercises();
+      await _reload(null);
+
+      setState(() {
+        MuscleController.value = TextEditingValue.empty;
+        WorkoutController.value = TextEditingValue.empty;
+        _isLoading = false;
+      });
+
+      await showAllExercises();
+
+      // Show success message after login
+      if (mounted && userService.isLoggedIn) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+                'Welcome ${userService.userName}! Your data has been loaded.'),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error loading data: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Center(
+        child: CircularProgressIndicator(),
+      );
+    }
+
     return Column(
         mainAxisAlignment: MainAxisAlignment.center,
         mainAxisSize: MainAxisSize.max,
@@ -135,11 +215,13 @@ class _LandingScreenState extends State<LandingScreen> {
             children: [
               const Text("Filter by or "),
               TextButton.icon(
-                onPressed: () => setState(() {
-                  showAllExercises();
-                  WorkoutController.value = TextEditingValue.empty;
-                  MuscleController.value = TextEditingValue.empty;
-                }),
+                onPressed: () async {
+                  setState(() {
+                    WorkoutController.value = TextEditingValue.empty;
+                    MuscleController.value = TextEditingValue.empty;
+                  });
+                  await showAllExercises();
+                },
                 label: const Text("Show All"),
                 icon: const Icon(Icons.search),
               )
@@ -149,7 +231,7 @@ class _LandingScreenState extends State<LandingScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Spacer(),
-              DropdownMenu<Workout>(
+              DropdownMenu<ApiWorkout>(
                 width: MediaQuery.of(context).size.width * 0.45,
                 enabled: true,
                 key: UniqueKey(),
@@ -157,7 +239,7 @@ class _LandingScreenState extends State<LandingScreen> {
                 controller: WorkoutController,
                 requestFocusOnTap: false,
                 label: const Text('Workouts'),
-                onSelected: (Workout? workout) {
+                onSelected: (ApiWorkout? workout) {
                   workoutFilterList(workout!);
                   setState(() {
                     MuscleController.value = TextEditingValue.empty;
@@ -173,14 +255,19 @@ class _LandingScreenState extends State<LandingScreen> {
                   ),
                 ),
                 dropdownMenuEntries: availableWorkouts
-                    .map<DropdownMenuEntry<Workout>>((Workout workout) {
-                  return DropdownMenuEntry<Workout>(
+                    .map<DropdownMenuEntry<ApiWorkout>>((ApiWorkout workout) {
+                  return DropdownMenuEntry<ApiWorkout>(
                     value: workout,
                     label: workout.name,
                     trailingIcon: IconButton(
                         onPressed: () => {
-                          Navigator.push( context, MaterialPageRoute(builder: (context) => WorkoutSetupScreen(workout.name))).then((value) => _reload(value))
-                        },
+                              Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (context) =>
+                                              WorkoutSetupScreen(workout.name)))
+                                  .then((value) => _reload(value))
+                            },
                         icon: const Icon(Icons.edit)),
                   );
                 }).toList(),
@@ -251,16 +338,17 @@ class _LandingScreenState extends State<LandingScreen> {
                               ),
                               dense: true,
                               title: Text(currentData.name),
-
                               subtitle: Row(
                                   mainAxisAlignment: MainAxisAlignment.start,
                                   children: [Text(meta)]),
                               onTap: () {
                                 Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                        builder: (context) =>
-                                            ExerciseScreen(currentData.name, description))).then((value) => _reload(value));
+                                        context,
+                                        MaterialPageRoute(
+                                            builder: (context) =>
+                                                ExerciseScreen(currentData.name,
+                                                    description)))
+                                    .then((value) => _reload(value));
                               });
                         });
                   } else {

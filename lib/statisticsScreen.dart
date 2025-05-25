@@ -1,16 +1,16 @@
 // ignore_for_file: file_names
 
 import 'package:flutter/material.dart';
-import 'package:hive_flutter/hive_flutter.dart';
 import 'package:intl/intl.dart';
 //import 'package:file_picker/file_picker.dart';
 import 'globals.dart' as globals;
 import 'package:time_machine/time_machine.dart';
 import 'package:fl_chart/fl_chart.dart';
-import 'package:Gymli/DataModels.dart';
 import 'package:tuple/tuple.dart';
 import 'dart:math';
 import 'database.dart' as db;
+import 'user_service.dart';
+import 'api_models.dart';
 
 class StatisticsScreen extends StatefulWidget {
   const StatisticsScreen({super.key});
@@ -18,8 +18,6 @@ class StatisticsScreen extends StatefulWidget {
   @override
   State<StatisticsScreen> createState() => _StatisticsScreen();
 }
-
-      
 
 const List<String> barChartMuscleNames = [
   "Pecs",
@@ -39,20 +37,20 @@ const List<String> barChartMuscleNames = [
 ];
 
 const List<Color> barChartMuscleColors = [
-  Color.fromARGB(255, 166,206,227), 
-  Color.fromARGB(255, 202,178,214), 
-  Color.fromARGB(255, 178,223,138), 
-  Color.fromARGB(255, 51,160,44), 
-  Color.fromARGB(255, 251,154,153),
-  Color.fromARGB(255, 251,154,153), 
-  Color.fromARGB(255, 251,154,153), 
-  Color.fromARGB(255, 31,120,180), 
-  Color.fromARGB(255, 227,26,28), 
-  Color.fromARGB(255, 255,127,0), 
-  Color.fromARGB(255, 253,191,111), 
-  Color.fromARGB(255, 106,61,154), 
-  Color.fromARGB(255, 255,255,153), 
-  Color.fromARGB(255, 177,89,40), 
+  Color.fromARGB(255, 166, 206, 227),
+  Color.fromARGB(255, 202, 178, 214),
+  Color.fromARGB(255, 178, 223, 138),
+  Color.fromARGB(255, 51, 160, 44),
+  Color.fromARGB(255, 251, 154, 153),
+  Color.fromARGB(255, 251, 154, 153),
+  Color.fromARGB(255, 251, 154, 153),
+  Color.fromARGB(255, 31, 120, 180),
+  Color.fromARGB(255, 227, 26, 28),
+  Color.fromARGB(255, 255, 127, 0),
+  Color.fromARGB(255, 253, 191, 111),
+  Color.fromARGB(255, 106, 61, 154),
+  Color.fromARGB(255, 255, 255, 153),
+  Color.fromARGB(255, 177, 89, 40),
 ];
 
 TextStyle subStyle =
@@ -71,6 +69,7 @@ class _StatisticsScreen extends State<StatisticsScreen> {
   List<double> heatMapMulti = [];
   // ignore: non_constant_identifier_names
   final TextEditingController MuscleController = TextEditingController();
+  final UserService userService = UserService();
   List<List<double>> heatMapCood = [
     [0.25, 0.53], //pectoralis
     [0.75, 0.57], // trapezius
@@ -87,9 +86,6 @@ class _StatisticsScreen extends State<StatisticsScreen> {
     [0.4, 0.40], //fore
     [0.31, 0.15], //calv
   ];
-  
-
-
 
   void updateView() {}
 
@@ -111,32 +107,34 @@ class _StatisticsScreen extends State<StatisticsScreen> {
     return BarChartGroupData(x: x, groupVertically: true, barRods: bars);
   }
 
-    void updateBarStatistics() {
+  Future<void> updateBarStatistics() async {
+    // calculate portions of training
+    // final musGroups = ["Pectoralis major", "Biceps", "Abdominals", "Deltoids", "Latissimus dorsi", "Triceps", "Gluteus maximus", "Hamstrings", "Quadriceps"];
+    // determine mapping of muscle groups to scores
+    Map<String, int> muscleMapping = {
+      "Pectoralis major": 0,
+      "Trapezius": 1,
+      "Biceps": 2,
+      "Abdominals": 3,
+      "Front Delts": 4,
+      "Deltoids": 5,
+      "Back Delts": 6,
+      "Latissimus dorsi": 7,
+      "Triceps": 8,
+      "Gluteus maximus": 9,
+      "Hamstrings": 10,
+      "Quadriceps": 11,
+      "Forearms": 12,
+      "Calves": 13,
+    };
 
-      // calculate portions of training
-      // final musGroups = ["Pectoralis major", "Biceps", "Abdominals", "Deltoids", "Latissimus dorsi", "Triceps", "Gluteus maximus", "Hamstrings", "Quadriceps"];
-      // determine mapping of muscle groups to scores
-      Map<String, int> muscleMapping = {
-        "Pectoralis major": 0,
-        "Trapezius": 1,
-        "Biceps": 2,
-        "Abdominals": 3,
-        "Front Delts": 4,
-        "Deltoids": 5,
-        "Back Delts": 6,
-        "Latissimus dorsi": 7,
-        "Triceps": 8,
-        "Gluteus maximus": 9,
-        "Hamstrings": 10,
-        "Quadriceps": 11,
-        "Forearms": 12,
-        "Calves": 13,
-        
-      };
+    try {
+      final exercisesData = await userService.getExercises();
+      final exercises =
+          exercisesData.map((e) => ApiExercise.fromJson(e)).toList();
 
-      var ebox = Hive.box<Exercise>("Exercises");
       Map<String, List<Tuple2<int, double>>> exerciseMapping = {};
-      for (var e in ebox.values.toList()) {
+      for (var e in exercises) {
         List<Tuple2<int, double>> intermediateMap = [];
         for (int i = 0; i < e.muscleGroups.length; ++i) {
           String which = e.muscleGroups[i];
@@ -145,30 +143,52 @@ class _StatisticsScreen extends State<StatisticsScreen> {
         }
         exerciseMapping[e.name] = intermediateMap;
       }
-    barChartStatistics.clear();
-    List<DateTime> _trainingDates = db.getTrainingDates("");
-    if (startingDate != null) {
-      var tokens = startingDate!.split("-");
-      String _startingDateString = "${tokens[2]}-${tokens[1]}-${tokens[0]}T00:00:00";
-      DateTime _start = DateTime.parse(_startingDateString!);
-      _trainingDates = _trainingDates.where((d) => _start.isBefore(d)).toList();
-    }
-    if (endingDate != null) {
-      var tokens = endingDate!.split("-");
-      String _endingDateString = "${tokens[2]}-${tokens[1]}-${tokens[0]}T00:00:00";
-      DateTime _end = DateTime.parse(_endingDateString!);
-      _trainingDates = _trainingDates.where((d) => _end.isAfter(d)).toList();
-    }
+
+      barChartStatistics.clear();
+      List<DateTime> _trainingDates = await db.getTrainingDates("");
+      if (startingDate != null) {
+        var tokens = startingDate!.split("-");
+        String _startingDateString =
+            "${tokens[2]}-${tokens[1]}-${tokens[0]}T00:00:00";
+        DateTime _start = DateTime.parse(_startingDateString);
+        _trainingDates =
+            _trainingDates.where((d) => _start.isBefore(d)).toList();
+      }
+      if (endingDate != null) {
+        var tokens = endingDate!.split("-");
+        String _endingDateString =
+            "${tokens[2]}-${tokens[1]}-${tokens[0]}T00:00:00";
+        DateTime _end = DateTime.parse(_endingDateString);
+        _trainingDates = _trainingDates.where((d) => _end.isAfter(d)).toList();
+      }
+
       List<List<double>> muscleHistoryScore = [];
       for (var day in _trainingDates) {
-        var trainings = db.getTrainings(day);
-        List<double> dailyMuscleScores = [0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0]; // very static and nasty
+        var trainings = await db.getTrainings(day);
+        List<double> dailyMuscleScores = [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]; // very static and nasty
         for (var exerciseSet in trainings) {
           String exerciseName = exerciseSet.exercise;
-          List<Tuple2<int, double>> muscleInvolved =
-              exerciseMapping[exerciseName]!;
-          for (Tuple2<int, double> pair in muscleInvolved) {
-            dailyMuscleScores[pair.item1] += pair.item2;
+          List<Tuple2<int, double>>? muscleInvolved =
+              exerciseMapping[exerciseName];
+          if (muscleInvolved != null) {
+            for (Tuple2<int, double> pair in muscleInvolved) {
+              dailyMuscleScores[pair.item1] += pair.item2;
+            }
           }
         }
         muscleHistoryScore.add(dailyMuscleScores);
@@ -183,55 +203,72 @@ class _StatisticsScreen extends State<StatisticsScreen> {
             .add(generateBars(i, accumulatedScore, barChartMuscleColors));
       }
       globals.muscleHistoryScore = muscleHistoryScore;
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error updating statistics: $e')),
+        );
+      }
     }
+  }
 
   @override
   void initState() {
     super.initState();
-    // ignore: no_leading_underscores_for_local_identifiers
-    List<DateTime> _trainingDates = db.getTrainingDates("");
-    setState(() {
-      numberOfTrainingDays = _trainingDates.length;
-      if (numberOfTrainingDays == 0) {
-        return;
-      }
-      // var timeDiff = _trainingDates.first.difference(_trainingDates.last).inDays;
-      Period diff = LocalDate.dateTime(_trainingDates.last)
-          .periodSince(LocalDate.dateTime(_trainingDates.first));
-      trainingDuration =
-          "Over the period of ${diff.months} month and ${diff.days} days";
-      var firstWeek = weekNumber(_trainingDates.first);
-      var lastWeek = weekNumber(_trainingDates.last);
-      List<int> trainingsPerWeek = [];
-      for (int i = firstWeek; i < lastWeek + 1; ++i) {
-        trainingsPerWeek.add(0);
-      }
-      for (var d in _trainingDates) {
-        trainingDates.add(DateFormat('dd-MM-yyyy').format(d));
-        trainingsPerWeek[weekNumber(d) - firstWeek] += 1;
-      }
-      List<FlSpot> spots = [];
-      for (int i = 0; i < trainingsPerWeek.length; ++i) {
-        spots.add(
-            FlSpot((i + firstWeek).toDouble(), trainingsPerWeek[i].toDouble()));
-      }
-      trainingsPerWeekChart.add(LineChartBarData(spots: spots));
+    _loadStatistics();
+  }
 
-      updateBarStatistics();
-    });
+  Future<void> _loadStatistics() async {
+    try {
+      // ignore: no_leading_underscores_for_local_identifiers
+      List<DateTime> _trainingDates = await db.getTrainingDates("");
+      setState(() {
+        numberOfTrainingDays = _trainingDates.length;
+        if (numberOfTrainingDays == 0) {
+          return;
+        }
+        // var timeDiff = _trainingDates.first.difference(_trainingDates.last).inDays;
+        Period diff = LocalDate.dateTime(_trainingDates.last)
+            .periodSince(LocalDate.dateTime(_trainingDates.first));
+        trainingDuration =
+            "Over the period of ${diff.months} month and ${diff.days} days";
+        var firstWeek = weekNumber(_trainingDates.first);
+        var lastWeek = weekNumber(_trainingDates.last);
+        List<int> trainingsPerWeek = [];
+        for (int i = firstWeek; i < lastWeek + 1; ++i) {
+          trainingsPerWeek.add(0);
+        }
+        for (var d in _trainingDates) {
+          trainingDates.add(DateFormat('dd-MM-yyyy').format(d));
+          trainingsPerWeek[weekNumber(d) - firstWeek] += 1;
+        }
+        List<FlSpot> spots = [];
+        for (int i = 0; i < trainingsPerWeek.length; ++i) {
+          spots.add(FlSpot(
+              (i + firstWeek).toDouble(), trainingsPerWeek[i].toDouble()));
+        }
+        trainingsPerWeekChart.add(LineChartBarData(spots: spots));
+      });
 
+      await updateBarStatistics();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error loading statistics: $e')),
+        );
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-
     List<List> muscleHistoryScore = globals.muscleHistoryScore;
 
     List<double> muscleHistoryScoreCum = [];
     if (muscleHistoryScore.isNotEmpty) {
-      for (int i = 0 ; i < muscleHistoryScore[0].length; i++) {
+      for (int i = 0; i < muscleHistoryScore[0].length; i++) {
         double item = 0;
-        for (int j = 0 ; j < muscleHistoryScore.length; j++) {
+        for (int j = 0; j < muscleHistoryScore.length; j++) {
           item = item +
               muscleHistoryScore[j]
                   [i]; //adds all values from all the lists in the list.
@@ -240,7 +277,7 @@ class _StatisticsScreen extends State<StatisticsScreen> {
       }
       var highestValue = muscleHistoryScoreCum.reduce(max);
       heatMapMulti = [];
-      for (int i =0; i < muscleHistoryScoreCum.length ; i++) {
+      for (int i = 0; i < muscleHistoryScoreCum.length; i++) {
         heatMapMulti.add(muscleHistoryScoreCum[i] /
             highestValue); //percentage of muscle usage in relation to highest for the heatmap.
       }
@@ -263,8 +300,6 @@ class _StatisticsScreen extends State<StatisticsScreen> {
           title: const Text("Statistics"),
         ),
         body: ListView(children: <Widget>[
-          
-
           Text("Selected Training Interval", style: subStyle),
           const SizedBox(height: 5),
           Row(mainAxisAlignment: MainAxisAlignment.center, children: [
@@ -316,7 +351,11 @@ class _StatisticsScreen extends State<StatisticsScreen> {
           Text("Number of training days: $numberOfTrainingDays"),
           Text(trainingDuration),
           const Divider(),
-          Text("Number of Trainings per Week", style: subStyle, textAlign: TextAlign.center,),
+          Text(
+            "Number of Trainings per Week",
+            style: subStyle,
+            textAlign: TextAlign.center,
+          ),
           SizedBox(
               width: MediaQuery.of(context).size.width,
               height: MediaQuery.of(context).size.height * 0.15,
@@ -336,7 +375,11 @@ class _StatisticsScreen extends State<StatisticsScreen> {
                     maxY: 4)),
               )),
           const SizedBox(height: 20),
-          Text("Muscle usage per Exercise", style: subStyle, textAlign: TextAlign.center,),
+          Text(
+            "Muscle usage per Exercise",
+            style: subStyle,
+            textAlign: TextAlign.center,
+          ),
           const SizedBox(height: 5),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -389,10 +432,13 @@ class _StatisticsScreen extends State<StatisticsScreen> {
                 BarChartData(
                   alignment: BarChartAlignment.spaceBetween,
                   titlesData: const FlTitlesData(
-                    topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                    rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                    topTitles:
+                        AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                    rightTitles:
+                        AxisTitles(sideTitles: SideTitles(showTitles: false)),
                     // bottomTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                    leftTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                    leftTitles:
+                        AxisTitles(sideTitles: SideTitles(showTitles: false)),
                   ),
                   barGroups: barChartStatistics,
                 ),
@@ -413,51 +459,57 @@ class _StatisticsScreen extends State<StatisticsScreen> {
           const SizedBox(
             height: 20,
           ),
-          Text("Heatmap: relative to most used muscle", style: subStyle, textAlign: TextAlign.center,),
-                    const SizedBox(
+          Text(
+            "Heatmap: relative to most used muscle",
+            style: subStyle,
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(
             height: 20,
           ),
-          
+
           SizedBox(
-            height: MediaQuery.of(context).size.height * 0.7,
-            width: 100,
-            child: 
-              Stack(
+              height: MediaQuery.of(context).size.height * 0.7,
+              width: 100,
+              child: Stack(
                 //width: MediaQuery.of(context).size.width,
                 fit: StackFit.expand,
                 // width: MediaQuery.of(context).size.width,
-                children: [Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Transform.scale(
-                      scaleX: -1,
-                      child:  Image(
-                        fit: BoxFit.fill,
-                          width: MediaQuery.of(context).size.width*0.35,
-                          // height: MediaQuery.of(context).size.height * 0.7,
-                          image: const AssetImage('images/muscles/Front_bg.png')),
-                    ),
-                     Image(
-                      fit: BoxFit.fill,
-                        width: MediaQuery.of(context).size.width*0.35,
-                        //   height: MediaQuery.of(context).size.height * 0.7,
-                        image: const AssetImage('images/muscles/Back_bg.png')),
-                  ],
-                ),
-              
-
-             
-
-              for (int i = 0; i < heatMapMulti.length; i++)
-                heatDot(
-                    text: "${(heatMapMulti[i] * 100).round()}%",
-                    x: (MediaQuery.of(context).size.width*heatMapCood[i][0]) - ((30 + (50 * heatMapMulti[i])) / 2),
-                    y: (MediaQuery.of(context).size.height*heatMapCood[i][1]) - ((30 + (50 * heatMapMulti[i])) / 2),
-                    dia: 30 + (50 * heatMapMulti[i]),
-                    opa: heatMapMulti[i] == 0 ? 0 : 200,
-                    lerp: heatMapMulti[i]),
-          ],
-          )),
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Transform.scale(
+                        scaleX: -1,
+                        child: Image(
+                            fit: BoxFit.fill,
+                            width: MediaQuery.of(context).size.width * 0.35,
+                            // height: MediaQuery.of(context).size.height * 0.7,
+                            image: const AssetImage(
+                                'images/muscles/Front_bg.png')),
+                      ),
+                      Image(
+                          fit: BoxFit.fill,
+                          width: MediaQuery.of(context).size.width * 0.35,
+                          //   height: MediaQuery.of(context).size.height * 0.7,
+                          image:
+                              const AssetImage('images/muscles/Back_bg.png')),
+                    ],
+                  ),
+                  for (int i = 0; i < heatMapMulti.length; i++)
+                    heatDot(
+                        text: "${(heatMapMulti[i] * 100).round()}%",
+                        x: (MediaQuery.of(context).size.width *
+                                heatMapCood[i][0]) -
+                            ((30 + (50 * heatMapMulti[i])) / 2),
+                        y: (MediaQuery.of(context).size.height *
+                                heatMapCood[i][1]) -
+                            ((30 + (50 * heatMapMulti[i])) / 2),
+                        dia: 30 + (50 * heatMapMulti[i]),
+                        opa: heatMapMulti[i] == 0 ? 0 : 200,
+                        lerp: heatMapMulti[i]),
+                ],
+              )),
         ]));
   }
 }

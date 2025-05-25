@@ -1,85 +1,156 @@
 // ignore_for_file: non_constant_identifier_names
 library my_prj.database;
-import 'package:Gymli/DataModels.dart';
-import 'package:hive_flutter/hive_flutter.dart';
+
 import 'package:tuple/tuple.dart';
 import 'package:intl/intl.dart';
+import 'user_service.dart';
+import 'api_models.dart';
 
-Exercise get_exercise(String exerciseName) {
-  var box = Hive.box<Exercise>('Exercises');
-  var exerciseFilter = box.values.toList().where((item) => item.name == exerciseName);
-  return exerciseFilter.first;
-}
+Future<ApiExercise?> get_exercise(String exerciseName) async {
+  try {
+    final userService = UserService();
+    final exercises = await userService.getExercises();
+    final exerciseData = exercises.firstWhere(
+      (item) => item['name'] == exerciseName,
+      orElse: () => null,
+    );
 
-List<TrainingSet> getExerciseTrainings(String exercise) {
-  var items = Hive.box<TrainingSet>('TrainingSets').values;
-  return items.where((item) => item.exercise == exercise).toList();
-
-}
-
-List<TrainingSet> getTrainings(DateTime day) {
-  var items = Hive.box<TrainingSet>('TrainingSets').values;
-  return items.where((item) => item.date.day == day.day &&item.date.month == day.month &&item.date.year == day.year).toList();
-}
-
-
-List<DateTime> getTrainingDates(String exercise) {
-  var box = Hive.box<TrainingSet>('TrainingSets');
-  var items = box.values;
-  if (exercise != "") {
-    items = items.where((item) => item.exercise == exercise && item.setType > 0).toList();
+    if (exerciseData != null) {
+      return ApiExercise.fromJson(exerciseData);
+    }
+    return null;
+  } catch (e) {
+    print('Error getting exercise: $e');
+    return null;
   }
-  final dates = items
-      .map((e) => DateFormat('yyyy-MM-dd').format(e.date))
-      .toSet()
-      .toList();
-  dates.sort((a, b) {
-    return a.toLowerCase().compareTo(b.toLowerCase());
-  }); // wiederum etwas hacky
-  List<DateTime> trainingDates = [];
-  for (var d in dates) {
-    trainingDates.add(DateFormat('yyyy-MM-dd').parse(d));
-  }
-  return trainingDates;
 }
 
-DateTime getLastTrainingDay(String exercise) {
-  var trainingDates = getTrainingDates(exercise);
-  if (trainingDates.isEmpty) { return DateTime.now(); }
-  // absolutely horrible solutions
-  var best_element = 0;
-  var best_element_distance = -999;
+Future<List<ApiTrainingSet>> getExerciseTrainings(String exercise) async {
+  try {
+    final userService = UserService();
+    final trainingSets = await userService.getTrainingSets();
+
+    return trainingSets
+        .where((item) =>
+            item['exercise_name'] == exercise ||
+            (item['exercise_name'] == null &&
+                _getExerciseNameFromId(item['exercise_id']) == exercise))
+        .map((item) => ApiTrainingSet.fromJson({
+              ...item,
+              'exercise_name': item['exercise_name'] ?? exercise,
+            }))
+        .toList();
+  } catch (e) {
+    print('Error getting exercise trainings: $e');
+    return [];
+  }
+}
+
+Future<List<ApiTrainingSet>> getTrainings(DateTime day) async {
+  try {
+    final userService = UserService();
+    final trainingSets = await userService.getTrainingSets();
+
+    return trainingSets
+        .where((item) {
+          final itemDate = DateTime.parse(item['date']);
+          return itemDate.day == day.day &&
+              itemDate.month == day.month &&
+              itemDate.year == day.year;
+        })
+        .map((item) => ApiTrainingSet.fromJson({
+              ...item,
+              'exercise_name': item['exercise_name'] ?? '',
+            }))
+        .toList();
+  } catch (e) {
+    print('Error getting trainings for day: $e');
+    return [];
+  }
+}
+
+Future<List<DateTime>> getTrainingDates(String exercise) async {
+  try {
+    final userService = UserService();
+    final trainingSets = await userService.getTrainingSets();
+
+    var filteredSets = trainingSets;
+    if (exercise.isNotEmpty) {
+      filteredSets = trainingSets
+          .where((item) =>
+              (item['exercise_name'] == exercise ||
+                  _getExerciseNameFromId(item['exercise_id']) == exercise) &&
+              item['set_type'] > 0)
+          .toList();
+    }
+
+    final dates = filteredSets
+        .map((e) => DateFormat('yyyy-MM-dd').format(DateTime.parse(e['date'])))
+        .toSet()
+        .toList();
+
+    dates.sort((a, b) => a.compareTo(b));
+
+    return dates.map((d) => DateFormat('yyyy-MM-dd').parse(d)).toList();
+  } catch (e) {
+    print('Error getting training dates: $e');
+    return [];
+  }
+}
+
+Future<DateTime> getLastTrainingDay(String exercise) async {
+  final trainingDates = await getTrainingDates(exercise);
+  if (trainingDates.isEmpty) {
+    return DateTime.now();
+  }
+
+  // Find the most recent training date
+  var bestElement = 0;
+  var bestElementDistance = -999;
   for (var i = 0; i < trainingDates.length; i++) {
     final dayDiff = trainingDates[i].difference(DateTime.now()).inDays;
-    if (dayDiff > best_element_distance) {
-      best_element = i;
-      best_element_distance = dayDiff;
+    if (dayDiff > bestElementDistance) {
+      bestElement = i;
+      bestElementDistance = dayDiff;
     }
   }
-  return trainingDates[best_element];
+  return trainingDates[bestElement];
 }
 
+Future<Tuple2<double, int>> getLastTrainingInfo(String exercise) async {
+  try {
+    final trainings = await getExerciseTrainings(exercise);
+    final trainingDates = await getTrainingDates(exercise);
 
-Tuple2<double, int> getLastTrainingInfo(String exercise) {
-  var trainings = Hive.box<TrainingSet>('TrainingSets').values.toList();
-  trainings = trainings.where((item) => item.exercise == exercise).toList();
-  var trainingDates = getTrainingDates(exercise);
-  if (trainingDates.isEmpty) {
+    if (trainingDates.isEmpty) {
+      return const Tuple2<double, int>(20.0, 10);
+    }
+
+    final d = await getLastTrainingDay(exercise);
+    final latestTrainings = trainings.where((item) =>
+        item.date.day == d.day &&
+        item.date.month == d.month &&
+        item.date.year == d.year);
+
+    var bestWeight = -100.0;
+    var bestReps = 1;
+    for (var s in latestTrainings) {
+      if (s.weight > bestWeight) {
+        bestWeight = s.weight;
+        bestReps = s.repetitions;
+      }
+    }
+    return Tuple2<double, int>(bestWeight, bestReps);
+  } catch (e) {
+    print('Error getting last training info: $e');
     return const Tuple2<double, int>(20.0, 10);
   }
+}
 
-  var d = getLastTrainingDay(exercise);
-  var latest_trainings = trainings.where((item) =>
-      item.date.day == d.day &&
-      item.date.month == d.month &&
-      item.date.year == d.year);
-  var best_weight = -100.0;
-  var best_reps = 1;
-  for (var s in latest_trainings) {
-    if (s.weight > best_weight) {
-      best_weight = s.weight;
-      best_reps = s.repetitions;
-    }
-  }
-  return Tuple2<double, int>(best_weight, best_reps);
+// Helper function to get exercise name from ID
+// This would need to be implemented based on your exercise data structure
+String _getExerciseNameFromId(int exerciseId) {
+  // TODO: Implement this by looking up exercise name from ID
+  // For now, return empty string as fallback
+  return '';
 }

@@ -1,11 +1,7 @@
 // ignore_for_file: non_constant_identifier_names
 
-import 'package:Gymli/groupScreen.dart';
-import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:Gymli/landingScreen.dart';
-import 'package:hive_flutter/hive_flutter.dart';
-import 'package:Gymli/DataModels.dart';
 import 'package:Gymli/exerciseSetupScreen.dart';
 import 'package:Gymli/settingsScreen.dart';
 import 'package:Gymli/workoutSetupScreen.dart';
@@ -13,22 +9,33 @@ import 'package:Gymli/statisticsScreen.dart';
 import 'package:Gymli/apiTestScreen.dart';
 import 'globals.dart' as globals;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:flutter/foundation.dart' show kIsWeb, kDebugMode;
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:auth0_flutter/auth0_flutter.dart';
 import 'package:auth0_flutter/auth0_flutter_web.dart';
 import 'themeColors.dart';
-import 'profile_view.dart';
+import 'user_service.dart';
 
 bool state = false;
 
 void get_exercise_list() async {
-  final box = await Hive.openBox<Exercise>('Exercises');
-  var boxmap = box.values.toList();
-  List<String> exerciseList = [];
-  for (var e in boxmap) {
-    exerciseList.add(e.name);
+  try {
+    // Add a small delay to ensure UserService singleton is properly initialized
+    await Future.delayed(const Duration(milliseconds: 100));
+
+    final userService = UserService();
+    final exercises = await userService.getExercises();
+    List<String> exerciseList = [];
+    for (var e in exercises) {
+      exerciseList.add(e['name']);
+    }
+    globals.exerciseList = exerciseList;
+    print(
+        'Exercise list loaded successfully: ${exerciseList.length} exercises');
+  } catch (e) {
+    print('Error loading exercise list: $e');
+    // Set a fallback empty list to prevent null reference errors
+    globals.exerciseList = [];
   }
-  globals.exerciseList = exerciseList;
 }
 
 Future<void> getPreferences() async {
@@ -47,18 +54,8 @@ Future<void> getPreferences() async {
 }
 
 void main() async {
-  await Hive.initFlutter();
-  Hive.registerAdapter(ExerciseAdapter());
-  Hive.registerAdapter(TrainingSetAdapter());
-  Hive.registerAdapter(WorkoutAdapter());
-  Hive.registerAdapter(WorkoutUnitAdapter());
-  Hive.registerAdapter(GroupAdapter());
+  WidgetsFlutterBinding.ensureInitialized();
   getPreferences();
-  // preopen all boxes
-  await Hive.openBox<TrainingSet>('TrainingSets');
-  await Hive.openBox<Exercise>('Exercises');
-  await Hive.openBox<Workout>('Workouts');
-  await Hive.openBox<Group>('Groups');
   runApp(const MainApp());
 }
 
@@ -77,6 +74,7 @@ class _MainAppState extends State<MainApp> {
   bool isDarkMode = false;
   Credentials? _credentials;
   late Auth0Web auth0;
+  final userService = UserService();
 
   @override
   void initState() {
@@ -89,12 +87,113 @@ class _MainAppState extends State<MainApp> {
 
     auth0.onLoad().then((final credentials) => setState(() {
           _credentials = credentials;
+          userService.setCredentials(credentials);
+          // Reload data after authentication state changes
+          _reloadUserData();
         }));
 
-    // if (kIsWeb) {
-    //   triggerLoad<TrainingSet>(context, "TrainingSets");
-    //   triggerLoad<Exercise>(context, "Exercises");
-    // }
+    // Load initial exercise list after a delay to ensure initialization
+    _initializeData();
+  }
+
+  Future<void> _initializeData() async {
+    // Wait a bit to ensure all widgets are initialized
+    await Future.delayed(const Duration(milliseconds: 500));
+    get_exercise_list();
+  }
+
+  Future<void> _reloadUserData() async {
+    // Refresh exercise list
+    get_exercise_list();
+
+    // Notify the landing screen to refresh its data
+    // This will be handled by the LandingScreen listening to auth state changes
+  }
+
+  Widget _buildUserDataIndicator() {
+    return ValueListenableBuilder<bool>(
+      valueListenable: userService.authStateNotifier,
+      builder: (context, isLoggedIn, child) {
+        return FutureBuilder<Map<String, int>>(
+          future: _getUserDataCounts(),
+          builder: (context, snapshot) {
+            final exerciseCount = snapshot.data?['exercises'] ?? 0;
+            final workoutCount = snapshot.data?['workouts'] ?? 0;
+
+            return Container(
+              padding: const EdgeInsets.all(12.0),
+              margin:
+                  const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
+              decoration: BoxDecoration(
+                color: userService.isLoggedIn
+                    ? Colors.green.withValues(alpha: 0.1)
+                    : Colors.grey.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8.0),
+                border: Border.all(
+                  color: userService.isLoggedIn ? Colors.green : Colors.grey,
+                  width: 1.0,
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        userService.isLoggedIn
+                            ? Icons.person
+                            : Icons.person_outline,
+                        color:
+                            userService.isLoggedIn ? Colors.green : Colors.grey,
+                        size: 16,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          userService.isLoggedIn
+                              ? 'Logged in as: ${userService.userName}'
+                              : 'Not logged in (viewing defaults)',
+                          style: TextStyle(
+                            color: userService.isLoggedIn
+                                ? Colors.green[700]
+                                : Colors.grey[600],
+                            fontSize: 11,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  if (exerciseCount > 0 || workoutCount > 0) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      '$exerciseCount exercises • $workoutCount workouts',
+                      style: TextStyle(
+                        color: Colors.grey[600],
+                        fontSize: 9,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Future<Map<String, int>> _getUserDataCounts() async {
+    try {
+      final exercises = await userService.getExercises();
+      final workouts = await userService.getWorkouts();
+      return {
+        'exercises': exercises.length,
+        'workouts': workouts.length,
+      };
+    } catch (e) {
+      return {'exercises': 0, 'workouts': 0};
+    }
   }
 
   Future<void> loadThemePreference() async {
@@ -272,11 +371,12 @@ class _MainAppState extends State<MainApp> {
                 ),
                 ListTile(
                   title: const Text('Login'),
-                  onTap: () {
+                  onTap: () async {
                     setState(() {
                       Navigator.pop(context);
                       auth0.loginWithRedirect(redirectUrl: redirectUrl);
                     });
+                    // After login, data will be reloaded in the onLoad callback
                   },
                 ),
               ],
@@ -292,9 +392,16 @@ class _MainAppState extends State<MainApp> {
                   onTap: () async {
                     Navigator.pop(context);
                     await auth0.logout(returnToUrl: redirectUrl);
+                    // Clear user data after logout
+                    setState(() {
+                      _credentials = null;
+                      userService.setCredentials(null);
+                    });
+                    // Reload data for default user
+                    _reloadUserData();
                   },
                 ),
-                ProfileView(user: _credentials!.user),
+                _buildUserDataIndicator(),
               ],
             ),
         ],
