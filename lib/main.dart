@@ -155,14 +155,14 @@ class _MainAppState extends State<MainApp> {
   }
 
   Widget _buildDrawer(BuildContext context) {
-    final redirectUrl =
+    const redirectUrl =
         kDebugMode ? 'http://localhost:3000' : 'https://gymli.brgmnn.de/';
     return Drawer(
       child: ListView(
         padding: EdgeInsets.zero,
         children: [
           DrawerHeader(
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               color: colorOrange,
             ),
             child: Image(
@@ -245,7 +245,7 @@ class _MainAppState extends State<MainApp> {
                 Navigator.push(
                     context,
                     MaterialPageRoute(
-                        builder: (context) => const apiTestScreen()));
+                        builder: (context) => const ApiTestScreen()));
               });
             },
           ),
