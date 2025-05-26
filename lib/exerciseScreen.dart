@@ -101,6 +101,10 @@ class _ExerciseScreen extends State<ExerciseScreen> {
   // State variable for training sets to avoid constant reloading
   List<ApiTrainingSet> _todaysTrainingSets = [];
   bool _isLoadingTrainingSets = false;
+
+  // Cache exercise and training data to avoid redundant API calls
+  ApiExercise? _currentExercise;
+  List<ApiTrainingSet> _cachedTodaysTrainingSetsForExercise = [];
   Future<void> _loadTodaysTrainingSets() async {
     if (_isLoadingTrainingSets) return;
 
@@ -137,6 +141,14 @@ class _ExerciseScreen extends State<ExerciseScreen> {
     try {
       final userService = UserService();
       await userService.deleteTrainingSet(trainingSet.id!);
+
+      // Update cached data
+      _cachedTodaysTrainingSetsForExercise
+          .removeWhere((set) => set.id == trainingSet.id);
+      _todaysTrainingSets.removeWhere((set) => set.id == trainingSet.id);
+
+      // Update graph with current cached data
+      await _updateGraphFromCachedTrainingSets();
     } catch (e) {
       print('Error deleting training set: $e');
     }
@@ -168,6 +180,26 @@ class _ExerciseScreen extends State<ExerciseScreen> {
           machineName: "",
         );
         print('Training set created successfully');
+
+        // Update cached data with the new set
+        final newSet = ApiTrainingSet(
+          userName: exercise.userName,
+          exerciseId: exercise.id!,
+          exerciseName: exerciseName,
+          date: DateTime.parse(when),
+          weight: weight,
+          repetitions: repetitions,
+          setType: setType,
+          baseReps: exercise.defaultRepBase,
+          maxReps: exercise.defaultRepMax,
+          increment: exercise.defaultIncrement,
+          machineName: "",
+        );
+        _cachedTodaysTrainingSetsForExercise.add(newSet);
+        _todaysTrainingSets.add(newSet);
+
+        // Update graph with current cached data
+        await _updateGraphFromCachedTrainingSets();
       } else {
         print('Exercise not found: $exerciseName');
       }
@@ -211,6 +243,83 @@ class _ExerciseScreen extends State<ExerciseScreen> {
   }
 
   void updateGraph() async {
+    // Use cached data if available, otherwise fallback to API call
+    if (_cachedTodaysTrainingSetsForExercise.isNotEmpty) {
+      await _updateGraphFromCachedTrainingSets();
+    } else {
+      // Fallback to API call if cache is not available
+      await _updateGraphFromAPI();
+    }
+  }
+
+  Future<void> _updateGraphFromCachedTrainingSets() async {
+    for (var t in trainingGraphs) {
+      t.clear();
+    }
+
+    try {
+      // Filter cached training sets for graph display (exclude warmups, limit time range)
+      final filteredSets = _cachedTodaysTrainingSetsForExercise
+          .where((t) =>
+              DateTime.now().difference(t.date).inDays <
+                  globals.graphNumberOfDays &&
+              t.setType > 0) // Exclude warmup sets (setType 0)
+          .toList();
+
+      // Group cached training sets by day
+      Map<int, List<ApiTrainingSet>> data = {};
+      for (var t in filteredSets) {
+        int diff = DateTime.now().difference(t.date).inDays;
+        if (!data.containsKey(diff)) {
+          data[diff] = [];
+        }
+        data[diff]!.add(t);
+      }
+
+      if (globals.detailedGraph) {
+        var ii = data.keys.length;
+        for (var k in data.keys) {
+          List<String> tips = List.filled(groupExercises.length + 6, "");
+          for (var i = 0; i < 4; ++i) {
+            if (i < data[k]!.length) {
+              trainingGraphs[i].add(
+                  FlSpot(-ii.toDouble(), globals.calculateScore(data[k]![i])));
+              tips[i] =
+                  "${data[k]![i].weight}kg @ ${data[k]![i].repetitions}reps";
+            }
+          }
+          graphToolTip[-ii] = tips;
+          ii -= 1;
+        }
+      } else {
+        var ii = data.keys.length;
+        for (var k in data.keys) {
+          double maxScore = 0.0;
+          int reps = 0;
+          double weight = 0;
+          for (var i = 0; i < data[k]!.length; ++i) {
+            maxScore = max(maxScore, globals.calculateScore(data[k]![i]));
+            reps = data[k]![i].repetitions;
+            weight = data[k]![i].weight;
+          }
+          trainingGraphs[0].add(FlSpot(-ii.toDouble(), maxScore));
+          graphToolTip[-ii] = ["${weight}kg @ ${reps}reps"];
+          ii -= 1;
+        }
+      }
+
+      // Update bar data for chart display
+      _updateBarDataFromTrainingGraphs();
+
+      setState(() {
+        // Graph data updated
+      });
+    } catch (e) {
+      print('Error updating graph from cached data: $e');
+    }
+  }
+
+  Future<void> _updateGraphFromAPI() async {
     for (var t in trainingGraphs) {
       t.clear();
     }
@@ -232,9 +341,6 @@ class _ExerciseScreen extends State<ExerciseScreen> {
           graphToolTip[-ii] = tips;
           ii -= 1;
         }
-
-        // Additional exercise graphs are simplified for now
-        // TODO: Implement group-based exercise graphs if needed
       } else {
         var dat = await get_trainingsets();
         var ii = dat.keys.length;
@@ -253,11 +359,14 @@ class _ExerciseScreen extends State<ExerciseScreen> {
         }
       }
 
+      // Update bar data for chart display
+      _updateBarDataFromTrainingGraphs();
+
       setState(() {
         // Graph data updated
       });
     } catch (e) {
-      print('Error updating graph: $e');
+      print('Error updating graph from API: $e');
     }
   }
 
@@ -282,6 +391,14 @@ class _ExerciseScreen extends State<ExerciseScreen> {
   }
 
   void updateLastWeightSetting() async {
+    // Use cached data if available, otherwise fall back to API calls
+    if (_currentExercise != null &&
+        _cachedTodaysTrainingSetsForExercise.isNotEmpty) {
+      _updateWeightFromCachedData();
+      return;
+    }
+
+    // Fallback to API calls if cache is not available (shouldn't happen after initialization)
     try {
       final userService = UserService();
       final exercises = await userService.getExercises();
@@ -332,9 +449,94 @@ class _ExerciseScreen extends State<ExerciseScreen> {
     }
   }
 
+  void _updateWeightFromCachedData() {
+    if (_currentExercise == null) return;
+
+    double weight = _currentExercise!.defaultIncrement;
+    int reps = _currentExercise!.defaultRepBase;
+
+    if (_cachedTodaysTrainingSetsForExercise.isNotEmpty) {
+      final lastSet = _cachedTodaysTrainingSetsForExercise.last;
+      weight = lastSet.weight;
+      reps = lastSet.repetitions;
+    }
+
+    if (_selected.first == ExerciseType.warmup) {
+      weight /= 2.0;
+      weight = (weight / _currentExercise!.defaultIncrement).round() *
+          _currentExercise!.defaultIncrement;
+    }
+
+    setState(() {
+      weightKg = weight.toInt();
+      weightDg = (weight * 100.0).toInt() % 100;
+      repetitions = reps;
+    });
+  }
+
+  void _parseWorkoutDescription() {
+    // Initialize default values
+    numWarmUps = 0;
+    numWorkSets = 0;
+
+    // Parse workout description if it contains workout context
+    if (widget.workoutDescription.isNotEmpty &&
+        widget.workoutDescription.startsWith("Warm:")) {
+      try {
+        // Expected format: "Warm: X, Work: Y"
+        final parts = widget.workoutDescription.split(", ");
+        if (parts.length == 2) {
+          // Parse warmups
+          final warmPart = parts[0]; // "Warm: X"
+          if (warmPart.contains(":")) {
+            final warmValue = warmPart.split(":")[1].trim();
+            numWarmUps = int.tryParse(warmValue) ?? 0;
+          }
+
+          // Parse worksets
+          final workPart = parts[1]; // "Work: Y"
+          if (workPart.contains(":")) {
+            final workValue = workPart.split(":")[1].trim();
+            numWorkSets = int.tryParse(workValue) ?? 0;
+          }
+        }
+        print(
+            'Parsed workout context: Warmups=$numWarmUps, Worksets=$numWorkSets');
+      } catch (e) {
+        print('Error parsing workout description: $e');
+        numWarmUps = 0;
+        numWorkSets = 0;
+      }
+    }
+
+    // Immediately update UI with workout context
+    _updateWorkoutTexts();
+  }
+
+  void _updateWorkoutTexts() {
+    warmText =
+        numWarmUps > 0 ? Text("${numWarmUps}x Warm") : const Text("Warm");
+    workText =
+        numWorkSets > 0 ? Text("${numWorkSets}x Work") : const Text("Work");
+  }
+
   @override
   void initState() {
     super.initState();
+
+    // Parse workout context and set UI immediately
+    _parseWorkoutDescription();
+
+    // Set initial state immediately to avoid UI delays
+    setState(() {
+      _isLoadingTrainingSets = true;
+      // Set reasonable defaults immediately
+      weightKg = 40;
+      weightDg = 0;
+      repetitions = 10;
+    });
+
+    // Initialize screen data asynchronously
     _initializeScreen();
 
     timer = Timer.periodic(const Duration(seconds: 1), (timer) {
@@ -358,14 +560,20 @@ class _ExerciseScreen extends State<ExerciseScreen> {
     try {
       final userService = UserService();
 
-      // Fetch all data once
-      final trainingSets = await userService.getTrainingSets();
-      final exercises = await userService.getExercises();
+      // Fetch data in parallel for faster loading
+      final results = await Future.wait([
+        userService.getTrainingSets(),
+        userService.getExercises(),
+      ]);
 
-      // Process today's training sets
+      final trainingSets = results[0];
+      final exercises = results[1];
+
+      // Process today's training sets for this exercise only
       final todaysTrainingSets = trainingSets
           .map((item) => ApiTrainingSet.fromJson(item))
           .where((t) =>
+              t.exerciseName == widget.exerciseName &&
               t.date.day == DateTime.now().day &&
               t.date.month == DateTime.now().month &&
               t.date.year == DateTime.now().year)
@@ -377,36 +585,86 @@ class _ExerciseScreen extends State<ExerciseScreen> {
         orElse: () => null,
       );
 
+      // Set workout timing
       if (todaysTrainingSets.isNotEmpty) {
         workoutStartTime = todaysTrainingSets.first.date;
         lastActivity = todaysTrainingSets.last.date;
       }
 
-      // Set timer text
+      // Calculate timer text
       var duration = DateTime.now().difference(lastActivity);
       var workoutDuration = DateTime.now().difference(workoutStartTime);
       timerText = Text(
           "Working out: ${workoutDuration.toString().split(".")[0]} - Idle: ${duration.toString().split(".")[0]}");
 
-      // Update state once with all data
+      // Prepare weight settings
+      double weight = 40.0;
+      int reps = 10;
+
+      if (exerciseData != null) {
+        final exercise = ApiExercise.fromJson(exerciseData);
+        _currentExercise = exercise; // Cache exercise data
+        weight = exercise.defaultIncrement;
+        reps = exercise.defaultRepBase;
+
+        // Use last set data if available and cache today's sets for this exercise
+        final todaysSetsForExercise = trainingSets
+            .map((item) => ApiTrainingSet.fromJson(item))
+            .where((t) => t.exerciseName == widget.exerciseName)
+            .toList();
+
+        _cachedTodaysTrainingSetsForExercise =
+            todaysSetsForExercise; // Cache for fast access
+
+        if (todaysSetsForExercise.isNotEmpty) {
+          final lastSet = todaysSetsForExercise.last;
+          weight = lastSet.weight;
+          reps = lastSet.repetitions;
+        }
+
+        // Adjust for warmup if selected
+        if (_selected.first == ExerciseType.warmup) {
+          weight /= 2.0;
+          weight = (weight / exercise.defaultIncrement).round() *
+              exercise.defaultIncrement;
+        }
+      }
+
+      // Update workout text counts based on completed sets
+      int originalWarmUps = numWarmUps;
+      int originalWorkSets = numWorkSets;
+
+      for (var set in todaysTrainingSets) {
+        if (set.setType == 0) {
+          numWarmUps = (numWarmUps - 1).clamp(0, originalWarmUps);
+        } else if (set.setType == 1) {
+          numWorkSets = (numWorkSets - 1).clamp(0, originalWorkSets);
+        }
+      }
+
+      // Update all UI in one setState call
       setState(() {
         _todaysTrainingSets = todaysTrainingSets;
         _isLoadingTrainingSets = false;
 
-        // Set weight/reps if exercise found
-        if (exerciseData != null) {
-          final exercise = ApiExercise.fromJson(exerciseData);
-          _updateWeightSettings(exercise, trainingSets);
-        }
+        // Set weight and reps
+        weightKg = weight.toInt();
+        weightDg = (weight * 100.0).toInt() % 100;
+        repetitions = reps;
+
+        // Update workout texts
+        _updateWorkoutTexts();
       });
 
-      // Initialize other components
+      // Initialize remaining components in parallel (non-blocking)
       groupExercises = [];
       additionalGraphs = List.filled(groupExercises.length, []);
 
-      // Update graph and texts with existing data
-      await _updateGraphWithData(trainingSets);
-      _updateTextsWithData(todaysTrainingSets);
+      // Update graph in background using already fetched data
+      _updateGraphWithCachedData(trainingSets);
+
+      // Update color mapping with cached data
+      _updateColorMappingFromCache();
     } catch (e) {
       print('Error initializing screen: $e');
       setState(() {
@@ -415,40 +673,33 @@ class _ExerciseScreen extends State<ExerciseScreen> {
     }
   }
 
-  void _updateWeightSettings(ApiExercise exercise, List<dynamic> trainingSets) {
-    final todaysSets = trainingSets
-        .map((item) => ApiTrainingSet.fromJson(item))
-        .where((t) => t.exerciseName == widget.exerciseName)
-        .toList();
-
-    double weight = exercise.defaultIncrement;
-    int reps = exercise.defaultRepBase;
-
-    if (todaysSets.isNotEmpty) {
-      final lastSet = todaysSets.last;
-      weight = lastSet.weight;
-      reps = lastSet.repetitions;
-    }
-
-    if (_selected.first == ExerciseType.warmup) {
-      weight /= 2.0;
-      weight = (weight / exercise.defaultIncrement).round() *
-          exercise.defaultIncrement;
-    }
-
-    weightKg = weight.toInt();
-    weightDg = (weight * 100.0).toInt() % 100;
-    repetitions = reps;
-  }
-
-  Future<void> _updateGraphWithData(List<dynamic> trainingSets) async {
+  Future<void> _updateGraphWithCachedData(List<dynamic> trainingSets) async {
+    // Clear existing graph data
     for (var t in trainingGraphs) {
       t.clear();
     }
 
     try {
+      // Convert training sets to ApiTrainingSet objects and filter for this exercise
+      final exerciseTrainingSets = trainingSets
+          .map((item) => ApiTrainingSet.fromJson(item))
+          .where((t) => t.exerciseName == widget.exerciseName)
+          .toList();
+
+      // Sort by date to create proper time-based grouping
+      exerciseTrainingSets.sort((a, b) => a.date.compareTo(b.date));
+
+      // Group by day
+      Map<int, List<ApiTrainingSet>> data = {};
+      for (var t in exerciseTrainingSets) {
+        int diff = DateTime.now().difference(t.date).inDays;
+        if (!data.containsKey(diff)) {
+          data[diff] = [];
+        }
+        data[diff]!.add(t);
+      }
+
       if (globals.detailedGraph) {
-        var data = await get_trainingsets();
         var ii = data.keys.length;
         for (var k in data.keys) {
           List<String> tips = List.filled(groupExercises.length + 6, "");
@@ -464,16 +715,15 @@ class _ExerciseScreen extends State<ExerciseScreen> {
           ii -= 1;
         }
       } else {
-        var dat = await get_trainingsets();
-        var ii = dat.keys.length;
-        for (var k in dat.keys) {
+        var ii = data.keys.length;
+        for (var k in data.keys) {
           double maxScore = 0.0;
           int reps = 0;
           double weight = 0;
-          for (var i = 0; i < dat[k]!.length; ++i) {
-            maxScore = max(maxScore, globals.calculateScore(dat[k]![i]));
-            reps = dat[k]![i].repetitions;
-            weight = dat[k]![i].weight;
+          for (var i = 0; i < data[k]!.length; ++i) {
+            maxScore = max(maxScore, globals.calculateScore(data[k]![i]));
+            reps = data[k]![i].repetitions;
+            weight = data[k]![i].weight;
           }
           trainingGraphs[0].add(FlSpot(-ii.toDouble(), maxScore));
           graphToolTip[-ii] = ["${weight}kg @ ${reps}reps"];
@@ -481,35 +731,103 @@ class _ExerciseScreen extends State<ExerciseScreen> {
         }
       }
 
+      // Update bar data for chart display
+      _updateBarDataFromTrainingGraphs();
+
       setState(() {
         // Graph data updated
       });
     } catch (e) {
-      print('Error updating graph: $e');
+      print('Error updating graph with cached data: $e');
+    }
+  }
+
+  void _updateColorMappingFromCache() {
+    if (_cachedTodaysTrainingSetsForExercise.isNotEmpty &&
+        _currentExercise != null) {
+      try {
+        for (int i = _currentExercise!.defaultRepBase;
+            i <= _currentExercise!.defaultRepMax;
+            ++i) {
+          _colorMap[i] = Colors.red;
+        }
+      } catch (e) {
+        print('Error updating color mapping: $e');
+      }
     }
   }
 
   void _updateTextsWithData(List<ApiTrainingSet> todaysTrainingSets) {
     try {
-      var today = DateTime.now();
-
       for (var i in todaysTrainingSets) {
         if (i.setType == 0) {
-          numWarmUps -= 1;
+          numWarmUps = (numWarmUps - 1).clamp(0, 999);
         } else if (i.setType == 1) {
-          numWorkSets -= 1;
+          numWorkSets = (numWorkSets - 1).clamp(0, 999);
         }
       }
 
       setState(() {
-        warmText =
-            numWarmUps > 0 ? Text("${numWarmUps}x Warm") : const Text("Warm");
-        workText =
-            numWorkSets > 0 ? Text("${numWorkSets}x Work") : const Text("Work");
+        _updateWorkoutTexts();
       });
     } catch (e) {
       print('Error updating texts: $e');
     }
+  }
+
+  void _updateBarDataFromTrainingGraphs() {
+    barData.clear();
+
+    // Create line chart bars from training graph data
+    for (int i = 0; i < trainingGraphs.length; i++) {
+      if (trainingGraphs[i].isNotEmpty) {
+        barData.add(LineChartBarData(
+          spots: trainingGraphs[i],
+          isCurved: true,
+          color: i < graphColors.length ? graphColors[i] : Colors.grey,
+          barWidth: 2,
+          isStrokeCapRound: true,
+          belowBarData: BarAreaData(show: false),
+          dotData: const FlDotData(show: true),
+        ));
+      }
+    }
+
+    // Add additional graph data if any
+    for (int i = 0; i < additionalGraphs.length; i++) {
+      if (additionalGraphs[i].isNotEmpty) {
+        barData.add(LineChartBarData(
+          spots: additionalGraphs[i],
+          isCurved: true,
+          color:
+              i < additionalColors.length ? additionalColors[i] : Colors.grey,
+          barWidth: 2,
+          isStrokeCapRound: true,
+          belowBarData: BarAreaData(show: false),
+          dotData: const FlDotData(show: true),
+        ));
+      }
+    }
+
+    // Update min/max scores for proper graph scaling
+    double newMinScore = 1e6;
+    double newMaxScore = 0.0;
+
+    for (var barDataItem in barData) {
+      for (var spot in barDataItem.spots) {
+        newMinScore = min(newMinScore, spot.y);
+        newMaxScore = max(newMaxScore, spot.y);
+      }
+    }
+
+    // Set reasonable defaults if no data
+    if (barData.isEmpty) {
+      newMinScore = 0;
+      newMaxScore = 100;
+    }
+
+    minScore = newMinScore;
+    maxScore = newMaxScore;
   }
 
   @override
@@ -667,7 +985,7 @@ class _ExerciseScreen extends State<ExerciseScreen> {
                           if (_selected.first == ExerciseType.warmup ||
                               newSelection.first == ExerciseType.warmup) {
                             _selected = newSelection;
-                            updateLastWeightSetting();
+                            _updateWeightFromCachedData(); // Use cached data instead of API calls
                           }
                           _selected = newSelection;
                         });
@@ -751,13 +1069,20 @@ class _ExerciseScreen extends State<ExerciseScreen> {
                   await addSet(widget.exerciseName, new_weight, repetitions,
                       _selected.first.index, dateInputController.text);
 
-                  // Reload training sets after adding
+                  // Reload training sets after adding and update cache
                   await _loadTodaysTrainingSets();
+
+                  // Update cache for this exercise specifically
+                  if (_currentExercise != null) {
+                    _cachedTodaysTrainingSetsForExercise = _todaysTrainingSets
+                        .where((t) => t.exerciseName == widget.exerciseName)
+                        .toList();
+                  }
 
                   // Update texts with the new data
                   _updateTextsWithData(_todaysTrainingSets);
 
-                  // Update graph
+                  // Update graph using cached data
                   updateGraph();
 
                   lastActivity = DateTime.now();
@@ -787,7 +1112,18 @@ class _ExerciseScreen extends State<ExerciseScreen> {
                                     icon: const Icon(Icons.delete),
                                     onPressed: () async {
                                       await _deleteTrainingSet(item);
-                                      _loadTodaysTrainingSets(); // Reload after deletion
+                                      await _loadTodaysTrainingSets(); // Reload after deletion
+
+                                      // Update cache for this exercise specifically
+                                      if (_currentExercise != null) {
+                                        _cachedTodaysTrainingSetsForExercise =
+                                            _todaysTrainingSets
+                                                .where((t) =>
+                                                    t.exerciseName ==
+                                                    widget.exerciseName)
+                                                .toList();
+                                      }
+
                                       updateGraph();
                                     }),
                               );

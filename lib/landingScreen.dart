@@ -115,8 +115,7 @@ class _LandingScreenState extends State<LandingScreen> {
     for (var e in workout.units) {
       for (int i = 0; i < filteredExercises.length; ++i) {
         if (filteredExercises[i].name == e.exerciseName) {
-          metainfo[i] =
-              'Warm: ${e.warmups}, Work: ${e.worksets}, Drop: ${e.dropsets}';
+          metainfo[i] = 'Warm: ${e.warmups}, Work: ${e.worksets}';
         }
       }
     }
@@ -212,8 +211,27 @@ class _LandingScreenState extends State<LandingScreen> {
         updateAllExercises(forceReload: true), // Force reload to get fresh data
       ]);
 
-      // Refresh the exercise display with updated training information
-      await showAllExercises();
+      // Preserve the current filter state when returning from other screens
+      if (selectedWorkout != null) {
+        // Re-apply workout filter if a workout was selected
+        workoutFilterList(selectedWorkout!);
+        // Update the controller to show the selected workout name
+        setState(() {
+          WorkoutController.text = selectedWorkout!.name;
+          MuscleController.value = TextEditingValue.empty;
+        });
+      } else if (selectedMuscle != null) {
+        // Re-apply muscle filter if a muscle group was selected
+        muscleFilterList(selectedMuscle!);
+        // Update the controller to show the selected muscle name
+        setState(() {
+          MuscleController.text = selectedMuscle!.muscleName;
+          WorkoutController.value = TextEditingValue.empty;
+        });
+      } else {
+        // Show all exercises if no filter was applied
+        await showAllExercises();
+      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -337,6 +355,8 @@ class _LandingScreenState extends State<LandingScreen> {
                   setState(() {
                     WorkoutController.value = TextEditingValue.empty;
                     MuscleController.value = TextEditingValue.empty;
+                    selectedWorkout = null;
+                    selectedMuscle = null;
                   });
                   await showAllExercises();
                 },
@@ -362,6 +382,7 @@ class _LandingScreenState extends State<LandingScreen> {
                   setState(() {
                     MuscleController.value = TextEditingValue.empty;
                     selectedWorkout = workout;
+                    selectedMuscle = null; // Clear muscle selection
                   });
                 },
                 inputDecorationTheme: InputDecorationTheme(
@@ -404,6 +425,7 @@ class _LandingScreenState extends State<LandingScreen> {
                   setState(() {
                     WorkoutController.value = TextEditingValue.empty;
                     selectedMuscle = name;
+                    selectedWorkout = null; // Clear workout selection
                   });
                 },
                 inputDecorationTheme: InputDecorationTheme(
