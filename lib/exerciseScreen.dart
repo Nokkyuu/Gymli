@@ -20,8 +20,6 @@
  * progress visualization, and workout guidance in a single interface.
  */
 
-// ignore_for_file: file_names, non_constant_identifier_names
-
 import 'package:flutter/material.dart';
 import 'package:Gymli/exerciseListScreen.dart';
 import 'package:fl_chart/fl_chart.dart';
@@ -104,7 +102,7 @@ class _ExerciseScreen extends State<ExerciseScreen> {
   List<ApiTrainingSet> _todaysTrainingSets = [];
   bool _isLoadingTrainingSets = false;
   Future<void> _loadTodaysTrainingSets() async {
-    if (_isLoadingTrainingSets) return; // Prevent multiple simultaneous loads
+    if (_isLoadingTrainingSets) return;
 
     setState(() {
       _isLoadingTrainingSets = true;
@@ -113,29 +111,15 @@ class _ExerciseScreen extends State<ExerciseScreen> {
     try {
       final userService = UserService();
       final trainingSets = await userService.getTrainingSets();
-      print('Total training sets retrieved: ${trainingSets.length}');
 
-      final items = trainingSets
+      final todaysItems = trainingSets
           .map((item) => ApiTrainingSet.fromJson(item))
-          .where((item) => item.exerciseName == widget.exerciseName)
-          .toList();
-      print('Training sets for ${widget.exerciseName}: ${items.length}');
-
-      var today = DateTime.now();
-      print('Today: ${today.day}/${today.month}/${today.year}');
-
-      for (var item in items) {
-        print(
-            'Training set date: ${item.date}, day: ${item.date.day}/${item.date.month}/${item.date.year}');
-      }
-
-      final todaysItems = items
           .where((item) =>
-              item.date.day == today.day &&
-              item.date.month == today.month &&
-              item.date.year == today.year)
+              item.exerciseName == widget.exerciseName &&
+              item.date.day == DateTime.now().day &&
+              item.date.month == DateTime.now().month &&
+              item.date.year == DateTime.now().year)
           .toList();
-      print('Today\'s training sets: ${todaysItems.length}');
 
       setState(() {
         _todaysTrainingSets = todaysItems;
@@ -373,7 +357,12 @@ class _ExerciseScreen extends State<ExerciseScreen> {
   void _initializeScreen() async {
     try {
       final userService = UserService();
+
+      // Fetch all data once
       final trainingSets = await userService.getTrainingSets();
+      final exercises = await userService.getExercises();
+
+      // Process today's training sets
       final todaysTrainingSets = trainingSets
           .map((item) => ApiTrainingSet.fromJson(item))
           .where((t) =>
@@ -382,106 +371,134 @@ class _ExerciseScreen extends State<ExerciseScreen> {
               t.date.year == DateTime.now().year)
           .toList();
 
+      // Find current exercise
+      final exerciseData = exercises.firstWhere(
+        (item) => item['name'] == widget.exerciseName,
+        orElse: () => null,
+      );
+
       if (todaysTrainingSets.isNotEmpty) {
         workoutStartTime = todaysTrainingSets.first.date;
         lastActivity = todaysTrainingSets.last.date;
       }
 
+      // Set timer text
       var duration = DateTime.now().difference(lastActivity);
       var workoutDuration = DateTime.now().difference(workoutStartTime);
       timerText = Text(
           "Working out: ${workoutDuration.toString().split(".")[0]} - Idle: ${duration.toString().split(".")[0]}");
 
-      // Initialize group exercises (simplified for now - no group support)
+      // Update state once with all data
+      setState(() {
+        _todaysTrainingSets = todaysTrainingSets;
+        _isLoadingTrainingSets = false;
+
+        // Set weight/reps if exercise found
+        if (exerciseData != null) {
+          final exercise = ApiExercise.fromJson(exerciseData);
+          _updateWeightSettings(exercise, trainingSets);
+        }
+      });
+
+      // Initialize other components
       groupExercises = [];
       additionalGraphs = List.filled(groupExercises.length, []);
 
-      updateGraph();
-      _loadTodaysTrainingSets(); // Load today's training sets on screen open
-
-      for (int i = 0; i < trainingGraphs.length; ++i) {
-        if (trainingGraphs[i].isNotEmpty) {
-          bool allNan = true;
-          for (var t in trainingGraphs[i]) {
-            if (!t.x.isNaN) {
-              allNan = false;
-            }
-          }
-          if (!allNan) {
-            barData.add(
-              LineChartBarData(spots: trainingGraphs[i], color: graphColors[i]),
-            );
-          }
-        }
-      }
-
-      for (int i = 0; i < additionalGraphs.length; ++i) {
-        if (additionalGraphs[i].isNotEmpty) {
-          barData.add(
-            LineChartBarData(
-                spots: additionalGraphs[i], color: additionalColors[i]),
-          );
-        }
-      }
-
-      for (var i = 0; i < 4; ++i) {
-        for (var d in trainingGraphs[i]) {
-          if (!d.y.isNaN) {
-            minScore = min(minScore, d.y);
-            maxScore = max(maxScore, d.y);
-          }
-        }
-      }
-
-      if (trainingGraphs[0].isNotEmpty) {
-        maxHistoryDistance =
-            min(trainingGraphs[0][0].x * -1, maxHistoryDistance);
-      }
-
-      if (widget.workoutDescription != "") {
-        var tokens = widget.workoutDescription.split(":");
-        numWarmUps = int.parse(tokens[1].split(",")[0]);
-        numWorkSets = int.parse(tokens[2].split(",")[0]);
-        // Skip dropsets - tokens[3] is ignored
-      } else {
-        numWarmUps = numWorkSets = 0;
-      }
-
-      updateTexts();
-      updateLastWeightSetting();
-
-      setState(() {
-        // Update UI with loaded data
-      });
+      // Update graph and texts with existing data
+      await _updateGraphWithData(trainingSets);
+      _updateTextsWithData(todaysTrainingSets);
     } catch (e) {
       print('Error initializing screen: $e');
+      setState(() {
+        _isLoadingTrainingSets = false;
+      });
     }
   }
 
-  void updateTexts() async {
+  void _updateWeightSettings(ApiExercise exercise, List<dynamic> trainingSets) {
+    final todaysSets = trainingSets
+        .map((item) => ApiTrainingSet.fromJson(item))
+        .where((t) => t.exerciseName == widget.exerciseName)
+        .toList();
+
+    double weight = exercise.defaultIncrement;
+    int reps = exercise.defaultRepBase;
+
+    if (todaysSets.isNotEmpty) {
+      final lastSet = todaysSets.last;
+      weight = lastSet.weight;
+      reps = lastSet.repetitions;
+    }
+
+    if (_selected.first == ExerciseType.warmup) {
+      weight /= 2.0;
+      weight = (weight / exercise.defaultIncrement).round() *
+          exercise.defaultIncrement;
+    }
+
+    weightKg = weight.toInt();
+    weightDg = (weight * 100.0).toInt() % 100;
+    repetitions = reps;
+  }
+
+  Future<void> _updateGraphWithData(List<dynamic> trainingSets) async {
+    for (var t in trainingGraphs) {
+      t.clear();
+    }
+
     try {
-      final userService = UserService();
-      final trainingSets = await userService.getTrainingSets();
-      final items = trainingSets
-          .map((item) => ApiTrainingSet.fromJson(item))
-          .where((item) => item.exerciseName == widget.exerciseName)
-          .toList();
+      if (globals.detailedGraph) {
+        var data = await get_trainingsets();
+        var ii = data.keys.length;
+        for (var k in data.keys) {
+          List<String> tips = List.filled(groupExercises.length + 6, "");
+          for (var i = 0; i < 4; ++i) {
+            if (i < data[k]!.length) {
+              trainingGraphs[i].add(
+                  FlSpot(-ii.toDouble(), globals.calculateScore(data[k]![i])));
+              tips[i] =
+                  "${data[k]![i].weight}kg @ ${data[k]![i].repetitions}reps";
+            }
+          }
+          graphToolTip[-ii] = tips;
+          ii -= 1;
+        }
+      } else {
+        var dat = await get_trainingsets();
+        var ii = dat.keys.length;
+        for (var k in dat.keys) {
+          double maxScore = 0.0;
+          int reps = 0;
+          double weight = 0;
+          for (var i = 0; i < dat[k]!.length; ++i) {
+            maxScore = max(maxScore, globals.calculateScore(dat[k]![i]));
+            reps = dat[k]![i].repetitions;
+            weight = dat[k]![i].weight;
+          }
+          trainingGraphs[0].add(FlSpot(-ii.toDouble(), maxScore));
+          graphToolTip[-ii] = ["${weight}kg @ ${reps}reps"];
+          ii -= 1;
+        }
+      }
 
+      setState(() {
+        // Graph data updated
+      });
+    } catch (e) {
+      print('Error updating graph: $e');
+    }
+  }
+
+  void _updateTextsWithData(List<ApiTrainingSet> todaysTrainingSets) {
+    try {
       var today = DateTime.now();
-      final todaysItems = items
-          .where((item) =>
-              item.date.day == today.day &&
-              item.date.month == today.month &&
-              item.date.year == today.year)
-          .toList();
 
-      for (var i in todaysItems) {
+      for (var i in todaysTrainingSets) {
         if (i.setType == 0) {
           numWarmUps -= 1;
         } else if (i.setType == 1) {
           numWorkSets -= 1;
         }
-        // No longer handling dropsets (setType == 2)
       }
 
       setState(() {
@@ -659,20 +676,6 @@ class _ExerciseScreen extends State<ExerciseScreen> {
                     const SizedBox(height: 10),
                     Row(children: [
                       const Spacer(),
-                      IconButton(
-                        icon: const Icon(FontAwesomeIcons.calculator),
-                        onPressed: () {
-                          setState(() {
-                            showModalBottomSheet<dynamic>(
-                              context: context,
-                              builder: (BuildContext context) {
-                                return WeightConfigurator(weightKg.toDouble() +
-                                    weightDg.toDouble() / 100.0);
-                              },
-                            );
-                          });
-                        },
-                      ),
                       NumberPicker(
                         //selectedTextStyle: TextStyle(color: Colors.black),
                         value: weightKg,
@@ -693,15 +696,6 @@ class _ExerciseScreen extends State<ExerciseScreen> {
                         onChanged: (value) => setState(() => weightDg = value),
                       ),
                       const Text("kg"),
-                      const Spacer(),
-                      // NumberPicker(
-                      //   value: repetitions,
-                      //   minValue: 1, maxValue: 30,
-
-                      //   haptics: true,
-                      //   itemHeight: itemHeight, itemWidth: itemWidth,
-                      //   onChanged: (value) => setState(() => repetitions = value),
-                      // ),
                       Container(
                         height: 100,
                         width: 100,
@@ -741,25 +735,31 @@ class _ExerciseScreen extends State<ExerciseScreen> {
                       ),
                       const Text("Reps."),
                       const Spacer(),
-                      const Spacer()
                     ])
                   ],
                 )),
+
             ElevatedButton.icon(
                 style: const ButtonStyle(),
                 label: const Text('Submit'),
                 icon: const Icon(Icons.send),
-                onPressed: () {
+                onPressed: () async {
                   double new_weight =
                       weightKg.toDouble() + weightDg.toDouble() / 100.0;
-                  // if (_selected.first.index == 0) { numWarmUps -= 1; }
-                  // else if (_selected.first.index == 1) { numWorkSets -= 1; }
-                  // else { numDropSets -= 1; }
-                  addSet(widget.exerciseName, new_weight, repetitions,
+
+                  // Add the set
+                  await addSet(widget.exerciseName, new_weight, repetitions,
                       _selected.first.index, dateInputController.text);
-                  updateTexts();
+
+                  // Reload training sets after adding
+                  await _loadTodaysTrainingSets();
+
+                  // Update texts with the new data
+                  _updateTextsWithData(_todaysTrainingSets);
+
+                  // Update graph
                   updateGraph();
-                  _loadTodaysTrainingSets(); // Reload training sets after adding
+
                   lastActivity = DateTime.now();
                 }),
             const Divider(),
@@ -800,227 +800,6 @@ class _ExerciseScreen extends State<ExerciseScreen> {
                           )),
             const SizedBox(height: 20),
           ]),
-    );
-  }
-}
-
-class WeightConfigurator extends StatefulWidget {
-  const WeightConfigurator(this.weight, {super.key});
-  final double weight;
-  @override
-  State<WeightConfigurator> createState() => _WeightConfigurator();
-}
-
-enum ExerciseDevice { dumbbell, barbell20, barbellhome }
-
-class _WeightConfigurator extends State<WeightConfigurator> {
-  double itemHeight = 50.0;
-  double itemWidth = 30.0;
-  ExerciseDevice selectedDevice = ExerciseDevice.dumbbell;
-  List<String> leftContainer = [];
-  List<String> rightContainer = [];
-  late ValueNotifier<List<String>> leftNotifier, rightNotifier;
-
-  List<TextEditingController> kg_controller = [];
-  late String weightText;
-  late String leftWeight;
-  late String midWeight;
-  late String rightWeight;
-
-  void updateWeight() {
-    setState(() {
-      leftContainer.clear();
-      rightContainer.clear();
-      if (selectedDevice == ExerciseDevice.dumbbell) {
-        List<double> matches = globals.mappableWeightsDumb;
-        double workWeight = widget.weight;
-        workWeight /= 2.0;
-        workWeight -= 2.3;
-        int bestIndex = 0;
-        double bestDistance = 999;
-        for (int i = 0; i < matches.length; ++i) {
-          if ((matches[i] - workWeight).abs() < bestDistance) {
-            bestDistance = (matches[i] - workWeight).abs();
-            bestIndex = i;
-          }
-        }
-        // double bestWeight = matches[bestIndex];
-        List<double> bestSet = globals.weightCombinationsDumb[bestIndex];
-        leftWeight = "";
-        rightWeight = "";
-        for (int i = 0; i < bestSet.length; i += 2) {
-          rightContainer.add(bestSet[i].toString());
-        }
-        var rights = [];
-        for (int i = 1; i < bestSet.length; i += 2) {
-          rights.add(bestSet[i]);
-        }
-        for (var r in rights.reversed) {
-          leftContainer.add(r.toString());
-        }
-        double sum = bestSet.reduce((a, b) => a + b);
-        sum += 2.3;
-        double all = sum * 2;
-        weightText = "Best match: $sum kg ea. ($all)";
-      }
-      if (selectedDevice == ExerciseDevice.barbellhome) {
-        List<double> matches = globals.mappableWeightsBar;
-        double workWeight = widget.weight - 8.6;
-        workWeight /= 2;
-        int bestIndex = 0;
-        double bestDistance = 999;
-        for (int i = 0; i < matches.length; ++i) {
-          if ((matches[i] - workWeight).abs() < bestDistance) {
-            bestDistance = (matches[i] - workWeight).abs();
-            bestIndex = i;
-          }
-        }
-        // double bestWeight = matches[bestIndex];
-        List<double> bestSet = globals.weightCombinationsBar[bestIndex];
-
-        for (int i = 0; i < bestSet.length; ++i) {
-          rightContainer.add(bestSet[i].toString());
-        }
-        for (int i = bestSet.length - 1; i >= 0; --i) {
-          leftContainer.add(bestSet[i].toString());
-        }
-        double sum = bestSet.reduce((a, b) => a + b);
-        sum *= 2.0;
-        sum += 8.6;
-        weightText = "Best match: $sum kg";
-      }
-    });
-  }
-
-  @override
-  void initState() {
-    super.initState();
-
-    leftNotifier = ValueNotifier(leftContainer);
-    rightNotifier = ValueNotifier(rightContainer);
-    weightText = "Stacked weight: ${widget.weight} kg";
-    updateWeight();
-    setState(() {});
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox.expand(
-      child: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            const SizedBox(height: 20.0),
-            ElevatedButton(
-              child: const Text('x'),
-              onPressed: () => Navigator.pop(context),
-            ),
-            const Spacer(),
-            Text(
-              weightText,
-              style: const TextStyle(fontSize: 20),
-            ),
-            const SizedBox(height: 20.0),
-            SegmentedButton<ExerciseDevice>(
-                showSelectedIcon: false,
-                segments: const <ButtonSegment<ExerciseDevice>>[
-                  ButtonSegment<ExerciseDevice>(
-                      value: ExerciseDevice.dumbbell, label: Text('Dumbbell')),
-                  ButtonSegment<ExerciseDevice>(
-                      value: ExerciseDevice.barbellhome,
-                      label: Text('Barbell Home')),
-                  ButtonSegment<ExerciseDevice>(
-                      value: ExerciseDevice.barbell20,
-                      label: Text('Barbell Gym'))
-                ],
-                selected: <ExerciseDevice>{selectedDevice},
-                onSelectionChanged: (Set<ExerciseDevice> newSelection) {
-                  setState(() {
-                    selectedDevice = newSelection.first;
-                    updateWeight();
-                  });
-                }),
-            const Spacer(),
-            Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-              ValueListenableBuilder(
-                  valueListenable: rightNotifier,
-                  builder: (context, List<String> weights, _) {
-                    List<Widget> discs = [];
-                    for (var txt in weights) {
-                      discs.add(RotatedBox(
-                        quarterTurns: 1,
-                        child: Container(
-                            color: Colors.black45,
-                            width: 110 - (10.0 - double.parse(txt)) * 5.0,
-                            alignment: Alignment.center,
-                            padding: const EdgeInsets.all(1),
-                            child: Text(txt,
-                                style: const TextStyle(
-                                    color: Colors.white, fontSize: 10.0))),
-                      ));
-                    }
-                    return Row(children: discs);
-                  }),
-              Container(
-                color: Colors.black54,
-                width: 50,
-                alignment: Alignment.center,
-                child: const Text('bar',
-                    style: TextStyle(color: Colors.white, fontSize: 10.0)),
-              ),
-              // acceptRow2,
-              ValueListenableBuilder(
-                  valueListenable: leftNotifier,
-                  builder: (context, List<String> weights, _) {
-                    List<Widget> discs = [];
-                    for (var txt in weights) {
-                      discs.add(RotatedBox(
-                        quarterTurns: 1,
-                        child: Container(
-                            color: Colors.black45,
-                            width: 110 - (10.0 - double.parse(txt)) * 5.0,
-                            alignment: Alignment.center,
-                            padding: const EdgeInsets.all(1),
-                            child: Text(txt,
-                                style: const TextStyle(
-                                    color: Colors.white, fontSize: 10.0))),
-                      ));
-                    }
-                    return Row(children: discs);
-                  })
-              // child: ValueListenableBuilder(
-              //     valueListenable:
-              //         Hive.box<TrainingSet>('TrainingSets').listenable(),
-              //     builder: (context, Box<TrainingSet> box, _) {
-              //       var items = box.values.toList();
-              //       if (items.isNotEmpty) {
-              //         return ListView.builder(
-              //             itemCount: items.length,
-              //             itemBuilder: (context, index) {
-              //               final item = items[index];
-              //               return ListTile(
-              //                   leading: CircleAvatar(
-              //                       radius: 17.5,
-              //                       child: FaIcon(workIcons[item.setType])),
-              //                   title: Text(
-              //                       "${item.weight}kg for ${item.repetitions} reps"),
-              //                   subtitle: Text("${item.date}"),
-              //                   trailing: IconButton(
-              //                       icon: const Icon(Icons.delete),
-              //                       onPressed: () => {
-              //                             box.delete(item.key)
-              //                           }));
-              //             });
-              //       } else {
-              //         return const Text("None");
-              //       }
-              //     })
-            ]),
-            const Spacer(),
-          ],
-        ),
-      ),
     );
   }
 }
