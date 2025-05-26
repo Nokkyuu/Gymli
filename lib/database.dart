@@ -122,17 +122,45 @@ Future<DateTime> getLastTrainingDay(String exercise) async {
     return DateTime.now();
   }
 
-  // Find the most recent training date
-  var bestElement = 0;
-  var bestElementDistance = -999;
-  for (var i = 0; i < trainingDates.length; i++) {
-    final dayDiff = trainingDates[i].difference(DateTime.now()).inDays;
-    if (dayDiff > bestElementDistance) {
-      bestElement = i;
-      bestElementDistance = dayDiff;
+  // Find the most recent training date (closest to today but in the past)
+  trainingDates
+      .sort((a, b) => b.compareTo(a)); // Sort descending (most recent first)
+  return trainingDates.first;
+}
+
+// Optimized batch function to get last training days for multiple exercises
+// Now uses dedicated API endpoint for better performance
+Future<Map<String, DateTime>> getLastTrainingDaysForExercises(
+    List<String> exerciseNames) async {
+  try {
+    final userService = UserService();
+
+    // Use the new optimized endpoint that gets all last training dates at once
+    final allLastDates = await userService.getLastTrainingDatesPerExercise();
+
+    Map<String, DateTime> result = {};
+    final now = DateTime.now();
+
+    for (String exerciseName in exerciseNames) {
+      // Check if we have a last training date for this exercise
+      if (allLastDates.containsKey(exerciseName)) {
+        result[exerciseName] = allLastDates[exerciseName]!;
+      } else {
+        // Fallback to current date if no training data exists
+        result[exerciseName] = now;
+      }
     }
+
+    return result;
+  } catch (e) {
+    print('Error getting last training days for exercises: $e');
+    // Return fallback dates for all exercises
+    Map<String, DateTime> fallback = {};
+    for (String exerciseName in exerciseNames) {
+      fallback[exerciseName] = DateTime.now();
+    }
+    return fallback;
   }
-  return trainingDates[bestElement];
 }
 
 Future<Tuple2<double, int>> getLastTrainingInfo(String exercise) async {

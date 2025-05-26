@@ -4,7 +4,6 @@ import 'package:Gymli/exerciseSetupScreen.dart';
 import 'package:Gymli/settingsScreen.dart';
 import 'package:Gymli/workoutSetupScreen.dart';
 import 'package:Gymli/statisticsScreen.dart';
-import 'package:Gymli/apiTestScreen.dart';
 import 'globals.dart' as globals;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
@@ -90,14 +89,20 @@ class _MainAppState extends State<MainApp> {
           _reloadUserData();
         }));
 
+    // Load stored authentication state on app initialization
+    _loadStoredAuthState();
+
     // Load initial exercise list after a delay to ensure initialization
     _initializeData();
   }
 
   Future<void> _initializeData() async {
-    // Wait a bit to ensure all widgets are initialized
-    await Future.delayed(const Duration(milliseconds: 500));
-    get_exercise_list();
+    // Only load exercise list if it hasn't been loaded yet or is empty
+    if (globals.exerciseList.isEmpty) {
+      // Wait a bit to ensure all widgets are initialized
+      await Future.delayed(const Duration(milliseconds: 300));
+      get_exercise_list();
+    }
   }
 
   Future<void> _reloadUserData() async {
@@ -106,6 +111,26 @@ class _MainAppState extends State<MainApp> {
 
     // Notify the landing screen to refresh its data
     // This will be handled by the LandingScreen listening to auth state changes
+  }
+
+  Future<void> _loadStoredAuthState() async {
+    try {
+      final credentials = await userService.loadStoredAuthState();
+      if (credentials != null) {
+        setState(() {
+          _credentials = credentials;
+        });
+        userService.setCredentials(credentials);
+        print('Loaded stored authentication state successfully');
+        // Reload user data after restoring auth state
+        _reloadUserData();
+      } else {
+        print('No stored authentication state found');
+      }
+    } catch (e) {
+      print('Error loading stored authentication state: $e');
+      // Continue without stored auth state
+    }
   }
 
   Widget _buildUserDataIndicator() {
@@ -334,18 +359,7 @@ class _MainAppState extends State<MainApp> {
               });
             },
           ),
-          ListTile(
-            title: const Text('API Test'),
-            onTap: () {
-              setState(() {
-                Navigator.pop(context);
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => const ApiTestScreen()));
-              });
-            },
-          ),
+
           IconButton(
             icon: const Icon(Icons.light),
             tooltip: 'Light/Dark Mode',

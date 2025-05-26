@@ -28,11 +28,9 @@ import 'package:csv/csv.dart';
 import 'package:path_provider/path_provider.dart';
 import 'dart:io';
 import 'package:flutter_file_dialog/flutter_file_dialog.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:confirm_dialog/confirm_dialog.dart';
-//import 'package/file_picker/file_picker.dart';
-import 'package:flutter/services.dart' show rootBundle;
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'globals.dart' as globals;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -144,20 +142,61 @@ void backup(String dataType) async {
 
 void triggerLoad(context, dataType) async {
   String importData;
-  if (kIsWeb) {
-    String filePath = dataType == "Exercises" ? 'csv/ex.csv' : 'csv/set.csv';
-    importData = await rootBundle.loadString(filePath);
-  } else {
-    final filePath = await FlutterFileDialog.pickFile(
-        params: const OpenFileDialogParams(
-            dialogType: OpenFileDialogType.document,
-            sourceType: SourceType.savedPhotosAlbum));
-    if (filePath == null) {
-      return;
-    }
-    importData = await File(filePath).readAsString();
+
+  // Use file_picker for cross-platform file picking (including web)
+  FilePickerResult? result = await FilePicker.platform.pickFiles(
+    type: FileType.custom,
+    allowedExtensions: ['csv'],
+    allowMultiple: false,
+  );
+
+  if (result == null || result.files.isEmpty) {
+    return;
   }
-  restoreData(dataType, importData);
+
+  // Read the file content - handle both web and mobile platforms
+  if (result.files.first.bytes != null) {
+    // Web platform - file content is available as bytes
+    importData = String.fromCharCodes(result.files.first.bytes!);
+  } else if (result.files.first.path != null) {
+    // Mobile platforms - file content is available via file path
+    importData = await File(result.files.first.path!).readAsString();
+  } else {
+    print('Error: Unable to read file content');
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Error: Unable to read file content'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+    return;
+  }
+
+  try {
+    restoreData(dataType, importData);
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('$dataType import completed successfully'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    }
+  } catch (e) {
+    print('Error in triggerLoad: $e');
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+              'Error importing $dataType: Some items may have failed. Check console for details.'),
+          backgroundColor: Colors.orange,
+          duration: const Duration(seconds: 5),
+        ),
+      );
+    }
+  }
 }
 
 List<T> stringToList<T>(String str) {
@@ -176,120 +215,193 @@ void restoreData(String dataType, String data) async {
     List<List<String>> csvTable =
         const CsvToListConverter(shouldParseNumbers: false).convert(data);
 
+    int importedCount = 0;
+    int skippedCount = 0;
+
     if (dataType == "TrainingSets") {
-      // Clear existing training sets
-      await userService.clearTrainingSets();
+      // Clear existing training sets with better error handling
+      print('Clearing existing training sets...');
+      try {
+        await userService.clearTrainingSets();
+        print('Successfully cleared existing training sets.');
+      } catch (e) {
+        print('Warning: Error clearing training sets: $e');
+        print('Continuing with import anyway...');
+      }
 
       for (List<String> row in csvTable) {
         if (row.length >= 8) {
-          // Find exercise ID by name - need to get exercises first
-          final exercises = await userService.getExercises();
-          final exerciseData = exercises.firstWhere(
-            (item) => item['name'] == row[0],
-            orElse: () => null,
-          );
+          try {
+            // Use new helper method for name-based exercise resolution
+            final exerciseId = await userService.getExerciseIdByName(row[0]);
 
-          if (exerciseData != null) {
-            await userService.createTrainingSet(
-              exerciseId: exerciseData['id'],
-              date: DateTime.parse(row[1]).toIso8601String(),
-              weight: double.parse(row[2]),
-              repetitions: int.parse(row[3]),
-              setType: int.parse(row[4]),
-              baseReps: int.parse(row[5]),
-              maxReps: int.parse(row[6]),
-              increment: double.parse(row[7]),
-              machineName: row.length > 8 ? row[8] : "",
-            );
+            if (exerciseId != null) {
+              await userService.createTrainingSet(
+                exerciseId: exerciseId,
+                date: DateTime.parse(row[1]).toIso8601String(),
+                weight: double.parse(row[2]),
+                repetitions: int.parse(row[3]),
+                setType: int.parse(row[4]),
+                baseReps: int.parse(row[5]),
+                maxReps: int.parse(row[6]),
+                increment: double.parse(row[7]),
+                machineName: row.length > 8 ? row[8] : "",
+              );
+              importedCount++;
+              print(
+                  'Successfully imported training set for exercise: ${row[0]}');
+            } else {
+              print(
+                  'Warning: Exercise "${row[0]}" not found, skipping training set');
+              skippedCount++;
+            }
+          } catch (e) {
+            print('Error importing training set for exercise "${row[0]}": $e');
+            skippedCount++;
           }
         }
       }
     } else if (dataType == "Exercises") {
-      // Clear existing exercises
-      await userService.clearExercises();
+      // Clear existing exercises with better error handling
+      print('Clearing existing exercises...');
+      try {
+        await userService.clearExercises();
+        print('Successfully cleared existing exercises.');
+      } catch (e) {
+        print('Warning: Error clearing exercises: $e');
+        print('Continuing with import anyway...');
+      }
 
       for (List<String> row in csvTable) {
         if (row.length >= 7) {
-          final muscleGroups = stringToList<String>(row[2]);
-          final muscleIntensities = stringToList<double>(row[3]);
+          try {
+            final muscleGroups = stringToList<String>(row[2]);
+            final muscleIntensities = stringToList<double>(row[3]);
 
-          // Map muscle groups to individual muscle fields
-          final Map<String, double> muscleMap = {};
-          for (int i = 0; i < muscleGroupNames.length; i++) {
-            String muscleKey = muscleGroupNames[i];
-            double intensity = 0.0;
+            // Map muscle groups to individual muscle fields
+            final Map<String, double> muscleMap = {};
+            for (int i = 0; i < muscleGroupNames.length; i++) {
+              String muscleKey = muscleGroupNames[i];
+              double intensity = 0.0;
 
-            int muscleIndex = muscleGroups.indexOf(muscleKey);
-            if (muscleIndex >= 0 && muscleIndex < muscleIntensities.length) {
-              intensity = muscleIntensities[muscleIndex];
+              int muscleIndex = muscleGroups.indexOf(muscleKey);
+              if (muscleIndex >= 0 && muscleIndex < muscleIntensities.length) {
+                intensity = muscleIntensities[muscleIndex];
+              }
+              muscleMap[muscleKey] = intensity;
             }
-            muscleMap[muscleKey] = intensity;
-          }
 
-          await userService.createExercise(
-            name: row[0],
-            type: int.parse(row[1]),
-            defaultRepBase: int.parse(row[4]),
-            defaultRepMax: int.parse(row[5]),
-            defaultIncrement: double.parse(row[6]),
-            pectoralisMajor: muscleMap["Pectoralis major"] ?? 0.0,
-            trapezius: muscleMap["Trapezius"] ?? 0.0,
-            biceps: muscleMap["Biceps"] ?? 0.0,
-            abdominals: muscleMap["Abdominals"] ?? 0.0,
-            frontDelts: muscleMap["Front Delts"] ?? 0.0,
-            deltoids: muscleMap["Deltoids"] ?? 0.0,
-            backDelts: muscleMap["Back Delts"] ?? 0.0,
-            latissimusDorsi: muscleMap["Latissimus dorsi"] ?? 0.0,
-            triceps: muscleMap["Triceps"] ?? 0.0,
-            gluteusMaximus: muscleMap["Gluteus maximus"] ?? 0.0,
-            hamstrings: muscleMap["Hamstrings"] ?? 0.0,
-            quadriceps: muscleMap["Quadriceps"] ?? 0.0,
-            calves: muscleMap["Calves"] ?? 0.0,
-          );
+            await userService.createExercise(
+              name: row[0],
+              type: int.parse(row[1]),
+              defaultRepBase: int.parse(row[4]),
+              defaultRepMax: int.parse(row[5]),
+              defaultIncrement: double.parse(row[6]),
+              pectoralisMajor: muscleMap["Pectoralis major"] ?? 0.0,
+              trapezius: muscleMap["Trapezius"] ?? 0.0,
+              biceps: muscleMap["Biceps"] ?? 0.0,
+              abdominals: muscleMap["Abdominals"] ?? 0.0,
+              frontDelts: muscleMap["Front Delts"] ?? 0.0,
+              deltoids: muscleMap["Deltoids"] ?? 0.0,
+              backDelts: muscleMap["Back Delts"] ?? 0.0,
+              latissimusDorsi: muscleMap["Latissimus dorsi"] ?? 0.0,
+              triceps: muscleMap["Triceps"] ?? 0.0,
+              gluteusMaximus: muscleMap["Gluteus maximus"] ?? 0.0,
+              hamstrings: muscleMap["Hamstrings"] ?? 0.0,
+              quadriceps: muscleMap["Quadriceps"] ?? 0.0,
+              calves: muscleMap["Calves"] ?? 0.0,
+            );
+            importedCount++;
+            print('Successfully imported exercise: ${row[0]}');
+          } catch (e) {
+            print('Error importing exercise "${row[0]}": $e');
+            skippedCount++;
+          }
         }
       }
     } else if (dataType == "Workouts") {
-      // Clear existing workouts
-      await userService.clearWorkouts();
+      // Clear existing workouts with better error handling
+      print('Clearing existing workouts...');
+      try {
+        await userService.clearWorkouts();
+        print('Successfully cleared existing workouts.');
+      } catch (e) {
+        print('Warning: Error clearing workouts: $e');
+        print('Continuing with import anyway...');
+      }
 
       for (List<String> row in csvTable) {
         if (row.isNotEmpty) {
-          final workoutName = row[0];
-          List<Map<String, dynamic>> units = [];
+          try {
+            final workoutName = row[0];
+            List<Map<String, dynamic>> units = [];
 
-          for (int i = 1; i < row.length; i++) {
-            final unitStr = row[i].split(", ");
-            if (unitStr.length >= 5) {
-              // Find exercise ID by name
-              final exercises = await userService.getExercises();
-              final exerciseData = exercises.firstWhere(
-                (item) => item['name'] == unitStr[0],
-                orElse: () => null,
-              );
+            for (int i = 1; i < row.length; i++) {
+              final unitStr = row[i].split(", ");
+              if (unitStr.length >= 5) {
+                // Use new helper method for name-based exercise resolution
+                final exerciseId =
+                    await userService.getExerciseIdByName(unitStr[0]);
 
-              if (exerciseData != null) {
-                units.add({
-                  'exercise_id': exerciseData['id'],
-                  'warmups': int.parse(unitStr[1]),
-                  'worksets': int.parse(unitStr[2]),
-                  'dropsets': int.parse(unitStr[3]),
-                  'type': int.parse(unitStr[4]),
-                });
+                if (exerciseId != null) {
+                  units.add({
+                    'exercise_id': exerciseId,
+                    'warmups': int.parse(unitStr[1]),
+                    'worksets': int.parse(unitStr[2]),
+                    'dropsets': int.parse(unitStr[3]),
+                    'type': int.parse(unitStr[4]),
+                  });
+                  print(
+                      'Added workout unit for exercise: ${unitStr[0]} with ${unitStr[1]} warmups, ${unitStr[2]} worksets, ${unitStr[3]} dropsets, type ${unitStr[4]}');
+                } else {
+                  print(
+                      'Warning: Exercise "${unitStr[0]}" not found, skipping workout unit');
+                  skippedCount++;
+                }
+              } else {
+                print(
+                    'Warning: Invalid workout unit format for row $i: ${row[i]}');
+                skippedCount++;
               }
             }
-          }
 
-          if (units.isNotEmpty) {
-            await userService.createWorkout(
-              name: workoutName,
-              units: units,
-            );
+            if (units.isNotEmpty) {
+              try {
+                final workoutData = await userService.createWorkout(
+                  name: workoutName,
+                  units: units,
+                );
+                importedCount++;
+                print(
+                    'Successfully imported workout: $workoutName with ${units.length} units (ID: ${workoutData['id']})');
+              } catch (e) {
+                print('Error creating workout $workoutName: $e');
+                skippedCount++;
+              }
+            } else {
+              print('Warning: No valid units found for workout: $workoutName');
+              skippedCount++;
+            }
+          } catch (e) {
+            print('Error importing workout "${row[0]}": $e');
+            skippedCount++;
           }
         }
       }
     }
+
+    // Print import summary
+    print(
+        '$dataType import completed: $importedCount imported, $skippedCount skipped');
+
+    // If we have skipped items, log additional details
+    if (skippedCount > 0) {
+      print(
+          'Warning: $skippedCount items were skipped due to errors. This is often due to missing dependencies or network issues.');
+    }
   } catch (e) {
-    print('Error during restore: $e');
+    print('Critical error during $dataType restore: $e');
+    rethrow; // Re-throw to be caught by triggerLoad
   }
 }
 
@@ -496,7 +608,7 @@ class _SettingsScreen extends State<SettingsScreen> {
                 icon: const FaIcon(FontAwesomeIcons.chartLine, size: 13),
                 onPressed: () {
                   triggerLoad(context, "TrainingSets");
-                  Navigator.pop(context);
+                  //Navigator.pop(context);
                 },
               ),
               TextButton.icon(
@@ -504,7 +616,7 @@ class _SettingsScreen extends State<SettingsScreen> {
                 icon: const FaIcon(FontAwesomeIcons.list, size: 13),
                 onPressed: () {
                   triggerLoad(context, "Exercises");
-                  Navigator.pop(context);
+                  //Navigator.pop(context);
                 },
               ),
               TextButton.icon(

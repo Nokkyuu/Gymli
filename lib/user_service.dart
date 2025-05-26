@@ -22,6 +22,8 @@
 
 import 'package:auth0_flutter/auth0_flutter.dart';
 import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
 import 'api.dart' as api;
 import 'api_models.dart';
 
@@ -61,11 +63,154 @@ class UserService {
     if (!isLoggedIn) {
       // Clear in-memory data when logging out
       _clearInMemoryData();
+      // Clear stored auth state
+      _clearStoredAuthState();
+    } else {
+      // Save auth state when logging in
+      _saveAuthState(credentials!);
     }
 
     // Notify listeners if auth state changed
     if (wasLoggedIn != isNowLoggedIn) {
       authStateNotifier.value = isNowLoggedIn;
+    }
+  }
+
+  // Save authentication state to persistent storage
+  Future<void> _saveAuthState(Credentials credentials) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final authData = {
+        'accessToken': credentials.accessToken,
+        'idToken': credentials.idToken,
+        'refreshToken': credentials.refreshToken,
+        'tokenType': credentials.tokenType,
+        'expiresAt': credentials.expiresAt.millisecondsSinceEpoch,
+        'scopes': credentials.scopes.toList(),
+        'user': {
+          'sub': credentials.user.sub,
+          'name': credentials.user.name,
+          'givenName': credentials.user.givenName,
+          'familyName': credentials.user.familyName,
+          'middleName': credentials.user.middleName,
+          'nickname': credentials.user.nickname,
+          'preferredUsername': credentials.user.preferredUsername,
+          'pictureUrl': credentials.user.pictureUrl?.toString(),
+          'profileUrl': credentials.user.profileUrl?.toString(),
+          'websiteUrl': credentials.user.websiteUrl?.toString(),
+          'email': credentials.user.email,
+          'isEmailVerified': credentials.user.isEmailVerified,
+          'gender': credentials.user.gender,
+          'birthdate': credentials.user.birthdate,
+          'zoneinfo': credentials.user.zoneinfo,
+          'locale': credentials.user.locale,
+          'phoneNumber': credentials.user.phoneNumber,
+          'isPhoneNumberVerified': credentials.user.isPhoneNumberVerified,
+          'address': credentials.user.address,
+          'updatedAt': credentials.user.updatedAt?.toIso8601String(),
+          'customClaims': credentials.user.customClaims,
+        }
+      };
+      await prefs.setString('auth_credentials', json.encode(authData));
+      await prefs.setBool('is_logged_in', true);
+      print('Auth state saved to persistent storage');
+    } catch (e) {
+      print('Error saving auth state: $e');
+    }
+  }
+
+  // Load authentication state from persistent storage
+  Future<Credentials?> loadStoredAuthState() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final isLoggedIn = prefs.getBool('is_logged_in') ?? false;
+
+      if (!isLoggedIn) {
+        return null;
+      }
+
+      final authDataString = prefs.getString('auth_credentials');
+      if (authDataString == null) {
+        return null;
+      }
+
+      final authData = json.decode(authDataString);
+
+      // Check if token is expired
+      final expiresAt =
+          DateTime.fromMillisecondsSinceEpoch(authData['expiresAt']);
+      if (DateTime.now().isAfter(expiresAt)) {
+        print('Stored credentials have expired');
+        await _clearStoredAuthState();
+        return null;
+      }
+
+      // Reconstruct credentials with only available UserProfile fields
+      final userData = authData['user'];
+      final user = UserProfile(
+        sub: userData['sub'],
+        name: userData['name'],
+        givenName: userData['givenName'],
+        familyName: userData['familyName'],
+        middleName: userData['middleName'],
+        nickname: userData['nickname'],
+        preferredUsername: userData['preferredUsername'],
+        pictureUrl: userData['pictureUrl'] != null
+            ? Uri.parse(userData['pictureUrl'])
+            : null,
+        profileUrl: userData['profileUrl'] != null
+            ? Uri.parse(userData['profileUrl'])
+            : null,
+        websiteUrl: userData['websiteUrl'] != null
+            ? Uri.parse(userData['websiteUrl'])
+            : null,
+        email: userData['email'],
+        isEmailVerified: userData['isEmailVerified'],
+        gender: userData['gender'],
+        birthdate: userData['birthdate'],
+        zoneinfo: userData['zoneinfo'],
+        locale: userData['locale'],
+        phoneNumber: userData['phoneNumber'],
+        isPhoneNumberVerified: userData['isPhoneNumberVerified'],
+        address: userData['address'] != null
+            ? Map<String, String>.from(userData['address'])
+            : null,
+        updatedAt: userData['updatedAt'] != null
+            ? DateTime.parse(userData['updatedAt'])
+            : null,
+        customClaims: userData['customClaims'] != null
+            ? Map<String, dynamic>.from(userData['customClaims'])
+            : null,
+      );
+
+      final credentials = Credentials(
+        accessToken: authData['accessToken'],
+        idToken: authData['idToken'],
+        refreshToken: authData['refreshToken'],
+        tokenType: authData['tokenType'],
+        expiresAt: expiresAt,
+        scopes: Set<String>.from(authData['scopes'] ?? []),
+        user: user,
+      );
+
+      print('Auth state loaded from persistent storage for user: ${user.name}');
+      return credentials;
+    } catch (e) {
+      print('Error loading stored auth state: $e');
+      await _clearStoredAuthState();
+      return null;
+    }
+  }
+
+  // Clear stored authentication state
+  Future<void> _clearStoredAuthState() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('auth_credentials');
+      await prefs.setBool('is_logged_in', false);
+      print('Stored auth state cleared');
+    } catch (e) {
+      print('Error clearing stored auth state: $e');
     }
   }
 
@@ -84,13 +229,19 @@ class UserService {
     if (isLoggedIn) {
       return await api.ExerciseService().getExercises(userName: userName);
     } else {
-      // For non-authenticated users, load DefaultUser data
-      try {
-        return await api.ExerciseService()
-            .getExercises(userName: 'DefaultUser');
-      } catch (e) {
-        // If API fails, return in-memory data
-        return _inMemoryData['exercises'] as List<dynamic>;
+      // When not logged in, prioritize in-memory data if it exists
+      final inMemoryExercises = _inMemoryData['exercises'] as List<dynamic>;
+      if (inMemoryExercises.isNotEmpty) {
+        return inMemoryExercises;
+      } else {
+        // Only try API if no in-memory data exists
+        try {
+          return await api.ExerciseService()
+              .getExercises(userName: 'DefaultUser');
+        } catch (e) {
+          // If API fails, return empty in-memory data
+          return inMemoryExercises;
+        }
       }
     }
   }
@@ -190,31 +341,167 @@ class UserService {
 
   // Workout Services
   Future<List<dynamic>> getWorkouts() async {
+    List<dynamic> rawWorkouts;
+
     if (isLoggedIn) {
-      return await api.WorkoutService().getWorkouts(userName: userName);
+      rawWorkouts = await api.WorkoutService().getWorkouts(userName: userName);
     } else {
-      try {
-        return await api.WorkoutService().getWorkouts(userName: 'DefaultUser');
-      } catch (e) {
-        return _inMemoryData['workouts'] as List<dynamic>;
+      // When not logged in, prioritize in-memory data if it exists
+      final inMemoryWorkouts = _inMemoryData['workouts'] as List<dynamic>;
+      if (inMemoryWorkouts.isNotEmpty) {
+        rawWorkouts = inMemoryWorkouts;
+      } else {
+        // Only try API if no in-memory data exists
+        try {
+          rawWorkouts =
+              await api.WorkoutService().getWorkouts(userName: 'DefaultUser');
+        } catch (e) {
+          rawWorkouts = inMemoryWorkouts; // Fallback to empty in-memory data
+        }
       }
+    }
+
+    // Enrich workouts with their units
+    return await _enrichWorkoutsWithUnits(rawWorkouts);
+  }
+
+  Future<List<dynamic>> _enrichWorkoutsWithUnits(List<dynamic> workouts) async {
+    try {
+      // Get all workout units for this user
+      final allWorkoutUnits = await getWorkoutUnits();
+
+      // Group workout units by workout_id
+      final Map<int, List<dynamic>> unitsByWorkoutId = {};
+      for (var workoutUnit in allWorkoutUnits) {
+        final workoutId = workoutUnit['workout_id'] as int?;
+        if (workoutId != null) {
+          unitsByWorkoutId.putIfAbsent(workoutId, () => []);
+          unitsByWorkoutId[workoutId]!.add(workoutUnit);
+        }
+      }
+
+      // Enrich each workout with its units using Future.wait for async operations
+      final List<Future<Map<String, dynamic>>> enrichmentFutures =
+          workouts.map((workout) async {
+        try {
+          final Map<String, dynamic> workoutMap;
+          if (workout is Map<String, dynamic>) {
+            workoutMap = Map<String, dynamic>.from(workout);
+          } else {
+            workoutMap = Map<String, dynamic>.from(workout as Map);
+          }
+
+          final workoutId = workoutMap['id'] as int?;
+
+          // Check if workout already has units (offline mode)
+          if (workoutMap.containsKey('units') &&
+              workoutMap['units'] is List &&
+              (workoutMap['units'] as List).isNotEmpty) {
+            print(
+                'DEBUG: Workout ${workoutMap['name']} already has ${(workoutMap['units'] as List).length} units, keeping them');
+            // Keep existing units but make sure they're enriched with exercise names
+            final existingUnits = workoutMap['units'] as List;
+            final enrichedUnits =
+                await _enrichWorkoutUnitsWithExerciseNames(existingUnits);
+            workoutMap['units'] = enrichedUnits;
+          } else if (workoutId != null) {
+            // Fetch units from workout units collection (online mode)
+            final units = unitsByWorkoutId[workoutId] ?? [];
+            print(
+                'DEBUG: Workout ${workoutMap['name']} fetched ${units.length} units from workout units collection');
+            workoutMap['units'] = units;
+          } else {
+            workoutMap['units'] = [];
+          }
+
+          return workoutMap;
+        } catch (e) {
+          print('Error enriching workout with units: $e');
+          // Return the original workout with empty units
+          final Map<String, dynamic> fallbackMap;
+          if (workout is Map<String, dynamic>) {
+            fallbackMap = Map<String, dynamic>.from(workout);
+          } else {
+            fallbackMap = Map<String, dynamic>.from(workout as Map);
+          }
+          fallbackMap['units'] = [];
+          return fallbackMap;
+        }
+      }).toList();
+
+      // Wait for all enrichment operations to complete
+      return await Future.wait(enrichmentFutures);
+    } catch (e) {
+      print('Error in _enrichWorkoutsWithUnits: $e');
+      // Return original workouts with empty units arrays
+      return workouts.map((workout) {
+        try {
+          final Map<String, dynamic> workoutMap;
+          if (workout is Map<String, dynamic>) {
+            workoutMap = Map<String, dynamic>.from(workout);
+          } else {
+            workoutMap = Map<String, dynamic>.from(workout as Map);
+          }
+          workoutMap['units'] = [];
+          return workoutMap;
+        } catch (conversionError) {
+          print(
+              'Error converting workout to Map in fallback: $conversionError');
+          return workout;
+        }
+      }).toList();
     }
   }
 
-  Future<void> createWorkout({
+  Future<Map<String, dynamic>> createWorkout({
     required String name,
     required List<Map<String, dynamic>> units,
   }) async {
     if (isLoggedIn) {
-      await api.WorkoutService().createWorkout(userName: userName, name: name);
+      // Create the workout first and get its data (including ID)
+      final workoutData = await api.WorkoutService()
+          .createWorkout(userName: userName, name: name);
+      final workoutId = workoutData['id'] as int;
+
+      // Now create all the workout units
+      for (final unit in units) {
+        await createWorkoutUnit(
+          workoutId: workoutId,
+          exerciseId: unit['exercise_id'],
+          warmups: unit['warmups'],
+          worksets: unit['worksets'],
+          dropsets: unit['dropsets'],
+          type: unit['type'],
+        );
+      }
+
+      return workoutData;
     } else {
+      final workoutId = DateTime.now().millisecondsSinceEpoch;
       final workout = {
-        'id': DateTime.now().millisecondsSinceEpoch,
+        'id': workoutId,
         'user_name': 'DefaultUser',
         'name': name,
         'units': units,
       };
       (_inMemoryData['workouts'] as List<dynamic>).add(workout);
+
+      // For offline mode, also add individual workout units to workoutUnits list
+      for (final unit in units) {
+        final workoutUnit = {
+          'id': DateTime.now().millisecondsSinceEpoch + units.indexOf(unit),
+          'user_name': 'DefaultUser',
+          'workout_id': workoutId,
+          'exercise_id': unit['exercise_id'],
+          'warmups': unit['warmups'],
+          'worksets': unit['worksets'],
+          'dropsets': unit['dropsets'],
+          'type': unit['type'],
+        };
+        (_inMemoryData['workoutUnits'] as List<dynamic>).add(workoutUnit);
+      }
+
+      return workout;
     }
   }
 
@@ -247,11 +534,20 @@ class UserService {
       rawTrainingSets =
           await api.TrainingSetService().getTrainingSets(userName: userName);
     } else {
-      try {
-        rawTrainingSets = await api.TrainingSetService()
-            .getTrainingSets(userName: 'DefaultUser');
-      } catch (e) {
-        rawTrainingSets = _inMemoryData['trainingSets'] as List<dynamic>;
+      // When not logged in, prioritize in-memory data if it exists
+      final inMemoryTrainingSets =
+          _inMemoryData['trainingSets'] as List<dynamic>;
+      if (inMemoryTrainingSets.isNotEmpty) {
+        rawTrainingSets = inMemoryTrainingSets;
+      } else {
+        // Only try API if no in-memory data exists
+        try {
+          rawTrainingSets = await api.TrainingSetService()
+              .getTrainingSets(userName: 'DefaultUser');
+        } catch (e) {
+          rawTrainingSets =
+              inMemoryTrainingSets; // Fallback to empty in-memory data
+        }
       }
     }
 
@@ -412,17 +708,155 @@ class UserService {
     }
   }
 
+  /// Optimized method to get last training dates per exercise (performance optimized)
+  /// Returns a map of exercise names to their last training dates
+  Future<Map<String, DateTime>> getLastTrainingDatesPerExercise() async {
+    try {
+      if (isLoggedIn) {
+        // Use the optimized API endpoint when logged in
+        final lastDatesMap = await api.TrainingSetService()
+            .getLastTrainingDatesPerExercise(userName: userName);
+
+        // Convert string dates to DateTime objects
+        return lastDatesMap.map((exerciseName, dateString) {
+          try {
+            return MapEntry(exerciseName, DateTime.parse(dateString));
+          } catch (e) {
+            print('Error parsing date for exercise $exerciseName: $e');
+            return MapEntry(exerciseName, DateTime.now());
+          }
+        });
+      } else {
+        // For offline mode, fall back to processing in-memory data
+        final inMemoryTrainingSets =
+            _inMemoryData['trainingSets'] as List<dynamic>;
+        final Map<String, DateTime> result = {};
+
+        // Get exercise name mapping
+        final exercises = await getExercises();
+        final Map<int, String> exerciseIdToName = {};
+        for (var exerciseData in exercises) {
+          final exercise = ApiExercise.fromJson(exerciseData);
+          exerciseIdToName[exercise.id!] = exercise.name;
+        }
+
+        // Process training sets to find last dates
+        for (var trainingSetData in inMemoryTrainingSets) {
+          final exerciseId = trainingSetData['exercise_id'] as int?;
+          if (exerciseId != null) {
+            final exerciseName = exerciseIdToName[exerciseId];
+            if (exerciseName != null) {
+              final date = DateTime.parse(trainingSetData['date']);
+              if (!result.containsKey(exerciseName) ||
+                  result[exerciseName]!.isBefore(date)) {
+                result[exerciseName] = date;
+              }
+            }
+          }
+        }
+
+        return result;
+      }
+    } catch (e) {
+      print('Error getting last training dates per exercise: $e');
+      return {};
+    }
+  }
+
   // Workout Unit Services
   Future<List<dynamic>> getWorkoutUnits() async {
+    List<dynamic> rawWorkoutUnits;
+
     if (isLoggedIn) {
-      return await api.WorkoutUnitService().getWorkoutUnits(userName: userName);
+      rawWorkoutUnits =
+          await api.WorkoutUnitService().getWorkoutUnits(userName: userName);
     } else {
       try {
-        return await api.WorkoutUnitService()
+        rawWorkoutUnits = await api.WorkoutUnitService()
             .getWorkoutUnits(userName: 'DefaultUser');
       } catch (e) {
-        return _inMemoryData['workoutUnits'] as List<dynamic>;
+        rawWorkoutUnits = _inMemoryData['workoutUnits'] as List<dynamic>;
       }
+    }
+
+    // Enrich workout units with exercise names
+    return await _enrichWorkoutUnitsWithExerciseNames(rawWorkoutUnits);
+  }
+
+  Future<List<dynamic>> _enrichWorkoutUnitsWithExerciseNames(
+      List<dynamic> workoutUnits) async {
+    try {
+      // Get all exercises to create a mapping from ID to name
+      final exercises = await getExercises();
+      final Map<int, String> exerciseIdToName = {};
+
+      for (var exerciseData in exercises) {
+        try {
+          // Handle both Map and LinkedMap types
+          final Map<String, dynamic> exerciseMap;
+          if (exerciseData is Map<String, dynamic>) {
+            exerciseMap = exerciseData;
+          } else {
+            exerciseMap = Map<String, dynamic>.from(exerciseData as Map);
+          }
+
+          final exercise = ApiExercise.fromJson(exerciseMap);
+          exerciseIdToName[exercise.id!] = exercise.name;
+        } catch (e) {
+          print('Error parsing exercise data in workout units: $e');
+        }
+      }
+
+      // Add exercise_name field to each workout unit
+      return workoutUnits.map((workoutUnit) {
+        try {
+          // Handle both Map and LinkedMap types
+          final Map<String, dynamic> workoutUnitMap;
+          if (workoutUnit is Map<String, dynamic>) {
+            workoutUnitMap = Map<String, dynamic>.from(workoutUnit);
+          } else {
+            workoutUnitMap = Map<String, dynamic>.from(workoutUnit as Map);
+          }
+
+          final exerciseId = workoutUnitMap['exercise_id'] as int?;
+          if (exerciseId != null) {
+            final exerciseName =
+                exerciseIdToName[exerciseId] ?? 'Unknown Exercise';
+            workoutUnitMap['exercise_name'] = exerciseName;
+          }
+
+          return workoutUnitMap;
+        } catch (e) {
+          print('Error enriching workout unit: $e');
+          // Return the original workout unit converted to proper Map if enrichment fails
+          try {
+            if (workoutUnit is Map<String, dynamic>) {
+              return Map<String, dynamic>.from(workoutUnit);
+            } else {
+              return Map<String, dynamic>.from(workoutUnit as Map);
+            }
+          } catch (conversionError) {
+            print('Error converting workout unit to Map: $conversionError');
+            return workoutUnit;
+          }
+        }
+      }).toList();
+    } catch (e) {
+      print('Error in _enrichWorkoutUnitsWithExerciseNames: $e');
+      // Return original workout units converted to proper Maps if enrichment completely fails
+      return workoutUnits.map((wu) {
+        try {
+          if (wu is Map<String, dynamic>) {
+            return Map<String, dynamic>.from(wu);
+          } else {
+            return Map<String, dynamic>.from(wu as Map);
+          }
+        } catch (conversionError) {
+          print(
+              'Error converting workout unit to Map in fallback: $conversionError');
+          return wu;
+        }
+      }).toList();
     }
   }
 
@@ -431,6 +865,7 @@ class UserService {
     required int exerciseId,
     required int warmups,
     required int worksets,
+    required int dropsets,
     required int type,
   }) async {
     if (isLoggedIn) {
@@ -440,6 +875,7 @@ class UserService {
         exerciseId: exerciseId,
         warmups: warmups,
         worksets: worksets,
+        dropsets: dropsets,
         type: type,
       );
     } else {
@@ -450,6 +886,7 @@ class UserService {
         'exercise_id': exerciseId,
         'warmups': warmups,
         'worksets': worksets,
+        'dropsets': dropsets,
         'type': type,
       };
       (_inMemoryData['workoutUnits'] as List<dynamic>).add(workoutUnit);
@@ -519,24 +956,49 @@ class UserService {
     if (isLoggedIn) {
       // Get all training sets for this user and delete them
       final trainingSets = await getTrainingSets();
+      int deletedCount = 0;
+      int errorCount = 0;
+
       for (var set in trainingSets) {
         if (set['id'] != null) {
-          await deleteTrainingSet(set['id']);
+          try {
+            await deleteTrainingSet(set['id']);
+            deletedCount++;
+          } catch (e) {
+            errorCount++;
+            print('Warning: Failed to delete training set ${set['id']}: $e');
+            // Continue with other sets instead of stopping
+          }
         }
       }
+      print('Cleared training sets: $deletedCount deleted, $errorCount errors');
     } else {
       // Clear in-memory training sets and clear DefaultUser from API
       _inMemoryData['trainingSets'] = <Map<String, dynamic>>[];
       try {
         final defaultSets = await api.TrainingSetService()
             .getTrainingSets(userName: 'DefaultUser');
+        int deletedCount = 0;
+        int errorCount = 0;
+
         for (var set in defaultSets) {
           if (set['id'] != null) {
-            await api.TrainingSetService().deleteTrainingSet(set['id']);
+            try {
+              await api.TrainingSetService().deleteTrainingSet(set['id']);
+              deletedCount++;
+            } catch (e) {
+              errorCount++;
+              print(
+                  'Warning: Failed to delete DefaultUser training set ${set['id']}: $e');
+              // Continue with other sets instead of stopping
+            }
           }
         }
+        print(
+            'Cleared DefaultUser training sets: $deletedCount deleted, $errorCount errors');
       } catch (e) {
-        // Ignore API errors for DefaultUser data
+        print('Error accessing DefaultUser training sets: $e');
+        // Continue anyway - we still cleared in-memory data
       }
     }
   }
@@ -545,24 +1007,49 @@ class UserService {
     if (isLoggedIn) {
       // Get all exercises for this user and delete them
       final exercises = await getExercises();
+      int deletedCount = 0;
+      int errorCount = 0;
+
       for (var exercise in exercises) {
         if (exercise['id'] != null) {
-          await deleteExercise(exercise['id']);
+          try {
+            await deleteExercise(exercise['id']);
+            deletedCount++;
+          } catch (e) {
+            errorCount++;
+            print('Warning: Failed to delete exercise ${exercise['id']}: $e');
+            // Continue with other exercises instead of stopping
+          }
         }
       }
+      print('Cleared exercises: $deletedCount deleted, $errorCount errors');
     } else {
       // Clear in-memory exercises and clear DefaultUser from API
       _inMemoryData['exercises'] = <Map<String, dynamic>>[];
       try {
         final defaultExercises =
             await api.ExerciseService().getExercises(userName: 'DefaultUser');
+        int deletedCount = 0;
+        int errorCount = 0;
+
         for (var exercise in defaultExercises) {
           if (exercise['id'] != null) {
-            await api.ExerciseService().deleteExercise(exercise['id']);
+            try {
+              await api.ExerciseService().deleteExercise(exercise['id']);
+              deletedCount++;
+            } catch (e) {
+              errorCount++;
+              print(
+                  'Warning: Failed to delete DefaultUser exercise ${exercise['id']}: $e');
+              // Continue with other exercises instead of stopping
+            }
           }
         }
+        print(
+            'Cleared DefaultUser exercises: $deletedCount deleted, $errorCount errors');
       } catch (e) {
-        // Ignore API errors for DefaultUser data
+        print('Error accessing DefaultUser exercises: $e');
+        // Continue anyway - we still cleared in-memory data
       }
     }
   }
@@ -571,25 +1058,80 @@ class UserService {
     if (isLoggedIn) {
       // Get all workouts for this user and delete them
       final workouts = await getWorkouts();
+      int deletedCount = 0;
+      int errorCount = 0;
+
       for (var workout in workouts) {
         if (workout['id'] != null) {
-          await deleteWorkout(workout['id']);
+          try {
+            await deleteWorkout(workout['id']);
+            deletedCount++;
+          } catch (e) {
+            errorCount++;
+            print('Warning: Failed to delete workout ${workout['id']}: $e');
+            // Continue with other workouts instead of stopping
+          }
         }
       }
+      print('Cleared workouts: $deletedCount deleted, $errorCount errors');
     } else {
       // Clear in-memory workouts and clear DefaultUser from API
       _inMemoryData['workouts'] = <Map<String, dynamic>>[];
       try {
         final defaultWorkouts =
             await api.WorkoutService().getWorkouts(userName: 'DefaultUser');
+        int deletedCount = 0;
+        int errorCount = 0;
+
         for (var workout in defaultWorkouts) {
           if (workout['id'] != null) {
-            await api.WorkoutService().deleteWorkout(workout['id']);
+            try {
+              await api.WorkoutService().deleteWorkout(workout['id']);
+              deletedCount++;
+            } catch (e) {
+              errorCount++;
+              print(
+                  'Warning: Failed to delete DefaultUser workout ${workout['id']}: $e');
+              // Continue with other workouts instead of stopping
+            }
           }
         }
+        print(
+            'Cleared DefaultUser workouts: $deletedCount deleted, $errorCount errors');
       } catch (e) {
-        // Ignore API errors for DefaultUser data
+        print('Error accessing DefaultUser workouts: $e');
+        // Continue anyway - we still cleared in-memory data
       }
+    }
+  }
+
+  // Helper method for import/export - resolve exercise name to ID
+  Future<int?> getExerciseIdByName(String exerciseName) async {
+    try {
+      final exercises = await getExercises();
+      final exerciseData = exercises.firstWhere(
+        (item) => item['name'] == exerciseName,
+        orElse: () => null,
+      );
+      return exerciseData?['id'];
+    } catch (e) {
+      print('Error resolving exercise name to ID: $e');
+      return null;
+    }
+  }
+
+  // Helper method for import/export - resolve exercise ID to name
+  Future<String?> getExerciseNameById(int exerciseId) async {
+    try {
+      final exercises = await getExercises();
+      final exerciseData = exercises.firstWhere(
+        (item) => item['id'] == exerciseId,
+        orElse: () => null,
+      );
+      return exerciseData?['name'];
+    } catch (e) {
+      print('Error resolving exercise ID to name: $e');
+      return null;
     }
   }
 }

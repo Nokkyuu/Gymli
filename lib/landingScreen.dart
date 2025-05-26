@@ -67,12 +67,23 @@ class _LandingScreenState extends State<LandingScreen> {
   ValueNotifier<bool> filterApplied = ValueNotifier<bool>(true);
   List<String> metainfo = [];
   bool _isLoading = true;
+  DateTime? _lastDataLoad; // Cache timestamp
 
-  Future<void> updateAllExercises() async {
+  Future<void> updateAllExercises({bool forceReload = false}) async {
     try {
+      // Only reload if data is stale (older than 30 seconds) or empty, unless force reload is requested
+      final now = DateTime.now();
+      if (!forceReload &&
+          _lastDataLoad != null &&
+          allExercises.isNotEmpty &&
+          now.difference(_lastDataLoad!).inSeconds < 30) {
+        return; // Use cached data
+      }
+
       final exercises = await userService.getExercises();
       allExercises = exercises.map((e) => ApiExercise.fromJson(e)).toList();
       allExercises.sort((a, b) => a.name.compareTo(b.name));
+      _lastDataLoad = now;
       filterApplied.value = !filterApplied.value;
     } catch (e) {
       if (mounted) {
@@ -89,13 +100,18 @@ class _LandingScreenState extends State<LandingScreen> {
       filterMask.add(e.exerciseName);
     }
     filteredExercises = [];
-    filteredExercises.sort((a, b) => a.name.compareTo(b.name));
     for (var ex in allExercises) {
       if (filterMask.contains(ex.name)) {
         filteredExercises.add(ex);
       }
     }
-    metainfo = List.filled(allExercises.length, "");
+    // Sort AFTER adding exercises to the list
+    filteredExercises.sort((a, b) => a.name.compareTo(b.name));
+
+    // Initialize metainfo array with default values
+    metainfo = List.filled(filteredExercises.length, "");
+
+    // Fill in workout-specific information
     for (var e in workout.units) {
       for (int i = 0; i < filteredExercises.length; ++i) {
         if (filteredExercises[i].name == e.exerciseName) {
@@ -104,20 +120,61 @@ class _LandingScreenState extends State<LandingScreen> {
         }
       }
     }
+
+    // Fill any remaining empty entries with default exercise info
+    for (int i = 0; i < metainfo.length; i++) {
+      if (metainfo[i].isEmpty) {
+        final ex = filteredExercises[i];
+        metainfo[i] =
+            '${ex.defaultRepBase}-${ex.defaultRepMax} Reps @ ${ex.defaultIncrement}kg';
+      }
+    }
+
     filterApplied.value = !filterApplied.value;
   }
 
   Future<void> showAllExercises() async {
     filteredExercises = allExercises;
-    // filteredExercises.sort((a, b) => a.name.compareTo(b.name));
     metainfo = [];
-    for (var ex in filteredExercises) {
-      var lastTraining = await db.getLastTrainingDay(ex.name);
-      var dayDiff = DateTime.now().difference(lastTraining).inDays;
-      String dayInfo = dayDiff > 0 ? "$dayDiff days ago" : "today";
-      metainfo.add(
-          '${ex.defaultRepBase}-${ex.defaultRepMax} Reps @ ${ex.defaultIncrement}kg - $dayInfo');
+
+    if (filteredExercises.isEmpty) {
+      filterApplied.value = !filterApplied.value;
+      return;
     }
+
+    try {
+      // Get exercise names for batch processing
+      final exerciseNames = filteredExercises.map((ex) => ex.name).toList();
+
+      // Fetch last training days for all exercises in one batch call
+      final lastTrainingDays =
+          await db.getLastTrainingDaysForExercises(exerciseNames);
+
+      // Build metainfo for each exercise
+      for (var ex in filteredExercises) {
+        final lastTraining = lastTrainingDays[ex.name] ?? DateTime.now();
+        final dayDiff = DateTime.now().difference(lastTraining).inDays;
+        String dayInfo = dayDiff > 0 ? "$dayDiff days ago" : "today";
+        metainfo.add(
+            '${ex.defaultRepBase}-${ex.defaultRepMax} Reps @ ${ex.defaultIncrement}kg - $dayInfo');
+      }
+    } catch (e) {
+      print('Error in showAllExercises: $e');
+      // Fallback metainfo without training dates - ensure same length as filteredExercises
+      metainfo.clear();
+      for (var ex in filteredExercises) {
+        metainfo.add(
+            '${ex.defaultRepBase}-${ex.defaultRepMax} Reps @ ${ex.defaultIncrement}kg');
+      }
+    }
+
+    // Ensure metainfo and filteredExercises are the same length
+    while (metainfo.length < filteredExercises.length) {
+      final ex = filteredExercises[metainfo.length];
+      metainfo.add(
+          '${ex.defaultRepBase}-${ex.defaultRepMax} Reps @ ${ex.defaultIncrement}kg');
+    }
+
     filterApplied.value = !filterApplied.value;
   }
 
@@ -130,14 +187,43 @@ class _LandingScreenState extends State<LandingScreen> {
         filteredExercises.add(ex);
       }
     }
+
+    // Build metainfo to match filteredExercises length
     for (var ex in filteredExercises) {
       metainfo.add(
           'Reps: ${ex.defaultRepBase} to ${ex.defaultRepMax} Weight Incr.: ${ex.defaultIncrement}');
     }
+
+    // Safety check to ensure lists are the same length
+    while (metainfo.length < filteredExercises.length) {
+      final ex = filteredExercises[metainfo.length];
+      metainfo.add(
+          'Reps: ${ex.defaultRepBase} to ${ex.defaultRepMax} Weight Incr.: ${ex.defaultIncrement}');
+    }
+
     filterApplied.value = !filterApplied.value;
   }
 
   Future<void> _reload(var value) async {
+    try {
+      // Load both workouts and exercises when navigating back from other screens
+      await Future.wait([
+        _loadWorkouts(),
+        updateAllExercises(forceReload: true), // Force reload to get fresh data
+      ]);
+
+      // Refresh the exercise display with updated training information
+      await showAllExercises();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error reloading data: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _loadWorkouts() async {
     try {
       final workouts = await userService.getWorkouts();
       setState(() {
@@ -169,11 +255,11 @@ class _LandingScreenState extends State<LandingScreen> {
   }
 
   void _onAuthStateChanged() {
-    // Reload data when authentication state changes
-    _loadData();
+    // Force reload data when authentication state changes (ignore cache)
+    _loadData(forceReload: true);
   }
 
-  Future<void> _loadData() async {
+  Future<void> _loadData({bool forceReload = false}) async {
     setState(() {
       _isLoading = true;
     });
@@ -182,8 +268,11 @@ class _LandingScreenState extends State<LandingScreen> {
       // Show current user info while loading
       print('Loading data for user: ${userService.userName}');
 
-      await updateAllExercises();
-      await _reload(null);
+      // Load exercises and workouts in parallel for faster loading
+      await Future.wait([
+        updateAllExercises(forceReload: forceReload),
+        _loadWorkouts(),
+      ]);
 
       setState(() {
         MuscleController.value = TextEditingValue.empty;
@@ -191,6 +280,7 @@ class _LandingScreenState extends State<LandingScreen> {
         _isLoading = false;
       });
 
+      // Load exercise details after UI is responsive
       await showAllExercises();
 
       // Show success message after login
@@ -223,7 +313,14 @@ class _LandingScreenState extends State<LandingScreen> {
   Widget build(BuildContext context) {
     if (_isLoading) {
       return const Center(
-        child: CircularProgressIndicator(),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(),
+            SizedBox(height: 16),
+            Text('Loading your fitness data...'),
+          ],
+        ),
       );
     }
 
@@ -339,7 +436,10 @@ class _LandingScreenState extends State<LandingScreen> {
                         itemCount: items.length,
                         itemBuilder: (context, index) {
                           final currentData = items[index];
-                          final meta = metainfo[index];
+                          // Safety check to prevent index out of range errors
+                          final meta = index < metainfo.length
+                              ? metainfo[index]
+                              : '${currentData.defaultRepBase}-${currentData.defaultRepMax} Reps @ ${currentData.defaultIncrement}kg';
                           String description = "";
                           if (meta.split(":")[0] == "Warm") {
                             description = meta;

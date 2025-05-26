@@ -256,7 +256,8 @@ class WorkoutService {
   /// Creates a new workout record
   /// [userName] - The username associated with the workout
   /// [name] - The name of the workout
-  Future<void> createWorkout({
+  /// Returns the created workout data including its ID
+  Future<Map<String, dynamic>> createWorkout({
     required String userName,
     required String name,
     // Add other required fields as needed
@@ -273,6 +274,7 @@ class WorkoutService {
     if (response.statusCode != 200 && response.statusCode != 201) {
       throw Exception('Failed to create workout');
     }
+    return json.decode(response.body);
   }
 
   /// Updates an existing workout record
@@ -391,6 +393,22 @@ class TrainingSetService {
     }
   }
 
+  /// Retrieves last training dates per exercise for a user (optimized for performance)
+  /// [userName] - The username to fetch last training dates for
+  /// Returns a map of exercise names to their last training dates
+  Future<Map<String, String>> getLastTrainingDatesPerExercise(
+      {required String userName}) async {
+    final response = await http.get(
+        Uri.parse('$baseUrl/training_sets/last_dates?user_name=$userName'));
+    if (response.statusCode == 200) {
+      final Map<String, dynamic> responseData = json.decode(response.body);
+      // Convert the response to Map<String, String> format
+      return responseData.map((key, value) => MapEntry(key, value.toString()));
+    } else {
+      throw Exception('Failed to load last training dates');
+    }
+  }
+
   /// Deletes a training set record
   /// [id] - The unique identifier of the training set to delete
   Future<void> deleteTrainingSet(int id) async {
@@ -441,6 +459,7 @@ class WorkoutUnitService {
   /// [exerciseId] - The ID of the exercise
   /// [warmups] - The number of warm-up sets
   /// [worksets] - The number of work sets
+  /// [dropsets] - The number of drop sets
   /// [type] - The type of workout unit (e.g., exercise, rest)
   Future<void> createWorkoutUnit({
     required String userName,
@@ -448,6 +467,7 @@ class WorkoutUnitService {
     required int exerciseId,
     required int warmups,
     required int worksets,
+    required int dropsets,
     required int type,
   }) async {
     final response = await http.post(
@@ -459,6 +479,7 @@ class WorkoutUnitService {
         'exercise_id': exerciseId,
         'warmups': warmups,
         'worksets': worksets,
+        'dropsets': dropsets,
         'type': type,
       }),
     );
