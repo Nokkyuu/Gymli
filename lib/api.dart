@@ -138,6 +138,7 @@ class ExerciseService {
   /// [gluteusMaximus] - Targeting gluteus maximus muscle (percentage)
   /// [hamstrings] - Targeting hamstrings muscle (percentage)
   /// [quadriceps] - Targeting quadriceps muscle (percentage)
+  /// [forearms] - Targeting forearms muscle (percentage)
   /// [calves] - Targeting calves muscle (percentage)
   Future<void> createExercise({
     required String userName,
@@ -158,6 +159,7 @@ class ExerciseService {
     required double gluteusMaximus,
     required double hamstrings,
     required double quadriceps,
+    required double forearms,
     required double calves,
   }) async {
     final response = await http.post(
@@ -182,6 +184,7 @@ class ExerciseService {
         'gluteus_maximus': gluteusMaximus,
         'hamstrings': hamstrings,
         'quadriceps': quadriceps,
+        'forearms': forearms,
         'calves': calves,
       }),
     );

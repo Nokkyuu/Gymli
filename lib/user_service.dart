@@ -264,6 +264,7 @@ class UserService {
     required double gluteusMaximus,
     required double hamstrings,
     required double quadriceps,
+    required double forearms,
     required double calves,
   }) async {
     if (isLoggedIn) {
@@ -286,6 +287,7 @@ class UserService {
         gluteusMaximus: gluteusMaximus,
         hamstrings: hamstrings,
         quadriceps: quadriceps,
+        forearms: forearms,
         calves: calves,
       );
     } else {
@@ -310,6 +312,7 @@ class UserService {
         'gluteus_maximus': gluteusMaximus,
         'hamstrings': hamstrings,
         'quadriceps': quadriceps,
+        'forearms': forearms,
         'calves': calves,
       };
       (_inMemoryData['exercises'] as List<dynamic>).add(exercise);

@@ -96,6 +96,7 @@ void add_exercise(String exerciseName, ExerciseDevice chosenDevice, int minRep,
       gluteusMaximus: muscleIntensities.length > 9 ? muscleIntensities[9] : 0.0,
       hamstrings: muscleIntensities.length > 10 ? muscleIntensities[10] : 0.0,
       quadriceps: muscleIntensities.length > 11 ? muscleIntensities[11] : 0.0,
+      forearms: muscleIntensities.length > 12 ? muscleIntensities[12] : 0.0,
       calves: muscleIntensities.length > 13 ? muscleIntensities[13] : 0.0,
     );
   } catch (e) {

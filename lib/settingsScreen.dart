@@ -32,7 +32,6 @@ import 'package:file_picker/file_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:confirm_dialog/confirm_dialog.dart';
 import 'globals.dart' as globals;
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'dart:convert'; // Add this import for utf8
 import 'package:flutter/foundation.dart'; // Add this import for kIsWeb
@@ -385,12 +384,10 @@ Future<void> backup(String dataType, BuildContext context) async {
         try {
           print('Attempting browser download fallback...');
 
-          // Create a data URL
-          final dataUrl =
-              'data:text/csv;charset=utf-8,${Uri.encodeComponent(csvData)}';
+          // Create a data URL for potential web download
+          // final dataUrl = 'data:text/csv;charset=utf-8,${Uri.encodeComponent(csvData)}';
 
-          // This is a simplified approach - you might need to use dart:html for full web support
-          // For now, we'll show the data in a dialog that users can copy
+          // This is a simplified approach - showing data in a dialog that users can copy
 
           if (context.mounted) {
             Navigator.of(context).pop(); // Close loading dialog
@@ -854,21 +851,37 @@ Future<void> restoreData(
 
         if (row.length >= 7) {
           try {
-            final muscleGroups = stringToList<String>(row[2]);
-            final muscleIntensities = stringToList<double>(row[3]);
+            // FIXED: Use proper CSV parsing for semicolon-separated values
+            final muscleGroups = parseCSVMuscleGroups(row[2]);
+            final muscleIntensities = parseCSVMuscleIntensities(row[3]);
+
+            print('DEBUG: Parsed muscle groups: $muscleGroups');
+            print('DEBUG: Parsed muscle intensities: $muscleIntensities');
 
             // Map muscle groups to individual muscle fields
             final Map<String, double> muscleMap = {};
-            for (int i = 0; i < muscleGroupNames.length; i++) {
-              String muscleKey = muscleGroupNames[i];
-              double intensity = 0.0;
 
-              int muscleIndex = muscleGroups.indexOf(muscleKey);
-              if (muscleIndex >= 0 && muscleIndex < muscleIntensities.length) {
-                intensity = muscleIntensities[muscleIndex];
-              }
-              muscleMap[muscleKey] = intensity;
+            // Initialize all muscle fields to 0.0
+            for (String muscleKey in muscleGroupNames) {
+              muscleMap[muscleKey] = 0.0;
             }
+
+            // Set actual values from parsed data
+            for (int i = 0;
+                i < muscleGroups.length && i < muscleIntensities.length;
+                i++) {
+              final muscleKey = muscleGroups[i];
+              final intensity = muscleIntensities[i];
+              if (muscleMap.containsKey(muscleKey)) {
+                muscleMap[muscleKey] = intensity;
+                print('DEBUG: Set $muscleKey = $intensity');
+              } else {
+                print(
+                    'WARNING: Unknown muscle group "$muscleKey" found in CSV');
+              }
+            }
+
+            print('DEBUG: Final muscle map: $muscleMap');
 
             await userService.createExercise(
               name: row[0],
@@ -888,10 +901,12 @@ Future<void> restoreData(
               gluteusMaximus: muscleMap["Gluteus maximus"] ?? 0.0,
               hamstrings: muscleMap["Hamstrings"] ?? 0.0,
               quadriceps: muscleMap["Quadriceps"] ?? 0.0,
+              forearms: muscleMap["Forearms"] ??
+                  0.0, // FIXED: Added missing forearms parameter
               calves: muscleMap["Calves"] ?? 0.0,
             );
             importedCount++;
-            print('Successfully imported exercise: ${row[0]}');
+            print('Successfully imported exercise: ${row[0]} with muscle data');
           } catch (e) {
             print('Error importing exercise "${row[0]}": $e');
             skippedCount++;
@@ -1135,6 +1150,51 @@ List<T> stringToList<T>(String input) {
   }
 }
 
+/// Parses muscle groups from CSV format (semicolon-separated)
+List<String> parseCSVMuscleGroups(String input) {
+  if (input.isEmpty || input.trim().isEmpty) {
+    return <String>[];
+  }
+
+  // Remove any brackets and split by semicolon
+  String cleaned = input.replaceAll('[', '').replaceAll(']', '').trim();
+  if (cleaned.isEmpty) {
+    return <String>[];
+  }
+
+  // Split by semicolon and filter out empty strings
+  List<String> parts = cleaned
+      .split(';')
+      .map((e) => e.trim())
+      .where((e) => e.isNotEmpty)
+      .toList();
+
+  return parts;
+}
+
+/// Parses muscle intensities from CSV format (semicolon-separated)
+List<double> parseCSVMuscleIntensities(String input) {
+  if (input.isEmpty || input.trim().isEmpty) {
+    return <double>[];
+  }
+
+  // Remove any brackets and split by semicolon
+  String cleaned = input.replaceAll('[', '').replaceAll(']', '').trim();
+  if (cleaned.isEmpty) {
+    return <double>[];
+  }
+
+  // Split by semicolon and convert to doubles
+  List<double> parts = cleaned
+      .split(';')
+      .map((e) => e.trim())
+      .where((e) => e.isNotEmpty)
+      .map((e) => double.tryParse(e) ?? 0.0)
+      .toList();
+
+  return parts;
+}
+
 /// List of muscle group names for mapping
 const List<String> muscleGroupNames = [
   "Pectoralis major",
@@ -1149,6 +1209,7 @@ const List<String> muscleGroupNames = [
   "Gluteus maximus",
   "Hamstrings",
   "Quadriceps",
+  "Forearms",
   "Calves"
 ];
 
@@ -1156,8 +1217,7 @@ class _SettingsScreen extends State<SettingsScreen> {
   // final wakeUpTimeController = TextEditingController();
   // final graphNumberOfDays = TextEditingController();
   // final equationController = TextEditingController();
-  final Future<SharedPreferences> _preferences =
-      SharedPreferences.getInstance();
+  // final Future<SharedPreferences> _preferences = SharedPreferences.getInstance();
   DisplayMode selectedMode = DisplayMode.light;
   GraphMode selectedGraphMode =
       globals.detailedGraph ? GraphMode.detailed : GraphMode.simple;
