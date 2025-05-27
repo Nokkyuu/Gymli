@@ -1,23 +1,22 @@
-/**
- * Landing Screen - Main Application Dashboard
- * 
- * This is the primary dashboard screen of the Gymli fitness application,
- * providing quick access to workouts, exercise browsing, and muscle group
- * specific training programs.
- * 
- * Key features:
- * - Exercise browse functionality with muscle group filtering
- * - Quick workout access and recent exercise display
- * - Muscle group specific workout recommendations
- * - Exercise search and filtering capabilities
- * - Recent training history overview
- * - Navigation hub to other application sections
- * - Real-time exercise data loading and display
- * - Integration with workout setup and exercise screens
- * 
- * The screen serves as the main entry point for users to access all
- * fitness tracking and workout management features of the application.
- */
+/// Landing Screen - Main Application Dashboard
+///
+/// This is the primary dashboard screen of the Gymli fitness application,
+/// providing quick access to workouts, exercise browsing, and muscle group
+/// specific training programs.
+///
+/// Key features:
+/// - Exercise browse functionality with muscle group filtering
+/// - Quick workout access and recent exercise display
+/// - Muscle group specific workout recommendations
+/// - Exercise search and filtering capabilities
+/// - Recent training history overview
+/// - Navigation hub to other application sections
+/// - Real-time exercise data loading and display
+/// - Integration with workout setup and exercise screens
+///
+/// The screen serves as the main entry point for users to access all
+/// fitness tracking and workout management features of the application.
+library;
 
 import 'package:flutter/material.dart';
 import 'package:Gymli/exerciseScreen.dart';
@@ -177,27 +176,54 @@ class _LandingScreenState extends State<LandingScreen> {
     filterApplied.value = !filterApplied.value;
   }
 
-  void muscleFilterList(MuscleList muscleName) {
+  Future<void> muscleFilterList(MuscleList muscleName) async {
     var muscle = muscleName.muscleName;
     filteredExercises = [];
     metainfo = [];
+
+    // Filter exercises by muscle group
     for (var ex in allExercises) {
       if (ex.muscleGroups.contains(muscle)) {
         filteredExercises.add(ex);
       }
     }
 
-    // Build metainfo to match filteredExercises length
-    for (var ex in filteredExercises) {
-      metainfo.add(
-          'Reps: ${ex.defaultRepBase} to ${ex.defaultRepMax} Weight Incr.: ${ex.defaultIncrement}');
+    if (filteredExercises.isEmpty) {
+      filterApplied.value = !filterApplied.value;
+      return;
     }
 
-    // Safety check to ensure lists are the same length
+    try {
+      // Get exercise names for batch processing
+      final exerciseNames = filteredExercises.map((ex) => ex.name).toList();
+
+      // Fetch last training days for all exercises in one batch call
+      final lastTrainingDays =
+          await db.getLastTrainingDaysForExercises(exerciseNames);
+
+      // Build metainfo for each exercise (same format as showAllExercises)
+      for (var ex in filteredExercises) {
+        final lastTraining = lastTrainingDays[ex.name] ?? DateTime.now();
+        final dayDiff = DateTime.now().difference(lastTraining).inDays;
+        String dayInfo = dayDiff > 0 ? "$dayDiff days ago" : "today";
+        metainfo.add(
+            '${ex.defaultRepBase}-${ex.defaultRepMax} Reps @ ${ex.defaultIncrement}kg - $dayInfo');
+      }
+    } catch (e) {
+      print('Error in muscleFilterList: $e');
+      // Fallback metainfo without training dates - ensure same length as filteredExercises
+      metainfo.clear();
+      for (var ex in filteredExercises) {
+        metainfo.add(
+            '${ex.defaultRepBase}-${ex.defaultRepMax} Reps @ ${ex.defaultIncrement}kg');
+      }
+    }
+
+    // Ensure metainfo and filteredExercises are the same length
     while (metainfo.length < filteredExercises.length) {
       final ex = filteredExercises[metainfo.length];
       metainfo.add(
-          'Reps: ${ex.defaultRepBase} to ${ex.defaultRepMax} Weight Incr.: ${ex.defaultIncrement}');
+          '${ex.defaultRepBase}-${ex.defaultRepMax} Reps @ ${ex.defaultIncrement}kg');
     }
 
     filterApplied.value = !filterApplied.value;
@@ -222,7 +248,7 @@ class _LandingScreenState extends State<LandingScreen> {
         });
       } else if (selectedMuscle != null) {
         // Re-apply muscle filter if a muscle group was selected
-        muscleFilterList(selectedMuscle!);
+        await muscleFilterList(selectedMuscle!);
         // Update the controller to show the selected muscle name
         setState(() {
           MuscleController.text = selectedMuscle!.muscleName;
@@ -420,8 +446,8 @@ class _LandingScreenState extends State<LandingScreen> {
                 requestFocusOnTap: false,
 
                 label: const Text('Muscles'),
-                onSelected: (MuscleList? name) {
-                  muscleFilterList(name!);
+                onSelected: (MuscleList? name) async {
+                  await muscleFilterList(name!);
                   setState(() {
                     WorkoutController.value = TextEditingValue.empty;
                     selectedMuscle = name;

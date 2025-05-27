@@ -1,23 +1,22 @@
-/**
- * Exercise Setup Screen - Exercise Configuration Interface
- * 
- * This screen provides a comprehensive interface for creating, editing, and
- * configuring exercises within the workout application. It handles exercise
- * metadata, muscle group assignments, and equipment specifications.
- * 
- * Key features:
- * - Exercise creation and editing capabilities
- * - Equipment type selection (free weights, machines, cables, bodyweight)
- * - Muscle group activation mapping and visualization
- * - Exercise name management and validation
- * - Primary and secondary muscle group assignments
- * - Visual muscle group selection interface
- * - Integration with global exercise database
- * - Real-time exercise data persistence
- * 
- * The screen enables users to customize their exercise library and ensure
- * proper muscle group tracking for comprehensive workout analysis.
- */
+/// Exercise Setup Screen - Exercise Configuration Interface
+///
+/// This screen provides a comprehensive interface for creating, editing, and
+/// configuring exercises within the workout application. It handles exercise
+/// metadata, muscle group assignments, and equipment specifications.
+///
+/// Key features:
+/// - Exercise creation and editing capabilities
+/// - Equipment type selection (free weights, machines, cables, bodyweight)
+/// - Muscle group activation mapping and visualization
+/// - Exercise name management and validation
+/// - Primary and secondary muscle group assignments
+/// - Visual muscle group selection interface
+/// - Integration with global exercise database
+/// - Real-time exercise data persistence
+///
+/// The screen enables users to customize their exercise library and ensure
+/// proper muscle group tracking for comprehensive workout analysis.
+library;
 
 // ignore_for_file: file_names, non_constant_identifier_names
 
@@ -84,7 +83,7 @@ void add_exercise(String exerciseName, ExerciseDevice chosenDevice, int minRep,
       defaultRepMax: maxRep,
       defaultIncrement: weightInc,
       pectoralisMajor:
-          muscleIntensities.length > 0 ? muscleIntensities[0] : 0.0,
+          muscleIntensities.isNotEmpty ? muscleIntensities[0] : 0.0,
       trapezius: muscleIntensities.length > 1 ? muscleIntensities[1] : 0.0,
       biceps: muscleIntensities.length > 2 ? muscleIntensities[2] : 0.0,
       abdominals: muscleIntensities.length > 3 ? muscleIntensities[3] : 0.0,

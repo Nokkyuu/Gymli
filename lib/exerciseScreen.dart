@@ -1,24 +1,23 @@
-/**
- * Exercise Screen - Main Workout Interface
- * 
- * This is the primary workout interface where users perform exercises and
- * log their training sets. It provides comprehensive workout management
- * with real-time progress tracking and interactive controls.
- * 
- * Key features:
- * - Interactive exercise performance logging (weight, reps, RPE)
- * - Real-time progress visualization with fl_chart graphs
- * - Exercise history display and comparison
- * - Timer functionality for rest periods
- * - Set management (warmup vs work sets)
- * - One Rep Max (1RM) calculations and tracking
- * - Exercise configuration and setup options
- * - Visual feedback with color-coded performance indicators
- * - Integration with global muscle activation tracking
- * 
- * The screen serves as the core workout experience, combining data entry,
- * progress visualization, and workout guidance in a single interface.
- */
+/// Exercise Screen - Main Workout Interface
+///
+/// This is the primary workout interface where users perform exercises and
+/// log their training sets. It provides comprehensive workout management
+/// with real-time progress tracking and interactive controls.
+///
+/// Key features:
+/// - Interactive exercise performance logging (weight, reps, RPE)
+/// - Real-time progress visualization with fl_chart graphs
+/// - Exercise history display and comparison
+/// - Timer functionality for rest periods
+/// - Set management (warmup vs work sets)
+/// - One Rep Max (1RM) calculations and tracking
+/// - Exercise configuration and setup options
+/// - Visual feedback with color-coded performance indicators
+/// - Integration with global muscle activation tracking
+///
+/// The screen serves as the core workout experience, combining data entry,
+/// progress visualization, and workout guidance in a single interface.
+library;
 
 import 'package:flutter/material.dart';
 import 'package:Gymli/exerciseListScreen.dart';
@@ -75,9 +74,12 @@ class _ExerciseScreen extends State<ExerciseScreen> {
   var minScore = 1e6;
 
   final List<int> _values = List<int>.generate(30, (i) => i + 1);
-  Map<int, Color> _colorMap = {};
+  final Map<int, Color> _colorMap = {};
   var maxScore = 0.0;
-  double maxHistoryDistance = globals.graphNumberOfDays.toDouble();
+  double maxHistoryDistance =
+      90.0; // Default to 90 days, will be updated based on actual data
+  DateTime?
+      mostRecentTrainingDate; // Store the most recent training date for proper x-axis labeling
   late Timer timer;
   List<LineChartBarData> barData = [];
   Text timerText = const Text("");
@@ -105,6 +107,10 @@ class _ExerciseScreen extends State<ExerciseScreen> {
   // Cache exercise and training data to avoid redundant API calls
   ApiExercise? _currentExercise;
   List<ApiTrainingSet> _cachedTodaysTrainingSetsForExercise = [];
+
+  // Complete historical training data cache for efficient graph updates
+  List<ApiTrainingSet> _cachedAllTrainingSetsForExercise = [];
+  bool _isHistoricalDataCached = false;
   Future<void> _loadTodaysTrainingSets() async {
     if (_isLoadingTrainingSets) return;
 
@@ -147,8 +153,8 @@ class _ExerciseScreen extends State<ExerciseScreen> {
           .removeWhere((set) => set.id == trainingSet.id);
       _todaysTrainingSets.removeWhere((set) => set.id == trainingSet.id);
 
-      // Update graph with current cached data
-      await _updateGraphFromCachedTrainingSets();
+      // Update graph with complete historical data from API
+      await _updateGraphFromAPI();
     } catch (e) {
       print('Error deleting training set: $e');
     }
@@ -163,10 +169,10 @@ class _ExerciseScreen extends State<ExerciseScreen> {
       final exercises = await userService.getExercises();
       final exerciseData = exercises.firstWhere(
         (item) => item['name'] == exerciseName,
-        orElse: () => null,
+        orElse: () => <String, dynamic>{},
       );
 
-      if (exerciseData != null) {
+      if (exerciseData.isNotEmpty) {
         final exercise = ApiExercise.fromJson(exerciseData);
         await userService.createTrainingSet(
           exerciseId: exercise.id!,
@@ -198,8 +204,8 @@ class _ExerciseScreen extends State<ExerciseScreen> {
         _cachedTodaysTrainingSetsForExercise.add(newSet);
         _todaysTrainingSets.add(newSet);
 
-        // Update graph with current cached data
-        await _updateGraphFromCachedTrainingSets();
+        // Update graph with complete historical data from API
+        await _updateGraphFromAPI();
       } else {
         print('Exercise not found: $exerciseName');
       }
@@ -218,23 +224,30 @@ class _ExerciseScreen extends State<ExerciseScreen> {
       Map<int, List<ApiTrainingSet>> data = {};
       List<ApiTrainingSet> trainings = trainingSets
           .map((item) => ApiTrainingSet.fromJson(item))
-          .where((t) => t.exerciseName == widget.exerciseName)
+          .where((t) => t.exerciseName == widget.exerciseName && t.setType > 0)
           .toList();
 
-      trainings = trainings
-          .where((t) =>
-              DateTime.now().difference(t.date).inDays <
-                  globals.graphNumberOfDays &&
-              t.setType > 0)
-          .toList();
+      if (trainings.isNotEmpty) {
+        // Find the most recent training date
+        trainings.sort((a, b) => b.date.compareTo(a.date));
+        final mostRecentDate = trainings.first.date;
 
-      for (var t in trainings) {
-        int diff = DateTime.now().difference(t.date).inDays;
-        if (!data.containsKey(diff)) {
-          data[diff] = [];
+        // Filter based on most recent training date (use global day range setting)
+        trainings = trainings
+            .where((t) =>
+                mostRecentDate.difference(t.date).inDays <
+                globals.graphNumberOfDays)
+            .toList();
+
+        for (var t in trainings) {
+          int diff = mostRecentDate.difference(t.date).inDays;
+          if (!data.containsKey(diff)) {
+            data[diff] = [];
+          }
+          data[diff]!.add(t);
         }
-        data[diff]!.add(t);
       }
+
       return data;
     } catch (e) {
       print('Error getting training sets: $e');
@@ -243,13 +256,9 @@ class _ExerciseScreen extends State<ExerciseScreen> {
   }
 
   void updateGraph() async {
-    // Use cached data if available, otherwise fallback to API call
-    if (_cachedTodaysTrainingSetsForExercise.isNotEmpty) {
-      await _updateGraphFromCachedTrainingSets();
-    } else {
-      // Fallback to API call if cache is not available
-      await _updateGraphFromAPI();
-    }
+    // Always use API call to ensure complete historical data for graphs
+    // The cached data only contains today's sets, which is insufficient for graph display
+    await _updateGraphFromAPI();
   }
 
   Future<void> _updateGraphFromCachedTrainingSets() async {
@@ -258,53 +267,90 @@ class _ExerciseScreen extends State<ExerciseScreen> {
     }
 
     try {
-      // Filter cached training sets for graph display (exclude warmups, limit time range)
-      final filteredSets = _cachedTodaysTrainingSetsForExercise
-          .where((t) =>
-              DateTime.now().difference(t.date).inDays <
-                  globals.graphNumberOfDays &&
-              t.setType > 0) // Exclude warmup sets (setType 0)
+      // Filter cached training sets for graph display (exclude warmups)
+      final workoutSets = _cachedTodaysTrainingSetsForExercise
+          .where((t) => t.setType > 0) // Exclude warmup sets (setType 0)
           .toList();
 
-      // Group cached training sets by day
-      Map<int, List<ApiTrainingSet>> data = {};
-      for (var t in filteredSets) {
-        int diff = DateTime.now().difference(t.date).inDays;
-        if (!data.containsKey(diff)) {
-          data[diff] = [];
+      // Group training sets by calendar day (not by days difference)
+      Map<String, List<ApiTrainingSet>> dataByDate = {};
+      for (var t in workoutSets) {
+        // Use date string as key (YYYY-MM-DD format)
+        String dateKey =
+            "${t.date.year}-${t.date.month.toString().padLeft(2, '0')}-${t.date.day.toString().padLeft(2, '0')}";
+        if (!dataByDate.containsKey(dateKey)) {
+          dataByDate[dateKey] = [];
         }
-        data[diff]!.add(t);
+        dataByDate[dateKey]!.add(t);
       }
 
-      if (globals.detailedGraph) {
-        var ii = data.keys.length;
-        for (var k in data.keys) {
-          List<String> tips = List.filled(groupExercises.length + 6, "");
-          for (var i = 0; i < 4; ++i) {
-            if (i < data[k]!.length) {
-              trainingGraphs[i].add(
-                  FlSpot(-ii.toDouble(), globals.calculateScore(data[k]![i])));
-              tips[i] =
-                  "${data[k]![i].weight}kg @ ${data[k]![i].repetitions}reps";
+      // Find best set for each day and create graph points
+      List<FlSpot> graphPoints = [];
+      Map<double, String> tooltipData = {};
+
+      // Sort dates chronologically
+      var sortedDates = dataByDate.keys.toList()..sort();
+
+      // Ensure we have at least 2 days of data for minimum range
+      if (sortedDates.isNotEmpty) {
+        final earliestDate = DateTime.parse(sortedDates.first);
+        final latestDate = DateTime.parse(sortedDates.last);
+        mostRecentTrainingDate = latestDate; // Store for x-axis labeling
+        final daysDifference = latestDate.difference(earliestDate).inDays;
+
+        // Calculate dynamic range (minimum 2 days, maximum from global setting from most recent training date)
+        final maxDaysFromLatest =
+            latestDate.subtract(Duration(days: globals.graphNumberOfDays));
+        DateTime startDate;
+        if (daysDifference < 2) {
+          // If we have less than 2 days, show at least 2 days range
+          startDate = latestDate.subtract(const Duration(days: 2));
+        } else {
+          // Use actual earliest date but limit to global setting days from most recent training date
+          startDate = earliestDate.isBefore(maxDaysFromLatest)
+              ? maxDaysFromLatest
+              : earliestDate;
+        }
+
+        // Update graph range
+        maxHistoryDistance =
+            max(2.0, latestDate.difference(startDate).inDays.toDouble());
+
+        for (String dateKey in sortedDates) {
+          final date = DateTime.parse(dateKey);
+          final sets = dataByDate[dateKey]!;
+
+          // Find best set for this day (highest weight, then most reps for that weight)
+          ApiTrainingSet? bestSet;
+          for (var set in sets) {
+            if (bestSet == null ||
+                set.weight > bestSet.weight ||
+                (set.weight == bestSet.weight &&
+                    set.repetitions > bestSet.repetitions)) {
+              bestSet = set;
             }
           }
-          graphToolTip[-ii] = tips;
-          ii -= 1;
-        }
-      } else {
-        var ii = data.keys.length;
-        for (var k in data.keys) {
-          double maxScore = 0.0;
-          int reps = 0;
-          double weight = 0;
-          for (var i = 0; i < data[k]!.length; ++i) {
-            maxScore = max(maxScore, globals.calculateScore(data[k]![i]));
-            reps = data[k]![i].repetitions;
-            weight = data[k]![i].weight;
+
+          if (bestSet != null) {
+            // Calculate x-coordinate as days from latest date (negative values)
+            double xValue = -latestDate.difference(date).inDays.toDouble();
+            double yValue = globals.calculateScore(bestSet);
+
+            graphPoints.add(FlSpot(xValue, yValue));
+            tooltipData[xValue] =
+                "${bestSet.weight}kg @ ${bestSet.repetitions}reps (${dateKey})";
           }
-          trainingGraphs[0].add(FlSpot(-ii.toDouble(), maxScore));
-          graphToolTip[-ii] = ["${weight}kg @ ${reps}reps"];
-          ii -= 1;
+        }
+      }
+
+      // Add points to training graph
+      if (graphPoints.isNotEmpty) {
+        trainingGraphs[0].addAll(graphPoints);
+
+        // Update tooltip data
+        graphToolTip.clear();
+        for (var entry in tooltipData.entries) {
+          graphToolTip[entry.key.toInt()] = [entry.value];
         }
       }
 
@@ -325,37 +371,61 @@ class _ExerciseScreen extends State<ExerciseScreen> {
     }
 
     try {
+      // Get training sets and extract the most recent date for x-axis labeling
+      final userService = UserService();
+      final trainingSets = await userService.getTrainingSets();
+      List<ApiTrainingSet> trainings = trainingSets
+          .map((item) => ApiTrainingSet.fromJson(item))
+          .where((t) => t.exerciseName == widget.exerciseName && t.setType > 0)
+          .toList();
+
+      if (trainings.isNotEmpty) {
+        trainings.sort((a, b) => b.date.compareTo(a.date));
+        mostRecentTrainingDate =
+            trainings.first.date; // Store for x-axis labeling
+      }
+
+      var data = await get_trainingsets();
+
+      if (data.isEmpty) {
+        setState(() {
+          // No data to display
+        });
+        return;
+      }
+
+      // The get_trainingsets method now returns data keyed by days from most recent date
+      // and already applies the 90-day filter, so we can use it directly
+      maxHistoryDistance = data.keys.isEmpty
+          ? 90.0
+          : data.keys.map((k) => k.abs()).reduce(max).toDouble();
+      maxHistoryDistance = max(2.0, maxHistoryDistance); // Ensure minimum range
+
       if (globals.detailedGraph) {
-        var data = await get_trainingsets();
-        var ii = data.keys.length;
         for (var k in data.keys) {
           List<String> tips = List.filled(groupExercises.length + 6, "");
           for (var i = 0; i < 4; ++i) {
             if (i < data[k]!.length) {
               trainingGraphs[i].add(
-                  FlSpot(-ii.toDouble(), globals.calculateScore(data[k]![i])));
+                  FlSpot(-k.toDouble(), globals.calculateScore(data[k]![i])));
               tips[i] =
                   "${data[k]![i].weight}kg @ ${data[k]![i].repetitions}reps";
             }
           }
-          graphToolTip[-ii] = tips;
-          ii -= 1;
+          graphToolTip[-k] = tips;
         }
       } else {
-        var dat = await get_trainingsets();
-        var ii = dat.keys.length;
-        for (var k in dat.keys) {
+        for (var k in data.keys) {
           double maxScore = 0.0;
           int reps = 0;
           double weight = 0;
-          for (var i = 0; i < dat[k]!.length; ++i) {
-            maxScore = max(maxScore, globals.calculateScore(dat[k]![i]));
-            reps = dat[k]![i].repetitions;
-            weight = dat[k]![i].weight;
+          for (var i = 0; i < data[k]!.length; ++i) {
+            maxScore = max(maxScore, globals.calculateScore(data[k]![i]));
+            reps = data[k]![i].repetitions;
+            weight = data[k]![i].weight;
           }
-          trainingGraphs[0].add(FlSpot(-ii.toDouble(), maxScore));
-          graphToolTip[-ii] = ["${weight}kg @ ${reps}reps"];
-          ii -= 1;
+          trainingGraphs[0].add(FlSpot(-k.toDouble(), maxScore));
+          graphToolTip[-k] = ["${weight}kg @ ${reps}reps"];
         }
       }
 
@@ -371,7 +441,9 @@ class _ExerciseScreen extends State<ExerciseScreen> {
   }
 
   _scrollToBottom() {
-    _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+    if (_scrollController.hasClients) {
+      _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+    }
   }
 
   @override
@@ -404,10 +476,10 @@ class _ExerciseScreen extends State<ExerciseScreen> {
       final exercises = await userService.getExercises();
       final exerciseData = exercises.firstWhere(
         (item) => item['name'] == widget.exerciseName,
-        orElse: () => null,
+        orElse: () => <String, dynamic>{},
       );
 
-      if (exerciseData != null) {
+      if (exerciseData.isNotEmpty) {
         final exercise = ApiExercise.fromJson(exerciseData);
         final trainingSets = await userService.getTrainingSets();
         final todaysSets = trainingSets
@@ -582,7 +654,7 @@ class _ExerciseScreen extends State<ExerciseScreen> {
       // Find current exercise
       final exerciseData = exercises.firstWhere(
         (item) => item['name'] == widget.exerciseName,
-        orElse: () => null,
+        orElse: () => <String, dynamic>{},
       );
 
       // Set workout timing
@@ -601,7 +673,7 @@ class _ExerciseScreen extends State<ExerciseScreen> {
       double weight = 40.0;
       int reps = 10;
 
-      if (exerciseData != null) {
+      if (exerciseData.isNotEmpty) {
         final exercise = ApiExercise.fromJson(exerciseData);
         _currentExercise = exercise; // Cache exercise data
         weight = exercise.defaultIncrement;
@@ -680,54 +752,100 @@ class _ExerciseScreen extends State<ExerciseScreen> {
     }
 
     try {
-      // Convert training sets to ApiTrainingSet objects and filter for this exercise
+      // Convert training sets to ApiTrainingSet objects and filter for this exercise (exclude warmups)
       final exerciseTrainingSets = trainingSets
           .map((item) => ApiTrainingSet.fromJson(item))
-          .where((t) => t.exerciseName == widget.exerciseName)
+          .where((t) =>
+              t.exerciseName == widget.exerciseName &&
+              t.setType > 0) // Exclude warmup sets
           .toList();
 
-      // Sort by date to create proper time-based grouping
-      exerciseTrainingSets.sort((a, b) => a.date.compareTo(b.date));
-
-      // Group by day
-      Map<int, List<ApiTrainingSet>> data = {};
-      for (var t in exerciseTrainingSets) {
-        int diff = DateTime.now().difference(t.date).inDays;
-        if (!data.containsKey(diff)) {
-          data[diff] = [];
-        }
-        data[diff]!.add(t);
+      if (exerciseTrainingSets.isEmpty) {
+        setState(() {
+          // No data to display
+        });
+        return;
       }
 
-      if (globals.detailedGraph) {
-        var ii = data.keys.length;
-        for (var k in data.keys) {
-          List<String> tips = List.filled(groupExercises.length + 6, "");
-          for (var i = 0; i < 4; ++i) {
-            if (i < data[k]!.length) {
-              trainingGraphs[i].add(
-                  FlSpot(-ii.toDouble(), globals.calculateScore(data[k]![i])));
-              tips[i] =
-                  "${data[k]![i].weight}kg @ ${data[k]![i].repetitions}reps";
+      // Group training sets by calendar day (consistent with _updateGraphFromCachedTrainingSets)
+      Map<String, List<ApiTrainingSet>> dataByDate = {};
+      for (var t in exerciseTrainingSets) {
+        // Use date string as key (YYYY-MM-DD format)
+        String dateKey =
+            "${t.date.year}-${t.date.month.toString().padLeft(2, '0')}-${t.date.day.toString().padLeft(2, '0')}";
+        if (!dataByDate.containsKey(dateKey)) {
+          dataByDate[dateKey] = [];
+        }
+        dataByDate[dateKey]!.add(t);
+      }
+
+      // Find best set for each day and create graph points
+      List<FlSpot> graphPoints = [];
+      Map<double, String> tooltipData = {};
+
+      // Sort dates chronologically
+      var sortedDates = dataByDate.keys.toList()..sort();
+
+      // Ensure we have at least 2 days of data for minimum range
+      if (sortedDates.isNotEmpty) {
+        final earliestDate = DateTime.parse(sortedDates.first);
+        final latestDate = DateTime.parse(sortedDates.last);
+        mostRecentTrainingDate = latestDate; // Store for x-axis labeling
+        final daysDifference = latestDate.difference(earliestDate).inDays;
+
+        // Calculate dynamic range (minimum 2 days, maximum 360 days from most recent training date)
+        final threeMonthsAgoFromLatest =
+            latestDate.subtract(const Duration(days: 360));
+        DateTime startDate;
+        if (daysDifference < 2) {
+          // If we have less than 2 days, show at least 2 days range
+          startDate = latestDate.subtract(const Duration(days: 2));
+        } else {
+          // Use actual earliest date but limit to 90 days from most recent training date
+          startDate = earliestDate.isBefore(threeMonthsAgoFromLatest)
+              ? threeMonthsAgoFromLatest
+              : earliestDate;
+        }
+
+        // Update graph range
+        maxHistoryDistance =
+            max(2.0, latestDate.difference(startDate).inDays.toDouble());
+
+        for (String dateKey in sortedDates) {
+          final date = DateTime.parse(dateKey);
+          final sets = dataByDate[dateKey]!;
+
+          // Find best set for this day (highest weight, then most reps for that weight)
+          ApiTrainingSet? bestSet;
+          for (var set in sets) {
+            if (bestSet == null ||
+                set.weight > bestSet.weight ||
+                (set.weight == bestSet.weight &&
+                    set.repetitions > bestSet.repetitions)) {
+              bestSet = set;
             }
           }
-          graphToolTip[-ii] = tips;
-          ii -= 1;
-        }
-      } else {
-        var ii = data.keys.length;
-        for (var k in data.keys) {
-          double maxScore = 0.0;
-          int reps = 0;
-          double weight = 0;
-          for (var i = 0; i < data[k]!.length; ++i) {
-            maxScore = max(maxScore, globals.calculateScore(data[k]![i]));
-            reps = data[k]![i].repetitions;
-            weight = data[k]![i].weight;
+
+          if (bestSet != null) {
+            // Calculate x-coordinate as days from latest date (negative values)
+            double xValue = -latestDate.difference(date).inDays.toDouble();
+            double yValue = globals.calculateScore(bestSet);
+
+            graphPoints.add(FlSpot(xValue, yValue));
+            tooltipData[xValue] =
+                "${bestSet.weight}kg @ ${bestSet.repetitions}reps (${dateKey})";
           }
-          trainingGraphs[0].add(FlSpot(-ii.toDouble(), maxScore));
-          graphToolTip[-ii] = ["${weight}kg @ ${reps}reps"];
-          ii -= 1;
+        }
+      }
+
+      // Add points to training graph
+      if (graphPoints.isNotEmpty) {
+        trainingGraphs[0].addAll(graphPoints);
+
+        // Update tooltip data
+        graphToolTip.clear();
+        for (var entry in tooltipData.entries) {
+          graphToolTip[entry.key.toInt()] = [entry.value];
         }
       }
 
@@ -882,11 +1000,35 @@ class _ExerciseScreen extends State<ExerciseScreen> {
                       padding: const EdgeInsets.only(
                           right: 10.0, top: 10.0, left: 0.0),
                       child: LineChart(LineChartData(
-                        titlesData: const FlTitlesData(
-                          topTitles: AxisTitles(
+                        titlesData: FlTitlesData(
+                          topTitles: const AxisTitles(
                               sideTitles: SideTitles(showTitles: false)),
-                          rightTitles: AxisTitles(
+                          rightTitles: const AxisTitles(
                               sideTitles: SideTitles(showTitles: false)),
+                          bottomTitles: AxisTitles(
+                            sideTitles: SideTitles(
+                              showTitles: true,
+                              reservedSize: 30,
+                              interval: maxHistoryDistance > 30
+                                  ? 14
+                                  : 7, // Show dates every 7-14 days
+                              getTitlesWidget: (double value, TitleMeta meta) {
+                                // Convert negative x-value back to actual date using most recent training date
+                                if (mostRecentTrainingDate == null)
+                                  return const Text('');
+                                final daysAgo = value.abs().round();
+                                final date = mostRecentTrainingDate!
+                                    .subtract(Duration(days: daysAgo));
+                                return Transform.rotate(
+                                  angle: -0.5,
+                                  child: Text(
+                                    '${date.day}/${date.month}',
+                                    style: const TextStyle(fontSize: 10),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
                         ),
                         clipData: const FlClipData.all(),
                         lineBarsData: barData,
@@ -919,7 +1061,7 @@ class _ExerciseScreen extends State<ExerciseScreen> {
                 var boxdim = 8.0;
                 List<Widget> widgets = [
                   const SizedBox(width: 20),
-                  const Text("Sets", style: const TextStyle(fontSize: 8.0)),
+                  const Text("Sets", style: TextStyle(fontSize: 8.0)),
                   const SizedBox(width: 10)
                 ];
                 for (int i = 0; i < 4; i++) {
@@ -1014,7 +1156,7 @@ class _ExerciseScreen extends State<ExerciseScreen> {
                         onChanged: (value) => setState(() => weightDg = value),
                       ),
                       const Text("kg"),
-                      Container(
+                      SizedBox(
                         height: 100,
                         width: 100,
                         child: ListWheelScrollView.useDelegate(
@@ -1062,11 +1204,11 @@ class _ExerciseScreen extends State<ExerciseScreen> {
                 label: const Text('Submit'),
                 icon: const Icon(Icons.send),
                 onPressed: () async {
-                  double new_weight =
+                  double newWeight =
                       weightKg.toDouble() + weightDg.toDouble() / 100.0;
 
                   // Add the set
-                  await addSet(widget.exerciseName, new_weight, repetitions,
+                  await addSet(widget.exerciseName, newWeight, repetitions,
                       _selected.first.index, dateInputController.text);
 
                   // Reload training sets after adding and update cache

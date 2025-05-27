@@ -1,17 +1,16 @@
-/**
- * API Service Classes for Gymli Application
- * 
- * This file contains all the HTTP API service classes that handle communication
- * with the Gymli backend server. Each service class manages CRUD operations
- * for its respective entity type.
- * 
- * Services included:
- * - AnimalService: For animal data (testing/demo purposes)
- * - ExerciseService: For exercise definitions and management
- * - WorkoutService: For workout templates and management
- * - TrainingSetService: For individual training set records
- * - WorkoutUnitService: For workout unit associations
- */
+/// API Service Classes for Gymli Application
+///
+/// This file contains all the HTTP API service classes that handle communication
+/// with the Gymli backend server. Each service class manages CRUD operations
+/// for its respective entity type.
+///
+/// Services included:
+/// - AnimalService: For animal data (testing/demo purposes)
+/// - ExerciseService: For exercise definitions and management
+/// - WorkoutService: For workout templates and management
+/// - TrainingSetService: For individual training set records
+/// - WorkoutUnitService: For workout unit associations
+library;
 
 import 'dart:convert';
 import 'package:http/http.dart' as http;
@@ -22,12 +21,10 @@ const String baseUrl =
 
 //----------------- Animals Service -----------------//
 
-/**
- * AnimalService - Demo/test service for API testing
- * 
- * This service provides basic CRUD operations for animal entities.
- * It's primarily used for testing API connectivity and functionality.
- */
+/// AnimalService - Demo/test service for API testing
+///
+/// This service provides basic CRUD operations for animal entities.
+/// It's primarily used for testing API connectivity and functionality.
 class AnimalService {
   /// Retrieves all animals from the API
   /// Returns a list of animal objects
@@ -92,12 +89,10 @@ class AnimalService {
 
 //----------------- Exercise Service -----------------//
 
-/**
- * ExerciseService - Manages exercise definitions and data
- * 
- * This service handles all CRUD operations for exercises, which are used
- * in workout planning and tracking.
- */
+/// ExerciseService - Manages exercise definitions and data
+///
+/// This service handles all CRUD operations for exercises, which are used
+/// in workout planning and tracking.
 class ExerciseService {
   /// Retrieves all exercises for a user
   /// [userName] - The username to fetch exercises for
@@ -221,12 +216,10 @@ class ExerciseService {
 
 //----------------- Workout Service -----------------//
 
-/**
- * WorkoutService - Manages workout templates and data
- * 
- * This service handles all CRUD operations for workouts, which are templates
- * for user training sessions.
- */
+/// WorkoutService - Manages workout templates and data
+///
+/// This service handles all CRUD operations for workouts, which are templates
+/// for user training sessions.
 class WorkoutService {
   /// Retrieves all workouts for a user
   /// [userName] - The username to fetch workouts for
@@ -303,12 +296,10 @@ class WorkoutService {
 
 //----------------- Training Set Service -----------------//
 
-/**
- * TrainingSetService - Manages individual training set records
- * 
- * This service handles all CRUD operations for training sets, which are records
- * of individual exercise instances within a workout.
- */
+/// TrainingSetService - Manages individual training set records
+///
+/// This service handles all CRUD operations for training sets, which are records
+/// of individual exercise instances within a workout.
 class TrainingSetService {
   /// Retrieves all training sets for a user
   /// [userName] - The username to fetch training sets for
@@ -421,12 +412,10 @@ class TrainingSetService {
 
 //----------------- Workout Unit Service -----------------//
 
-/**
- * WorkoutUnitService - Manages workout unit associations
- * 
- * This service handles all CRUD operations for workout units, which link exercises
- * to workouts and define their order and type within the workout.
- */
+/// WorkoutUnitService - Manages workout unit associations
+///
+/// This service handles all CRUD operations for workout units, which link exercises
+/// to workouts and define their order and type within the workout.
 class WorkoutUnitService {
   /// Retrieves all workout units for a user
   /// [userName] - The username to fetch workout units for

@@ -1,20 +1,18 @@
-/**
- * Database Service for Workout Data Operations
- * 
- * This service provides database-like operations for managing workout data
- * including exercises, training sets, and workout statistics. It acts as
- * an abstraction layer between the UI and the underlying data storage.
- * 
- * Key functions:
- * - Exercise data retrieval and management
- * - Training set queries and filtering
- * - Statistical calculations (1RM, volume analysis)
- * - Date-based data filtering for progress tracking
- * - Data aggregation for workout insights
- * 
- * The service integrates with UserService for data persistence and
- * provides specialized query functions for the fitness tracking features.
- */
+/// Database Service for Workout Data Operations
+///
+/// This service provides database-like operations for managing workout data
+/// including exercises, training sets, and workout statistics. It acts as
+/// an abstraction layer between the UI and the underlying data storage.
+///
+/// Key functions:
+/// - Exercise data retrieval and management
+/// - Training set queries and filtering
+/// - Statistical calculations (1RM, volume analysis)
+/// - Date-based data filtering for progress tracking
+/// - Data aggregation for workout insights
+///
+/// The service integrates with UserService for data persistence and
+/// provides specialized query functions for the fitness tracking features.
 
 // ignore_for_file: non_constant_identifier_names
 library my_prj.database;

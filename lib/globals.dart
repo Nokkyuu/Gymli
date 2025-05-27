@@ -1,15 +1,13 @@
-/**
- * Global Variables and Constants for Gymli Application
- * 
- * This file contains application-wide global variables, constants, and
- * configuration settings that are shared across multiple screens and widgets.
- * 
- * Key components:
- * - User preference settings (timers, graph settings)
- * - Muscle group activation values
- * - Exercise relationship mappings (twin exercises)
- * - Exercise data structures and utilities
- */
+/// Global Variables and Constants for Gymli Application
+///
+/// This file contains application-wide global variables, constants, and
+/// configuration settings that are shared across multiple screens and widgets.
+///
+/// Key components:
+/// - User preference settings (timers, graph settings)
+/// - Muscle group activation values
+/// - Exercise relationship mappings (twin exercises)
+/// - Exercise data structures and utilities
 
 // ignore_for_file: non_constant_identifier_names
 library my_prj.globals;

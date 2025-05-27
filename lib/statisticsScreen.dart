@@ -1,25 +1,24 @@
-/**
- * Statistics Screen - Workout Analytics and Progress Visualization
- * 
- * This screen provides comprehensive workout analytics and progress tracking
- * through various charts, graphs, and statistical visualizations using fl_chart.
- * 
- * Key features:
- * - Muscle group activation bar charts and heatmaps
- * - Training volume analysis over time
- * - One Rep Max (1RM) progression tracking
- * - Exercise-specific performance metrics
- * - Weekly/monthly workout frequency analysis
- * - Visual progress indicators and trend analysis
- * - Customizable date ranges for data analysis
- * - Interactive charts with detailed data points
- * - Muscle group balance assessment
- * - Training load distribution visualization
- * 
- * The screen helps users understand their training patterns, identify
- * imbalances, track progress, and make data-driven decisions about their
- * fitness routines through comprehensive visual analytics.
- */
+/// Statistics Screen - Workout Analytics and Progress Visualization
+///
+/// This screen provides comprehensive workout analytics and progress tracking
+/// through various charts, graphs, and statistical visualizations using fl_chart.
+///
+/// Key features:
+/// - Muscle group activation bar charts and heatmaps
+/// - Training volume analysis over time
+/// - One Rep Max (1RM) progression tracking
+/// - Exercise-specific performance metrics
+/// - Weekly/monthly workout frequency analysis
+/// - Visual progress indicators and trend analysis
+/// - Customizable date ranges for data analysis
+/// - Interactive charts with detailed data points
+/// - Muscle group balance assessment
+/// - Training load distribution visualization
+///
+/// The screen helps users understand their training patterns, identify
+/// imbalances, track progress, and make data-driven decisions about their
+/// fitness routines through comprehensive visual analytics.
+library;
 
 // ignore_for_file: file_names
 
@@ -168,25 +167,24 @@ class _StatisticsScreen extends State<StatisticsScreen> {
       }
 
       barChartStatistics.clear();
-      List<DateTime> _trainingDates = await db.getTrainingDates("");
+      List<DateTime> trainingDates = await db.getTrainingDates("");
       if (startingDate != null) {
         var tokens = startingDate!.split("-");
-        String _startingDateString =
+        String startingDateString =
             "${tokens[2]}-${tokens[1]}-${tokens[0]}T00:00:00";
-        DateTime _start = DateTime.parse(_startingDateString);
-        _trainingDates =
-            _trainingDates.where((d) => _start.isBefore(d)).toList();
+        DateTime start = DateTime.parse(startingDateString);
+        trainingDates = trainingDates.where((d) => start.isBefore(d)).toList();
       }
       if (endingDate != null) {
         var tokens = endingDate!.split("-");
-        String _endingDateString =
+        String endingDateString =
             "${tokens[2]}-${tokens[1]}-${tokens[0]}T00:00:00";
-        DateTime _end = DateTime.parse(_endingDateString);
-        _trainingDates = _trainingDates.where((d) => _end.isAfter(d)).toList();
+        DateTime end = DateTime.parse(endingDateString);
+        trainingDates = trainingDates.where((d) => end.isAfter(d)).toList();
       }
 
       List<List<double>> muscleHistoryScore = [];
-      for (var day in _trainingDates) {
+      for (var day in trainingDates) {
         var trainings = await db.getTrainings(day);
         List<double> dailyMuscleScores = [
           0.0,
