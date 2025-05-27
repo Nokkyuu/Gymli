@@ -72,6 +72,7 @@ class _MainAppState extends State<MainApp> {
   Credentials? _credentials;
   late Auth0Web auth0;
   final userService = UserService();
+  bool _authInitialized = false;
 
   @override
   void initState() {
@@ -79,15 +80,24 @@ class _MainAppState extends State<MainApp> {
     loadThemePreference();
     isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
-    auth0 = Auth0Web('dev-aqz5a2g54oer01tk.us.auth0.com',
-        'MAxJUti2T7TkLagzT7SdeEzCTZsHyuOa');
+    if (!_authInitialized) {
+      auth0 = Auth0Web('dev-aqz5a2g54oer01tk.us.auth0.com',
+          'MAxJUti2T7TkLagzT7SdeEzCTZsHyuOa');
 
-    auth0.onLoad().then((final credentials) => setState(() {
-          _credentials = credentials;
-          userService.setCredentials(credentials);
-          // Reload data after authentication state changes
-          _reloadUserData();
-        }));
+      auth0.onLoad().then((final credentials) {
+        if (mounted) {
+          setState(() {
+            _credentials = credentials;
+            userService.setCredentials(credentials);
+            _reloadUserData();
+          });
+        }
+      }).catchError((error) {
+        print('Auth0 onLoad error: $error');
+      });
+
+      _authInitialized = true;
+    }
 
     // Load stored authentication state on app initialization
     _loadStoredAuthState();

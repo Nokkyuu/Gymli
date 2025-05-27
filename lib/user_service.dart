@@ -555,6 +555,41 @@ class UserService {
     return await _enrichTrainingSetsWithExerciseNames(rawTrainingSets);
   }
 
+  /// Gets the last training date for each exercise
+  /// Returns a map where keys are exercise names and values are the most recent training dates
+  Future<Map<String, DateTime>> getLastTrainingDatesPerExercise() async {
+    try {
+      final trainingSets = await getTrainingSets();
+      final Map<String, DateTime> lastDates = {};
+
+      for (var trainingSet in trainingSets) {
+        final exerciseName = trainingSet['exercise_name'] as String?;
+        final dateString = trainingSet['date'] as String?;
+        final setType = trainingSet['set_type'] as int? ?? 0;
+
+        // Only count actual work sets (set_type > 0), skip warmups
+        if (exerciseName != null && dateString != null && setType > 0) {
+          try {
+            final trainingDate = DateTime.parse(dateString);
+
+            // Update if this is the first date for this exercise or if it's more recent
+            if (!lastDates.containsKey(exerciseName) ||
+                trainingDate.isAfter(lastDates[exerciseName]!)) {
+              lastDates[exerciseName] = trainingDate;
+            }
+          } catch (e) {
+            print('Error parsing date for exercise $exerciseName: $e');
+          }
+        }
+      }
+
+      return lastDates;
+    } catch (e) {
+      print('Error getting last training dates per exercise: $e');
+      return {};
+    }
+  }
+
   Future<List<dynamic>> _enrichTrainingSetsWithExerciseNames(
       List<dynamic> trainingSets) async {
     try {
@@ -687,79 +722,74 @@ class UserService {
     }
   }
 
-  Future<void> updateTrainingSet(int id, Map<String, dynamic> data) async {
+  /// Creates multiple training sets in a single batch operation
+  /// This method is optimized for bulk imports and significantly reduces
+  /// the number of HTTP requests compared to creating sets individually.
+  ///
+  /// [trainingSets] - List of training set data to create. Each item should contain:
+  ///   - exerciseId, date, weight, repetitions, setType, baseReps, maxReps, increment, machineName
+  ///
+  /// Returns a list of created training sets with their assigned IDs
+  Future<List<Map<String, dynamic>>> createTrainingSetsBulk(
+    List<Map<String, dynamic>> trainingSets,
+  ) async {
+    if (trainingSets.isEmpty) {
+      return [];
+    }
+
     if (isLoggedIn) {
-      await api.TrainingSetService().updateTrainingSet(id, data);
+      // Convert the training sets to the format expected by the API
+      final apiTrainingSets = trainingSets
+          .map((ts) => {
+                'exercise_id': ts['exerciseId'],
+                'date': ts['date'],
+                'weight': ts['weight'],
+                'repetitions': ts['repetitions'],
+                'set_type': ts['setType'],
+                'base_reps': ts['baseReps'],
+                'max_reps': ts['maxReps'],
+                'increment': ts['increment'],
+                'machine_name': ts['machineName'],
+              })
+          .toList();
+
+      return await api.TrainingSetService().createTrainingSetsBulk(
+        userName: userName,
+        trainingSets: apiTrainingSets,
+      );
     } else {
-      final trainingSets = _inMemoryData['trainingSets'] as List<dynamic>;
-      final index = trainingSets.indexWhere((ts) => ts['id'] == id);
-      if (index != -1) {
-        trainingSets[index] = {...trainingSets[index], ...data};
+      // For offline mode, add all training sets to in-memory storage
+      final createdSets = <Map<String, dynamic>>[];
+      for (final ts in trainingSets) {
+        final trainingSet = {
+          'id': DateTime.now().millisecondsSinceEpoch + createdSets.length,
+          'user_name': 'DefaultUser',
+          'exercise_id': ts['exerciseId'],
+          'date': ts['date'],
+          'weight': ts['weight'],
+          'repetitions': ts['repetitions'],
+          'set_type': ts['setType'],
+          'base_reps': ts['baseReps'],
+          'max_reps': ts['maxReps'],
+          'increment': ts['increment'],
+          'machine_name': ts['machineName'],
+        };
+        (_inMemoryData['trainingSets'] as List<dynamic>).add(trainingSet);
+        createdSets.add(trainingSet);
       }
+      return createdSets;
     }
   }
 
+  /// Deletes a training set by its ID
+  /// [id] - The unique identifier of the training set to delete
   Future<void> deleteTrainingSet(int id) async {
     if (isLoggedIn) {
       await api.TrainingSetService().deleteTrainingSet(id);
     } else {
-      final trainingSets = _inMemoryData['trainingSets'] as List<dynamic>;
-      trainingSets.removeWhere((ts) => ts['id'] == id);
-    }
-  }
-
-  /// Optimized method to get last training dates per exercise (performance optimized)
-  /// Returns a map of exercise names to their last training dates
-  Future<Map<String, DateTime>> getLastTrainingDatesPerExercise() async {
-    try {
-      if (isLoggedIn) {
-        // Use the optimized API endpoint when logged in
-        final lastDatesMap = await api.TrainingSetService()
-            .getLastTrainingDatesPerExercise(userName: userName);
-
-        // Convert string dates to DateTime objects
-        return lastDatesMap.map((exerciseName, dateString) {
-          try {
-            return MapEntry(exerciseName, DateTime.parse(dateString));
-          } catch (e) {
-            print('Error parsing date for exercise $exerciseName: $e');
-            return MapEntry(exerciseName, DateTime.now());
-          }
-        });
-      } else {
-        // For offline mode, fall back to processing in-memory data
-        final inMemoryTrainingSets =
-            _inMemoryData['trainingSets'] as List<dynamic>;
-        final Map<String, DateTime> result = {};
-
-        // Get exercise name mapping
-        final exercises = await getExercises();
-        final Map<int, String> exerciseIdToName = {};
-        for (var exerciseData in exercises) {
-          final exercise = ApiExercise.fromJson(exerciseData);
-          exerciseIdToName[exercise.id!] = exercise.name;
-        }
-
-        // Process training sets to find last dates
-        for (var trainingSetData in inMemoryTrainingSets) {
-          final exerciseId = trainingSetData['exercise_id'] as int?;
-          if (exerciseId != null) {
-            final exerciseName = exerciseIdToName[exerciseId];
-            if (exerciseName != null) {
-              final date = DateTime.parse(trainingSetData['date']);
-              if (!result.containsKey(exerciseName) ||
-                  result[exerciseName]!.isBefore(date)) {
-                result[exerciseName] = date;
-              }
-            }
-          }
-        }
-
-        return result;
-      }
-    } catch (e) {
-      print('Error getting last training dates per exercise: $e');
-      return {};
+      // Remove from in-memory storage
+      (_inMemoryData['trainingSets'] as List<dynamic>)
+          .removeWhere((ts) => ts['id'] == id);
     }
   }
 
@@ -954,53 +984,17 @@ class UserService {
   // Clear all data methods for settings screen
   Future<void> clearTrainingSets() async {
     if (isLoggedIn) {
-      // Get all training sets for this user and delete them
-      final trainingSets = await getTrainingSets();
-      int deletedCount = 0;
-      int errorCount = 0;
-
-      for (var set in trainingSets) {
-        if (set['id'] != null) {
-          try {
-            await deleteTrainingSet(set['id']);
-            deletedCount++;
-          } catch (e) {
-            errorCount++;
-            print('Warning: Failed to delete training set ${set['id']}: $e');
-            // Continue with other sets instead of stopping
-          }
-        }
-      }
-      print('Cleared training sets: $deletedCount deleted, $errorCount errors');
+      // OPTIMIZED: Use bulk delete endpoint instead of individual deletes
+      await api.TrainingSetService().clearTrainingSets(userName: userName);
+      print('Training sets cleared using bulk delete endpoint');
     } else {
-      // Clear in-memory training sets and clear DefaultUser from API
+      // For offline mode, clear in-memory data
       _inMemoryData['trainingSets'] = <Map<String, dynamic>>[];
-      try {
-        final defaultSets = await api.TrainingSetService()
-            .getTrainingSets(userName: 'DefaultUser');
-        int deletedCount = 0;
-        int errorCount = 0;
-
-        for (var set in defaultSets) {
-          if (set['id'] != null) {
-            try {
-              await api.TrainingSetService().deleteTrainingSet(set['id']);
-              deletedCount++;
-            } catch (e) {
-              errorCount++;
-              print(
-                  'Warning: Failed to delete DefaultUser training set ${set['id']}: $e');
-              // Continue with other sets instead of stopping
-            }
-          }
-        }
-        print(
-            'Cleared DefaultUser training sets: $deletedCount deleted, $errorCount errors');
-      } catch (e) {
-        print('Error accessing DefaultUser training sets: $e');
-        // Continue anyway - we still cleared in-memory data
-      }
     }
+
+    // Always clear in-memory data regardless of login status to prevent cache issues
+    _inMemoryData['trainingSets'] = <Map<String, dynamic>>[];
+    print('Cleared in-memory training sets cache');
   }
 
   Future<void> clearExercises() async {

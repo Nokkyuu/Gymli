@@ -45,18 +45,85 @@ class SettingsScreen extends StatefulWidget {
 }
 
 Future<void> wipeTrainingSets(BuildContext context) async {
-  if (await confirm(context)) {
+  if (await confirm(
+    context,
+    title: const Text('Clear Training Sets'),
+    content: const Text(
+        'Are you sure you want to permanently delete all training sets? This action cannot be undone.'),
+  )) {
+    // Show loading dialog
+    if (context.mounted) {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          return const AlertDialog(
+            content: Row(
+              children: [
+                CircularProgressIndicator(),
+                SizedBox(width: 20),
+                Text('Clearing training sets...'),
+              ],
+            ),
+          );
+        },
+      );
+    }
+
     try {
-      await UserService().clearTrainingSets();
+      print('Starting to clear training sets...');
+      // Use the UserService which has the correct username handling
+      final userService = UserService();
+
+      // Get the correct username from UserService
+      final currentUserName = userService.userName;
+      print('Clearing training sets for user: $currentUserName');
+
+      // Use the UserService method which handles both API calls and in-memory data
+      await userService.clearTrainingSets();
+      print('Clear training sets completed successfully');
+
+      // Wait a moment for the clear operation to fully complete
+      await Future.delayed(const Duration(milliseconds: 500));
+
+      // Verify that training sets were actually cleared
+      final remainingTrainingSets = await userService.getTrainingSets();
+      print(
+          'Remaining training sets after clear: ${remainingTrainingSets.length}');
+
+      // Dismiss loading dialog
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Training sets cleared successfully')),
-        );
+        Navigator.of(context).pop();
+
+        if (remainingTrainingSets.isEmpty) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Training sets cleared successfully'),
+              backgroundColor: Colors.green,
+              duration: Duration(seconds: 3),
+            ),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                  'Warning: ${remainingTrainingSets.length} training sets may still remain'),
+              backgroundColor: Colors.orange,
+              duration: const Duration(seconds: 5),
+            ),
+          );
+        }
       }
     } catch (e) {
+      // Dismiss loading dialog
       if (context.mounted) {
+        Navigator.of(context).pop();
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error clearing training sets: $e')),
+          SnackBar(
+            content: Text('Error clearing training sets: $e'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 5),
+          ),
         );
       }
     }
@@ -64,18 +131,55 @@ Future<void> wipeTrainingSets(BuildContext context) async {
 }
 
 Future<void> wipeExercises(BuildContext context) async {
-  if (await confirm(context)) {
+  if (await confirm(
+    context,
+    title: const Text('Clear Exercises'),
+    content: const Text(
+        'Are you sure you want to permanently delete all exercises? This action cannot be undone.'),
+  )) {
+    // Show loading dialog
+    if (context.mounted) {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          return const AlertDialog(
+            content: Row(
+              children: [
+                CircularProgressIndicator(),
+                SizedBox(width: 20),
+                Text('Clearing exercises...'),
+              ],
+            ),
+          );
+        },
+      );
+    }
+
     try {
       await UserService().clearExercises();
+
+      // Dismiss loading dialog
       if (context.mounted) {
+        Navigator.of(context).pop();
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Exercises cleared successfully')),
+          const SnackBar(
+            content: Text('Exercises cleared successfully'),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 3),
+          ),
         );
       }
     } catch (e) {
+      // Dismiss loading dialog
       if (context.mounted) {
+        Navigator.of(context).pop();
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error clearing exercises: $e')),
+          SnackBar(
+            content: Text('Error clearing exercises: $e'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 5),
+          ),
         );
       }
     }
@@ -83,18 +187,55 @@ Future<void> wipeExercises(BuildContext context) async {
 }
 
 Future<void> wipeWorkouts(BuildContext context) async {
-  if (await confirm(context)) {
+  if (await confirm(
+    context,
+    title: const Text('Clear Workouts'),
+    content: const Text(
+        'Are you sure you want to permanently delete all workouts? This action cannot be undone.'),
+  )) {
+    // Show loading dialog
+    if (context.mounted) {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          return const AlertDialog(
+            content: Row(
+              children: [
+                CircularProgressIndicator(),
+                SizedBox(width: 20),
+                Text('Clearing workouts...'),
+              ],
+            ),
+          );
+        },
+      );
+    }
+
     try {
       await UserService().clearWorkouts();
+
+      // Dismiss loading dialog
       if (context.mounted) {
+        Navigator.of(context).pop();
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Workouts cleared successfully')),
+          const SnackBar(
+            content: Text('Workouts cleared successfully'),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 3),
+          ),
         );
       }
     } catch (e) {
+      // Dismiss loading dialog
       if (context.mounted) {
+        Navigator.of(context).pop();
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error clearing workouts: $e')),
+          SnackBar(
+            content: Text('Error clearing workouts: $e'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 5),
+          ),
         );
       }
     }
@@ -173,18 +314,50 @@ void triggerLoad(context, dataType) async {
     return;
   }
 
+  // Show loading dialog for training sets import
+  if (dataType == "TrainingSets" && context.mounted) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return const AlertDialog(
+          content: Row(
+            children: [
+              CircularProgressIndicator(),
+              SizedBox(width: 20),
+              Text('Importing training sets...'),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   try {
-    restoreData(dataType, importData);
+    await restoreData(dataType, importData, context);
+
+    // Dismiss loading dialog if it was shown
+    if (dataType == "TrainingSets" && context.mounted) {
+      Navigator.of(context).pop();
+    }
+
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('$dataType import completed successfully'),
           backgroundColor: Colors.green,
+          duration: const Duration(seconds: 3),
         ),
       );
     }
   } catch (e) {
     print('Error in triggerLoad: $e');
+
+    // Dismiss loading dialog if it was shown
+    if (dataType == "TrainingSets" && context.mounted) {
+      Navigator.of(context).pop();
+    }
+
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -198,17 +371,8 @@ void triggerLoad(context, dataType) async {
   }
 }
 
-List<T> stringToList<T>(String str) {
-  List<T> values = [];
-  for (String e in str.split(";")) {
-    if (e != "") {
-      values.add((T == double ? double.parse(e) : e) as T);
-    }
-  }
-  return values;
-}
-
-void restoreData(String dataType, String data) async {
+Future<void> restoreData(
+    String dataType, String data, BuildContext context) async {
   try {
     final userService = UserService();
     List<List<String>> csvTable =
@@ -228,36 +392,168 @@ void restoreData(String dataType, String data) async {
         print('Continuing with import anyway...');
       }
 
+      // Update dialog to show preparation phase
+      if (context.mounted) {
+        // Update the dialog content to show preparation
+        Navigator.of(context).pop(); // Close current dialog
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (BuildContext context) {
+            return const AlertDialog(
+              content: Row(
+                children: [
+                  CircularProgressIndicator(),
+                  SizedBox(width: 20),
+                  Text('Preparing training sets...'),
+                ],
+              ),
+            );
+          },
+        );
+      }
+
+      // OPTIMIZATION: Fetch all exercises once and create lookup map
+      print('Fetching exercises for ID resolution...');
+      final exercises = await userService.getExercises();
+      final Map<String, int> exerciseNameToIdMap = {};
+
+      for (var exercise in exercises) {
+        exerciseNameToIdMap[exercise['name']] = exercise['id'];
+      }
+
+      print(
+          'Created exercise lookup map with ${exerciseNameToIdMap.length} exercises');
+
+      // Prepare training sets for bulk import
+      List<Map<String, dynamic>> trainingSetsToCreate = [];
+
       for (List<String> row in csvTable) {
         if (row.length >= 8) {
           try {
-            // Use new helper method for name-based exercise resolution
-            final exerciseId = await userService.getExerciseIdByName(row[0]);
+            // OPTIMIZED: Use lookup map instead of API call
+            final exerciseId = exerciseNameToIdMap[row[0]];
 
             if (exerciseId != null) {
-              await userService.createTrainingSet(
-                exerciseId: exerciseId,
-                date: DateTime.parse(row[1]).toIso8601String(),
-                weight: double.parse(row[2]),
-                repetitions: int.parse(row[3]),
-                setType: int.parse(row[4]),
-                baseReps: int.parse(row[5]),
-                maxReps: int.parse(row[6]),
-                increment: double.parse(row[7]),
-                machineName: row.length > 8 ? row[8] : "",
-              );
-              importedCount++;
-              print(
-                  'Successfully imported training set for exercise: ${row[0]}');
+              trainingSetsToCreate.add({
+                'exerciseId': exerciseId,
+                'date': DateTime.parse(row[1]).toIso8601String(),
+                'weight': double.parse(row[2]),
+                'repetitions': int.parse(row[3]),
+                'setType': int.parse(row[4]),
+                'baseReps': int.parse(row[5]),
+                'maxReps': int.parse(row[6]),
+                'increment': double.parse(row[7]),
+                'machineName': row.length > 8 ? row[8] : "",
+              });
+              print('Prepared training set for exercise: ${row[0]}');
             } else {
               print(
                   'Warning: Exercise "${row[0]}" not found, skipping training set');
               skippedCount++;
             }
           } catch (e) {
-            print('Error importing training set for exercise "${row[0]}": $e');
+            print('Error preparing training set for exercise "${row[0]}": $e');
             skippedCount++;
           }
+        } else {
+          print('Skipping row with insufficient data: $row');
+          skippedCount++;
+        }
+      }
+
+      // Create training sets in bulk (batches of 1000) with progress updates
+      if (trainingSetsToCreate.isNotEmpty) {
+        print(
+            'Creating ${trainingSetsToCreate.length} training sets in bulk...');
+
+        int batchSize = 1000;
+        int totalBatches = (trainingSetsToCreate.length / batchSize).ceil();
+
+        for (int i = 0; i < trainingSetsToCreate.length; i += batchSize) {
+          int endIndex = (i + batchSize < trainingSetsToCreate.length)
+              ? i + batchSize
+              : trainingSetsToCreate.length;
+
+          List<Map<String, dynamic>> batch =
+              trainingSetsToCreate.sublist(i, endIndex);
+
+          int currentBatch = (i / batchSize).floor() + 1;
+
+          // Update dialog to show current batch progress
+          if (context.mounted) {
+            Navigator.of(context).pop(); // Close current dialog
+            showDialog(
+              context: context,
+              barrierDismissible: false,
+              builder: (BuildContext context) {
+                return AlertDialog(
+                  content: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const CircularProgressIndicator(),
+                      const SizedBox(height: 20),
+                      Text('Importing batch $currentBatch of $totalBatches'),
+                      const SizedBox(height: 10),
+                      Text('${batch.length} training sets'),
+                      const SizedBox(height: 10),
+                      LinearProgressIndicator(
+                        value: currentBatch / totalBatches,
+                      ),
+                    ],
+                  ),
+                );
+              },
+            );
+          }
+
+          try {
+            await userService.createTrainingSetsBulk(batch);
+            importedCount += batch.length;
+            print(
+                'Successfully imported batch of ${batch.length} training sets (${i + 1}-${endIndex} of ${trainingSetsToCreate.length})');
+          } catch (e) {
+            print('Error importing batch ${i + 1}-${endIndex}: $e');
+            skippedCount += batch.length;
+          }
+
+          // Small delay to allow UI to update
+          await Future.delayed(const Duration(milliseconds: 100));
+        }
+
+        // Final completion dialog
+        if (context.mounted) {
+          Navigator.of(context).pop(); // Close progress dialog
+          showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (BuildContext context) {
+              return AlertDialog(
+                title: const Text('Import Complete'),
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                        '✅ Successfully imported: $importedCount training sets'),
+                    if (skippedCount > 0)
+                      Text('⚠️ Skipped: $skippedCount items'),
+                    const SizedBox(height: 10),
+                    const Text(
+                        'All training sets have been imported successfully!'),
+                  ],
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                    child: const Text('OK'),
+                  ),
+                ],
+              );
+            },
+          );
         }
       }
     } else if (dataType == "Exercises") {
@@ -403,6 +699,51 @@ void restoreData(String dataType, String data) async {
     rethrow; // Re-throw to be caught by triggerLoad
   }
 }
+
+/// Converts a string representation of a list back to a typed list
+/// Example: "[item1, item2, item3]" -> ["item1", "item2", "item3"]
+List<T> stringToList<T>(String input) {
+  if (input.isEmpty || input == '[]') {
+    return <T>[];
+  }
+
+  // Remove brackets and split by comma
+  String cleaned = input.replaceAll('[', '').replaceAll(']', '').trim();
+  if (cleaned.isEmpty) {
+    return <T>[];
+  }
+
+  List<String> parts = cleaned.split(',').map((e) => e.trim()).toList();
+
+  // Convert to the specified type
+  if (T == String) {
+    return parts.cast<T>();
+  } else if (T == double) {
+    return parts.map((e) => double.tryParse(e) ?? 0.0).toList().cast<T>();
+  } else if (T == int) {
+    return parts.map((e) => int.tryParse(e) ?? 0).toList().cast<T>();
+  } else {
+    // Default to string conversion
+    return parts.cast<T>();
+  }
+}
+
+/// List of muscle group names for mapping
+const List<String> muscleGroupNames = [
+  "Pectoralis major",
+  "Trapezius",
+  "Biceps",
+  "Abdominals",
+  "Front Delts",
+  "Deltoids",
+  "Back Delts",
+  "Latissimus dorsi",
+  "Triceps",
+  "Gluteus maximus",
+  "Hamstrings",
+  "Quadriceps",
+  "Calves"
+];
 
 class _SettingsScreen extends State<SettingsScreen> {
   final wakeUpTimeController = TextEditingController();

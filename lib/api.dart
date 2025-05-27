@@ -370,6 +370,50 @@ class TrainingSetService {
     }
   }
 
+  /// Creates multiple training sets in a single batch operation
+  /// This method is optimized for bulk imports and significantly reduces
+  /// the number of HTTP requests compared to creating sets individually.
+  ///
+  /// [userName] - The username associated with all training sets
+  /// [trainingSets] - List of training set data to create
+  ///
+  /// Returns a list of created training sets with their assigned IDs
+  Future<List<Map<String, dynamic>>> createTrainingSetsBulk({
+    required String userName,
+    required List<Map<String, dynamic>> trainingSets,
+  }) async {
+    if (trainingSets.isEmpty) {
+      throw Exception('Training sets list cannot be empty');
+    }
+
+    if (trainingSets.length > 1000) {
+      throw Exception(
+          'Cannot create more than 1000 training sets in a single request');
+    }
+
+    // Ensure all training sets have the required user_name field
+    final trainingSetsWithUser = trainingSets
+        .map((ts) => {
+              'user_name': userName,
+              ...ts,
+            })
+        .toList();
+
+    final response = await http.post(
+      Uri.parse('$baseUrl/training_sets/bulk'),
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode(trainingSetsWithUser),
+    );
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      final List<dynamic> responseData = json.decode(response.body);
+      return responseData.cast<Map<String, dynamic>>();
+    } else {
+      throw Exception(
+          'Failed to create training sets in bulk: ${response.body}');
+    }
+  }
+
   /// Updates an existing training set record
   /// [id] - The unique identifier of the training set to update
   /// [data] - Map containing the fields to update
@@ -406,6 +450,29 @@ class TrainingSetService {
     final response = await http.delete(Uri.parse('$baseUrl/training_sets/$id'));
     if (response.statusCode != 200 && response.statusCode != 204) {
       throw Exception('Failed to delete training set');
+    }
+  }
+
+  /// Clears all training sets for a specific user using bulk delete endpoint
+  /// This is much more efficient than deleting individual training sets
+  Future<Map<String, dynamic>> clearTrainingSets({
+    required String userName,
+  }) async {
+    final response = await http.delete(
+      Uri.parse('$baseUrl/training_sets/bulk_clear?user_name=$userName'),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    );
+
+    if (response.statusCode == 200 || response.statusCode == 204) {
+      final result = response.body.isNotEmpty
+          ? json.decode(response.body)
+          : {'message': 'Training sets cleared successfully'};
+      return result;
+    } else {
+      throw Exception(
+          'Failed to clear training sets: ${response.statusCode} ${response.body}');
     }
   }
 }
