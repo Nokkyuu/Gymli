@@ -21,6 +21,7 @@ library;
 
 // ignore_for_file: file_names
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart'; // Add this for Clipboard
 import 'package:Gymli/user_service.dart';
 import 'package:Gymli/api_models.dart';
 import 'package:csv/csv.dart';
@@ -33,6 +34,8 @@ import 'package:confirm_dialog/confirm_dialog.dart';
 import 'globals.dart' as globals;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'dart:convert'; // Add this import for utf8
+import 'package:flutter/foundation.dart'; // Add this import for kIsWeb
 
 enum DisplayMode { light, dark }
 
@@ -92,6 +95,9 @@ Future<void> wipeTrainingSets(BuildContext context) async {
           'Remaining training sets after clear: ${remainingTrainingSets.length}');
 
       // Dismiss loading dialog
+      // Notify that data has changed
+      UserService().notifyDataChanged();
+
       if (context.mounted) {
         Navigator.of(context).pop();
 
@@ -159,6 +165,9 @@ Future<void> wipeExercises(BuildContext context) async {
     try {
       await UserService().clearExercises();
 
+      // Notify that data has changed
+      UserService().notifyDataChanged();
+
       // Dismiss loading dialog
       if (context.mounted) {
         Navigator.of(context).pop();
@@ -214,6 +223,8 @@ Future<void> wipeWorkouts(BuildContext context) async {
 
     try {
       await UserService().clearWorkouts();
+      // Notify that data has changed
+      UserService().notifyDataChanged();
 
       // Dismiss loading dialog
       if (context.mounted) {
@@ -242,41 +253,260 @@ Future<void> wipeWorkouts(BuildContext context) async {
   }
 }
 
-void backup(String dataType) async {
+Future<void> backup(String dataType, BuildContext context) async {
   try {
+    // Show loading dialog
+    if (context.mounted) {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            content: Row(
+              children: [
+                const CircularProgressIndicator(),
+                const SizedBox(width: 20),
+                Text('Exporting $dataType...'),
+              ],
+            ),
+          );
+        },
+      );
+    }
+
     final userService = UserService();
     List<List<String>> datalist = [];
 
+    print('Starting backup for $dataType...');
+
     if (dataType == "TrainingSets") {
       final trainingSets = await userService.getTrainingSets();
+      print('Retrieved ${trainingSets.length} training sets');
+
       for (var ts in trainingSets) {
-        final apiTrainingSet = ApiTrainingSet.fromJson(ts);
-        datalist.add(apiTrainingSet.toCSVString());
+        try {
+          final apiTrainingSet = ApiTrainingSet.fromJson(ts);
+          datalist.add(apiTrainingSet.toCSVString());
+        } catch (e) {
+          print('Error converting training set to CSV: $e');
+        }
       }
     } else if (dataType == "Exercises") {
       final exercises = await userService.getExercises();
+      print('Retrieved ${exercises.length} exercises');
+
       for (var ex in exercises) {
-        final apiExercise = ApiExercise.fromJson(ex);
-        datalist.add(apiExercise.toCSVString());
+        try {
+          final apiExercise = ApiExercise.fromJson(ex);
+          datalist.add(apiExercise.toCSVString());
+        } catch (e) {
+          print('Error converting exercise to CSV: $e');
+        }
       }
     } else if (dataType == "Workouts") {
       final workouts = await userService.getWorkouts();
+      print('Retrieved ${workouts.length} workouts');
+
       for (var wo in workouts) {
-        final apiWorkout = ApiWorkout.fromJson(wo);
-        datalist.add(apiWorkout.toCSVString());
+        try {
+          final apiWorkout = ApiWorkout.fromJson(wo);
+          datalist.add(apiWorkout.toCSVString());
+        } catch (e) {
+          print('Error converting workout to CSV: $e');
+        }
       }
     }
 
+    if (datalist.isEmpty) {
+      // Dismiss loading dialog
+      if (context.mounted) {
+        Navigator.of(context).pop();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('No $dataType data to export'),
+            backgroundColor: Colors.orange,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+      return;
+    }
+
+    print('Converting ${datalist.length} items to CSV...');
     String csvData = const ListToCsvConverter().convert(datalist);
-    final String directory = (await getApplicationSupportDirectory()).path;
-    final path =
-        "$directory/${dataType}_${DateFormat('yyyy-MM-dd').format(DateTime.now())}.csv";
-    final File file = File(path);
-    await file.writeAsString(csvData);
-    final params = SaveFileDialogParams(sourceFilePath: path);
-    await FlutterFileDialog.saveFile(params: params);
+
+    final fileName =
+        "${dataType}_${DateFormat('yyyy-MM-dd_HH-mm-ss').format(DateTime.now())}.csv";
+
+    print('Starting file save process...');
+
+    if (kIsWeb) {
+      // Web-specific implementation
+      try {
+        print('Using web download approach...');
+
+        // Convert string to bytes
+        final bytes = utf8.encode(csvData);
+
+        // Try direct save with just bytes and filename
+        final params = SaveFileDialogParams(
+          data: bytes,
+          fileName: fileName,
+        );
+
+        final result = await FlutterFileDialog.saveFile(params: params);
+
+        // Dismiss loading dialog
+        if (context.mounted) {
+          Navigator.of(context).pop();
+
+          if (result != null) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('$dataType exported successfully'),
+                backgroundColor: Colors.green,
+                duration: const Duration(seconds: 3),
+              ),
+            );
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Export cancelled by user'),
+                backgroundColor: Colors.orange,
+                duration: Duration(seconds: 3),
+              ),
+            );
+          }
+        }
+      } catch (webError) {
+        print('Web export failed: $webError');
+
+        // Fallback: try to trigger browser download
+        try {
+          print('Attempting browser download fallback...');
+
+          // Create a data URL
+          final dataUrl =
+              'data:text/csv;charset=utf-8,${Uri.encodeComponent(csvData)}';
+
+          // This is a simplified approach - you might need to use dart:html for full web support
+          // For now, we'll show the data in a dialog that users can copy
+
+          if (context.mounted) {
+            Navigator.of(context).pop(); // Close loading dialog
+
+            showDialog(
+              context: context,
+              builder: (BuildContext context) {
+                return AlertDialog(
+                  title: Text('$dataType Export Data'),
+                  content: SizedBox(
+                    width: double.maxFinite,
+                    height: 300,
+                    child: SingleChildScrollView(
+                      child: SelectableText(
+                        csvData,
+                        style: const TextStyle(
+                            fontFamily: 'monospace', fontSize: 12),
+                      ),
+                    ),
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                      child: const Text('Close'),
+                    ),
+                    TextButton(
+                      onPressed: () async {
+                        // Copy to clipboard
+                        await Clipboard.setData(ClipboardData(text: csvData));
+                        Navigator.of(context).pop();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('CSV data copied to clipboard'),
+                            backgroundColor: Colors.green,
+                          ),
+                        );
+                      },
+                      child: const Text('Copy to Clipboard'),
+                    ),
+                  ],
+                );
+              },
+            );
+          }
+        } catch (fallbackError) {
+          print('Fallback also failed: $fallbackError');
+          rethrow;
+        }
+      }
+    } else {
+      // Mobile platform implementation
+      try {
+        print('Using mobile file system approach...');
+
+        // Get platform-appropriate directory
+        final directory = (await getApplicationSupportDirectory()).path;
+        final path = "$directory/$fileName";
+
+        print('Creating file at: $path');
+
+        final File file = File(path);
+        await file.writeAsString(csvData);
+        print('File written successfully');
+
+        // Save file dialog
+        final params = SaveFileDialogParams(
+          sourceFilePath: path,
+          fileName: fileName,
+        );
+
+        final result = await FlutterFileDialog.saveFile(params: params);
+
+        // Dismiss loading dialog
+        if (context.mounted) {
+          Navigator.of(context).pop();
+
+          if (result != null) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('$dataType exported successfully to $result'),
+                backgroundColor: Colors.green,
+                duration: const Duration(seconds: 3),
+              ),
+            );
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Export cancelled by user'),
+                backgroundColor: Colors.orange,
+                duration: Duration(seconds: 3),
+              ),
+            );
+          }
+        }
+      } catch (mobileError) {
+        print('Mobile export failed: $mobileError');
+        rethrow;
+      }
+    }
   } catch (e) {
     print('Error during backup: $e');
+    print('Stack trace: ${StackTrace.current}');
+
+    // Dismiss loading dialog
+    if (context.mounted) {
+      Navigator.of(context).pop();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error exporting $dataType: ${e.toString()}'),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 5),
+        ),
+      );
+    }
   }
 }
 
@@ -314,18 +544,18 @@ void triggerLoad(context, dataType) async {
     return;
   }
 
-  // Show loading dialog for training sets import
-  if (dataType == "TrainingSets" && context.mounted) {
+  // Show loading dialog for all import types
+  if (context.mounted) {
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (BuildContext context) {
-        return const AlertDialog(
+        return AlertDialog(
           content: Row(
             children: [
-              CircularProgressIndicator(),
-              SizedBox(width: 20),
-              Text('Importing training sets...'),
+              const CircularProgressIndicator(),
+              const SizedBox(width: 20),
+              Text('Importing $dataType...'),
             ],
           ),
         );
@@ -335,9 +565,11 @@ void triggerLoad(context, dataType) async {
 
   try {
     await restoreData(dataType, importData, context);
+    // Notify that data has changed
+    UserService().notifyDataChanged();
 
-    // Dismiss loading dialog if it was shown
-    if (dataType == "TrainingSets" && context.mounted) {
+    // Dismiss loading dialog
+    if (context.mounted) {
       Navigator.of(context).pop();
     }
 
@@ -353,8 +585,8 @@ void triggerLoad(context, dataType) async {
   } catch (e) {
     print('Error in triggerLoad: $e');
 
-    // Dismiss loading dialog if it was shown
-    if (dataType == "TrainingSets" && context.mounted) {
+    // Dismiss loading dialog
+    if (context.mounted) {
       Navigator.of(context).pop();
     }
 
@@ -567,7 +799,59 @@ Future<void> restoreData(
         print('Continuing with import anyway...');
       }
 
-      for (List<String> row in csvTable) {
+      // Update dialog to show total count
+      if (context.mounted) {
+        Navigator.of(context).pop(); // Close current dialog
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const CircularProgressIndicator(),
+                  const SizedBox(height: 20),
+                  Text('Importing ${csvTable.length} exercises...'),
+                  const SizedBox(height: 10),
+                  const Text('Please wait...'),
+                ],
+              ),
+            );
+          },
+        );
+      }
+
+      for (int index = 0; index < csvTable.length; index++) {
+        List<String> row = csvTable[index];
+
+        // Update progress every 10 exercises
+        if (index % 10 == 0 && context.mounted) {
+          Navigator.of(context).pop(); // Close current dialog
+          showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (BuildContext context) {
+              return AlertDialog(
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const CircularProgressIndicator(),
+                    const SizedBox(height: 20),
+                    Text('Importing exercises...'),
+                    const SizedBox(height: 10),
+                    Text('${index + 1} of ${csvTable.length}'),
+                    const SizedBox(height: 10),
+                    LinearProgressIndicator(
+                      value: (index + 1) / csvTable.length,
+                    ),
+                  ],
+                ),
+              );
+            },
+          );
+        }
+
         if (row.length >= 7) {
           try {
             final muscleGroups = stringToList<String>(row[2]);
@@ -614,6 +898,38 @@ Future<void> restoreData(
           }
         }
       }
+
+      // Show completion dialog for exercises
+      if (context.mounted) {
+        Navigator.of(context).pop(); // Close progress dialog
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: const Text('Exercise Import Complete'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('✅ Successfully imported: $importedCount exercises'),
+                  if (skippedCount > 0) Text('⚠️ Skipped: $skippedCount items'),
+                  const SizedBox(height: 10),
+                  const Text('All exercises have been imported successfully!'),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: const Text('OK'),
+                ),
+              ],
+            );
+          },
+        );
+      }
     } else if (dataType == "Workouts") {
       // Clear existing workouts with better error handling
       print('Clearing existing workouts...');
@@ -625,7 +941,66 @@ Future<void> restoreData(
         print('Continuing with import anyway...');
       }
 
-      for (List<String> row in csvTable) {
+      // Update dialog to show total count
+      if (context.mounted) {
+        Navigator.of(context).pop(); // Close current dialog
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const CircularProgressIndicator(),
+                  const SizedBox(height: 20),
+                  Text('Importing ${csvTable.length} workouts...'),
+                  const SizedBox(height: 10),
+                  const Text('Please wait...'),
+                ],
+              ),
+            );
+          },
+        );
+      }
+
+      for (int index = 0; index < csvTable.length; index++) {
+        List<String> row = csvTable[index];
+
+        // Update progress for each workout
+        if (context.mounted) {
+          Navigator.of(context).pop(); // Close current dialog
+          showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (BuildContext context) {
+              return AlertDialog(
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const CircularProgressIndicator(),
+                    const SizedBox(height: 20),
+                    Text('Importing workouts...'),
+                    const SizedBox(height: 10),
+                    Text('${index + 1} of ${csvTable.length}'),
+                    const SizedBox(height: 5),
+                    if (row.isNotEmpty)
+                      Text(
+                        'Current: ${row[0]}',
+                        style: const TextStyle(fontSize: 12),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    const SizedBox(height: 10),
+                    LinearProgressIndicator(
+                      value: (index + 1) / csvTable.length,
+                    ),
+                  ],
+                ),
+              );
+            },
+          );
+        }
+
         if (row.isNotEmpty) {
           try {
             final workoutName = row[0];
@@ -682,6 +1057,38 @@ Future<void> restoreData(
             skippedCount++;
           }
         }
+      }
+
+      // Show completion dialog for workouts
+      if (context.mounted) {
+        Navigator.of(context).pop(); // Close progress dialog
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: const Text('Workout Import Complete'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('✅ Successfully imported: $importedCount workouts'),
+                  if (skippedCount > 0) Text('⚠️ Skipped: $skippedCount items'),
+                  const SizedBox(height: 10),
+                  const Text('All workouts have been imported successfully!'),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: const Text('OK'),
+                ),
+              ],
+            );
+          },
+        );
       }
     }
 
@@ -746,8 +1153,8 @@ const List<String> muscleGroupNames = [
 ];
 
 class _SettingsScreen extends State<SettingsScreen> {
-  final wakeUpTimeController = TextEditingController();
-  final graphNumberOfDays = TextEditingController();
+  // final wakeUpTimeController = TextEditingController();
+  // final graphNumberOfDays = TextEditingController();
   // final equationController = TextEditingController();
   final Future<SharedPreferences> _preferences =
       SharedPreferences.getInstance();
@@ -758,8 +1165,8 @@ class _SettingsScreen extends State<SettingsScreen> {
   @override
   void initState() {
     super.initState();
-    wakeUpTimeController.text = "${globals.idleTimerWakeup}";
-    graphNumberOfDays.text = "${globals.graphNumberOfDays}";
+    // wakeUpTimeController.text = "${globals.idleTimerWakeup}";
+    // graphNumberOfDays.text = "${globals.graphNumberOfDays}";
     // equationController.text = "w * ((r-b)/(m-b)) * r";
   }
 
@@ -782,127 +1189,127 @@ class _SettingsScreen extends State<SettingsScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           mainAxisSize: MainAxisSize.max,
           children: <Widget>[
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                const Text("Wakeup Timer (s)"),
-                SizedBox(
-                  width: 100,
-                  child: TextField(
-                      textAlign: TextAlign.center,
-                      controller: wakeUpTimeController,
-                      obscureText: false,
-                      decoration: const InputDecoration(
-                        border: UnderlineInputBorder(),
-                        //alignLabelWithHint: true
-                      ),
-                      onChanged: (String s) async {
-                        if (double.tryParse(s) != null) {
-                          final SharedPreferences prefs = await _preferences;
-                          globals.idleTimerWakeup = int.parse(s);
-                          prefs.setInt('idleWakeTime', globals.idleTimerWakeup);
-                        }
-                      }),
-                ),
-              ],
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                const Text("Graph days"),
-                SizedBox(
-                  width: 100,
-                  child: TextField(
-                      textAlign: TextAlign.center,
-                      controller: graphNumberOfDays,
-                      obscureText: false,
-                      decoration: const InputDecoration(
-                        border: UnderlineInputBorder(),
-                        //alignLabelWithHint: true
-                      ),
-                      onChanged: (String s) async {
-                        if (double.tryParse(s) != null) {
-                          final SharedPreferences prefs = await _preferences;
-                          globals.graphNumberOfDays = int.parse(s);
-                          prefs.setInt(
-                              'graphNumberOfDays', globals.graphNumberOfDays);
-                        }
-                      }),
-                ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
-              const Text("Graph display"),
-              SegmentedButton<GraphMode>(
-                  showSelectedIcon: false,
-                  segments: const <ButtonSegment<GraphMode>>[
-                    ButtonSegment<GraphMode>(
-                        value: GraphMode.simple,
-                        label: Text('Simple (max)'),
-                        icon: FaIcon(FontAwesomeIcons.arrowTrendUp)),
-                    ButtonSegment<GraphMode>(
-                        value: GraphMode.detailed,
-                        label: Text('Detailed'),
-                        icon: FaIcon(FontAwesomeIcons.chartColumn))
-                  ],
-                  selected: <GraphMode>{selectedGraphMode},
-                  onSelectionChanged: (Set<GraphMode> s) async {
-                    setState(() {
-                      selectedGraphMode = s.first;
-                    });
-                    final SharedPreferences prefs = await _preferences;
-                    globals.detailedGraph =
-                        s.first == GraphMode.simple ? false : true;
-                    prefs.setBool('detailedGraph',
-                        s.first == GraphMode.simple ? false : true);
-                  }),
-            ]),
-            const SizedBox(height: 10),
-            Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
-              const Text("Display mode"),
-              SegmentedButton<DisplayMode>(
-                  showSelectedIcon: false,
-                  segments: const <ButtonSegment<DisplayMode>>[
-                    ButtonSegment<DisplayMode>(
-                        value: DisplayMode.light, icon: Icon(Icons.light_mode)),
-                    ButtonSegment<DisplayMode>(
-                        value: DisplayMode.dark, icon: Icon(Icons.dark_mode)),
-                  ],
-                  selected: <DisplayMode>{selectedMode},
-                  onSelectionChanged: (Set<DisplayMode> s) {
-                    setState(() {
-                      selectedMode = s.first;
-                    });
-                  }),
-            ]),
-            const SizedBox(height: 10),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                const Text("Score calculation"),
-                Column(children: [
-                  SegmentedButton<DisplayMode>(
-                      showSelectedIcon: false,
-                      segments: const <ButtonSegment<DisplayMode>>[
-                        ButtonSegment<DisplayMode>(
-                            value: DisplayMode.light,
-                            label: Text('Equation'),
-                            icon: Icon(Icons.calculate)),
-                        ButtonSegment<DisplayMode>(
-                            value: DisplayMode.dark,
-                            label: Text('Records'),
-                            icon: Icon(Icons.arrow_outward))
-                      ],
-                      selected: <DisplayMode>{selectedMode},
-                      onSelectionChanged: (Set<DisplayMode> s) {
-                        setState(() {
-                          selectedMode = s.first;
-                        });
-                      }),
-                ])
-              ],
-            ),
+            // Row(
+            //   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            //   children: [
+            //     const Text("Wakeup Timer (s)"),
+            //     SizedBox(
+            //       width: 100,
+            //       child: TextField(
+            //           textAlign: TextAlign.center,
+            //           controller: wakeUpTimeController,
+            //           obscureText: false,
+            //           decoration: const InputDecoration(
+            //             border: UnderlineInputBorder(),
+            //             //alignLabelWithHint: true
+            //           ),
+            //           onChanged: (String s) async {
+            //             if (double.tryParse(s) != null) {
+            //               final SharedPreferences prefs = await _preferences;
+            //               globals.idleTimerWakeup = int.parse(s);
+            //               prefs.setInt('idleWakeTime', globals.idleTimerWakeup);
+            //             }
+            //           }),
+            //     ),
+            //   ],
+            // ),
+            // Row(
+            //   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            //   children: [
+            //     const Text("Graph days"),
+            //     SizedBox(
+            //       width: 100,
+            //       child: TextField(
+            //           textAlign: TextAlign.center,
+            //           controller: graphNumberOfDays,
+            //           obscureText: false,
+            //           decoration: const InputDecoration(
+            //             border: UnderlineInputBorder(),
+            //             //alignLabelWithHint: true
+            //           ),
+            //           onChanged: (String s) async {
+            //             if (double.tryParse(s) != null) {
+            //               final SharedPreferences prefs = await _preferences;
+            //               globals.graphNumberOfDays = int.parse(s);
+            //               prefs.setInt(
+            //                   'graphNumberOfDays', globals.graphNumberOfDays);
+            //             }
+            //           }),
+            //     ),
+            //   ],
+            // ),
+            // const SizedBox(height: 10),
+            // Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
+            //   const Text("Graph display"),
+            //   SegmentedButton<GraphMode>(
+            //       showSelectedIcon: false,
+            //       segments: const <ButtonSegment<GraphMode>>[
+            //         ButtonSegment<GraphMode>(
+            //             value: GraphMode.simple,
+            //             label: Text('Simple (max)'),
+            //             icon: FaIcon(FontAwesomeIcons.arrowTrendUp)),
+            //         ButtonSegment<GraphMode>(
+            //             value: GraphMode.detailed,
+            //             label: Text('Detailed'),
+            //             icon: FaIcon(FontAwesomeIcons.chartColumn))
+            //       ],
+            //       selected: <GraphMode>{selectedGraphMode},
+            //       onSelectionChanged: (Set<GraphMode> s) async {
+            //         setState(() {
+            //           selectedGraphMode = s.first;
+            //         });
+            //         final SharedPreferences prefs = await _preferences;
+            //         globals.detailedGraph =
+            //             s.first == GraphMode.simple ? false : true;
+            //         prefs.setBool('detailedGraph',
+            //             s.first == GraphMode.simple ? false : true);
+            //       }),
+            // ]),
+            // const SizedBox(height: 10),
+            // Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
+            //   const Text("Display mode"),
+            //   SegmentedButton<DisplayMode>(
+            //       showSelectedIcon: false,
+            //       segments: const <ButtonSegment<DisplayMode>>[
+            //         ButtonSegment<DisplayMode>(
+            //             value: DisplayMode.light, icon: Icon(Icons.light_mode)),
+            //         ButtonSegment<DisplayMode>(
+            //             value: DisplayMode.dark, icon: Icon(Icons.dark_mode)),
+            //       ],
+            //       selected: <DisplayMode>{selectedMode},
+            //       onSelectionChanged: (Set<DisplayMode> s) {
+            //         setState(() {
+            //           selectedMode = s.first;
+            //         });
+            //       }),
+            // ]),
+            // const SizedBox(height: 10),
+            // Row(
+            //   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            //   children: [
+            //     const Text("Score calculation"),
+            //     Column(children: [
+            //       SegmentedButton<DisplayMode>(
+            //           showSelectedIcon: false,
+            //           segments: const <ButtonSegment<DisplayMode>>[
+            //             ButtonSegment<DisplayMode>(
+            //                 value: DisplayMode.light,
+            //                 label: Text('Equation'),
+            //                 icon: Icon(Icons.calculate)),
+            //             ButtonSegment<DisplayMode>(
+            //                 value: DisplayMode.dark,
+            //                 label: Text('Records'),
+            //                 icon: Icon(Icons.arrow_outward))
+            //           ],
+            //           selected: <DisplayMode>{selectedMode},
+            //           onSelectionChanged: (Set<DisplayMode> s) {
+            //             setState(() {
+            //               selectedMode = s.first;
+            //             });
+            //           }),
+            //     ])
+            //   ],
+            // ),
             const Spacer(
               flex: 3,
             ),
@@ -918,21 +1325,21 @@ class _SettingsScreen extends State<SettingsScreen> {
                 label: const Text('Trainings'),
                 icon: const FaIcon(FontAwesomeIcons.chartLine, size: 13),
                 onPressed: () {
-                  backup("TrainingSets");
+                  backup("TrainingSets", context);
                 },
               ),
               TextButton.icon(
                 label: const Text('Exercises'),
                 icon: const FaIcon(FontAwesomeIcons.list, size: 13),
                 onPressed: () {
-                  backup("Exercises");
+                  backup("Exercises", context);
                 },
               ),
               TextButton.icon(
                 label: const Text('Workouts'),
                 icon: const FaIcon(FontAwesomeIcons.clipboardList, size: 13),
                 onPressed: () {
-                  backup("Workouts");
+                  backup("Workouts", context);
                 },
               ),
             ]),

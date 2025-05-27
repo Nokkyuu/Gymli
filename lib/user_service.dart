@@ -1008,6 +1008,7 @@ class UserService {
         if (exercise['id'] != null) {
           try {
             await deleteExercise(exercise['id']);
+
             deletedCount++;
           } catch (e) {
             errorCount++;
@@ -1039,6 +1040,8 @@ class UserService {
             }
           }
         }
+        // Clear in-memory exercises regardless of API success
+        _inMemoryData['exercises'] = <Map<String, dynamic>>[];
         print(
             'Cleared DefaultUser exercises: $deletedCount deleted, $errorCount errors');
       } catch (e) {
@@ -1090,6 +1093,8 @@ class UserService {
             }
           }
         }
+        // Clear in-memory workouts regardless of API success
+        _inMemoryData['workouts'] = <Map<String, dynamic>>[];
         print(
             'Cleared DefaultUser workouts: $deletedCount deleted, $errorCount errors');
       } catch (e) {
@@ -1127,5 +1132,12 @@ class UserService {
       print('Error resolving exercise ID to name: $e');
       return null;
     }
+  }
+
+  // Add this method to the UserService class
+  void notifyDataChanged() {
+    // Trigger the auth state notifier to refresh all listening screens
+    authStateNotifier.value = !authStateNotifier.value;
+    print('Data change notification sent to all listeners');
   }
 }

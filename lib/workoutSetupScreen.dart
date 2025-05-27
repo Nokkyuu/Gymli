@@ -57,7 +57,7 @@ class _WorkoutSetupScreenState extends State<WorkoutSetupScreen> {
   ValueNotifier<bool> addRemEx = ValueNotifier<bool>(true);
   int warmUpS = 0;
   int workS = 1;
-  int dropS = 0;
+  //int dropS = 0;
   ApiWorkout? currentWorkout;
   TextEditingController workoutNameController = TextEditingController();
   List<ApiExercise> allExercises = [];
@@ -244,18 +244,6 @@ class _WorkoutSetupScreenState extends State<WorkoutSetupScreen> {
                     ),
                   ],
                 ),
-                Column(
-                  children: [
-                    const Text('Drop Sets'),
-                    NumberPicker(
-                      decoration: BoxDecoration(border: Border.all()),
-                      value: dropS,
-                      minValue: 0,
-                      maxValue: 10,
-                      onChanged: (value) => setState(() => dropS = value),
-                    ),
-                  ],
-                ),
               ],
             ),
             const Divider(),
@@ -313,7 +301,7 @@ class _WorkoutSetupScreenState extends State<WorkoutSetupScreen> {
                         exerciseName: selectedExercise!.name,
                         warmups: warmUpS,
                         worksets: workS,
-                        dropsets: dropS,
+                        // dropsets: dropS,
                         type: selectedExercise!.type));
                     addRemEx.value = !addRemEx.value;
                   } else {
@@ -339,7 +327,7 @@ class _WorkoutSetupScreenState extends State<WorkoutSetupScreen> {
                                 exerciseName: item.exerciseName,
                                 warmUpS: item.warmups,
                                 workS: item.worksets,
-                                dropS: item.dropsets,
+                                //dropS: item.dropsets,
                                 icon: currentIcon,
                                 remo: remExercise,
                                 item: item);
@@ -360,7 +348,7 @@ class ExerciseTile extends StatelessWidget {
     required this.exerciseName,
     required this.warmUpS,
     required this.workS,
-    required this.dropS,
+    //required this.dropS,
     required this.icon,
     required this.remo,
     required this.item,
@@ -369,7 +357,7 @@ class ExerciseTile extends StatelessWidget {
   final String exerciseName;
   final int warmUpS;
   final int workS;
-  final int dropS;
+  //final int dropS;
   final IconData icon;
   final Function remo;
   final ApiWorkoutUnit item;
@@ -380,8 +368,7 @@ class ExerciseTile extends StatelessWidget {
       enabled: true,
       leading: FaIcon(icon),
       title: Text(exerciseName),
-      subtitle:
-          Text('Warm Ups: $warmUpS, Work Sets: $workS, Drop Sets: $dropS'),
+      subtitle: Text('Warm Ups: $warmUpS, Work Sets: $workS'),
       trailing: IconButton(
           icon: const Icon(Icons.delete), onPressed: () => remo(item)),
     );
