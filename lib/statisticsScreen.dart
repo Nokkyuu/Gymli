@@ -30,7 +30,6 @@ import 'package:time_machine/time_machine.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:tuple/tuple.dart';
 import 'dart:math';
-import 'database.dart' as db;
 import 'user_service.dart';
 import 'api_models.dart';
 
@@ -88,10 +87,22 @@ class _StatisticsScreen extends State<StatisticsScreen> {
   List<Text> exerciseDetails = [];
   String? startingDate;
   String? endingDate;
+  // Add temporary variables for the selected dates before confirmation
+  String? _tempStartingDate;
+  String? _tempEndingDate;
   List<double> heatMapMulti = [];
+  bool isLoading = true;
   // ignore: non_constant_identifier_names
   final TextEditingController MuscleController = TextEditingController();
   final UserService userService = UserService();
+
+  // Caching variables to prevent redundant API calls
+  // This solves the issue of thousands of "Enriched training set" debug messages
+  // when adjusting date intervals by avoiding repeated API calls for the same data
+  List<Map<String, dynamic>>? _cachedTrainingSets;
+  List<ApiExercise>? _cachedExercises;
+  bool _dataCacheValid = false;
+  DateTime? _lastCacheTime;
   List<List<double>> heatMapCood = [
     [0.25, 0.53], //pectoralis
     [0.75, 0.57], // trapezius
@@ -111,9 +122,70 @@ class _StatisticsScreen extends State<StatisticsScreen> {
 
   void updateView() {}
 
+  // Cache invalidation method
+  void _invalidateCache() {
+    _cachedTrainingSets = null;
+    _cachedExercises = null;
+    _dataCacheValid = false;
+    _lastCacheTime = null;
+    print('Data cache invalidated');
+  }
+
+  // Check if cache is expired (5 minutes for freshness)
+  bool _isCacheExpired() {
+    if (_lastCacheTime == null) return true;
+    return DateTime.now().difference(_lastCacheTime!).inMinutes > 5;
+  }
+
+  // Smart data loading with caching
+  Future<List<Map<String, dynamic>>> _getTrainingSetsWithCache() async {
+    if (_cachedTrainingSets == null || !_dataCacheValid || _isCacheExpired()) {
+      print('Loading training sets from API...');
+      final rawData = await userService.getTrainingSets();
+      _cachedTrainingSets = rawData.cast<Map<String, dynamic>>();
+      _dataCacheValid = true;
+      _lastCacheTime = DateTime.now();
+    } else {
+      print('Using cached training sets');
+    }
+    return _cachedTrainingSets!;
+  }
+
+  Future<List<ApiExercise>> _getExercisesWithCache() async {
+    if (_cachedExercises == null || !_dataCacheValid || _isCacheExpired()) {
+      print('Loading exercises from API...');
+      final exercisesData = await userService.getExercises();
+      _cachedExercises =
+          exercisesData.map((e) => ApiExercise.fromJson(e)).toList();
+      _dataCacheValid = true;
+      _lastCacheTime = DateTime.now();
+    } else {
+      print('Using cached exercises');
+    }
+    return _cachedExercises!;
+  }
+
   int weekNumber(DateTime date) {
-    int dayOfYear = int.parse(DateFormat("D").format(date));
-    return ((dayOfYear - date.weekday + 10) / 7).floor();
+    // Use a more reliable week number calculation
+    // This calculates the ISO week number (week 1 is the first week with Thursday)
+    DateTime jan1 = DateTime(date.year, 1, 1);
+    int dayOfYear = date.difference(jan1).inDays + 1;
+    int weekDay = jan1.weekday;
+
+    // Adjust for ISO week calculation
+    int week = ((dayOfYear - date.weekday + 10) / 7).floor();
+
+    // Handle edge cases for year boundaries
+    if (week < 1) {
+      return weekNumber(DateTime(date.year - 1, 12, 31));
+    } else if (week > 52) {
+      DateTime dec31 = DateTime(date.year, 12, 31);
+      if (dec31.weekday < 4) {
+        return 1; // This week belongs to next year
+      }
+    }
+
+    return week;
   }
 
   BarChartGroupData generateBars(
@@ -130,8 +202,6 @@ class _StatisticsScreen extends State<StatisticsScreen> {
   }
 
   Future<void> updateBarStatistics() async {
-    // calculate portions of training
-    // final musGroups = ["Pectoralis major", "Biceps", "Abdominals", "Deltoids", "Latissimus dorsi", "Triceps", "Gluteus maximus", "Hamstrings", "Quadriceps"];
     // determine mapping of muscle groups to scores
     Map<String, int> muscleMapping = {
       "Pectoralis major": 0,
@@ -151,71 +221,101 @@ class _StatisticsScreen extends State<StatisticsScreen> {
     };
 
     try {
-      final exercisesData = await userService.getExercises();
-      final exercises =
-          exercisesData.map((e) => ApiExercise.fromJson(e)).toList();
+      // Use cached data to prevent redundant API calls
+      final exercises = await _getExercisesWithCache();
 
       Map<String, List<Tuple2<int, double>>> exerciseMapping = {};
       for (var e in exercises) {
         List<Tuple2<int, double>> intermediateMap = [];
         for (int i = 0; i < e.muscleGroups.length; ++i) {
           String which = e.muscleGroups[i];
-          var val = muscleMapping[which]!;
-          intermediateMap.add(Tuple2<int, double>(val, e.muscleIntensities[i]));
+          var val = muscleMapping[which];
+          if (val != null) {
+            intermediateMap
+                .add(Tuple2<int, double>(val, e.muscleIntensities[i]));
+          }
         }
         exerciseMapping[e.name] = intermediateMap;
       }
 
-      barChartStatistics.clear();
-      List<DateTime> trainingDates = await db.getTrainingDates("");
+      // Get all training sets instead of using db functions
+      final allTrainingSets = await _getTrainingSetsWithCache();
+
+      // Extract unique training dates
+      Set<DateTime> uniqueDates = {};
+      for (var trainingSet in allTrainingSets) {
+        try {
+          final date = DateTime.parse(trainingSet['date']);
+          // Only count work sets (set_type > 0), not warmups
+          if (trainingSet['set_type'] > 0) {
+            uniqueDates.add(DateTime(date.year, date.month, date.day));
+          }
+        } catch (e) {
+          print('Error parsing date: $e');
+        }
+      }
+
+      List<DateTime> trainingDates = uniqueDates.toList()..sort();
+
+      // Apply date filtering if specified
       if (startingDate != null) {
         var tokens = startingDate!.split("-");
         String startingDateString =
             "${tokens[2]}-${tokens[1]}-${tokens[0]}T00:00:00";
         DateTime start = DateTime.parse(startingDateString);
-        trainingDates = trainingDates.where((d) => start.isBefore(d)).toList();
+        trainingDates = trainingDates
+            .where((d) => d.isAfter(start) || d.isAtSameMomentAs(start))
+            .toList();
       }
       if (endingDate != null) {
         var tokens = endingDate!.split("-");
         String endingDateString =
             "${tokens[2]}-${tokens[1]}-${tokens[0]}T00:00:00";
         DateTime end = DateTime.parse(endingDateString);
-        trainingDates = trainingDates.where((d) => end.isAfter(d)).toList();
+        trainingDates = trainingDates
+            .where((d) => d.isBefore(end) || d.isAtSameMomentAs(end))
+            .toList();
       }
 
       List<List<double>> muscleHistoryScore = [];
       for (var day in trainingDates) {
-        var trainings = await db.getTrainings(day);
-        List<double> dailyMuscleScores = [
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0
-        ]; // very static and nasty
-        for (var exerciseSet in trainings) {
-          String exerciseName = exerciseSet.exercise;
-          List<Tuple2<int, double>>? muscleInvolved =
-              exerciseMapping[exerciseName];
-          if (muscleInvolved != null) {
-            for (Tuple2<int, double> pair in muscleInvolved) {
-              dailyMuscleScores[pair.item1] += pair.item2;
+        // Filter training sets for this specific day
+        var dayTrainingSets = allTrainingSets.where((trainingSet) {
+          try {
+            final date = DateTime.parse(trainingSet['date']);
+            return date.year == day.year &&
+                date.month == day.month &&
+                date.day == day.day &&
+                trainingSet['set_type'] > 0; // Only count work sets
+          } catch (e) {
+            return false;
+          }
+        }).toList();
+
+        List<double> dailyMuscleScores = List.filled(14, 0.0);
+
+        for (var trainingSet in dayTrainingSets) {
+          // Use exercise_name from the enriched training set
+          String? exerciseName = trainingSet['exercise_name'];
+          if (exerciseName != null) {
+            List<Tuple2<int, double>>? muscleInvolved =
+                exerciseMapping[exerciseName];
+            if (muscleInvolved != null) {
+              for (Tuple2<int, double> pair in muscleInvolved) {
+                if (pair.item1 < dailyMuscleScores.length) {
+                  dailyMuscleScores[pair.item1] += pair.item2;
+                }
+              }
             }
           }
         }
         muscleHistoryScore.add(dailyMuscleScores);
       }
+
+      // Clear and rebuild chart data
+      barChartStatistics.clear();
       for (var i = 0; i < muscleHistoryScore.length; ++i) {
-        var currentScore = muscleHistoryScore[i]; // convert to accumulated
+        var currentScore = muscleHistoryScore[i];
         List<double> accumulatedScore = [0.0];
         for (var d in currentScore) {
           accumulatedScore.add(accumulatedScore.last + d);
@@ -224,7 +324,15 @@ class _StatisticsScreen extends State<StatisticsScreen> {
             .add(generateBars(i, accumulatedScore, barChartMuscleColors));
       }
       globals.muscleHistoryScore = muscleHistoryScore;
+
+      // Trigger UI update
+      if (mounted) {
+        setState(() {
+          // Data has been updated
+        });
+      }
     } catch (e) {
+      print('Error updating bar statistics: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error updating statistics: $e')),
@@ -237,42 +345,185 @@ class _StatisticsScreen extends State<StatisticsScreen> {
   void initState() {
     super.initState();
     _loadStatistics();
+
+    // Listen for route changes to refresh data when returning to this screen
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        // Add a listener to refresh when data might have changed
+        userService.authStateNotifier.addListener(_onDataChanged);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    userService.authStateNotifier.removeListener(_onDataChanged);
+    super.dispose();
+  }
+
+  void _onDataChanged() {
+    if (mounted) {
+      // Invalidate cache when data changes externally (e.g., new workouts added)
+      _invalidateCache();
+      _loadStatistics();
+    }
+  }
+
+  // Add this method to be called when navigating back to the screen
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Invalidate cache and refresh data when navigating back from other screens
+    if (mounted) {
+      _invalidateCache();
+      _loadStatistics();
+    }
   }
 
   Future<void> _loadStatistics() async {
     try {
-      // ignore: no_leading_underscores_for_local_identifiers
-      List<DateTime> _trainingDates = await db.getTrainingDates("");
       setState(() {
-        numberOfTrainingDays = _trainingDates.length;
-        if (numberOfTrainingDays == 0) {
-          return;
-        }
-        // var timeDiff = _trainingDates.first.difference(_trainingDates.last).inDays;
-        Period diff = LocalDate.dateTime(_trainingDates.last)
-            .periodSince(LocalDate.dateTime(_trainingDates.first));
-        trainingDuration =
-            "Over the period of ${diff.months} month and ${diff.days} days";
-        var firstWeek = weekNumber(_trainingDates.first);
-        var lastWeek = weekNumber(_trainingDates.last);
-        List<int> trainingsPerWeek = [];
-        for (int i = firstWeek; i < lastWeek + 1; ++i) {
-          trainingsPerWeek.add(0);
-        }
-        for (var d in _trainingDates) {
-          trainingDates.add(DateFormat('dd-MM-yyyy').format(d));
-          trainingsPerWeek[weekNumber(d) - firstWeek] += 1;
-        }
-        List<FlSpot> spots = [];
-        for (int i = 0; i < trainingsPerWeek.length; ++i) {
-          spots.add(FlSpot(
-              (i + firstWeek).toDouble(), trainingsPerWeek[i].toDouble()));
-        }
-        trainingsPerWeekChart.add(LineChartBarData(spots: spots));
+        isLoading = true;
       });
 
+      // Get all training sets from UserService with caching
+      final allTrainingSets = await _getTrainingSetsWithCache();
+
+      // Check if we have any training sets at all
+      if (allTrainingSets.isEmpty) {
+        setState(() {
+          isLoading = false;
+          numberOfTrainingDays = 0;
+          trainingDuration = "No training data available";
+          trainingDates.clear();
+          trainingsPerWeekChart.clear();
+          barChartStatistics.clear();
+          heatMapMulti.clear();
+        });
+        return;
+      }
+
+      // Extract unique training dates
+      Set<DateTime> uniqueDates = {};
+      for (var trainingSet in allTrainingSets) {
+        try {
+          final date = DateTime.parse(trainingSet['date']);
+          // Only count work sets (set_type > 0), not warmups
+          if (trainingSet['set_type'] > 0) {
+            uniqueDates.add(DateTime(date.year, date.month, date.day));
+          }
+        } catch (e) {
+          print('Error parsing date: $e');
+        }
+      }
+
+      List<DateTime> _trainingDates = uniqueDates.toList()..sort();
+
+      // Apply date filtering to training dates for the weekly chart
+      List<DateTime> filteredTrainingDates = List.from(_trainingDates);
+
+      if (startingDate != null) {
+        var tokens = startingDate!.split("-");
+        String startingDateString =
+            "${tokens[2]}-${tokens[1]}-${tokens[0]}T00:00:00";
+        DateTime start = DateTime.parse(startingDateString);
+        filteredTrainingDates = filteredTrainingDates
+            .where((d) => d.isAfter(start) || d.isAtSameMomentAs(start))
+            .toList();
+      }
+      if (endingDate != null) {
+        var tokens = endingDate!.split("-");
+        String endingDateString =
+            "${tokens[2]}-${tokens[1]}-${tokens[0]}T00:00:00";
+        DateTime end = DateTime.parse(endingDateString);
+        filteredTrainingDates = filteredTrainingDates
+            .where((d) => d.isBefore(end) || d.isAtSameMomentAs(end))
+            .toList();
+      }
+
+      // Use filtered dates for calculations
+      numberOfTrainingDays = filteredTrainingDates.length;
+      if (numberOfTrainingDays == 0) {
+        setState(() {
+          isLoading = false;
+          trainingDuration = "No work sets found in selected date range";
+          trainingDates.clear();
+          trainingsPerWeekChart.clear();
+          barChartStatistics.clear();
+          heatMapMulti.clear();
+        });
+        return;
+      }
+
+      Period diff = LocalDate.dateTime(filteredTrainingDates.last)
+          .periodSince(LocalDate.dateTime(filteredTrainingDates.first));
+      trainingDuration =
+          "Over the period of ${diff.months} month and ${diff.days} days";
+
+      // Create a map to count trainings per week using filtered dates
+      Map<int, int> trainingsPerWeekMap = {};
+
+      for (var date in filteredTrainingDates) {
+        int week = weekNumber(date);
+        int year = date.year;
+        // Create a unique key combining year and week to handle year boundaries
+        int weekKey = year * 100 + week;
+
+        trainingsPerWeekMap[weekKey] = (trainingsPerWeekMap[weekKey] ?? 0) + 1;
+      }
+
+      // Sort week keys and create continuous data
+      List<int> sortedWeekKeys = trainingsPerWeekMap.keys.toList()..sort();
+
+      if (sortedWeekKeys.isEmpty) {
+        setState(() {
+          isLoading = false;
+          trainingsPerWeekChart.clear();
+        });
+        return;
+      }
+
+      // Create spots for the line chart
+      List<FlSpot> spots = [];
+      for (int i = 0; i < sortedWeekKeys.length; i++) {
+        int weekKey = sortedWeekKeys[i];
+        int count = trainingsPerWeekMap[weekKey] ?? 0;
+        spots.add(FlSpot(i.toDouble(), count.toDouble()));
+      }
+
+      // Use original training dates for dropdown menus (not filtered)
+      trainingDates.clear();
+      for (var d in _trainingDates) {
+        trainingDates.add(DateFormat('dd-MM-yyyy').format(d));
+      }
+
+      trainingsPerWeekChart.clear();
+      trainingsPerWeekChart.add(LineChartBarData(
+        spots: spots,
+        isCurved: true,
+        color: Colors.blue,
+        barWidth: 2,
+        isStrokeCapRound: true,
+        belowBarData: BarAreaData(show: false),
+        dotData: const FlDotData(show: true),
+      ));
+
       await updateBarStatistics();
+
+      setState(() {
+        isLoading = false;
+      });
     } catch (e) {
+      print('Error loading statistics: $e');
+      setState(() {
+        isLoading = false;
+        numberOfTrainingDays = 0;
+        trainingDuration = "Error loading data";
+        trainingDates.clear();
+        trainingsPerWeekChart.clear();
+        barChartStatistics.clear();
+        heatMapMulti.clear();
+      });
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error loading statistics: $e')),
@@ -283,27 +534,91 @@ class _StatisticsScreen extends State<StatisticsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (isLoading) {
+      return Scaffold(
+        appBar: AppBar(
+          leading: InkWell(
+            onTap: () {
+              Navigator.pop(context);
+            },
+            child: const Icon(
+              Icons.arrow_back_ios,
+            ),
+          ),
+          title: const Text("Statistics"),
+        ),
+        body: const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
+    // Handle empty data case
+    if (numberOfTrainingDays == 0) {
+      return Scaffold(
+        appBar: AppBar(
+          leading: InkWell(
+            onTap: () {
+              Navigator.pop(context);
+            },
+            child: const Icon(
+              Icons.arrow_back_ios,
+            ),
+          ),
+          title: const Text("Statistics"),
+        ),
+        body: const Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.bar_chart,
+                size: 64,
+                color: Colors.grey,
+              ),
+              SizedBox(height: 16),
+              Text(
+                "No training data available",
+                style: TextStyle(fontSize: 18, color: Colors.grey),
+              ),
+              SizedBox(height: 8),
+              Text(
+                "Start adding workouts to see your statistics",
+                style: TextStyle(fontSize: 14, color: Colors.grey),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     List<List> muscleHistoryScore = globals.muscleHistoryScore;
 
     List<double> muscleHistoryScoreCum = [];
-    if (muscleHistoryScore.isNotEmpty) {
+    if (muscleHistoryScore.isNotEmpty && muscleHistoryScore[0].isNotEmpty) {
       for (int i = 0; i < muscleHistoryScore[0].length; i++) {
         double item = 0;
         for (int j = 0; j < muscleHistoryScore.length; j++) {
-          item = item +
-              muscleHistoryScore[j]
-                  [i]; //adds all values from all the lists in the list.
+          if (i < muscleHistoryScore[j].length) {
+            item = item + muscleHistoryScore[j][i];
+          }
         }
         muscleHistoryScoreCum.add(item);
       }
-      var highestValue = muscleHistoryScoreCum.reduce(max);
-      heatMapMulti = [];
-      for (int i = 0; i < muscleHistoryScoreCum.length; i++) {
-        heatMapMulti.add(muscleHistoryScoreCum[i] /
-            highestValue); //percentage of muscle usage in relation to highest for the heatmap.
+
+      if (muscleHistoryScoreCum.isNotEmpty) {
+        var highestValue = muscleHistoryScoreCum.reduce(max);
+        heatMapMulti = [];
+        for (int i = 0; i < muscleHistoryScoreCum.length; i++) {
+          heatMapMulti.add(
+              highestValue > 0 ? muscleHistoryScoreCum[i] / highestValue : 0.0);
+        }
       }
-      //print(heatMapMulti);
+    } else {
+      // Initialize empty heatmap data
+      heatMapMulti = List.filled(14, 0.0);
     }
+
     //print(highestValue);
     //print(globals.muscleHistoryScore);
     //print(heatMapCood);
@@ -321,56 +636,114 @@ class _StatisticsScreen extends State<StatisticsScreen> {
           title: const Text("Statistics"),
         ),
         body: ListView(children: <Widget>[
-          Text("Selected Training Interval", style: subStyle),
+          Text(
+            "Selected Training Interval",
+            style: subStyle,
+            textAlign: TextAlign.center,
+          ),
           const SizedBox(height: 5),
-          Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-            const Spacer(),
-            DropdownMenu<String>(
-              label: const Text("Start"),
-              onSelected: (String? date) {
-                startingDate = date!;
-                updateBarStatistics();
-              },
-              dropdownMenuEntries:
-                  trainingDates.map<DropdownMenuEntry<String>>((String name) {
-                return DropdownMenuEntry<String>(value: name, label: name);
-              }).toList(),
-              menuHeight: 200,
-              inputDecorationTheme: InputDecorationTheme(
-                isDense: true,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-                constraints: BoxConstraints.tight(const Size.fromHeight(40)),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(width: 16),
+              // Left side - dropdowns with constraints
+              Flexible(
+                flex: 3,
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(
+                    minWidth: 250,
+                    maxWidth: 400,
+                  ),
+                  child: Column(
+                    children: [
+                      DropdownMenu<String>(
+                        label: const Text("Start Date"),
+                        onSelected: (String? date) {
+                          _tempStartingDate = date;
+                        },
+                        dropdownMenuEntries: trainingDates
+                            .map<DropdownMenuEntry<String>>((String name) {
+                          return DropdownMenuEntry<String>(
+                              value: name, label: name);
+                        }).toList(),
+                        menuHeight: 200,
+                        width: double.infinity,
+                        inputDecorationTheme: InputDecorationTheme(
+                          isDense: true,
+                          contentPadding:
+                              const EdgeInsets.symmetric(horizontal: 16),
+                          constraints:
+                              BoxConstraints.tight(const Size.fromHeight(40)),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      DropdownMenu<String>(
+                        label: const Text("End Date"),
+                        onSelected: (String? date) {
+                          _tempEndingDate = date;
+                        },
+                        dropdownMenuEntries: trainingDates
+                            .map<DropdownMenuEntry<String>>((String name) {
+                          return DropdownMenuEntry<String>(
+                              value: name, label: name);
+                        }).toList(),
+                        menuHeight: 200,
+                        width: double.infinity,
+                        inputDecorationTheme: InputDecorationTheme(
+                          isDense: true,
+                          contentPadding:
+                              const EdgeInsets.symmetric(horizontal: 16),
+                          constraints:
+                              BoxConstraints.tight(const Size.fromHeight(40)),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-            const Spacer(),
-            DropdownMenu<String>(
-              label: const Text("End"),
-              onSelected: (String? date) {
-                endingDate = date!;
-                updateBarStatistics();
-              },
-              dropdownMenuEntries:
-                  trainingDates.map<DropdownMenuEntry<String>>((String name) {
-                return DropdownMenuEntry<String>(value: name, label: name);
-              }).toList(),
-              menuHeight: 200,
-              inputDecorationTheme: InputDecorationTheme(
-                isDense: true,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-                constraints: BoxConstraints.tight(const Size.fromHeight(40)),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
+              const SizedBox(width: 16),
+              // Right side - button with constraints
+              ConstrainedBox(
+                constraints: const BoxConstraints(
+                  minWidth: 80,
+                  maxWidth: 120,
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 25),
+                  child: ElevatedButton(
+                    onPressed: () {
+                      setState(() {
+                        startingDate = _tempStartingDate;
+                        endingDate = _tempEndingDate;
+                      });
+                      // Call _loadStatistics() instead of just updateBarStatistics()
+                      // This will update both the line chart and bar chart with the new date filters
+                      _loadStatistics();
+                    },
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: const Size(double.infinity, 40),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: const Text("Confirm"),
+                  ),
                 ),
               ),
-            ),
-            const Spacer(),
-          ]),
+              const SizedBox(width: 16),
+            ],
+          ),
           const SizedBox(height: 20),
-          Text("Number of training days: $numberOfTrainingDays"),
-          Text(trainingDuration),
+          Text("Number of training days: $numberOfTrainingDays",
+              style: subStyle, textAlign: TextAlign.center),
+          Text(trainingDuration, style: subStyle, textAlign: TextAlign.center),
           const Divider(),
           Text(
             "Number of Trainings per Week",
@@ -488,49 +861,58 @@ class _StatisticsScreen extends State<StatisticsScreen> {
           const SizedBox(
             height: 20,
           ),
-
-          SizedBox(
-              height: MediaQuery.of(context).size.height * 0.7,
-              width: 100,
-              child: Stack(
-                //width: MediaQuery.of(context).size.width,
-                fit: StackFit.expand,
-                // width: MediaQuery.of(context).size.width,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Transform.scale(
-                        scaleX: -1,
-                        child: Image(
+          // ConstrainedBox(
+          //     constraints: const BoxConstraints(
+          //       minWidth: 150,
+          //       maxWidth: 200,
+          // ),
+          // child:
+          Center(
+            child: SizedBox(
+                height: MediaQuery.of(context).size.height * 0.7,
+                //width: 100,
+                child: Stack(
+                  //width: MediaQuery.of(context).size.width,
+                  fit: StackFit.expand,
+                  // width: MediaQuery.of(context).size.width,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Transform.scale(
+                          scaleX: -1,
+                          child: Image(
+                              fit: BoxFit.fill,
+                              width: MediaQuery.of(context).size.width * 0.35,
+                              // height: MediaQuery.of(context).size.height * 0.7,
+                              image: const AssetImage(
+                                  'images/muscles/Front_bg.png')),
+                        ),
+                        Image(
                             fit: BoxFit.fill,
                             width: MediaQuery.of(context).size.width * 0.35,
-                            // height: MediaQuery.of(context).size.height * 0.7,
-                            image: const AssetImage(
-                                'images/muscles/Front_bg.png')),
-                      ),
-                      Image(
-                          fit: BoxFit.fill,
-                          width: MediaQuery.of(context).size.width * 0.35,
-                          //   height: MediaQuery.of(context).size.height * 0.7,
-                          image:
-                              const AssetImage('images/muscles/Back_bg.png')),
-                    ],
-                  ),
-                  for (int i = 0; i < heatMapMulti.length; i++)
-                    heatDot(
-                        text: "${(heatMapMulti[i] * 100).round()}%",
-                        x: (MediaQuery.of(context).size.width *
-                                heatMapCood[i][0]) -
-                            ((30 + (50 * heatMapMulti[i])) / 2),
-                        y: (MediaQuery.of(context).size.height *
-                                heatMapCood[i][1]) -
-                            ((30 + (50 * heatMapMulti[i])) / 2),
-                        dia: 30 + (50 * heatMapMulti[i]),
-                        opa: heatMapMulti[i] == 0 ? 0 : 200,
-                        lerp: heatMapMulti[i]),
-                ],
-              )),
+                            //   height: MediaQuery.of(context).size.height * 0.7,
+                            image:
+                                const AssetImage('images/muscles/Back_bg.png')),
+                      ],
+                    ),
+                    for (int i = 0; i < heatMapMulti.length; i++)
+                      heatDot(
+                          text: "${(heatMapMulti[i] * 100).round()}%",
+                          x: (MediaQuery.of(context).size.width *
+                                  heatMapCood[i][0]) -
+                              ((30 + (50 * heatMapMulti[i])) / 2),
+                          y: (MediaQuery.of(context).size.height *
+                                  heatMapCood[i][1]) -
+                              ((30 + (50 * heatMapMulti[i])) / 2),
+                          dia: 30 + (50 * heatMapMulti[i]),
+                          opa: heatMapMulti[i] == 0 ? 0 : 200,
+                          lerp: heatMapMulti[i]),
+                  ],
+                )
+                // )
+                ),
+          ),
         ]));
   }
 }
