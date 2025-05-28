@@ -128,6 +128,8 @@ class _WorkoutSetupScreenState extends State<WorkoutSetupScreen> {
           units: units.map((unit) => unit.toJson()).toList(),
         );
       }
+      // Notify that data has changed
+      UserService().notifyDataChanged();
       Navigator.pop(context);
     } catch (e) {
       print('Error saving workout: $e');

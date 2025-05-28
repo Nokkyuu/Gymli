@@ -107,54 +107,23 @@ class _ExerciseScreen extends State<ExerciseScreen> {
   // Cache exercise and training data to avoid redundant API calls
   ApiExercise? _currentExercise;
   List<ApiTrainingSet> _cachedTodaysTrainingSetsForExercise = [];
-
-  // Complete historical training data cache for efficient graph updates
-  List<ApiTrainingSet> _cachedAllTrainingSetsForExercise = [];
-  bool _isHistoricalDataCached = false;
-  Future<void> _loadTodaysTrainingSets() async {
-    if (_isLoadingTrainingSets) return;
-
-    setState(() {
-      _isLoadingTrainingSets = true;
-    });
-
-    try {
-      final userService = UserService();
-      final trainingSets = await userService.getTrainingSets();
-
-      final todaysItems = trainingSets
-          .map((item) => ApiTrainingSet.fromJson(item))
-          .where((item) =>
-              item.exerciseName == widget.exerciseName &&
-              item.date.day == DateTime.now().day &&
-              item.date.month == DateTime.now().month &&
-              item.date.year == DateTime.now().year)
-          .toList();
-
-      setState(() {
-        _todaysTrainingSets = todaysItems;
-        _isLoadingTrainingSets = false;
-      });
-    } catch (e) {
-      print('Error loading today\'s training sets: $e');
-      setState(() {
-        _isLoadingTrainingSets = false;
-      });
-    }
-  }
-
   Future<void> _deleteTrainingSet(ApiTrainingSet trainingSet) async {
     try {
       final userService = UserService();
       await userService.deleteTrainingSet(trainingSet.id!);
 
-      // Update cached data
+      // Update cached data immediately
       _cachedTodaysTrainingSetsForExercise
           .removeWhere((set) => set.id == trainingSet.id);
       _todaysTrainingSets.removeWhere((set) => set.id == trainingSet.id);
 
-      // Update graph with complete historical data from API
-      await _updateGraphFromAPI();
+      // Update graph and UI in parallel for better performance
+      await Future.wait([
+        _updateGraphFromCachedTrainingSets(),
+        Future(() => setState(() {
+              // UI will reflect the updated _todaysTrainingSets
+            })),
+      ]);
     } catch (e) {
       print('Error deleting training set: $e');
     }
@@ -165,53 +134,65 @@ class _ExerciseScreen extends State<ExerciseScreen> {
     try {
       print(
           'Adding set: exercise=$exerciseName, weight=$weight, reps=$repetitions, setType=$setType, when=$when');
+
+      // Use cached exercise data instead of API call
+      if (_currentExercise == null || _currentExercise!.name != exerciseName) {
+        print('Error: Exercise data not cached properly');
+        return -1;
+      }
+
       final userService = UserService();
-      final exercises = await userService.getExercises();
-      final exerciseData = exercises.firstWhere(
-        (item) => item['name'] == exerciseName,
-        orElse: () => <String, dynamic>{},
+      await userService.createTrainingSet(
+        exerciseId: _currentExercise!.id!,
+        date: when,
+        weight: weight,
+        repetitions: repetitions,
+        setType: setType,
+        baseReps: _currentExercise!.defaultRepBase,
+        maxReps: _currentExercise!.defaultRepMax,
+        increment: _currentExercise!.defaultIncrement,
+        machineName: "",
       );
 
-      if (exerciseData.isNotEmpty) {
-        final exercise = ApiExercise.fromJson(exerciseData);
-        await userService.createTrainingSet(
-          exerciseId: exercise.id!,
-          date: when,
-          weight: weight,
-          repetitions: repetitions,
-          setType: setType,
-          baseReps: exercise.defaultRepBase,
-          maxReps: exercise.defaultRepMax,
-          increment: exercise.defaultIncrement,
-          machineName: "",
-        );
-        print('Training set created successfully');
+      // Only update cache AFTER successful API call
+      final newSet = ApiTrainingSet(
+        userName: _currentExercise!.userName,
+        exerciseId: _currentExercise!.id!,
+        exerciseName: exerciseName,
+        date: DateTime.parse(when),
+        weight: weight,
+        repetitions: repetitions,
+        setType: setType,
+        baseReps: _currentExercise!.defaultRepBase,
+        maxReps: _currentExercise!.defaultRepMax,
+        increment: _currentExercise!.defaultIncrement,
+      );
 
-        // Update cached data with the new set
-        final newSet = ApiTrainingSet(
-          userName: exercise.userName,
-          exerciseId: exercise.id!,
-          exerciseName: exerciseName,
-          date: DateTime.parse(when),
-          weight: weight,
-          repetitions: repetitions,
-          setType: setType,
-          baseReps: exercise.defaultRepBase,
-          maxReps: exercise.defaultRepMax,
-          increment: exercise.defaultIncrement,
-          machineName: "",
-        );
-        _cachedTodaysTrainingSetsForExercise.add(newSet);
-        _todaysTrainingSets.add(newSet);
+      _cachedTodaysTrainingSetsForExercise.add(newSet);
+      _todaysTrainingSets.add(newSet);
 
-        // Update graph with complete historical data from API
-        await _updateGraphFromAPI();
-      } else {
-        print('Exercise not found: $exerciseName');
-      }
+      // Update graph and UI in parallel for better performance
+      await Future.wait([
+        Future(() => _updateGraphFromSingleNewSet(newSet)),
+        Future(() => setState(() {
+              // UI will reflect the updated _todaysTrainingSets
+            })),
+      ]);
+
       return 0;
     } catch (e) {
       print('Error adding training set: $e');
+
+      // Show error to user
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to save training set: $e'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
       return -1;
     }
   }
@@ -951,8 +932,9 @@ class _ExerciseScreen extends State<ExerciseScreen> {
   @override
   Widget build(BuildContext context) {
     WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
-    TextEditingController dateInputController =
-        TextEditingController(text: DateTime.now().toString());
+    TextEditingController dateInputController = TextEditingController(
+        text: DateTime.now().toIso8601String() // Use ISO format instead
+        );
 
     return Scaffold(
       resizeToAvoidBottomInset: false,
@@ -1207,27 +1189,37 @@ class _ExerciseScreen extends State<ExerciseScreen> {
                   double newWeight =
                       weightKg.toDouble() + weightDg.toDouble() / 100.0;
 
-                  // Add the set
-                  await addSet(widget.exerciseName, newWeight, repetitions,
-                      _selected.first.index, dateInputController.text);
+                  // Show loading indicator
+                  setState(() {
+                    // You might want to add a loading state
+                  });
 
-                  // Reload training sets after adding and update cache
-                  await _loadTodaysTrainingSets();
+                  final result = await addSet(
+                      widget.exerciseName,
+                      newWeight,
+                      repetitions,
+                      _selected.first.index,
+                      dateInputController.text);
 
-                  // Update cache for this exercise specifically
-                  if (_currentExercise != null) {
-                    _cachedTodaysTrainingSetsForExercise = _todaysTrainingSets
-                        .where((t) => t.exerciseName == widget.exerciseName)
-                        .toList();
+                  if (result == 0) {
+                    // Success - update UI
+                    _updateTextsWithData(_todaysTrainingSets);
+                    lastActivity = DateTime.now();
+
+                    // Show success feedback
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Training set saved successfully!'),
+                          backgroundColor: Colors.green,
+                          duration: Duration(seconds: 1),
+                        ),
+                      );
+                    }
+                  } else {
+                    // Failure was already handled in addSet, but we could add additional handling here
+                    print('Submit failed - training set not saved');
                   }
-
-                  // Update texts with the new data
-                  _updateTextsWithData(_todaysTrainingSets);
-
-                  // Update graph using cached data
-                  updateGraph();
-
-                  lastActivity = DateTime.now();
                 }),
             const Divider(),
             Expanded(
@@ -1253,20 +1245,8 @@ class _ExerciseScreen extends State<ExerciseScreen> {
                                 trailing: IconButton(
                                     icon: const Icon(Icons.delete),
                                     onPressed: () async {
+                                      // Delete training set (this already updates cache and graph efficiently)
                                       await _deleteTrainingSet(item);
-                                      await _loadTodaysTrainingSets(); // Reload after deletion
-
-                                      // Update cache for this exercise specifically
-                                      if (_currentExercise != null) {
-                                        _cachedTodaysTrainingSetsForExercise =
-                                            _todaysTrainingSets
-                                                .where((t) =>
-                                                    t.exerciseName ==
-                                                    widget.exerciseName)
-                                                .toList();
-                                      }
-
-                                      updateGraph();
                                     }),
                               );
                             })
@@ -1279,5 +1259,50 @@ class _ExerciseScreen extends State<ExerciseScreen> {
             const SizedBox(height: 20),
           ]),
     );
+  }
+
+  // Efficiently update graph with a single new training set
+  void _updateGraphFromSingleNewSet(ApiTrainingSet newSet) {
+    try {
+      // Only update if this is a work set (not warmup)
+      if (newSet.setType == 0) return;
+
+      final dateKey =
+          "${newSet.date.year}-${newSet.date.month.toString().padLeft(2, '0')}-${newSet.date.day.toString().padLeft(2, '0')}";
+      final today = DateTime.now();
+      final todayKey =
+          "${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}";
+
+      // If this is today's set, update the graph
+      if (dateKey == todayKey) {
+        // Find if we already have a point for today
+        final todayIndex = trainingGraphs[0].indexWhere((spot) => spot.x == 0);
+        final score = globals.calculateScore(newSet);
+
+        if (todayIndex != -1) {
+          // Update existing point if this set is better
+          if (score > trainingGraphs[0][todayIndex].y) {
+            trainingGraphs[0][todayIndex] = FlSpot(0, score);
+            graphToolTip[0] = [
+              "${newSet.weight}kg @ ${newSet.repetitions}reps"
+            ];
+          }
+        } else {
+          // Add new point for today
+          trainingGraphs[0].add(FlSpot(0, score));
+          graphToolTip[0] = ["${newSet.weight}kg @ ${newSet.repetitions}reps"];
+        }
+
+        // Update bar data and UI
+        _updateBarDataFromTrainingGraphs();
+        setState(() {
+          // Graph updated
+        });
+      }
+    } catch (e) {
+      print('Error updating graph with new set: $e');
+      // Fallback to full graph update if needed
+      updateGraph();
+    }
   }
 }

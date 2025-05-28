@@ -99,6 +99,8 @@ void add_exercise(String exerciseName, ExerciseDevice chosenDevice, int minRep,
       forearms: muscleIntensities.length > 12 ? muscleIntensities[12] : 0.0,
       calves: muscleIntensities.length > 13 ? muscleIntensities[13] : 0.0,
     );
+    // Notify that data has changed
+    UserService().notifyDataChanged();
   } catch (e) {
     print('Error adding exercise: $e');
   }
