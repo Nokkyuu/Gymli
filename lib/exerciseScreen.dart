@@ -31,6 +31,7 @@ import 'globals.dart' as globals;
 import 'package:flutter/services.dart';
 import 'user_service.dart';
 import 'api_models.dart';
+import 'responsive_helper.dart';
 
 enum ExerciseType { warmup, work }
 
@@ -969,218 +970,260 @@ class _ExerciseScreen extends State<ExerciseScreen> {
                 },
                 icon: const Icon(Icons.list))
           ]),
-      body: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          mainAxisSize: MainAxisSize.max,
-          children: <Widget>[
-            SizedBox(
-                width: MediaQuery.of(context).size.width,
-                height: MediaQuery.of(context).size.height * 0.20,
-                child: Padding(
-                  padding: const EdgeInsets.all(10.0),
-                  child: Padding(
-                      padding: const EdgeInsets.only(
-                          right: 10.0, top: 10.0, left: 0.0),
-                      child: LineChart(LineChartData(
-                        titlesData: FlTitlesData(
-                          topTitles: const AxisTitles(
-                              sideTitles: SideTitles(showTitles: false)),
-                          rightTitles: const AxisTitles(
-                              sideTitles: SideTitles(showTitles: false)),
-                          bottomTitles: AxisTitles(
-                            sideTitles: SideTitles(
-                              showTitles: true,
-                              reservedSize: 30,
-                              interval: maxHistoryDistance > 30
-                                  ? 14
-                                  : 7, // Show dates every 7-14 days
-                              getTitlesWidget: (double value, TitleMeta meta) {
-                                // Convert negative x-value back to actual date using most recent training date
-                                if (mostRecentTrainingDate == null)
-                                  return const Text('');
-                                final daysAgo = value.abs().round();
-                                final date = mostRecentTrainingDate!
-                                    .subtract(Duration(days: daysAgo));
-                                return Transform.rotate(
-                                  angle: -0.5,
-                                  child: Text(
-                                    '${date.day}/${date.month}',
-                                    style: const TextStyle(fontSize: 10),
-                                  ),
-                                );
-                              },
-                            ),
+      body: ResponsiveHelper.isWebMobile(context)
+          ? _buildMobileLayout(dateInputController)
+          : _buildDesktopLayout(dateInputController),
+    );
+  }
+
+  Widget _buildDesktopLayout(TextEditingController dateInputController) {
+    return Row(
+      children: [
+        // Left side - Main workout interface
+        Expanded(
+          flex: 2,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.max,
+            children: [
+              _buildGraphSection(),
+              _buildGraphLegend(),
+              const Divider(),
+              _buildExerciseControls(dateInputController),
+              const SizedBox(height: 20),
+            ],
+          ),
+        ),
+        // Right side - Training sets list
+        Container(
+          width: 400,
+          decoration: const BoxDecoration(
+            border: Border(left: BorderSide(color: Colors.grey, width: 1)),
+          ),
+          child: Column(
+            children: [
+              const Padding(
+                padding: EdgeInsets.all(16.0),
+                child: Text(
+                  "Today's Training Sets",
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+              ),
+              const Divider(),
+              Expanded(child: _buildTrainingSetsList()),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMobileLayout(TextEditingController dateInputController) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      mainAxisSize: MainAxisSize.max,
+      children: [
+        _buildGraphSection(),
+        _buildGraphLegend(),
+        const Divider(),
+        _buildExerciseControls(dateInputController),
+        const Divider(),
+        Expanded(child: _buildTrainingSetsList()),
+        const SizedBox(height: 20),
+      ],
+    );
+  }
+
+  Widget _buildGraphSection() {
+    return SizedBox(
+        width: MediaQuery.of(context).size.width,
+        height: MediaQuery.of(context).size.height * 0.20,
+        child: Padding(
+          padding: const EdgeInsets.all(10.0),
+          child: Padding(
+              padding: const EdgeInsets.only(right: 10.0, top: 10.0, left: 0.0),
+              child: LineChart(LineChartData(
+                titlesData: FlTitlesData(
+                  topTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false)),
+                  rightTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false)),
+                  bottomTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 30,
+                      interval: maxHistoryDistance > 30
+                          ? 14
+                          : 7, // Show dates every 7-14 days
+                      getTitlesWidget: (double value, TitleMeta meta) {
+                        // Convert negative x-value back to actual date using most recent training date
+                        if (mostRecentTrainingDate == null)
+                          return const Text('');
+                        final daysAgo = value.abs().round();
+                        final date = mostRecentTrainingDate!
+                            .subtract(Duration(days: daysAgo));
+                        return Transform.rotate(
+                          angle: -0.5,
+                          child: Text(
+                            '${date.day}/${date.month}',
+                            style: const TextStyle(fontSize: 10),
                           ),
-                        ),
-                        clipData: const FlClipData.all(),
-                        lineBarsData: barData,
-                        lineTouchData: LineTouchData(
-                            touchTooltipData: LineTouchTooltipData(
-                          tooltipRoundedRadius: 0.0,
-                          showOnTopOfTheChartBoxArea: false,
-                          fitInsideVertically: true,
-                          tooltipMargin: 0,
-                          getTooltipItems: (value) {
-                            return value.map((e) {
-                              return LineTooltipItem(
-                                  graphToolTip[e.x.toInt()]![e.barIndex],
-                                  const TextStyle(
-                                    fontSize: 10,
-                                    color: Colors.white,
-                                  ));
-                            }).toList();
-                          },
-                        )),
-                        minY: minScore - 5.0,
-                        maxY: maxScore + 5.0,
-                        minX: -maxHistoryDistance,
-                        maxX: 0,
-                      ))),
-                )),
-            Row(
-              // mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: (() {
-                var boxdim = 8.0;
-                List<Widget> widgets = [
-                  const SizedBox(width: 20),
-                  const Text("Sets", style: TextStyle(fontSize: 8.0)),
-                  const SizedBox(width: 10)
-                ];
-                for (int i = 0; i < 4; i++) {
-                  widgets.add(Wrap(
-                      crossAxisAlignment: WrapCrossAlignment.center,
-                      children: [
-                        Container(
-                            width: boxdim,
-                            height: boxdim,
-                            color: graphColors[i]),
-                        Text("  $i", style: const TextStyle(fontSize: 8.0)),
-                        const SizedBox(width: 10)
-                      ]));
-                }
-                for (int i = 0; i < groupExercises.length; ++i) {
-                  widgets.add(Wrap(
-                      crossAxisAlignment: WrapCrossAlignment.center,
-                      children: [
-                        Container(
-                            width: boxdim,
-                            height: boxdim,
-                            color: additionalColors[i]),
-                        Text("  ${groupExercises[i]}",
-                            style: const TextStyle(fontSize: 8.0)),
-                        const SizedBox(width: 10)
-                      ]));
-                }
-                return widgets;
-              })(),
-            ),
-            // const Divider(),
-            // Row(mainAxisAlignment: MainAxisAlignment.center,
-            //   children: [
-            //     Image.asset('images/fairy.png',
-            //       fit: BoxFit.contain,
-            //       height: 18,
-            //       ),
-            //       const SizedBox(width: 10),
-            //       Text(hintText),
-            //   ],
-            // ),
-            const Divider(),
-            Padding(
-                padding: const EdgeInsets.only(left: 20, right: 20, bottom: 10),
-                child: Column(
-                  children: [
-                    const SizedBox(height: 10),
-                    SegmentedButton<ExerciseType>(
-                      showSelectedIcon: false,
-                      segments: <ButtonSegment<ExerciseType>>[
-                        ButtonSegment<ExerciseType>(
-                            value: ExerciseType.warmup,
-                            label: warmText,
-                            icon: const Icon(Icons.local_fire_department)),
-                        ButtonSegment<ExerciseType>(
-                            value: ExerciseType.work,
-                            label: workText,
-                            icon: const FaIcon(FontAwesomeIcons.handFist)),
-                      ],
-                      selected: _selected,
-                      onSelectionChanged: (newSelection) {
-                        setState(() {
-                          if (_selected.first == ExerciseType.warmup ||
-                              newSelection.first == ExerciseType.warmup) {
-                            _selected = newSelection;
-                            _updateWeightFromCachedData(); // Use cached data instead of API calls
-                          }
-                          _selected = newSelection;
-                        });
+                        );
                       },
                     ),
-                    const SizedBox(height: 10),
-                    Row(children: [
-                      const Spacer(),
-                      NumberPicker(
-                        //selectedTextStyle: TextStyle(color: Colors.black),
-                        value: weightKg,
-                        minValue: -70, maxValue: 250,
-                        haptics: true,
-                        itemHeight: itemHeight, itemWidth: itemWidth,
-                        onChanged: (value) => setState(() => weightKg = value),
-                      ),
-                      const Text(","),
-                      NumberPicker(
-                        value: weightDg,
-                        minValue: 0,
-                        maxValue: 75,
-                        step: 25,
-                        haptics: true,
-                        itemHeight: itemHeight,
-                        itemWidth: itemWidth,
-                        onChanged: (value) => setState(() => weightDg = value),
-                      ),
-                      const Text("kg"),
-                      SizedBox(
-                        height: 100,
-                        width: 100,
-                        child: ListWheelScrollView.useDelegate(
-                          controller: FixedExtentScrollController(
-                              initialItem: repetitions - 1),
-                          itemExtent: 40,
-                          physics: const FixedExtentScrollPhysics(),
-                          useMagnifier: true,
-                          magnification: 1.4,
-                          onSelectedItemChanged: (index) {
-                            setState(() {
-                              repetitions = _values[index];
-                              HapticFeedback.selectionClick();
-                              // print(_currentValue);
-                            });
-                          },
-                          childDelegate: ListWheelChildBuilderDelegate(
-                            builder: (context, index) {
-                              final value = _values[index];
-                              final color = _colorMap.containsKey(value)
-                                  ? _colorMap[value]
-                                  : Colors.black;
-                              return Center(
-                                child: Text(
-                                  value.toString(),
-                                  style: TextStyle(
-                                      color: color,
-                                      fontSize: 20,
-                                      fontFamily: 'Roboto'),
-                                ),
-                              );
-                            },
-                            childCount: _values.length,
-                          ),
-                        ),
-                      ),
-                      const Text("Reps."),
-                      const Spacer(),
-                    ])
-                  ],
+                  ),
+                ),
+                clipData: const FlClipData.all(),
+                lineBarsData: barData,
+                lineTouchData: LineTouchData(
+                    touchTooltipData: LineTouchTooltipData(
+                  tooltipRoundedRadius: 0.0,
+                  showOnTopOfTheChartBoxArea: false,
+                  fitInsideVertically: true,
+                  tooltipMargin: 0,
+                  getTooltipItems: (value) {
+                    return value.map((e) {
+                      return LineTooltipItem(
+                          graphToolTip[e.x.toInt()]![e.barIndex],
+                          const TextStyle(
+                            fontSize: 10,
+                            color: Colors.white,
+                          ));
+                    }).toList();
+                  },
                 )),
+                minY: minScore - 5.0,
+                maxY: maxScore + 5.0,
+                minX: -maxHistoryDistance,
+                maxX: 0,
+              ))),
+        ));
+  }
 
+  Widget _buildGraphLegend() {
+    return Row(
+      children: (() {
+        var boxdim = 8.0;
+        List<Widget> widgets = [
+          const SizedBox(width: 20),
+          const Text("Sets", style: TextStyle(fontSize: 8.0)),
+          const SizedBox(width: 10)
+        ];
+        for (int i = 0; i < 4; i++) {
+          widgets.add(
+              Wrap(crossAxisAlignment: WrapCrossAlignment.center, children: [
+            Container(width: boxdim, height: boxdim, color: graphColors[i]),
+            Text("  $i", style: const TextStyle(fontSize: 8.0)),
+            const SizedBox(width: 10)
+          ]));
+        }
+        for (int i = 0; i < groupExercises.length; ++i) {
+          widgets.add(
+              Wrap(crossAxisAlignment: WrapCrossAlignment.center, children: [
+            Container(
+                width: boxdim, height: boxdim, color: additionalColors[i]),
+            Text("  ${groupExercises[i]}",
+                style: const TextStyle(fontSize: 8.0)),
+            const SizedBox(width: 10)
+          ]));
+        }
+        return widgets;
+      })(),
+    );
+  }
+
+  Widget _buildExerciseControls(TextEditingController dateInputController) {
+    return Padding(
+        padding: const EdgeInsets.only(left: 20, right: 20, bottom: 10),
+        child: Column(
+          children: [
+            const SizedBox(height: 10),
+            SegmentedButton<ExerciseType>(
+              showSelectedIcon: false,
+              segments: <ButtonSegment<ExerciseType>>[
+                ButtonSegment<ExerciseType>(
+                    value: ExerciseType.warmup,
+                    label: warmText,
+                    icon: const Icon(Icons.local_fire_department)),
+                ButtonSegment<ExerciseType>(
+                    value: ExerciseType.work,
+                    label: workText,
+                    icon: const FaIcon(FontAwesomeIcons.handFist)),
+              ],
+              selected: _selected,
+              onSelectionChanged: (newSelection) {
+                setState(() {
+                  if (_selected.first == ExerciseType.warmup ||
+                      newSelection.first == ExerciseType.warmup) {
+                    _selected = newSelection;
+                    _updateWeightFromCachedData(); // Use cached data instead of API calls
+                  }
+                  _selected = newSelection;
+                });
+              },
+            ),
+            const SizedBox(height: 10),
+            Row(children: [
+              const Spacer(),
+              NumberPicker(
+                //selectedTextStyle: TextStyle(color: Colors.black),
+                value: weightKg,
+                minValue: -70, maxValue: 250,
+                haptics: true,
+                itemHeight: itemHeight, itemWidth: itemWidth,
+                onChanged: (value) => setState(() => weightKg = value),
+              ),
+              const Text(","),
+              NumberPicker(
+                value: weightDg,
+                minValue: 0,
+                maxValue: 75,
+                step: 25,
+                haptics: true,
+                itemHeight: itemHeight,
+                itemWidth: itemWidth,
+                onChanged: (value) => setState(() => weightDg = value),
+              ),
+              const Text("kg"),
+              SizedBox(
+                height: 100,
+                width: 100,
+                child: ListWheelScrollView.useDelegate(
+                  controller:
+                      FixedExtentScrollController(initialItem: repetitions - 1),
+                  itemExtent: 40,
+                  physics: const FixedExtentScrollPhysics(),
+                  useMagnifier: true,
+                  magnification: 1.4,
+                  onSelectedItemChanged: (index) {
+                    setState(() {
+                      repetitions = _values[index];
+                      HapticFeedback.selectionClick();
+                      // print(_currentValue);
+                    });
+                  },
+                  childDelegate: ListWheelChildBuilderDelegate(
+                    builder: (context, index) {
+                      final value = _values[index];
+                      final color = _colorMap.containsKey(value)
+                          ? _colorMap[value]
+                          : Colors.black;
+                      return Center(
+                        child: Text(
+                          value.toString(),
+                          style: TextStyle(
+                              color: color, fontSize: 20, fontFamily: 'Roboto'),
+                        ),
+                      );
+                    },
+                    childCount: _values.length,
+                  ),
+                ),
+              ),
+              const Text("Reps."),
+              const Spacer(),
+            ]),
+            const SizedBox(height: 20),
             ElevatedButton.icon(
                 style: const ButtonStyle(),
                 label: const Text('Submit'),
@@ -1221,44 +1264,42 @@ class _ExerciseScreen extends State<ExerciseScreen> {
                     print('Submit failed - training set not saved');
                   }
                 }),
-            const Divider(),
-            Expanded(
-                child: _isLoadingTrainingSets
-                    ? const Center(child: CircularProgressIndicator())
-                    : _todaysTrainingSets.isNotEmpty
-                        ? ListView.builder(
-                            controller: _scrollController,
-                            itemCount: _todaysTrainingSets.length,
-                            itemBuilder: (context, index) {
-                              final item = _todaysTrainingSets[index];
-                              return ListTile(
-                                leading: CircleAvatar(
-                                    radius: 17.5,
-                                    child: FaIcon(workIcons[item.setType])),
-                                dense: true,
-                                visualDensity:
-                                    const VisualDensity(vertical: -3),
-                                title: Text(
-                                    "${item.weight}kg for ${item.repetitions} reps"),
-                                subtitle: Text(
-                                    "${item.date.hour}:${item.date.minute}:${item.date.second}"),
-                                trailing: IconButton(
-                                    icon: const Icon(Icons.delete),
-                                    onPressed: () async {
-                                      // Delete training set (this already updates cache and graph efficiently)
-                                      await _deleteTrainingSet(item);
-                                    }),
-                              );
-                            })
-                        : ListView(
-                            controller: _scrollController,
-                            children: const [
-                              ListTile(title: Text("No Training yet.")),
-                            ],
-                          )),
-            const SizedBox(height: 20),
-          ]),
-    );
+          ],
+        ));
+  }
+
+  Widget _buildTrainingSetsList() {
+    return _isLoadingTrainingSets
+        ? const Center(child: CircularProgressIndicator())
+        : _todaysTrainingSets.isNotEmpty
+            ? ListView.builder(
+                controller: _scrollController,
+                itemCount: _todaysTrainingSets.length,
+                itemBuilder: (context, index) {
+                  final item = _todaysTrainingSets[index];
+                  return ListTile(
+                    leading: CircleAvatar(
+                        radius: 17.5, child: FaIcon(workIcons[item.setType])),
+                    dense: true,
+                    visualDensity: const VisualDensity(vertical: -3),
+                    title:
+                        Text("${item.weight}kg for ${item.repetitions} reps"),
+                    subtitle: Text(
+                        "${item.date.hour}:${item.date.minute}:${item.date.second}"),
+                    trailing: IconButton(
+                        icon: const Icon(Icons.delete),
+                        onPressed: () async {
+                          // Delete training set (this already updates cache and graph efficiently)
+                          await _deleteTrainingSet(item);
+                        }),
+                  );
+                })
+            : ListView(
+                controller: _scrollController,
+                children: const [
+                  ListTile(title: Text("No Training yet.")),
+                ],
+              );
   }
 
   // Efficiently update graph with a single new training set
