@@ -340,7 +340,7 @@ class TrainingSetService {
   /// [maxReps] - Maximum number of repetitions for the set
   /// [increment] - Increment value for progression
   /// [machineName] - Optional machine name used for the exercise
-  Future<void> createTrainingSet({
+  Future<Map<String, dynamic>> createTrainingSet({
     required String userName,
     required int exerciseId,
     required String date,
@@ -371,6 +371,7 @@ class TrainingSetService {
     if (response.statusCode != 200 && response.statusCode != 201) {
       throw Exception('Failed to create training set');
     }
+    return json.decode(response.body);
   }
 
   /// Creates multiple training sets in a single batch operation

@@ -64,9 +64,10 @@ class _ExerciseListScreenState extends State<ExerciseListScreen> {
 
       items = trainingSets
           .where((item) => item.exerciseName == widget.exercise)
-          .toList()
-          .reversed
           .toList();
+
+      // Sort by date in descending order (newest first)
+      items.sort((a, b) => b.date.compareTo(a.date));
 
       print('ExerciseListScreen - Filtered training sets: ${items.length}');
     } catch (e) {

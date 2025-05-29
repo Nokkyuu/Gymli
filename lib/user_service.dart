@@ -683,7 +683,7 @@ class UserService {
     }
   }
 
-  Future<void> createTrainingSet({
+  Future<Map<String, dynamic>?> createTrainingSet({
     required int exerciseId,
     required String date,
     required double weight,
@@ -695,7 +695,8 @@ class UserService {
     String? machineName,
   }) async {
     if (isLoggedIn) {
-      await api.TrainingSetService().createTrainingSet(
+      // Return the created set from the API
+      return await api.TrainingSetService().createTrainingSet(
         userName: userName,
         exerciseId: exerciseId,
         date: date,
@@ -722,6 +723,7 @@ class UserService {
         'machine_name': machineName,
       };
       (_inMemoryData['trainingSets'] as List<dynamic>).add(trainingSet);
+      return trainingSet;
     }
   }
 

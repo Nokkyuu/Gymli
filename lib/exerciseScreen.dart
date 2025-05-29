@@ -143,7 +143,7 @@ class _ExerciseScreen extends State<ExerciseScreen> {
       }
 
       final userService = UserService();
-      await userService.createTrainingSet(
+      final createdSetData = await userService.createTrainingSet(
         exerciseId: _currentExercise!.id!,
         date: when,
         weight: weight,
@@ -157,6 +157,7 @@ class _ExerciseScreen extends State<ExerciseScreen> {
 
       // Only update cache AFTER successful API call
       final newSet = ApiTrainingSet(
+        id: createdSetData?['id'],
         userName: _currentExercise!.userName,
         exerciseId: _currentExercise!.id!,
         exerciseName: exerciseName,
@@ -174,7 +175,7 @@ class _ExerciseScreen extends State<ExerciseScreen> {
 
       // Update graph and UI in parallel for better performance
       await Future.wait([
-        Future(() => _updateGraphFromSingleNewSet(newSet)),
+        _updateGraphFromCachedTrainingSets(),
         Future(() => setState(() {
               // UI will reflect the updated _todaysTrainingSets
             })),
