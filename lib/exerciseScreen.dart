@@ -989,7 +989,7 @@ class _ExerciseScreen extends State<ExerciseScreen> {
               _buildGraphSection(),
               _buildGraphLegend(),
               const Divider(),
-              _buildExerciseControls(dateInputController),
+              _buildExerciseControlsDesktop(dateInputController),
               const SizedBox(height: 20),
             ],
           ),
@@ -1266,6 +1266,149 @@ class _ExerciseScreen extends State<ExerciseScreen> {
                 }),
           ],
         ));
+  }
+
+  Widget _buildExerciseControlsDesktop(
+      TextEditingController dateInputController) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 20, right: 20, bottom: 10),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          // Vertical warmup/work set switch
+          Column(
+            children: [
+              SegmentedButton<ExerciseType>(
+                showSelectedIcon: false,
+                multiSelectionEnabled: false,
+                segments: <ButtonSegment<ExerciseType>>[
+                  ButtonSegment<ExerciseType>(
+                    value: ExerciseType.warmup,
+                    label: warmText,
+                    icon: const Icon(Icons.local_fire_department),
+                  ),
+                  ButtonSegment<ExerciseType>(
+                    value: ExerciseType.work,
+                    label: workText,
+                    icon: const FaIcon(FontAwesomeIcons.handFist),
+                  ),
+                ],
+                selected: _selected,
+                onSelectionChanged: (newSelection) {
+                  setState(() {
+                    if (_selected.first == ExerciseType.warmup ||
+                        newSelection.first == ExerciseType.warmup) {
+                      _selected = newSelection;
+                      _updateWeightFromCachedData();
+                    }
+                    _selected = newSelection;
+                  });
+                },
+              ),
+            ],
+          ),
+
+          const SizedBox(width: 40),
+
+          // Weight and reps input fields stacked vertically
+          Column(
+            children: [
+              // Weight input
+              SizedBox(
+                width: 120,
+                child: TextField(
+                  keyboardType:
+                      const TextInputType.numberWithOptions(decimal: true),
+                  decoration: const InputDecoration(
+                    labelText: 'Weight (kg)',
+                    border: OutlineInputBorder(),
+                    contentPadding:
+                        EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  ),
+                  controller: TextEditingController(
+                    text: (weightKg.toDouble() + weightDg.toDouble() / 100.0)
+                        .toString(),
+                  ),
+                  onChanged: (value) {
+                    final weight = double.tryParse(value) ?? 0.0;
+                    setState(() {
+                      weightKg = weight.toInt();
+                      weightDg = ((weight - weightKg) * 100).round();
+                    });
+                  },
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              // Reps input
+              SizedBox(
+                width: 120,
+                child: TextField(
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    labelText: 'Reps',
+                    border: OutlineInputBorder(),
+                    contentPadding:
+                        EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  ),
+                  controller:
+                      TextEditingController(text: repetitions.toString()),
+                  onChanged: (value) {
+                    final reps = int.tryParse(value) ?? 10;
+                    setState(() {
+                      repetitions = reps.clamp(1, 30);
+                    });
+                  },
+                ),
+              ),
+            ],
+          ),
+
+          const Spacer(),
+
+          // Submit button on the right
+          ElevatedButton.icon(
+            style: const ButtonStyle(),
+            label: const Text('Submit'),
+            icon: const Icon(Icons.send),
+            onPressed: () async {
+              double newWeight =
+                  weightKg.toDouble() + weightDg.toDouble() / 100.0;
+
+              setState(() {
+                // Loading state if needed
+              });
+
+              final result = await addSet(
+                widget.exerciseName,
+                newWeight,
+                repetitions,
+                _selected.first.index,
+                dateInputController.text,
+              );
+
+              if (result == 0) {
+                _updateTextsWithData(_todaysTrainingSets);
+                lastActivity = DateTime.now();
+
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Training set saved successfully!'),
+                      backgroundColor: Colors.green,
+                      duration: Duration(seconds: 1),
+                    ),
+                  );
+                }
+              } else {
+                print('Submit failed - training set not saved');
+              }
+            },
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildTrainingSetsList() {
