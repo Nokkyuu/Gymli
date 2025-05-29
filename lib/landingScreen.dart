@@ -25,6 +25,7 @@ import 'api_models.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:Gymli/workoutSetupScreen.dart';
 import 'database.dart' as db;
+import 'responsive_helper.dart';
 
 enum MuscleList {
   Pectoralis_major("Pectoralis major"),
@@ -480,52 +481,84 @@ class _LandingScreenState extends State<LandingScreen> {
                 builder: (context, bool filterApplied, _) {
                   var items = filteredExercises;
                   if (items.isNotEmpty) {
-                    return ListView.builder(
-                        itemCount: items.length,
-                        itemBuilder: (context, index) {
-                          final currentData = items[index];
-                          // Safety check to prevent index out of range errors
-                          final meta = index < metainfo.length
-                              ? metainfo[index]
-                              : '${currentData.defaultRepBase}-${currentData.defaultRepMax} Reps @ ${currentData.defaultIncrement}kg';
-                          String description = "";
-                          if (meta.split(":")[0] == "Warm") {
-                            description = meta;
-                          }
-                          final exerciseType = currentData.type;
-                          final itemList = [
-                            FontAwesomeIcons.dumbbell,
-                            Icons.forklift,
-                            Icons.cable,
-                            Icons.sports_martial_arts
-                          ];
-                          final currentIcon = itemList[exerciseType];
-                          return ListTile(
-                              leading: CircleAvatar(
-                                radius: 17.5,
-                                child: FaIcon(currentIcon),
-                              ),
-                              dense: true,
-                              title: Text(currentData.name),
-                              subtitle: Row(
-                                  mainAxisAlignment: MainAxisAlignment.start,
-                                  children: [Text(meta)]),
-                              onTap: () {
-                                Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                            builder: (context) =>
-                                                ExerciseScreen(currentData.name,
-                                                    description)))
-                                    .then((value) => _reload(value));
-                              });
-                        });
+                    // Use responsive layout: ListView for mobile, GridView for non-mobile
+                    return ResponsiveHelper.isMobile(context)
+                        ? _buildMobileListView(items)
+                        : _buildDesktopGridView(items);
                   } else {
-                    //Hive.box<Exercise>('Exercises').watch();
                     return const Text("No exercises yet");
                   }
                 }),
           )
         ]);
+  }
+
+  Widget _buildMobileListView(List<ApiExercise> items) {
+    return ListView.builder(
+      itemCount: items.length,
+      itemBuilder: (context, index) => _buildExerciseListTile(items, index),
+    );
+  }
+
+  Widget _buildDesktopGridView(List<ApiExercise> items) {
+    return GridView.builder(
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 3, // 4 columns for non-mobile devices
+        childAspectRatio: 4.0,
+        crossAxisSpacing: 12.0,
+        mainAxisSpacing: 8.0,
+      ),
+      itemCount: items.length,
+      itemBuilder: (context, index) {
+        return Card(
+          elevation: 2,
+          child: _buildExerciseListTile(items, index),
+        );
+      },
+    );
+  }
+
+  Widget _buildExerciseListTile(List<ApiExercise> items, int index) {
+    final currentData = items[index];
+    final meta = index < metainfo.length
+        ? metainfo[index]
+        : '${currentData.defaultRepBase}-${currentData.defaultRepMax} Reps @ ${currentData.defaultIncrement}kg';
+    String description = "";
+    if (meta.split(":")[0] == "Warm") {
+      description = meta;
+    }
+    final exerciseType = currentData.type;
+    final itemList = [
+      FontAwesomeIcons.dumbbell,
+      Icons.forklift,
+      Icons.cable,
+      Icons.sports_martial_arts
+    ];
+    final currentIcon = itemList[exerciseType];
+
+    return ListTile(
+      leading: CircleAvatar(
+        radius: 17.5,
+        child: FaIcon(currentIcon),
+      ),
+      dense: true,
+      title: Text(
+        currentData.name,
+        overflow: TextOverflow.ellipsis,
+      ),
+      subtitle: Text(
+        meta,
+        overflow: TextOverflow.ellipsis,
+        maxLines: ResponsiveHelper.isMobile(context) ? 2 : 1,
+      ),
+      onTap: () {
+        Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) =>
+                        ExerciseScreen(currentData.name, description)))
+            .then((value) => _reload(value));
+      },
+    );
   }
 }
