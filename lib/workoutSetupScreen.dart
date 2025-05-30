@@ -229,7 +229,7 @@ class _WorkoutSetupScreenState extends State<WorkoutSetupScreen> {
                       item: item);
                 });
           } else {
-            return const Text("No exercises yet");
+            return const Center(child: Text("No exercises yet"));
           }
         },
       ),
@@ -476,7 +476,6 @@ class _WorkoutSetupScreenState extends State<WorkoutSetupScreen> {
             child: ControlUI(context),
           ),
         ),
-        // Exercise list takes 1/3 of the width
         // Vertical divider line
         Container(
           width: 1,
@@ -487,10 +486,37 @@ class _WorkoutSetupScreenState extends State<WorkoutSetupScreen> {
           flex: 3,
           child: Padding(
             padding: const EdgeInsets.only(top: 16.0, right: 16.0),
-            child: exerciseListUI(),
+            child: _exerciseListContent(),
           ),
         ),
       ],
+    );
+  }
+
+  Widget _exerciseListContent() {
+    return ValueListenableBuilder(
+      valueListenable: addRemEx,
+      builder: (context, bool addRemEx, _) {
+        var items = addedExercises;
+        if (items.isNotEmpty) {
+          return ListView.builder(
+              itemCount: items.length,
+              itemBuilder: (context, index) {
+                final item = items[index];
+                final exerciseType = item.type;
+                final currentIcon = itemList[exerciseType];
+                return ExerciseTile(
+                    exerciseName: item.exerciseName,
+                    warmUpS: item.warmups,
+                    workS: item.worksets,
+                    icon: currentIcon,
+                    remo: remExercise,
+                    item: item);
+              });
+        } else {
+          return const Center(child: Text("No exercises yet"));
+        }
+      },
     );
   }
 
