@@ -624,8 +624,7 @@ class _ExerciseScreen extends State<ExerciseScreen> {
             workoutDuration.toString().split(".")[0]; // ewwww, nasty
         workoutString =
             "${workoutString.split(":")[0]}:${workoutString.split(":")[1]}";
-        timerText = Text(
-            "Working out: $workoutString - Idle: ${duration.toString().split(".")[0]}");
+        timerText = Text("Idle: ${duration.toString().split(".")[0]}");
       });
     });
   }
