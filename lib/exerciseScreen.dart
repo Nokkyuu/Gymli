@@ -667,9 +667,8 @@ class _ExerciseScreen extends State<ExerciseScreen> {
 
       // Calculate timer text
       var duration = DateTime.now().difference(lastActivity);
-      var workoutDuration = DateTime.now().difference(workoutStartTime);
-      timerText = Text(
-          "Working out: ${workoutDuration.toString().split(".")[0]} - Idle: ${duration.toString().split(".")[0]}");
+      //var workoutDuration = DateTime.now().difference(workoutStartTime);
+      timerText = Text("Idle: ${duration.toString().split(".")[0]}");
 
       // Prepare weight settings
       double weight = 40.0;
