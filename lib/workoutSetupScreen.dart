@@ -27,6 +27,7 @@ import 'package:flutter/material.dart';
 import 'package:numberpicker/numberpicker.dart';
 import 'package:Gymli/api_models.dart';
 import 'package:Gymli/user_service.dart';
+import 'responsive_helper.dart';
 
 // enum ExerciseList {
 //   Benchpress('Benchpress', 2, 3, 1),
@@ -171,176 +172,336 @@ class _WorkoutSetupScreenState extends State<WorkoutSetupScreen> {
       );
     }
 
+    final mainContent = ControlUI(context);
+
+    final exerciseList = exerciseListUI();
+
     return Scaffold(
-        resizeToAvoidBottomInset: false,
-        appBar: AppBar(
-          leading: InkWell(
-            onTap: () {
-              Navigator.pop(context);
-            },
-            child: const Icon(Icons.arrow_back_ios),
-          ),
-          title: const Text(title),
-          centerTitle: true,
-          actions: [
-            IconButton(
-                onPressed: () async {
-                  if (currentWorkout != null &&
-                      currentWorkout!.id != null &&
-                      currentWorkout!.id! > 0) {
-                    final userService = UserService();
-                    await userService.deleteWorkout(currentWorkout!.id!);
-                    Navigator.pop(context);
-                  }
-                },
-                icon: const Icon(Icons.delete))
-          ],
+      resizeToAvoidBottomInset: false,
+      appBar: AppBar(
+        leading: InkWell(
+          onTap: () {
+            Navigator.pop(context);
+          },
+          child: const Icon(Icons.arrow_back_ios),
         ),
-        body: Column(
-          children: [
-            const SizedBox(height: 20),
-            SizedBox(
-              width: 300,
-              child: TextField(
-                textAlign: TextAlign.center,
-                controller: workoutNameController,
-                obscureText: false,
-                decoration: const InputDecoration(
-                  border: UnderlineInputBorder(),
-                  labelText: 'Workout Name',
-                ),
-              ),
-            ),
-            TextButton.icon(
-              icon: const Icon(Icons.add),
-              label: const Text("Add Workout"),
-              onPressed: () {
-                addWorkout(workoutNameController.text, addedExercises);
+        title: const Text(title),
+        centerTitle: true,
+        actions: [
+          IconButton(
+              onPressed: () async {
+                if (currentWorkout != null &&
+                    currentWorkout!.id != null &&
+                    currentWorkout!.id! > 0) {
+                  final userService = UserService();
+                  await userService.deleteWorkout(currentWorkout!.id!);
+                  Navigator.pop(context);
+                }
               },
-            ),
-            const SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                Column(
-                  children: [
-                    const Text('Warm Ups'),
-                    NumberPicker(
-                      decoration: BoxDecoration(border: Border.all()),
-                      value: warmUpS,
-                      minValue: 0,
-                      maxValue: 10,
-                      onChanged: (value) => setState(() => warmUpS = value),
-                    ),
-                  ],
-                ),
-                Column(
-                  children: [
-                    const Text('Work Sets'),
-                    NumberPicker(
-                      decoration: BoxDecoration(border: Border.all()),
-                      value: workS,
-                      minValue: 0,
-                      maxValue: 10,
-                      onChanged: (value) => setState(() => workS = value),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-            const Divider(),
-            const SizedBox(height: 20),
-            DropdownMenu<ApiExercise>(
-              width: MediaQuery.of(context).size.width * 0.7,
-              //initialSelection: ExerciseList.Benchpress,
-              controller: exerciseController,
-              menuHeight: 500,
-              inputDecorationTheme: InputDecorationTheme(
-                isDense: true,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-                constraints: BoxConstraints.tight(const Size.fromHeight(40)),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              requestFocusOnTap: false,
-              label: const Text('Exercises'),
-              onSelected: (selectExercises) {
-                setState(() {
-                  selectedExercise = selectExercises;
+              icon: const Icon(Icons.delete))
+        ],
+      ),
+      body: ResponsiveHelper.isWebMobile(context)
+          ? IsMobileWebLayout()
+          : IsNotMobileWebLayout(),
+    );
+  }
+
+  Expanded exerciseListUI() {
+    return Expanded(
+      child: ValueListenableBuilder(
+        valueListenable: addRemEx,
+        builder: (context, bool addRemEx, _) {
+          var items = addedExercises;
+          if (items.isNotEmpty) {
+            return ListView.builder(
+                itemCount: items.length,
+                itemBuilder: (context, index) {
+                  final item = items[index];
+                  final exerciseType = item.type;
+                  final currentIcon = itemList[exerciseType];
+                  return ExerciseTile(
+                      exerciseName: item.exerciseName,
+                      warmUpS: item.warmups,
+                      workS: item.worksets,
+                      icon: currentIcon,
+                      remo: remExercise,
+                      item: item);
                 });
-              },
-              dropdownMenuEntries: allExercises
-                  .map<DropdownMenuEntry<ApiExercise>>((ApiExercise exercise) {
-                return DropdownMenuEntry<ApiExercise>(
-                    value: exercise,
-                    label: exercise.name,
-                    leadingIcon: FaIcon(itemList[exercise.type])
-                    //enabled: color.label != 'Grey',
-                    //style: MenuItemButton.styleFrom(
-                    //  foregroundColor: color.color,
-                    //),
-                    );
-              }).toList(),
+          } else {
+            return const Text("No exercises yet");
+          }
+        },
+      ),
+    );
+  }
+
+  Column ControlUI(BuildContext context) {
+    return Column(
+      children: [
+        const SizedBox(height: 20),
+        SizedBox(
+          width: 300,
+          child: TextField(
+            textAlign: TextAlign.center,
+            controller: workoutNameController,
+            obscureText: false,
+            decoration: const InputDecoration(
+              border: UnderlineInputBorder(),
+              labelText: 'Workout Name',
             ),
-            TextButton.icon(
-              icon: const Icon(Icons.add),
-              label: const Text("Add Exercise"),
-              onPressed: () {
-                setState(() {
-                  if (selectedExercise != null) {
-                    for (int i = 0; i < addedExercises.length; ++i) {
-                      if (addedExercises[i].exerciseName ==
-                          selectedExercise!.name) {
-                        return;
-                      }
-                    }
-                    addedExercises.add(ApiWorkoutUnit(
-                        id: 0,
-                        userName: "DefaultUser",
-                        workoutId: 0,
-                        exerciseId: selectedExercise!.id ?? 0,
-                        exerciseName: selectedExercise!.name,
-                        warmups: warmUpS,
-                        worksets: workS,
-                        // dropsets: dropS,
-                        type: selectedExercise!.type));
-                    addRemEx.value = !addRemEx.value;
-                  } else {
+          ),
+        ),
+        TextButton.icon(
+          icon: const Icon(Icons.add),
+          label: const Text("Add Workout"),
+          onPressed: () {
+            addWorkout(workoutNameController.text, addedExercises);
+          },
+        ),
+        const SizedBox(height: 20),
+        ResponsiveHelper.isWebMobile(context)
+            ? Column(children: [
+                SetNumberPickerMobile(),
+                ExerciseChoiceMobile(context),
+              ])
+            : Row(children: [
+                SizedBox(width: 40),
+                SetNumberPickerDesktop(),
+                SizedBox(width: 20),
+                ExerciseChoiceDesktop(context),
+                SizedBox(width: 20),
+              ]),
+        const SizedBox(height: 20),
+        TextButton.icon(
+          icon: const Icon(Icons.add),
+          label: const Text("Add Exercise"),
+          onPressed: () {
+            setState(() {
+              if (selectedExercise != null) {
+                for (int i = 0; i < addedExercises.length; ++i) {
+                  if (addedExercises[i].exerciseName ==
+                      selectedExercise!.name) {
                     return;
                   }
-                });
-              },
+                }
+                addedExercises.add(ApiWorkoutUnit(
+                    id: 0,
+                    userName: "DefaultUser",
+                    workoutId: 0,
+                    exerciseId: selectedExercise!.id ?? 0,
+                    exerciseName: selectedExercise!.name,
+                    warmups: warmUpS,
+                    worksets: workS,
+                    type: selectedExercise!.type));
+                addRemEx.value = !addRemEx.value;
+              } else {
+                return;
+              }
+            });
+          },
+        ),
+      ],
+    );
+  }
+
+  DropdownMenu<ApiExercise> ExerciseChoiceMobile(BuildContext context) {
+    return DropdownMenu<ApiExercise>(
+      width: MediaQuery.of(context).size.width * 0.7,
+      controller: exerciseController,
+      menuHeight: 500,
+      inputDecorationTheme: InputDecorationTheme(
+        isDense: true,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+        constraints: BoxConstraints.tight(const Size.fromHeight(40)),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+      ),
+      requestFocusOnTap: false,
+      label: const Text('Exercises'),
+      onSelected: (selectExercises) {
+        setState(() {
+          selectedExercise = selectExercises;
+        });
+      },
+      dropdownMenuEntries: allExercises
+          .map<DropdownMenuEntry<ApiExercise>>((ApiExercise exercise) {
+        return DropdownMenuEntry<ApiExercise>(
+            value: exercise,
+            label: exercise.name,
+            leadingIcon: FaIcon(itemList[exercise.type]));
+      }).toList(),
+    );
+  }
+
+  Widget ExerciseChoiceDesktop(BuildContext context) {
+    return Expanded(
+      child: Container(
+        width: 300,
+        height: 400,
+        //decoration: BoxDecoration(
+        //border: Border(
+        //top: BorderSide(color: Colors.grey),
+        //bottom: BorderSide(color: Colors.grey),
+        //),
+        //borderRadius: BorderRadius.circular(8),
+        //),
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: const BoxDecoration(
+                //color: Theme.of(context).primaryColor.withOpacity(0.1),
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(8),
+                  topRight: Radius.circular(8),
+                ),
+              ),
+              width: double.infinity,
+              child: const Text(
+                'Select Exercise',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
             ),
-            const Divider(),
             Expanded(
-              child: ValueListenableBuilder(
-                  valueListenable: addRemEx,
-                  builder: (context, bool addRemEx, _) {
-                    var items = addedExercises;
-                    if (items.isNotEmpty) {
-                      return ListView.builder(
-                          itemCount: items.length,
-                          itemBuilder: (context, index) {
-                            final item = items[index];
-                            final exerciseType = item.type;
-                            final currentIcon = itemList[exerciseType];
-                            return ExerciseTile(
-                                exerciseName: item.exerciseName,
-                                warmUpS: item.warmups,
-                                workS: item.worksets,
-                                //dropS: item.dropsets,
-                                icon: currentIcon,
-                                remo: remExercise,
-                                item: item);
-                          });
-                    } else {
-                      return const Text("No exercises yet");
-                    }
-                  }),
+              child: ListView.builder(
+                itemCount: allExercises.length,
+                itemBuilder: (context, index) {
+                  final exercise = allExercises[index];
+                  final isSelected = selectedExercise?.id == exercise.id;
+
+                  return ListTile(
+                    selected: isSelected,
+                    leading: FaIcon(
+                      itemList[exercise.type],
+                      color: isSelected ? Theme.of(context).primaryColor : null,
+                    ),
+                    title: Text(
+                      exercise.name,
+                      style: TextStyle(
+                        fontWeight:
+                            isSelected ? FontWeight.bold : FontWeight.normal,
+                        color:
+                            isSelected ? Theme.of(context).primaryColor : null,
+                      ),
+                    ),
+                    onTap: () {
+                      setState(() {
+                        selectedExercise = exercise;
+                        exerciseController.text = exercise.name;
+                      });
+                    },
+                  );
+                },
+              ),
             ),
           ],
-        ));
+        ),
+      ),
+    );
+  }
+
+  Row SetNumberPickerMobile() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Column(
+          children: [
+            const Text('Warm Ups'),
+            NumberPicker(
+              decoration: BoxDecoration(border: Border.all()),
+              value: warmUpS,
+              minValue: 0,
+              maxValue: 10,
+              onChanged: (value) => setState(() => warmUpS = value),
+            ),
+          ],
+        ),
+        const SizedBox(width: 20),
+        Column(
+          children: [
+            const Text('Work Sets'),
+            NumberPicker(
+              decoration: BoxDecoration(border: Border.all()),
+              value: workS,
+              minValue: 0,
+              maxValue: 10,
+              onChanged: (value) => setState(() => workS = value),
+            ),
+          ],
+        ),
+        const Divider(),
+      ],
+    );
+  }
+
+  Row SetNumberPickerDesktop() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.start,
+      children: [
+        const SizedBox(width: 20),
+        Column(
+          children: [
+            const Text('Warm Ups'),
+            NumberPicker(
+              decoration: BoxDecoration(border: Border.all()),
+              value: warmUpS,
+              minValue: 0,
+              maxValue: 10,
+              onChanged: (value) => setState(() => warmUpS = value),
+            ),
+            const Text('Work Sets'),
+            NumberPicker(
+              decoration: BoxDecoration(border: Border.all()),
+              value: workS,
+              minValue: 0,
+              maxValue: 10,
+              onChanged: (value) => setState(() => workS = value),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Row IsNotMobileWebLayout() {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Main content takes 2/3 of the width
+        Expanded(
+          flex: 4,
+          child: SingleChildScrollView(
+            child: ControlUI(context),
+          ),
+        ),
+        // Exercise list takes 1/3 of the width
+        // Vertical divider line
+        Container(
+          width: 1,
+          color: Colors.black,
+          margin: const EdgeInsets.symmetric(horizontal: 8.0),
+        ),
+        Expanded(
+          flex: 3,
+          child: Padding(
+            padding: const EdgeInsets.only(top: 16.0, right: 16.0),
+            child: exerciseListUI(),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Column IsMobileWebLayout() {
+    return Column(
+      children: [
+        ControlUI(context),
+        const Divider(),
+        exerciseListUI(),
+      ],
+    );
   }
 }
 
