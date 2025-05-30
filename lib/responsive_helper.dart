@@ -6,7 +6,7 @@
 ///   @override
 ///   Widget build(BuildContext context) {
 ///     return Scaffold(
-///       body: ResponsiveHelper.isMobile(context)
+///       body: ResponsiveHelper.isWebMobile(context)
 ///           ? Row(
 ///               children: [
 ///                 // mobile layout

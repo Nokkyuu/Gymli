@@ -108,6 +108,10 @@ class _ExerciseScreen extends State<ExerciseScreen> {
   // Cache exercise and training data to avoid redundant API calls
   ApiExercise? _currentExercise;
   List<ApiTrainingSet> _cachedTodaysTrainingSetsForExercise = [];
+
+  // Persistent text controllers to prevent deselection on setState
+  late TextEditingController _weightController;
+  late TextEditingController _repsController;
   Future<void> _deleteTrainingSet(ApiTrainingSet trainingSet) async {
     try {
       final userService = UserService();
@@ -432,6 +436,8 @@ class _ExerciseScreen extends State<ExerciseScreen> {
   @override
   void dispose() {
     timer.cancel(); // Cancel the timer when the state is disposed
+    _weightController.dispose();
+    _repsController.dispose();
     super.dispose();
   }
 
@@ -526,6 +532,10 @@ class _ExerciseScreen extends State<ExerciseScreen> {
       weightKg = weight.toInt();
       weightDg = (weight * 100.0).toInt() % 100;
       repetitions = reps;
+
+      // Update text controllers to match the new values
+      _weightController.text = weight.toString();
+      _repsController.text = reps.toString();
     });
   }
 
@@ -579,6 +589,10 @@ class _ExerciseScreen extends State<ExerciseScreen> {
   void initState() {
     super.initState();
 
+    // Initialize text controllers for persistent input fields
+    _weightController = TextEditingController();
+    _repsController = TextEditingController();
+
     // Parse workout context and set UI immediately
     _parseWorkoutDescription();
 
@@ -589,6 +603,11 @@ class _ExerciseScreen extends State<ExerciseScreen> {
       weightKg = 40;
       weightDg = 0;
       repetitions = 10;
+
+      // Initialize controllers with default values
+      _weightController.text =
+          (weightKg.toDouble() + weightDg.toDouble() / 100.0).toString();
+      _repsController.text = repetitions.toString();
     });
 
     // Initialize screen data asynchronously
@@ -1038,7 +1057,9 @@ class _ExerciseScreen extends State<ExerciseScreen> {
   Widget _buildGraphSection() {
     return SizedBox(
         width: MediaQuery.of(context).size.width,
-        height: MediaQuery.of(context).size.height * 0.20,
+        height: ResponsiveHelper.isWebMobile(context)
+            ? MediaQuery.of(context).size.height * 0.20
+            : MediaQuery.of(context).size.height * 0.50,
         child: Padding(
           padding: const EdgeInsets.all(10.0),
           child: Padding(
@@ -1272,39 +1293,86 @@ class _ExerciseScreen extends State<ExerciseScreen> {
   Widget _buildExerciseControlsDesktop(
       TextEditingController dateInputController) {
     return Padding(
-      padding: const EdgeInsets.only(left: 20, right: 20, bottom: 10),
+      padding: const EdgeInsets.only(top: 20, left: 20, right: 20, bottom: 20),
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // Vertical warmup/work set switch
+          // Vertically aligned warmup/work set radio buttons
           Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
             children: [
-              SegmentedButton<ExerciseType>(
-                showSelectedIcon: false,
-                multiSelectionEnabled: false,
-                segments: <ButtonSegment<ExerciseType>>[
-                  ButtonSegment<ExerciseType>(
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Radio<ExerciseType>(
                     value: ExerciseType.warmup,
-                    label: warmText,
-                    icon: const Icon(Icons.local_fire_department),
+                    groupValue: _selected.first,
+                    onChanged: (ExerciseType? value) {
+                      if (value != null) {
+                        setState(() {
+                          _selected = {value};
+                          _updateWeightFromCachedData();
+                        });
+                      }
+                    },
                   ),
-                  ButtonSegment<ExerciseType>(
+                  GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _selected = {ExerciseType.warmup};
+                        _updateWeightFromCachedData();
+                      });
+                    },
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const SizedBox(
+                            width: 24,
+                            child: Icon(Icons.local_fire_department)),
+                        const SizedBox(width: 8),
+                        SizedBox(width: 60, child: warmText),
+                      ],
+                    ),
+                  )
+                ],
+              ),
+              const SizedBox(height: 8), // Changed from width to height
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Radio<ExerciseType>(
                     value: ExerciseType.work,
-                    label: workText,
-                    icon: const FaIcon(FontAwesomeIcons.handFist),
+                    groupValue: _selected.first,
+                    onChanged: (ExerciseType? value) {
+                      if (value != null) {
+                        setState(() {
+                          _selected = {value};
+                          _updateWeightFromCachedData();
+                        });
+                      }
+                    },
+                  ),
+                  GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _selected = {ExerciseType.work};
+                        _updateWeightFromCachedData();
+                      });
+                    },
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const SizedBox(
+                            width: 24,
+                            child: FaIcon(FontAwesomeIcons.handFist)),
+                        const SizedBox(width: 8),
+                        SizedBox(width: 60, child: workText),
+                      ],
+                    ),
                   ),
                 ],
-                selected: _selected,
-                onSelectionChanged: (newSelection) {
-                  setState(() {
-                    if (_selected.first == ExerciseType.warmup ||
-                        newSelection.first == ExerciseType.warmup) {
-                      _selected = newSelection;
-                      _updateWeightFromCachedData();
-                    }
-                    _selected = newSelection;
-                  });
-                },
               ),
             ],
           ),
@@ -1326,10 +1394,7 @@ class _ExerciseScreen extends State<ExerciseScreen> {
                     contentPadding:
                         EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   ),
-                  controller: TextEditingController(
-                    text: (weightKg.toDouble() + weightDg.toDouble() / 100.0)
-                        .toString(),
-                  ),
+                  controller: _weightController,
                   onChanged: (value) {
                     final weight = double.tryParse(value) ?? 0.0;
                     setState(() {
@@ -1353,8 +1418,7 @@ class _ExerciseScreen extends State<ExerciseScreen> {
                     contentPadding:
                         EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   ),
-                  controller:
-                      TextEditingController(text: repetitions.toString()),
+                  controller: _repsController,
                   onChanged: (value) {
                     final reps = int.tryParse(value) ?? 10;
                     setState(() {
@@ -1366,47 +1430,49 @@ class _ExerciseScreen extends State<ExerciseScreen> {
             ],
           ),
 
-          const Spacer(),
-
+          //const Spacer(),
+          const SizedBox(width: 40),
           // Submit button on the right
-          ElevatedButton.icon(
-            style: const ButtonStyle(),
-            label: const Text('Submit'),
-            icon: const Icon(Icons.send),
-            onPressed: () async {
-              double newWeight =
-                  weightKg.toDouble() + weightDg.toDouble() / 100.0;
+          SizedBox(
+            height: 60,
+            child: FilledButton.icon(
+              label: const Text('Submit'),
+              icon: const Icon(Icons.send),
+              onPressed: () async {
+                double newWeight =
+                    weightKg.toDouble() + weightDg.toDouble() / 100.0;
 
-              setState(() {
-                // Loading state if needed
-              });
+                setState(() {
+                  // Loading state if needed
+                });
 
-              final result = await addSet(
-                widget.exerciseName,
-                newWeight,
-                repetitions,
-                _selected.first.index,
-                dateInputController.text,
-              );
+                final result = await addSet(
+                  widget.exerciseName,
+                  newWeight,
+                  repetitions,
+                  _selected.first.index,
+                  dateInputController.text,
+                );
 
-              if (result == 0) {
-                _updateTextsWithData(_todaysTrainingSets);
-                lastActivity = DateTime.now();
+                if (result == 0) {
+                  _updateTextsWithData(_todaysTrainingSets);
+                  lastActivity = DateTime.now();
 
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Training set saved successfully!'),
-                      backgroundColor: Colors.green,
-                      duration: Duration(seconds: 1),
-                    ),
-                  );
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Training set saved successfully!'),
+                        backgroundColor: Colors.green,
+                        duration: Duration(seconds: 1),
+                      ),
+                    );
+                  }
+                } else {
+                  print('Submit failed - training set not saved');
                 }
-              } else {
-                print('Submit failed - training set not saved');
-              }
-            },
-          ),
+              },
+            ),
+          )
         ],
       ),
     );

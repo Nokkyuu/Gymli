@@ -25,6 +25,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'globals.dart' as globals;
 import 'user_service.dart';
 import 'api_models.dart';
+import 'responsive_helper.dart';
 
 enum ExerciseDevice { free, machine, cable, body }
 
@@ -167,162 +168,359 @@ class _ExerciseSetupScreenState extends State<ExerciseSetupScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isMobileWeb = ResponsiveHelper.isWebMobile(context);
+
     return Scaffold(
-        resizeToAvoidBottomInset: false,
-        appBar: AppBar(
-          leading: InkWell(
-            onTap: () {
-              Navigator.pop(context);
-            },
-            child: const Icon(Icons.arrow_back_ios),
-          ),
-          title: const Text("Exercise Setup"),
-          actions: [
-            IconButton(
-                onPressed: () async {
-                  if (currentExercise != null && currentExercise!.id != null) {
-                    try {
-                      // Delete the exercise via API
-                      await userService.deleteExercise(currentExercise!.id!);
-
-                      // Delete all training sets for this exercise
-                      final trainingSets = await userService.getTrainingSets();
-                      for (var set in trainingSets) {
-                        if (set['exercise_id'] == currentExercise!.id) {
-                          await userService.deleteTrainingSet(set['id']);
-                        }
-                      }
-
-                      int count = 0;
-                      Navigator.of(context).popUntil((_) => count++ >= 2);
-                    } catch (e) {
-                      print('Error deleting exercise: $e');
-                      // Show error to user
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Error deleting exercise: $e')),
-                      );
-                    }
-                  }
-                },
-                icon: const Icon(Icons.delete))
-          ],
+      resizeToAvoidBottomInset: false,
+      appBar: AppBar(
+        leading: InkWell(
+          onTap: () {
+            Navigator.pop(context);
+          },
+          child: const Icon(Icons.arrow_back_ios),
         ),
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            mainAxisSize: MainAxisSize.max,
-            children: [
-              SizedBox(
-                width: 300,
-                child: TextField(
-                  textAlign: TextAlign.center,
-                  controller: exerciseTitleController,
-                  obscureText: false,
-                  decoration: const InputDecoration(
-                    border: UnderlineInputBorder(),
-                    labelText: 'Exercise Name',
-                    //alignLabelWithHint: true
+        title: const Text("Exercise Setup"),
+        actions: [
+          IconButton(
+              onPressed: () async {
+                if (currentExercise != null && currentExercise!.id != null) {
+                  try {
+                    // Delete the exercise via API
+                    await userService.deleteExercise(currentExercise!.id!);
+
+                    // Delete all training sets for this exercise
+                    final trainingSets = await userService.getTrainingSets();
+                    for (var set in trainingSets) {
+                      if (set['exercise_id'] == currentExercise!.id) {
+                        await userService.deleteTrainingSet(set['id']);
+                      }
+                    }
+
+                    int count = 0;
+                    Navigator.of(context).popUntil((_) => count++ >= 2);
+                  } catch (e) {
+                    print('Error deleting exercise: $e');
+                    // Show error to user
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Error deleting exercise: $e')),
+                    );
+                  }
+                }
+              },
+              icon: const Icon(Icons.delete))
+        ],
+      ),
+      body: isMobileWeb
+          ? _buildMobileWebLayout(context)
+          : _buildDesktopLayout(context),
+    );
+  }
+
+  Widget _buildMobileWebLayout(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.start,
+        mainAxisSize: MainAxisSize.max,
+        children: [
+          _buildExerciseForm(context),
+          SizedBox(height: boxSpace),
+          IconButton(
+            icon: const Icon(Icons.accessibility_new),
+            iconSize: 50,
+            tooltip: 'muscles',
+            onPressed: () {
+              showModalBottomSheet<dynamic>(
+                isScrollControlled: true,
+                context: context,
+                sheetAnimationStyle: AnimationStyle(
+                  duration: const Duration(milliseconds: 600),
+                  reverseDuration: const Duration(milliseconds: 600),
+                ),
+                builder: (BuildContext context) {
+                  return const BottomSheet();
+                },
+              );
+            },
+          ),
+          SizedBox(height: boxSpace),
+          ConfirmButton(context),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDesktopLayout(BuildContext context) {
+    return Row(
+      children: [
+        // Left side - Exercise form
+        Expanded(
+          flex: 1,
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              mainAxisSize: MainAxisSize.max,
+              children: [
+                _buildExerciseFormDesktop(context),
+                SizedBox(height: boxSpace),
+                ConfirmButton(context),
+                Text("Confirm")
+              ],
+            ),
+          ),
+        ),
+        // Right side - Muscle selection (always visible)
+        SizedBox(
+          //flex: 1,
+          width: 400,
+          child: Container(
+            padding: const EdgeInsets.all(16.0),
+            decoration: BoxDecoration(
+              border: Border(
+                left: BorderSide(
+                  color: Theme.of(context).dividerColor,
+                  width: 1.0,
+                ),
+              ),
+            ),
+            child: const MuscleSelectionWidget(),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildExerciseForm(BuildContext context) {
+    return Column(
+      children: [
+        SizedBox(
+          width: 300,
+          child: TextField(
+            textAlign: TextAlign.center,
+            controller: exerciseTitleController,
+            obscureText: false,
+            decoration: const InputDecoration(
+              border: UnderlineInputBorder(),
+              labelText: 'Exercise Name',
+            ),
+          ),
+        ),
+        SizedBox(height: boxSpace),
+        SizedBox(height: boxSpace),
+        SizedBox(height: boxSpace),
+        const Text("Exercise Utility"),
+        SizedBox(height: boxSpace),
+        SegmentedButton<ExerciseDevice>(
+            showSelectedIcon: false,
+            segments: const <ButtonSegment<ExerciseDevice>>[
+              ButtonSegment<ExerciseDevice>(
+                  value: ExerciseDevice.free,
+                  icon: FaIcon(FontAwesomeIcons.dumbbell)),
+              ButtonSegment<ExerciseDevice>(
+                  value: ExerciseDevice.machine, icon: Icon(Icons.forklift)),
+              ButtonSegment<ExerciseDevice>(
+                  value: ExerciseDevice.cable, icon: Icon(Icons.cable)),
+              ButtonSegment<ExerciseDevice>(
+                  value: ExerciseDevice.body,
+                  icon: Icon(Icons.sports_martial_arts)),
+            ],
+            selected: <ExerciseDevice>{chosenDevice},
+            onSelectionChanged: (Set<ExerciseDevice> newSelection) {
+              setState(() {
+                chosenDevice = newSelection.first;
+              });
+            }),
+        SizedBox(height: boxSpace),
+        SizedBox(height: boxSpace),
+        SizedBox(height: boxSpace),
+        const Text("Repetition Range"),
+        SizedBox(height: boxSpace),
+        RangeSlider(
+          values: repRange,
+          max: 30,
+          min: 1,
+          divisions: 29,
+          labels: RangeLabels(
+            repRange.start.round().toString(),
+            repRange.end.round().toString(),
+          ),
+          onChanged: (RangeValues values) {
+            setState(() {
+              RangeValues newValues = RangeValues(values.start,
+                  values.start == values.end ? values.end + 1 : values.end);
+              repRange = newValues;
+              minRep = newValues.start;
+              maxRep = newValues.end;
+            });
+          },
+        ),
+        SizedBox(height: boxSpace),
+        const Text("Weight Increase Increments"),
+        SizedBox(height: boxSpace),
+        Slider(
+          value: weightInc,
+          min: 1,
+          max: 10,
+          divisions: 18,
+          label: weightInc.toString(),
+          onChanged: (double value) {
+            setState(() {
+              weightInc = value;
+            });
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildExerciseFormDesktop(BuildContext context) {
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(top: 100.0),
+          child: SizedBox(
+            width: 300,
+            child: TextField(
+              textAlign: TextAlign.center,
+              controller: exerciseTitleController,
+              obscureText: false,
+              decoration: const InputDecoration(
+                border: UnderlineInputBorder(),
+                labelText: 'Exercise Name',
+              ),
+            ),
+          ),
+        ),
+        SizedBox(height: boxSpace),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SizedBox(width: boxSpace),
+            SizedBox(width: boxSpace), // Spacer
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Row(
+                    children: [
+                      SizedBox(
+                        width: 30,
+                      ),
+                      Text("Exercise Utility"),
+                    ],
+                  ),
+                  RadioListTile<ExerciseDevice>(
+                    title: const Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SizedBox(
+                            width: 30,
+                            child: FaIcon(FontAwesomeIcons.dumbbell)),
+                        SizedBox(width: 8),
+                        Text('Free Weights'),
+                      ],
+                    ),
+                    value: ExerciseDevice.free,
+                    groupValue: chosenDevice,
+                    onChanged: (ExerciseDevice? value) {
+                      setState(() {
+                        chosenDevice = value!;
+                      });
+                    },
+                  ),
+                  RadioListTile<ExerciseDevice>(
+                    title: const Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SizedBox(width: 30, child: Icon(Icons.forklift)),
+                        SizedBox(width: 8),
+                        Text('Machine'),
+                      ],
+                    ),
+                    value: ExerciseDevice.machine,
+                    groupValue: chosenDevice,
+                    onChanged: (ExerciseDevice? value) {
+                      setState(() {
+                        chosenDevice = value!;
+                      });
+                    },
+                  ),
+                  RadioListTile<ExerciseDevice>(
+                    title: const Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SizedBox(width: 30, child: Icon(Icons.cable)),
+                        SizedBox(width: 8),
+                        Text('Cable'),
+                      ],
+                    ),
+                    value: ExerciseDevice.cable,
+                    groupValue: chosenDevice,
+                    onChanged: (ExerciseDevice? value) {
+                      setState(() {
+                        chosenDevice = value!;
+                      });
+                    },
+                  ),
+                  RadioListTile<ExerciseDevice>(
+                    title: const Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SizedBox(
+                            width: 30, child: Icon(Icons.sports_martial_arts)),
+                        SizedBox(width: 8),
+                        Text('Bodyweight'),
+                      ],
+                    ),
+                    value: ExerciseDevice.body,
+                    groupValue: chosenDevice,
+                    onChanged: (ExerciseDevice? value) {
+                      setState(() {
+                        chosenDevice = value!;
+                      });
+                    },
+                  ),
+                ],
+              ),
+            ),
+
+// ...existing code...
+
+            Column(
+              children: [
+                const Text("Weight Increase Increments"),
+                RotatedBox(
+                  quarterTurns: 3,
+                  child: Slider(
+                    value: weightInc,
+                    min: 1,
+                    max: 10,
+                    divisions: 18,
+                    label: weightInc.toString(),
+                    onChanged: (double value) {
+                      setState(() {
+                        weightInc = value;
+                      });
+                    },
                   ),
                 ),
-              ),
-              SizedBox(height: boxSpace),
-              SizedBox(height: boxSpace),
-              SizedBox(height: boxSpace),
-              const Text("Exercise Utility"),
-              SizedBox(height: boxSpace),
-              SegmentedButton<ExerciseDevice>(
-                  showSelectedIcon: false,
-                  segments: const <ButtonSegment<ExerciseDevice>>[
-                    ButtonSegment<ExerciseDevice>(
-                        value: ExerciseDevice.free,
-                        //label: Text('Free'),
-
-                        icon: FaIcon(FontAwesomeIcons.dumbbell)),
-                    ButtonSegment<ExerciseDevice>(
-                        value: ExerciseDevice.machine,
-                        //label: Text('Machine',softWrap: false, overflow: TextOverflow.fade),
-                        icon: Icon(Icons.forklift)),
-                    ButtonSegment<ExerciseDevice>(
-                        value: ExerciseDevice.cable,
-                        //label: Text('Cable'),
-                        icon: Icon(Icons.cable)),
-                    ButtonSegment<ExerciseDevice>(
-                        value: ExerciseDevice.body,
-                        //label: Text('Body'),
-                        icon: Icon(Icons.sports_martial_arts)),
-                  ],
-                  selected: <ExerciseDevice>{chosenDevice},
-                  onSelectionChanged: (Set<ExerciseDevice> newSelection) {
-                    setState(() {
-                      chosenDevice = newSelection.first;
-                    });
-                  }),
-              SizedBox(height: boxSpace),
-              SizedBox(height: boxSpace),
-              SizedBox(height: boxSpace),
-              const Text("Repetition Range"),
-              SizedBox(height: boxSpace),
-              RangeSlider(
-                values: repRange,
-                max: 30,
-                min: 1,
-                divisions: 29,
-                labels: RangeLabels(
-                  repRange.start.round().toString(),
-                  repRange.end.round().toString(),
-                ),
-                onChanged: (RangeValues values) {
-                  setState(() {
-                    RangeValues newValues = RangeValues(
-                        values.start,
-                        values.start == values.end
-                            ? values.end + 1
-                            : values.end);
-                    repRange = newValues;
-                    minRep = newValues.start;
-                    maxRep = newValues.end;
-                  });
-                },
-              ),
-              SizedBox(height: boxSpace),
-              const Text("Weight Increase Increments"),
-              SizedBox(height: boxSpace),
-              Slider(
-                value: weightInc,
-                min: 1,
-                max: 10,
-                divisions: 18,
-                label: weightInc.toString(),
-                onChanged: (double value) {
-                  setState(() {
-                    weightInc = value;
-                  });
-                },
-              ),
-              SizedBox(height: boxSpace),
-              IconButton(
-                icon: const Icon(Icons.accessibility_new),
-                iconSize: 50,
-                tooltip: 'muscles',
-                onPressed: () {
-                  showModalBottomSheet<dynamic>(
-                    isScrollControlled: true,
-                    context: context,
-                    sheetAnimationStyle: AnimationStyle(
-                      duration: const Duration(milliseconds: 600),
-                      reverseDuration: const Duration(milliseconds: 600),
-                    ),
-                    builder: (BuildContext context) {
-                      return const BottomSheet();
-                    },
-                  );
-                },
-              ),
-              SizedBox(height: boxSpace),
-              ConfirmButton(context),
-            ],
-          ),
-        ));
+                Text("$weightInc kg"),
+              ],
+            ),
+            SizedBox(width: boxSpace),
+            SizedBox(width: boxSpace),
+          ],
+        )
+      ],
+    );
   }
 
   IconButton ConfirmButton(BuildContext context) {
@@ -468,7 +666,7 @@ class _BottomSheetState extends State<BottomSheet> {
     [0.35, 0.4, 'Triceps'], //Triceps
   ];
 
-  opacity_change(double op) {
+  double opacity_change(double op) {
     if (op >= 1.0) {
       op = 0.0;
     } else {
@@ -601,6 +799,189 @@ class _BottomSheetState extends State<BottomSheet> {
             }),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class MuscleSelectionWidget extends StatefulWidget {
+  const MuscleSelectionWidget({super.key});
+
+  @override
+  State<MuscleSelectionWidget> createState() => _MuscleSelectionWidgetState();
+}
+
+class _MuscleSelectionWidgetState extends State<MuscleSelectionWidget> {
+  final List<List<String>> frontImages = [
+    ['images/muscles/Front_biceps.png', 'Biceps'],
+    ['images/muscles/Front_calves.png', 'Calves'],
+    ['images/muscles/Front_Front_delts.png', 'Front Delts'],
+    ['images/muscles/Front_forearms.png', 'Forearms'],
+    ['images/muscles/Front_pecs.png', 'Pectoralis major'],
+    ['images/muscles/Front_quads.png', 'Quadriceps'],
+    ['images/muscles/Front_sideabs.png', 'Abdominals'],
+    ['images/muscles/Front_abs.png', 'Abdominals'],
+    ['images/muscles/Front_trapz.png', 'Trapezius'],
+    ['images/muscles/Front_abs.png', 'Abdominals']
+  ];
+
+  final List<List<String>> backImages = [
+    ['images/muscles/Back_calves.png', 'Calves'],
+    ['images/muscles/Back_Back_delts.png', 'Back Delts'],
+    ['images/muscles/Back_Back_delts2.png', 'Back Delts'],
+    ['images/muscles/Back_Front_delts.png', 'Front Delts'],
+    ['images/muscles/Back_Side_delts.png', 'Deltoids'],
+    ['images/muscles/Back_forearms.png', 'Forearms'],
+    ['images/muscles/Back_glutes.png', 'Gluteus maximus'],
+    ['images/muscles/Back_hamstrings.png', 'Hamstrings'],
+    ['images/muscles/Back_lats.png', 'Latissimus dorsi'],
+    ['images/muscles/Back_trapz.png', 'Trapezius'],
+    ['images/muscles/Back_triceps.png', 'Triceps'],
+  ];
+
+  final List<List> frontButtons = [
+    [0.35, 0.4, 'Biceps'],
+    [0.46, 0.4, 'Forearms'],
+    [0.25, 0.4, 'Front Delts'],
+    [0.28, 0.7, 'Pectoralis major'],
+    [0.4, 0.7, 'Abdominals'],
+    [0.2, 0.7, 'Trapezius'],
+    [0.6, 0.62, 'Quadriceps'],
+    [0.8, 0.58, 'Calves'],
+  ];
+
+  final List<List> backButtons = [
+    [0.82, 0.6, 'Calves'],
+    [0.2, 0.45, 'Deltoids'],
+    [0.26, 0.38, 'Back Delts'],
+    [0.5, 0.4, 'Forearms'],
+    [0.55, 0.7, 'Gluteus maximus'],
+    [0.68, 0.6, 'Hamstrings'],
+    [0.4, 0.7, 'Latissimus dorsi'],
+    [0.2, 0.7, 'Trapezius'],
+    [0.35, 0.4, 'Triceps'],
+  ];
+
+  double opacity_change(double op) {
+    if (op >= 1.0) {
+      op = 0.0;
+    } else {
+      op += 1 / 4;
+    }
+    return op;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Text(
+            'Muscle Groups',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 16),
+          LayoutBuilder(builder: (context, constraints) {
+            return Stack(children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  SizedBox(
+                    width: constraints.maxWidth / 2,
+                    height: MediaQuery.of(context).size.height * 0.5,
+                    child: Transform.scale(
+                        scaleX: -1,
+                        child: Stack(children: [
+                          Image(
+                            width: constraints.maxWidth / 3,
+                            fit: BoxFit.fill,
+                            image:
+                                const AssetImage('images/muscles/Front_bg.png'),
+                          ),
+                          for (var i in frontImages)
+                            Image(
+                              fit: BoxFit.fill,
+                              width: constraints.maxWidth / 3,
+                              image: AssetImage(i[0]),
+                              opacity: AlwaysStoppedAnimation(
+                                  globals.muscle_val[i[1]]!),
+                            ),
+                          for (var i in frontButtons)
+                            FractionallySizedBox(
+                                alignment: Alignment.bottomRight,
+                                heightFactor: i[0],
+                                widthFactor: i[1],
+                                child: Stack(
+                                  alignment: AlignmentDirectional.bottomEnd,
+                                  children: [
+                                    TextButton(
+                                        onPressed: () => setState(() {
+                                              globals.muscle_val[i[2]] =
+                                                  opacity_change(globals
+                                                      .muscle_val[i[2]]!);
+                                            }),
+                                        child: Transform.scale(
+                                            scaleX: -1,
+                                            child: Text(
+                                              ("${(globals.muscle_val[i[2]]! * 100).round()}%"),
+                                              maxLines: 1,
+                                              style: Theme.of(context)
+                                                  .textTheme
+                                                  .bodyLarge,
+                                              overflow: TextOverflow.visible,
+                                            )))
+                                  ],
+                                )),
+                        ])),
+                  ),
+                  SizedBox(
+                      width: constraints.maxWidth / 2,
+                      height: MediaQuery.of(context).size.height * 0.5,
+                      child: Stack(children: [
+                        Image(
+                            fit: BoxFit.fill,
+                            width: constraints.maxWidth / 3,
+                            image:
+                                const AssetImage('images/muscles/Back_bg.png')),
+                        for (var i in backImages)
+                          Image(
+                            fit: BoxFit.fill,
+                            width: constraints.maxWidth / 3,
+                            image: AssetImage(i[0]),
+                            opacity: AlwaysStoppedAnimation(
+                                globals.muscle_val[i[1]]!),
+                          ),
+                        for (var i in backButtons)
+                          FractionallySizedBox(
+                              alignment: Alignment.bottomRight,
+                              heightFactor: i[0],
+                              widthFactor: i[1],
+                              child: Stack(
+                                alignment: AlignmentDirectional.bottomEnd,
+                                children: [
+                                  TextButton(
+                                      onPressed: () => setState(() {
+                                            globals.muscle_val[i[2]] =
+                                                opacity_change(
+                                                    globals.muscle_val[i[2]]!);
+                                          }),
+                                      child: Text(
+                                        ("${(globals.muscle_val[i[2]]! * 100).round()}%"),
+                                        maxLines: 1,
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodyLarge,
+                                        overflow: TextOverflow.visible,
+                                      ))
+                                ],
+                              )),
+                      ]))
+                ],
+              ),
+            ]);
+          }),
+        ],
       ),
     );
   }
