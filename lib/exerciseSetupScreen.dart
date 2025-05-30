@@ -184,23 +184,54 @@ class _ExerciseSetupScreenState extends State<ExerciseSetupScreen> {
           IconButton(
               onPressed: () async {
                 if (currentExercise != null && currentExercise!.id != null) {
-                  try {
-                    // Delete the exercise via API
-                    await userService.deleteExercise(currentExercise!.id!);
+                  final exerciseId = currentExercise!.id!;
 
-                    // Delete all training sets for this exercise
+                  // Show confirmation dialog
+                  final confirmed = await showDialog<bool>(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: Text('Delete "${currentExercise!.name}"?'),
+                      content: const Text(
+                          'This will permanently delete the exercise and ALL training history. This cannot be undone.'),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.of(context).pop(false),
+                          child: const Text('Cancel'),
+                        ),
+                        TextButton(
+                          onPressed: () => Navigator.of(context).pop(true),
+                          child: const Text('Delete',
+                              style: TextStyle(color: Colors.red)),
+                        ),
+                      ],
+                    ),
+                  );
+
+                  if (confirmed != true) return;
+
+                  try {
+                    // CORRECT ORDER: Delete dependent records FIRST
+                    print('Deleting training sets for exercise $exerciseId');
                     final trainingSets = await userService.getTrainingSets();
                     for (var set in trainingSets) {
-                      if (set['exercise_id'] == currentExercise!.id) {
+                      if (set['exercise_id'] == exerciseId) {
                         await userService.deleteTrainingSet(set['id']);
                       }
                     }
+
+                    // THEN delete the exercise (no more foreign key violations)
+                    print('Deleting exercise $exerciseId');
+                    await userService.deleteExercise(exerciseId);
+
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                          content: Text('Exercise deleted successfully')),
+                    );
 
                     int count = 0;
                     Navigator.of(context).popUntil((_) => count++ >= 2);
                   } catch (e) {
                     print('Error deleting exercise: $e');
-                    // Show error to user
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(content: Text('Error deleting exercise: $e')),
                     );
@@ -492,11 +523,41 @@ class _ExerciseSetupScreenState extends State<ExerciseSetupScreen> {
               ),
             ),
 
-// ...existing code...
-
             Column(
               children: [
-                const Text("Weight Increase Increments"),
+                const Text("Repetition Range"),
+                SizedBox(height: boxSpace),
+                RotatedBox(
+                  quarterTurns: 3,
+                  child: RangeSlider(
+                    values: repRange,
+                    max: 30,
+                    min: 1,
+                    divisions: 29,
+                    labels: RangeLabels(
+                      repRange.start.round().toString(),
+                      repRange.end.round().toString(),
+                    ),
+                    onChanged: (RangeValues values) {
+                      setState(() {
+                        RangeValues newValues = RangeValues(
+                            values.start,
+                            values.start == values.end
+                                ? values.end + 1
+                                : values.end);
+                        repRange = newValues;
+                        minRep = newValues.start;
+                        maxRep = newValues.end;
+                      });
+                    },
+                  ),
+                )
+              ],
+            ),
+            SizedBox(width: boxSpace),
+            Column(
+              children: [
+                const Text("Weight Increments"),
                 RotatedBox(
                   quarterTurns: 3,
                   child: Slider(
@@ -646,7 +707,7 @@ class _BottomSheetState extends State<BottomSheet> {
   ];
   final List<List> frontButtons = [
     [0.35, 0.4, 'Biceps'], //Biceps
-    [0.46, 0.4, 'Forearms'], //Forearms
+    [0.46, 0.4, 'Calves'], //Calves
     [0.25, 0.4, 'Front Delts'], //Front Delts
     [0.28, 0.7, 'Pectoralis major'], // Pectoralis major
     [0.4, 0.7, 'Abdominals'], //abdominals

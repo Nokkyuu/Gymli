@@ -182,9 +182,9 @@ class _LandingScreenState extends State<LandingScreen> {
     filteredExercises = [];
     metainfo = [];
 
-    // Filter exercises by muscle group
+    // Filter exercises by muscle group with 0.75+ intensity
     for (var ex in allExercises) {
-      if (ex.muscleGroups.contains(muscle)) {
+      if (ex.primaryMuscleGroups.contains(muscle)) {
         filteredExercises.add(ex);
       }
     }
@@ -369,128 +369,167 @@ class _LandingScreenState extends State<LandingScreen> {
       );
     }
 
-    return Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        mainAxisSize: MainAxisSize.max,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Text("Filter by or "),
-              TextButton.icon(
-                onPressed: () async {
-                  setState(() {
-                    WorkoutController.value = TextEditingValue.empty;
-                    MuscleController.value = TextEditingValue.empty;
-                    selectedWorkout = null;
-                    selectedMuscle = null;
-                  });
-                  await showAllExercises();
-                },
-                label: const Text("Show All"),
-                icon: const Icon(Icons.search),
-              )
-            ],
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Spacer(),
-              DropdownMenu<ApiWorkout>(
-                width: MediaQuery.of(context).size.width * 0.45,
-                enabled: true,
-                key: UniqueKey(),
-                //initialSelection: WorkoutList.Push,
-                controller: WorkoutController,
-                requestFocusOnTap: false,
-                label: const Text('Workouts'),
-                onSelected: (ApiWorkout? workout) {
-                  workoutFilterList(workout!);
-                  setState(() {
-                    MuscleController.value = TextEditingValue.empty;
-                    selectedWorkout = workout;
-                    selectedMuscle = null; // Clear muscle selection
-                  });
-                },
-                inputDecorationTheme: InputDecorationTheme(
-                  isDense: true,
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-                  constraints: BoxConstraints.tight(const Size.fromHeight(40)),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
+    return Stack(
+      children: [
+        Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.max,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Text("Filter by or "),
+                TextButton.icon(
+                  onPressed: () async {
+                    setState(() {
+                      WorkoutController.value = TextEditingValue.empty;
+                      MuscleController.value = TextEditingValue.empty;
+                      selectedWorkout = null;
+                      selectedMuscle = null;
+                    });
+                    await showAllExercises();
+                  },
+                  label: const Text("Show All"),
+                  icon: const Icon(Icons.search),
+                )
+              ],
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Spacer(),
+                DropdownMenu<ApiWorkout>(
+                  width: MediaQuery.of(context).size.width * 0.45,
+                  enabled: true,
+                  key: UniqueKey(),
+                  controller: WorkoutController,
+                  requestFocusOnTap: false,
+                  label: const Text('Workouts'),
+                  onSelected: (ApiWorkout? workout) {
+                    workoutFilterList(workout!);
+                    setState(() {
+                      MuscleController.value = TextEditingValue.empty;
+                      selectedWorkout = workout;
+                      selectedMuscle = null;
+                    });
+                  },
+                  inputDecorationTheme: InputDecorationTheme(
+                    isDense: true,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                    constraints:
+                        BoxConstraints.tight(const Size.fromHeight(40)),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  dropdownMenuEntries: availableWorkouts
+                      .map<DropdownMenuEntry<ApiWorkout>>((ApiWorkout workout) {
+                    return DropdownMenuEntry<ApiWorkout>(
+                      value: workout,
+                      label: workout.name,
+                      trailingIcon: IconButton(
+                          onPressed: () => {
+                                Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                            builder: (context) =>
+                                                WorkoutSetupScreen(
+                                                    workout.name)))
+                                    .then((value) => _reload(value))
+                              },
+                          icon: const Icon(Icons.edit)),
+                    );
+                  }).toList(),
+                ),
+                const Spacer(),
+                DropdownMenu<MuscleList>(
+                  width: MediaQuery.of(context).size.width * 0.45,
+                  enabled: true,
+                  controller: MuscleController,
+                  requestFocusOnTap: false,
+                  label: const Text('Muscles'),
+                  onSelected: (MuscleList? name) async {
+                    await muscleFilterList(name!);
+                    setState(() {
+                      WorkoutController.value = TextEditingValue.empty;
+                      selectedMuscle = name;
+                      selectedWorkout = null;
+                    });
+                  },
+                  inputDecorationTheme: InputDecorationTheme(
+                    isDense: true,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                    constraints:
+                        BoxConstraints.tight(const Size.fromHeight(40)),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  dropdownMenuEntries: MuscleList.values
+                      .map<DropdownMenuEntry<MuscleList>>((MuscleList name) {
+                    return DropdownMenuEntry<MuscleList>(
+                      value: name,
+                      label: name.muscleName,
+                    );
+                  }).toList(),
+                ),
+                const Spacer(),
+              ],
+            ),
+            const Divider(),
+            Expanded(
+              child: ValueListenableBuilder(
+                  valueListenable: filterApplied,
+                  builder: (context, bool filterApplied, _) {
+                    var items = filteredExercises;
+                    if (items.isNotEmpty) {
+                      return ResponsiveHelper.isMobile(context)
+                          ? _buildMobileListView(items)
+                          : _buildDesktopGridView(items);
+                    } else {
+                      return const Text("No exercises yet");
+                    }
+                  }),
+            )
+          ],
+        ),
+        // Demo mode watermark
+        if (!userService.isLoggedIn)
+          Positioned.fill(
+            child: IgnorePointer(
+              child: Container(
+                alignment: Alignment.center,
+                child: Transform.rotate(
+                  angle: -0.3, // Slight rotation for watermark effect
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 10,
+                    ),
+                    decoration: BoxDecoration(
+                      border: Border.all(
+                        color: Colors.red.withValues(alpha: 0.3),
+                        width: 2,
+                      ),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      'DEMO MODE\nNo data will be saved\nplease log in',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.red.withValues(alpha: 0.4),
+                        letterSpacing: 2,
+                      ),
+                    ),
                   ),
                 ),
-                dropdownMenuEntries: availableWorkouts
-                    .map<DropdownMenuEntry<ApiWorkout>>((ApiWorkout workout) {
-                  return DropdownMenuEntry<ApiWorkout>(
-                    value: workout,
-                    label: workout.name,
-                    trailingIcon: IconButton(
-                        onPressed: () => {
-                              Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                          builder: (context) =>
-                                              WorkoutSetupScreen(workout.name)))
-                                  .then((value) => _reload(value))
-                            },
-                        icon: const Icon(Icons.edit)),
-                  );
-                }).toList(),
               ),
-              const Spacer(),
-              DropdownMenu<MuscleList>(
-                width: MediaQuery.of(context).size.width * 0.45,
-                enabled: true,
-                //initialSelection: MuscleList.Pectoralis_major,
-                controller: MuscleController,
-                requestFocusOnTap: false,
-
-                label: const Text('Muscles'),
-                onSelected: (MuscleList? name) async {
-                  await muscleFilterList(name!);
-                  setState(() {
-                    WorkoutController.value = TextEditingValue.empty;
-                    selectedMuscle = name;
-                    selectedWorkout = null; // Clear workout selection
-                  });
-                },
-                inputDecorationTheme: InputDecorationTheme(
-                  isDense: true,
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-                  constraints: BoxConstraints.tight(const Size.fromHeight(40)),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                dropdownMenuEntries: MuscleList.values
-                    .map<DropdownMenuEntry<MuscleList>>((MuscleList name) {
-                  return DropdownMenuEntry<MuscleList>(
-                    value: name,
-                    label: name.muscleName,
-                  );
-                }).toList(),
-              ),
-              const Spacer(),
-            ],
+            ),
           ),
-          const Divider(),
-          Expanded(
-            child: ValueListenableBuilder(
-                valueListenable: filterApplied,
-                builder: (context, bool filterApplied, _) {
-                  var items = filteredExercises;
-                  if (items.isNotEmpty) {
-                    // Use responsive layout: ListView for mobile, GridView for non-mobile
-                    return ResponsiveHelper.isMobile(context)
-                        ? _buildMobileListView(items)
-                        : _buildDesktopGridView(items);
-                  } else {
-                    return const Text("No exercises yet");
-                  }
-                }),
-          )
-        ]);
+      ],
+    );
   }
 
   Widget _buildMobileListView(List<ApiExercise> items) {

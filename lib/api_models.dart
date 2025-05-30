@@ -183,6 +183,21 @@ class ApiExercise {
       "$defaultIncrement"
     ];
   }
+
+  // Add this new getter method
+  List<String> get primaryMuscleGroups {
+    List<String> groups = [];
+    final intensities = muscleIntensities;
+    for (int i = 0;
+        i < muscleGroupNames.length && i < intensities.length;
+        i++) {
+      if (intensities[i] >= 0.75) {
+        // Only include muscles with high intensity
+        groups.add(muscleGroupNames[i]);
+      }
+    }
+    return groups;
+  }
 }
 
 /// ApiTrainingSet - Represents a single training session entry for an exercise

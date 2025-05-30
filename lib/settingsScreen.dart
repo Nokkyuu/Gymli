@@ -1249,130 +1249,69 @@ class _SettingsScreen extends State<SettingsScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           mainAxisSize: MainAxisSize.max,
           children: <Widget>[
-            // Row(
-            //   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            //   children: [
-            //     const Text("Wakeup Timer (s)"),
-            //     SizedBox(
-            //       width: 100,
-            //       child: TextField(
-            //           textAlign: TextAlign.center,
-            //           controller: wakeUpTimeController,
-            //           obscureText: false,
-            //           decoration: const InputDecoration(
-            //             border: UnderlineInputBorder(),
-            //             //alignLabelWithHint: true
-            //           ),
-            //           onChanged: (String s) async {
-            //             if (double.tryParse(s) != null) {
-            //               final SharedPreferences prefs = await _preferences;
-            //               globals.idleTimerWakeup = int.parse(s);
-            //               prefs.setInt('idleWakeTime', globals.idleTimerWakeup);
-            //             }
-            //           }),
-            //     ),
-            //   ],
-            // ),
-            // Row(
-            //   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            //   children: [
-            //     const Text("Graph days"),
-            //     SizedBox(
-            //       width: 100,
-            //       child: TextField(
-            //           textAlign: TextAlign.center,
-            //           controller: graphNumberOfDays,
-            //           obscureText: false,
-            //           decoration: const InputDecoration(
-            //             border: UnderlineInputBorder(),
-            //             //alignLabelWithHint: true
-            //           ),
-            //           onChanged: (String s) async {
-            //             if (double.tryParse(s) != null) {
-            //               final SharedPreferences prefs = await _preferences;
-            //               globals.graphNumberOfDays = int.parse(s);
-            //               prefs.setInt(
-            //                   'graphNumberOfDays', globals.graphNumberOfDays);
-            //             }
-            //           }),
-            //     ),
-            //   ],
-            // ),
-            // const SizedBox(height: 10),
-            // Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
-            //   const Text("Graph display"),
-            //   SegmentedButton<GraphMode>(
-            //       showSelectedIcon: false,
-            //       segments: const <ButtonSegment<GraphMode>>[
-            //         ButtonSegment<GraphMode>(
-            //             value: GraphMode.simple,
-            //             label: Text('Simple (max)'),
-            //             icon: FaIcon(FontAwesomeIcons.arrowTrendUp)),
-            //         ButtonSegment<GraphMode>(
-            //             value: GraphMode.detailed,
-            //             label: Text('Detailed'),
-            //             icon: FaIcon(FontAwesomeIcons.chartColumn))
-            //       ],
-            //       selected: <GraphMode>{selectedGraphMode},
-            //       onSelectionChanged: (Set<GraphMode> s) async {
-            //         setState(() {
-            //           selectedGraphMode = s.first;
-            //         });
-            //         final SharedPreferences prefs = await _preferences;
-            //         globals.detailedGraph =
-            //             s.first == GraphMode.simple ? false : true;
-            //         prefs.setBool('detailedGraph',
-            //             s.first == GraphMode.simple ? false : true);
-            //       }),
-            // ]),
-            // const SizedBox(height: 10),
-            // Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
-            //   const Text("Display mode"),
-            //   SegmentedButton<DisplayMode>(
-            //       showSelectedIcon: false,
-            //       segments: const <ButtonSegment<DisplayMode>>[
-            //         ButtonSegment<DisplayMode>(
-            //             value: DisplayMode.light, icon: Icon(Icons.light_mode)),
-            //         ButtonSegment<DisplayMode>(
-            //             value: DisplayMode.dark, icon: Icon(Icons.dark_mode)),
-            //       ],
-            //       selected: <DisplayMode>{selectedMode},
-            //       onSelectionChanged: (Set<DisplayMode> s) {
-            //         setState(() {
-            //           selectedMode = s.first;
-            //         });
-            //       }),
-            // ]),
-            // const SizedBox(height: 10),
-            // Row(
-            //   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            //   children: [
-            //     const Text("Score calculation"),
-            //     Column(children: [
-            //       SegmentedButton<DisplayMode>(
-            //           showSelectedIcon: false,
-            //           segments: const <ButtonSegment<DisplayMode>>[
-            //             ButtonSegment<DisplayMode>(
-            //                 value: DisplayMode.light,
-            //                 label: Text('Equation'),
-            //                 icon: Icon(Icons.calculate)),
-            //             ButtonSegment<DisplayMode>(
-            //                 value: DisplayMode.dark,
-            //                 label: Text('Records'),
-            //                 icon: Icon(Icons.arrow_outward))
-            //           ],
-            //           selected: <DisplayMode>{selectedMode},
-            //           onSelectionChanged: (Set<DisplayMode> s) {
-            //             setState(() {
-            //               selectedMode = s.first;
-            //             });
-            //           }),
-            //     ])
-            //   ],
-            // ),
-            const Spacer(
-              flex: 3,
+            Stack(
+              alignment: Alignment.center,
+              children: [
+                // Background image with reduced opacity
+                Opacity(
+                  opacity:
+                      0.15, // Adjust this value (0.0 to 1.0) for desired transparency
+                  child: Image.asset(
+                    Theme.of(context).brightness == Brightness.dark
+                        ? 'images/Icon-App_3_Darkmode.png'
+                        : 'images/Icon-App_3.png',
+                    fit: BoxFit.fill,
+                  ),
+                ),
+                // Text overlay
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'Gymli',
+                      style:
+                          Theme.of(context).textTheme.headlineLarge?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Son of Gain, part of the Fellowship of the Gym',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurface
+                                .withValues(alpha: 0.7),
+                          ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Version 1.1.0',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurface
+                                .withValues(alpha: 0.5),
+                          ),
+                    ),
+                    const SizedBox(height: 15),
+                    Text(
+                      'You should be lifting instead of fumbling with settings, son.',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurface
+                                .withValues(alpha: 0.7),
+                          ),
+                    ),
+                  ],
+                ),
+              ],
             ),
+            // const Spacer(
+            //   flex: 3,
+            // ),
             const Divider(),
             const SizedBox(height: 10),
             const Row(mainAxisAlignment: MainAxisAlignment.center, children: [
