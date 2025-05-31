@@ -205,6 +205,16 @@ class _StatisticsScreen extends State<StatisticsScreen> {
   // Add a new variable to track whether to use default filtering
   bool _useDefaultDateFilter = true;
 
+  // Exercise graph variables
+  List<ApiExercise> _availableExercises = [];
+  String? _selectedExerciseForGraph;
+  List<LineChartBarData> _exerciseGraphData = [];
+  Map<int, List<String>> _exerciseGraphTooltip = {};
+  double _exerciseGraphMinScore = 0;
+  double _exerciseGraphMaxScore = 100;
+  double _exerciseGraphMaxHistoryDistance = 90;
+  DateTime? _exerciseGraphMostRecentDate;
+
   // Modify the _loadStatistics method
   Future<void> _loadStatistics() async {
     try {
@@ -797,6 +807,7 @@ class _StatisticsScreen extends State<StatisticsScreen> {
                       _buildListTile("Trainings per Week", 1),
                       _buildListTile("Muscle Usage per Exercise", 2),
                       _buildListTile("Muscle Heatmap", 3),
+                      _buildListTile("Exercise Progress", 4),
                     ],
                   ),
                 ),
@@ -829,6 +840,10 @@ class _StatisticsScreen extends State<StatisticsScreen> {
       onTap: () {
         setState(() {
           _selectedWidgetIndex = index;
+          // Load exercises when Exercise Progress is selected
+          if (index == 4) {
+            _loadAvailableExercises();
+          }
         });
       },
       trailing: _selectedWidgetIndex == index
@@ -899,6 +914,8 @@ class _StatisticsScreen extends State<StatisticsScreen> {
             ),
           ],
         );
+      case 4:
+        return _buildExerciseProgressView();
       default:
         return Container();
     }
@@ -981,7 +998,7 @@ class _StatisticsScreen extends State<StatisticsScreen> {
                 Text(" ${barChartMuscleNames[i]}",
                     style: const TextStyle(fontSize: 10.0))
               ]));
-              // widgets.add(Text(barChartMuscleNames[i]));
+              // widgets.add(Text(barChartMuscleMuscleNames[i]));
             }
             return widgets;
           })(),
@@ -1000,7 +1017,7 @@ class _StatisticsScreen extends State<StatisticsScreen> {
                 Text(" ${barChartMuscleNames[i]}",
                     style: const TextStyle(fontSize: 10.0))
               ]));
-              // widgets.add(Text(barChartMuscleNames[i]));
+              // widgets.add(Text(barChartMuscleMuscleNames[i]));
             }
             return widgets;
           })(),
@@ -1073,7 +1090,7 @@ class _StatisticsScreen extends State<StatisticsScreen> {
     );
   }
 
-  // Modify the Confirm button in DatePicker to disable default filtering
+  // Update the Confirm button in DatePicker to refresh exercise graph data
   Row DatePicker() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -1152,9 +1169,13 @@ class _StatisticsScreen extends State<StatisticsScreen> {
                   // Disable default filtering when user selects custom dates
                   _useDefaultDateFilter = false;
                 });
-                // Call _loadStatistics() instead of just updateBarStatistics()
-                // This will update both the line chart and bar chart with the new date filters
+                // Call _loadStatistics() to update all statistics
                 _loadStatistics();
+
+                // Also update exercise graph if one is selected
+                if (_selectedExerciseForGraph != null) {
+                  _loadExerciseGraphData(_selectedExerciseForGraph!);
+                }
               },
               style: ElevatedButton.styleFrom(
                 minimumSize: const Size(double.infinity, 40),
@@ -1170,6 +1191,358 @@ class _StatisticsScreen extends State<StatisticsScreen> {
       ],
     );
   }
+
+  // Add new methods for exercise progress functionality
+  Future<void> _loadAvailableExercises() async {
+    try {
+      final exercises = await _getExercisesWithCache();
+      setState(() {
+        _availableExercises = exercises;
+        // Sort alphabetically with case-insensitive comparison and trimmed names (same as landing screen)
+        _availableExercises.sort((a, b) =>
+            a.name.trim().toLowerCase().compareTo(b.name.trim().toLowerCase()));
+
+        // Auto-select first exercise if available
+        if (_availableExercises.isNotEmpty &&
+            _selectedExerciseForGraph == null) {
+          _selectedExerciseForGraph = _availableExercises.first.name;
+          _loadExerciseGraphData(_selectedExerciseForGraph!);
+        }
+      });
+    } catch (e) {
+      print('Error loading exercises: $e');
+    }
+  }
+
+  Widget _buildExerciseProgressView() {
+    return Column(
+      children: [
+        Text(
+          "Exercise Progress",
+          style: subStyle,
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 20),
+
+        // Exercise dropdown
+        if (_availableExercises.isNotEmpty)
+          Container(
+            width: 300,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: DropdownButton<String>(
+              isExpanded: true,
+              value: _selectedExerciseForGraph,
+              hint: const Text("Select an exercise"),
+              items: _availableExercises.map((exercise) {
+                return DropdownMenuItem<String>(
+                  value: exercise.name,
+                  child: Text(exercise.name),
+                );
+              }).toList(),
+              onChanged: (String? newValue) {
+                if (newValue != null) {
+                  setState(() {
+                    _selectedExerciseForGraph = newValue;
+                  });
+                  _loadExerciseGraphData(newValue);
+                }
+              },
+            ),
+          ),
+
+        const SizedBox(height: 20),
+
+        // Graph section
+        if (_selectedExerciseForGraph != null)
+          Expanded(
+            child: Column(
+              children: [
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.all(10.0),
+                    child: LineChart(
+                      LineChartData(
+                        titlesData: FlTitlesData(
+                          topTitles: const AxisTitles(
+                            sideTitles: SideTitles(showTitles: false),
+                          ),
+                          rightTitles: const AxisTitles(
+                            sideTitles: SideTitles(showTitles: false),
+                          ),
+                          bottomTitles: AxisTitles(
+                            sideTitles: SideTitles(
+                              showTitles: true,
+                              reservedSize: 30,
+                              interval: _exerciseGraphMaxHistoryDistance > 30
+                                  ? 14
+                                  : 7,
+                              getTitlesWidget: (double value, TitleMeta meta) {
+                                if (_exerciseGraphMostRecentDate == null) {
+                                  return const Text('');
+                                }
+                                final daysAgo = value.abs().round();
+                                final date = _exerciseGraphMostRecentDate!
+                                    .subtract(Duration(days: daysAgo));
+                                return Transform.rotate(
+                                  angle: -0.5,
+                                  child: Text(
+                                    '${date.day}/${date.month}',
+                                    style: const TextStyle(fontSize: 10),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                        ),
+                        clipData: const FlClipData.all(),
+                        lineBarsData: _exerciseGraphData,
+                        lineTouchData: LineTouchData(
+                          touchTooltipData: LineTouchTooltipData(
+                            tooltipRoundedRadius: 0.0,
+                            showOnTopOfTheChartBoxArea: false,
+                            fitInsideVertically: true,
+                            tooltipMargin: 0,
+                            getTooltipItems: (value) {
+                              return value.map((e) {
+                                final tooltips =
+                                    _exerciseGraphTooltip[e.x.toInt()];
+                                if (tooltips != null &&
+                                    e.barIndex < tooltips.length) {
+                                  return LineTooltipItem(
+                                    tooltips[e.barIndex],
+                                    const TextStyle(
+                                      fontSize: 10,
+                                      color: Colors.white,
+                                    ),
+                                  );
+                                }
+                                return null;
+                              }).toList();
+                            },
+                          ),
+                        ),
+                        minY: _exerciseGraphMinScore - 5.0,
+                        maxY: _exerciseGraphMaxScore + 5.0,
+                        minX: -_exerciseGraphMaxHistoryDistance,
+                        maxX: 0,
+                      ),
+                    ),
+                  ),
+                ),
+                // Graph legend
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Row(
+                    children: [
+                      const SizedBox(width: 20),
+                      const Text("Best Set Per Day",
+                          style: TextStyle(fontSize: 12)),
+                      const SizedBox(width: 10),
+                      Container(width: 12, height: 12, color: Colors.blue),
+                      const SizedBox(width: 5),
+                      const Text("Progress", style: TextStyle(fontSize: 10)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          )
+        else
+          const Expanded(
+            child: Center(
+              child: Text("Select an exercise to view progress"),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Future<void> _loadExerciseGraphData(String exerciseName) async {
+    try {
+      // Get all training sets for the selected exercise
+      final allTrainingSets = await _getTrainingSetsWithCache();
+
+      // Filter for the selected exercise (exclude warmups)
+      List<Map<String, dynamic>> exerciseTrainingSets = allTrainingSets
+          .where((t) => t['exercise_name'] == exerciseName && t['set_type'] > 0)
+          .toList();
+
+      if (exerciseTrainingSets.isEmpty) {
+        setState(() {
+          _exerciseGraphData.clear();
+          _exerciseGraphTooltip.clear();
+        });
+        return;
+      }
+
+      // Apply date filtering (same logic as other statistics)
+      if (startingDate != null || endingDate != null) {
+        exerciseTrainingSets = exerciseTrainingSets.where((t) {
+          try {
+            final date = DateTime.parse(t['date']);
+            bool includeSet = true;
+
+            if (startingDate != null) {
+              var tokens = startingDate!.split("-");
+              String startingDateString =
+                  "${tokens[2]}-${tokens[1]}-${tokens[0]}T00:00:00";
+              DateTime start = DateTime.parse(startingDateString);
+              includeSet = includeSet &&
+                  (date.isAfter(start) || date.isAtSameMomentAs(start));
+            }
+
+            if (endingDate != null) {
+              var tokens = endingDate!.split("-");
+              String endingDateString =
+                  "${tokens[2]}-${tokens[1]}-${tokens[0]}T00:00:00";
+              DateTime end = DateTime.parse(endingDateString);
+              includeSet = includeSet &&
+                  (date.isBefore(end) || date.isAtSameMomentAs(end));
+            }
+
+            return includeSet;
+          } catch (e) {
+            return false;
+          }
+        }).toList();
+      } else if (_useDefaultDateFilter) {
+        // Apply 30-day default filter for exercise graph too
+        exerciseTrainingSets.sort((a, b) =>
+            DateTime.parse(b['date']).compareTo(DateTime.parse(a['date'])));
+        if (exerciseTrainingSets.length > 30) {
+          // Get unique training dates first
+          Set<String> uniqueDates = {};
+          List<Map<String, dynamic>> filteredSets = [];
+
+          for (var set in exerciseTrainingSets) {
+            final date = DateTime.parse(set['date']);
+            String dateKey =
+                "${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}";
+            if (!uniqueDates.contains(dateKey)) {
+              uniqueDates.add(dateKey);
+              if (uniqueDates.length <= 30) {
+                filteredSets.add(set);
+              }
+            } else if (uniqueDates.length <= 30) {
+              filteredSets.add(set);
+            }
+          }
+          exerciseTrainingSets = filteredSets;
+        }
+      }
+
+      // Group by date and find best set per day
+      Map<String, Map<String, dynamic>> bestSetPerDay = {};
+
+      for (var setData in exerciseTrainingSets) {
+        final date = DateTime.parse(setData['date']);
+        String dateKey =
+            "${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}";
+
+        if (!bestSetPerDay.containsKey(dateKey)) {
+          bestSetPerDay[dateKey] = setData;
+        } else {
+          // Compare with existing best set for this day
+          final existing = bestSetPerDay[dateKey]!;
+          final currentWeight = setData['weight'] as double;
+          final currentReps = setData['repetitions'] as int;
+          final existingWeight = existing['weight'] as double;
+          final existingReps = existing['repetitions'] as int;
+
+          // Choose better set (higher weight, then more reps)
+          if (currentWeight > existingWeight ||
+              (currentWeight == existingWeight && currentReps > existingReps)) {
+            bestSetPerDay[dateKey] = setData;
+          }
+        }
+      }
+
+      // Create graph data
+      List<FlSpot> graphPoints = [];
+      Map<double, String> tooltipData = {};
+
+      if (bestSetPerDay.isNotEmpty) {
+        // Sort dates and find range
+        var sortedDates = bestSetPerDay.keys.toList()..sort();
+        final earliestDate = DateTime.parse(sortedDates.first);
+        final latestDate = DateTime.parse(sortedDates.last);
+        _exerciseGraphMostRecentDate = latestDate;
+
+        // Calculate scores and create points
+        double minScore = double.infinity;
+        double maxScore = double.negativeInfinity;
+
+        for (String dateKey in sortedDates) {
+          final date = DateTime.parse(dateKey);
+          final setData = bestSetPerDay[dateKey]!;
+
+          // Create ApiTrainingSet for score calculation
+          final trainingSet = ApiTrainingSet(
+            weight: setData['weight'] as double,
+            repetitions: setData['repetitions'] as int,
+            baseReps: setData['base_reps'] as int,
+            maxReps: setData['max_reps'] as int,
+            increment: setData['increment'] as double,
+            date: date,
+            setType: setData['set_type'] as int,
+            exerciseId: setData['exercise_id'] as int,
+            exerciseName: exerciseName,
+            userName: '',
+          );
+
+          double xValue = -latestDate.difference(date).inDays.toDouble();
+          double yValue = globals.calculateScore(trainingSet);
+
+          graphPoints.add(FlSpot(xValue, yValue));
+          tooltipData[xValue] =
+              "${setData['weight']}kg @ ${setData['repetitions']}reps ($dateKey)";
+
+          minScore = min(minScore, yValue);
+          maxScore = max(maxScore, yValue);
+        }
+
+        // Update graph range
+        _exerciseGraphMaxHistoryDistance =
+            max(2.0, latestDate.difference(earliestDate).inDays.toDouble());
+        _exerciseGraphMinScore = minScore.isFinite ? minScore : 0;
+        _exerciseGraphMaxScore = maxScore.isFinite ? maxScore : 100;
+
+        // Create line chart data
+        _exerciseGraphData = [
+          LineChartBarData(
+            spots: graphPoints,
+            isCurved: true,
+            color: Colors.blue,
+            barWidth: 2,
+            isStrokeCapRound: true,
+            belowBarData: BarAreaData(show: false),
+            dotData: const FlDotData(show: true),
+          ),
+        ];
+
+        // Update tooltip data
+        _exerciseGraphTooltip.clear();
+        for (var entry in tooltipData.entries) {
+          _exerciseGraphTooltip[entry.key.toInt()] = [entry.value];
+        }
+      } else {
+        _exerciseGraphData.clear();
+        _exerciseGraphTooltip.clear();
+      }
+
+      setState(() {
+        // Graph data updated
+      });
+    } catch (e) {
+      print('Error loading exercise graph data: $e');
+      setState(() {
+        _exerciseGraphData.clear();
+        _exerciseGraphTooltip.clear();
+      });
+    }
+  }
+
+  // ...existing code...
 }
 
 // ignore: camel_case_types
