@@ -555,8 +555,10 @@ class _LandingScreenState extends State<LandingScreen> {
 
   Widget _buildDesktopGridView(List<ApiExercise> items) {
     return GridView.builder(
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3, // 4 columns for non-mobile devices
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: ResponsiveHelper.isDesktop(context)
+            ? 4
+            : 3, // 4 columns for non-mobile devices
         childAspectRatio: 4.0,
         crossAxisSpacing: 12.0,
         mainAxisSpacing: 8.0,
