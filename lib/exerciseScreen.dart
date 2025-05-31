@@ -901,7 +901,7 @@ class _ExerciseScreen extends State<ExerciseScreen> {
       if (trainingGraphs[i].isNotEmpty) {
         barData.add(LineChartBarData(
           spots: trainingGraphs[i],
-          isCurved: true,
+          isCurved: false,
           color: i < graphColors.length ? graphColors[i] : Colors.grey,
           barWidth: 2,
           isStrokeCapRound: true,

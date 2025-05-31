@@ -1511,7 +1511,8 @@ class _StatisticsScreen extends State<StatisticsScreen> {
         _exerciseGraphData = [
           LineChartBarData(
             spots: graphPoints,
-            isCurved: true,
+            isCurved: false,
+            curveSmoothness: 0.2,
             color: Colors.blue,
             barWidth: 2,
             isStrokeCapRound: true,
