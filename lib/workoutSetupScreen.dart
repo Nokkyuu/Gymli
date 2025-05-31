@@ -114,14 +114,17 @@ class _WorkoutSetupScreenState extends State<WorkoutSetupScreen> {
       if (currentWorkout != null &&
           currentWorkout!.id != null &&
           currentWorkout!.id! > 0) {
-        // Update existing workout
-        await userService.updateWorkout(
-          currentWorkout!.id!,
-          {
-            'name': name,
-            'units': units.map((unit) => unit.toJson()).toList(),
-          },
+        // Delete existing workout (this should also delete associated workout units)
+        await userService.deleteWorkout(currentWorkout!.id!);
+
+        // Create new workout with the updated data
+        await userService.createWorkout(
+          name: name,
+          units: units.map((unit) => unit.toJson()).toList(),
         );
+
+        // Reset currentWorkout since we've created a new one
+        currentWorkout = null;
       } else {
         // Create new workout
         await userService.createWorkout(

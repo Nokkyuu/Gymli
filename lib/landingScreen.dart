@@ -105,8 +105,8 @@ class _LandingScreenState extends State<LandingScreen> {
         filteredExercises.add(ex);
       }
     }
-    // Sort AFTER adding exercises to the list
-    filteredExercises.sort((a, b) => a.name.compareTo(b.name));
+    // Remove this line - sorting is done in ValueListenableBuilder
+    // filteredExercises.sort((a, b) => a.name.compareTo(b.name));
 
     // Initialize metainfo array with default values
     metainfo = List.filled(filteredExercises.length, "");
@@ -134,6 +134,8 @@ class _LandingScreenState extends State<LandingScreen> {
 
   Future<void> showAllExercises() async {
     filteredExercises = allExercises;
+    // Remove this line - sorting is done in ValueListenableBuilder
+    // filteredExercises.sort((a, b) => a.name.compareTo(b.name));
     metainfo = [];
 
     if (filteredExercises.isEmpty) {
@@ -188,6 +190,9 @@ class _LandingScreenState extends State<LandingScreen> {
         filteredExercises.add(ex);
       }
     }
+
+    // Remove this line - sorting is done in ValueListenableBuilder
+    // filteredExercises.sort((a, b) => a.name.compareTo(b.name));
 
     if (filteredExercises.isEmpty) {
       filterApplied.value = !filterApplied.value;
@@ -274,6 +279,8 @@ class _LandingScreenState extends State<LandingScreen> {
       setState(() {
         availableWorkouts =
             workouts.map((w) => ApiWorkout.fromJson(w)).toList();
+        // Sort workouts alphabetically by name
+        availableWorkouts.sort((a, b) => a.name.compareTo(b.name));
       });
     } catch (e) {
       if (mounted) {
@@ -481,7 +488,14 @@ class _LandingScreenState extends State<LandingScreen> {
               child: ValueListenableBuilder(
                   valueListenable: filterApplied,
                   builder: (context, bool filterApplied, _) {
-                    var items = filteredExercises;
+                    var items = filteredExercises
+                        .toList(); // Ensure we always work with a fresh list
+                    // Sort alphabetically with case-insensitive comparison and trimmed names
+                    items.sort((a, b) => a.name
+                        .trim()
+                        .toLowerCase()
+                        .compareTo(b.name.trim().toLowerCase()));
+                    //print(filteredExercises.map((e) => e.name).toList());
                     if (items.isNotEmpty) {
                       return ResponsiveHelper.isMobile(context)
                           ? _buildMobileListView(items)

@@ -410,8 +410,8 @@ class UserService {
           } else if (workoutId != null) {
             // Fetch units from workout units collection (online mode)
             final units = unitsByWorkoutId[workoutId] ?? [];
-            print(
-                'DEBUG: Workout ${workoutMap['name']} fetched ${units.length} units from workout units collection');
+            //print(
+            //    'DEBUG: Workout ${workoutMap['name']} fetched ${units.length} units from workout units collection');
             workoutMap['units'] = units;
           } else {
             workoutMap['units'] = [];
@@ -619,7 +619,7 @@ class UserService {
         }
       }
 
-      print('DEBUG: Created exercise ID to name mapping: $exerciseIdToName');
+      //print('DEBUG: Created exercise ID to name mapping: $exerciseIdToName');
 
       // Add exercise_name field to each training set
       return trainingSets.map((trainingSet) {
@@ -637,8 +637,8 @@ class UserService {
             final exerciseName =
                 exerciseIdToName[exerciseId] ?? 'Unknown Exercise';
             trainingSetMap['exercise_name'] = exerciseName;
-            print(
-                'DEBUG: Enriched training set ${trainingSetMap['id']} with exercise name: $exerciseName');
+            //print(
+            //   'DEBUG: Enriched training set ${trainingSetMap['id']} with exercise name: $exerciseName');
           } else {
             print('DEBUG: Training set missing exercise_id: $trainingSetMap');
           }
