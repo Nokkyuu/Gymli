@@ -241,6 +241,7 @@ class _WorkoutSetupScreenState extends State<WorkoutSetupScreen> {
 
   Column ControlUI(BuildContext context) {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         const SizedBox(height: 20),
         SizedBox(
@@ -268,7 +269,7 @@ class _WorkoutSetupScreenState extends State<WorkoutSetupScreen> {
                 SetNumberPickerMobile(),
                 ExerciseChoiceMobile(context),
               ])
-            : Row(children: [
+            : Row(mainAxisAlignment: MainAxisAlignment.center, children: [
                 SizedBox(width: 40),
                 SetNumberPickerDesktop(),
                 SizedBox(width: 20),
@@ -339,68 +340,65 @@ class _WorkoutSetupScreenState extends State<WorkoutSetupScreen> {
   }
 
   Widget ExerciseChoiceDesktop(BuildContext context) {
-    return Expanded(
-      child: Container(
-        width: 300,
-        height: 400,
-        //decoration: BoxDecoration(
-        //border: Border(
-        //top: BorderSide(color: Colors.grey),
-        //bottom: BorderSide(color: Colors.grey),
-        //),
-        //borderRadius: BorderRadius.circular(8),
-        //),
-        child: Column(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: const BoxDecoration(
-                //color: Theme.of(context).primaryColor.withOpacity(0.1),
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(8),
-                  topRight: Radius.circular(8),
-                ),
-              ),
-              width: double.infinity,
-              child: const Text(
-                'Select Exercise',
-                style: TextStyle(fontWeight: FontWeight.bold),
+    return Container(
+      width: 300,
+      height: MediaQuery.of(context).size.height * 0.6,
+      //decoration: BoxDecoration(
+      //border: Border(
+      //top: BorderSide(color: Colors.grey),
+      //bottom: BorderSide(color: Colors.grey),
+      //),
+      //borderRadius: BorderRadius.circular(8),
+      //),
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: const BoxDecoration(
+              //color: Theme.of(context).primaryColor.withOpacity(0.1),
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(8),
+                topRight: Radius.circular(8),
               ),
             ),
-            Expanded(
-              child: ListView.builder(
-                itemCount: allExercises.length,
-                itemBuilder: (context, index) {
-                  final exercise = allExercises[index];
-                  final isSelected = selectedExercise?.id == exercise.id;
+            width: double.infinity,
+            child: const Text(
+              'Select Exercise',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ),
+          Expanded(
+            child: ListView.builder(
+              itemCount: allExercises.length,
+              itemBuilder: (context, index) {
+                final exercise = allExercises[index];
+                final isSelected = selectedExercise?.id == exercise.id;
 
-                  return ListTile(
-                    selected: isSelected,
-                    leading: FaIcon(
-                      itemList[exercise.type],
+                return ListTile(
+                  selected: isSelected,
+                  leading: FaIcon(
+                    itemList[exercise.type],
+                    color: isSelected ? Theme.of(context).primaryColor : null,
+                  ),
+                  title: Text(
+                    exercise.name,
+                    style: TextStyle(
+                      fontWeight:
+                          isSelected ? FontWeight.bold : FontWeight.normal,
                       color: isSelected ? Theme.of(context).primaryColor : null,
                     ),
-                    title: Text(
-                      exercise.name,
-                      style: TextStyle(
-                        fontWeight:
-                            isSelected ? FontWeight.bold : FontWeight.normal,
-                        color:
-                            isSelected ? Theme.of(context).primaryColor : null,
-                      ),
-                    ),
-                    onTap: () {
-                      setState(() {
-                        selectedExercise = exercise;
-                        exerciseController.text = exercise.name;
-                      });
-                    },
-                  );
-                },
-              ),
+                  ),
+                  onTap: () {
+                    setState(() {
+                      selectedExercise = exercise;
+                      exerciseController.text = exercise.name;
+                    });
+                  },
+                );
+              },
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -470,7 +468,7 @@ class _WorkoutSetupScreenState extends State<WorkoutSetupScreen> {
 
   Row IsNotMobileWebLayout() {
     return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         // Main content takes 2/3 of the width
         Expanded(

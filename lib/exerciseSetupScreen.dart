@@ -428,7 +428,8 @@ class _ExerciseSetupScreenState extends State<ExerciseSetupScreen> {
           children: [
             SizedBox(width: boxSpace),
             SizedBox(width: boxSpace), // Spacer
-            Expanded(
+            SizedBox(
+              width: MediaQuery.of(context).size.width * 0.2,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -591,62 +592,119 @@ class _ExerciseSetupScreenState extends State<ExerciseSetupScreen> {
       tooltip: 'Confirm',
       onPressed: () => showDialog<String>(
         context: context,
+        barrierDismissible: false,
         builder: (BuildContext context) => Dialog(
           child: Padding(
-            padding: const EdgeInsets.all(8.0),
+            padding: const EdgeInsets.all(16.0),
             child: Column(
               mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
-                () {
-                  if (!globals.exerciseList
-                      .contains(exerciseTitleController.text)) {
-                    get_exercise_list(); //important redundancy if you dont leave the screen after saving
-                    return Text(
-                      'Save Exercise:\n',
-                      style: Theme.of(context).textTheme.titleLarge,
-                    );
-                  }
-                  return Text('Attention! \nOverwriting Exercise:\n',
-                      textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.titleLarge);
-                }(),
+                Icon(
+                  globals.exerciseList.contains(exerciseTitleController.text)
+                      ? Icons.edit
+                      : Icons.add_circle,
+                  size: 48,
+                  color: globals.exerciseList
+                          .contains(exerciseTitleController.text)
+                      ? Colors.orange
+                      : Colors.green,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  globals.exerciseList.contains(exerciseTitleController.text)
+                      ? 'Update Exercise'
+                      : 'Create New Exercise',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+                const SizedBox(height: 8),
+                if (globals.exerciseList.contains(exerciseTitleController.text))
+                  const Text(
+                    'This will update the existing exercise configuration.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: Colors.orange),
+                  ),
+                const SizedBox(height: 16),
                 Card(
-                    elevation: 5.0,
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text('${exerciseTitleController.text}\n',
-                              style: Theme.of(context).textTheme.titleMedium),
-                          Text(chosenDevice.name),
-                          Text(
-                              '${minRep.toInt()} to ${minRep.toInt() + maxRep.toInt()} reps'),
-                          Text('$weightInc kg increments'),
-                        ],
-                      ),
-                    )),
-                const SizedBox(height: 15),
+                  elevation: 2.0,
+                  child: Padding(
+                    padding: const EdgeInsets.all(12.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            const Icon(Icons.fitness_center, size: 20),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                exerciseTitleController.text,
+                                style: Theme.of(context).textTheme.titleMedium,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            const Icon(Icons.category, size: 16),
+                            const SizedBox(width: 4),
+                            Text('Equipment: ${_getDeviceName(chosenDevice)}'),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            const Icon(Icons.repeat, size: 16),
+                            const SizedBox(width: 4),
+                            Text('Reps: ${minRep.toInt()} - ${maxRep.toInt()}'),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            const Icon(Icons.add, size: 16),
+                            const SizedBox(width: 4),
+                            Text('Weight increments: $weightInc kg'),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Active muscle groups: ${_getActiveMuscleGroups()}',
+                          style:
+                              const TextStyle(fontSize: 12, color: Colors.grey),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
                     TextButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: const Text('Cancel'),
+                    ),
+                    FilledButton(
                       onPressed: () {
-                        add_exercise(exerciseTitleController.text, chosenDevice,
-                            minRep.toInt(), maxRep.toInt(), weightInc);
+                        add_exercise(
+                          exerciseTitleController.text,
+                          chosenDevice,
+                          minRep.toInt(),
+                          maxRep.toInt(),
+                          weightInc,
+                        );
                         setState(() {});
                         int count = 0;
                         Navigator.of(context).popUntil((_) => count++ >= 2);
                       },
-                      child: const Text('Confirm'),
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        int count = 0;
-                        Navigator.of(context).popUntil((_) => count++ >= 2);
-                      },
-                      child: const Text('Cancel'),
+                      child: Text(
+                        globals.exerciseList
+                                .contains(exerciseTitleController.text)
+                            ? 'Update Exercise'
+                            : 'Create Exercise',
+                      ),
                     ),
                   ],
                 ),
@@ -1070,4 +1128,27 @@ class HeadCard extends StatelessWidget {
       ),
     );
   }
+}
+
+String _getDeviceName(ExerciseDevice device) {
+  switch (device) {
+    case ExerciseDevice.free:
+      return 'Free Weights';
+    case ExerciseDevice.machine:
+      return 'Machine';
+    case ExerciseDevice.cable:
+      return 'Cable';
+    case ExerciseDevice.body:
+      return 'Bodyweight';
+  }
+}
+
+String _getActiveMuscleGroups() {
+  final activeMuscles = <String>[];
+  for (var entry in globals.muscle_val.entries) {
+    if (entry.value > 0) {
+      activeMuscles.add('${entry.key} (${(entry.value * 100).round()}%)');
+    }
+  }
+  return activeMuscles.isEmpty ? 'None selected' : activeMuscles.join(', ');
 }
