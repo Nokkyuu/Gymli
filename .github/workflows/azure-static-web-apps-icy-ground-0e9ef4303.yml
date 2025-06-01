@@ -45,6 +45,9 @@ jobs:
 
     - name: Build Flutter Web
       run: flutter build web
+    
+    - name: Copy staticwebapp.config.json
+      run: cp web/staticwebapp.config.json build/web/
 
     - name: Build And Deploy
       id: builddeploy
