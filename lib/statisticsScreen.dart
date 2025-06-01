@@ -42,20 +42,20 @@ class StatisticsScreen extends StatefulWidget {
 }
 
 const List<String> barChartMuscleNames = [
-  "Pecs",
-  "Trapz",
-  "Biceps",
-  "Abs",
-  "Front-D",
-  "Delts",
-  "Back-D",
-  "Lats",
-  "Triceps",
-  "Glutes",
-  "Hams",
-  "Quads",
-  "Arms",
-  "Calves",
+  "Pecs", // 0 - Pectoralis major
+  "Trapz", // 1 - Trapezius
+  "Biceps", // 2 - Biceps
+  "Abs", // 3 - Abdominals
+  "Front-D", // 4 - Front Delts
+  "Delts", // 5 - Deltoids (Side)
+  "Back-D", // 6 - Back Delts
+  "Lats", // 7 - Latissimus dorsi
+  "Triceps", // 8 - Triceps
+  "Glutes", // 9 - Gluteus maximus
+  "Hams", // 10 - Hamstrings
+  "Quads", // 11 - Quadriceps
+  "Forearms", // 12 - Forearms (FIXED: was "Arms")
+  "Calves", // 13 - Calves
 ];
 
 const List<Color> barChartMuscleColors = [
@@ -686,8 +686,25 @@ class _StatisticsScreen extends State<StatisticsScreen> {
         var highestValue = muscleHistoryScoreCum.reduce(max);
         heatMapMulti = [];
         for (int i = 0; i < muscleHistoryScoreCum.length; i++) {
-          heatMapMulti.add(
-              highestValue > 0 ? muscleHistoryScoreCum[i] / highestValue : 0.0);
+          double normalizedValue =
+              highestValue > 0 ? muscleHistoryScoreCum[i] / highestValue : 0.0;
+          heatMapMulti.add(normalizedValue);
+
+          // Debug output
+          if (i == 12) {
+            // Forearms index
+            print(
+                "Forearms debug - Raw score: ${muscleHistoryScoreCum[i]}, Normalized: $normalizedValue, Highest: $highestValue");
+          }
+        }
+
+        // Debug all muscle scores
+        print("All muscle scores:");
+        for (int i = 0;
+            i < min(muscleHistoryScoreCum.length, barChartMuscleNames.length);
+            i++) {
+          print(
+              "${barChartMuscleNames[i]}: ${muscleHistoryScoreCum[i]} (${(heatMapMulti[i] * 100).round()}%)");
         }
       }
     } else {

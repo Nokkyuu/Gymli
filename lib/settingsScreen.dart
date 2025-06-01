@@ -855,8 +855,20 @@ Future<void> restoreData(
             final muscleGroups = parseCSVMuscleGroups(row[2]);
             final muscleIntensities = parseCSVMuscleIntensities(row[3]);
 
-            print('DEBUG: Parsed muscle groups: $muscleGroups');
-            print('DEBUG: Parsed muscle intensities: $muscleIntensities');
+            // Add this debug code after parsing muscle groups and intensities
+            // print('DEBUG: Raw muscle groups string: "${row[2]}"');
+            // print('DEBUG: Raw muscle intensities string: "${row[3]}"');
+            // print('DEBUG: Parsed muscle groups: $muscleGroups');
+            // print('DEBUG: Parsed muscle intensities: $muscleIntensities');
+            // print(
+            //     'DEBUG: Available muscle group names: ${muscleGroupNames.join(", ")}');
+
+            // Check for exact matches
+            // for (String muscleGroup in muscleGroups) {
+            //   bool hasMatch = muscleGroupNames.contains(muscleGroup.trim());
+            //   print(
+            //       // 'DEBUG: Muscle group "$muscleGroup" has exact match: $hasMatch');
+            // }
 
             // Map muscle groups to individual muscle fields
             final Map<String, double> muscleMap = {};
@@ -866,18 +878,27 @@ Future<void> restoreData(
               muscleMap[muscleKey] = 0.0;
             }
 
-            // Set actual values from parsed data
+            // FIXED: Set actual values from parsed data with proper name matching
             for (int i = 0;
                 i < muscleGroups.length && i < muscleIntensities.length;
                 i++) {
-              final muscleKey = muscleGroups[i];
+              final muscleKey = muscleGroups[i].trim(); // Remove any whitespace
               final intensity = muscleIntensities[i];
+
+              // Direct match first
               if (muscleMap.containsKey(muscleKey)) {
                 muscleMap[muscleKey] = intensity;
                 print('DEBUG: Set $muscleKey = $intensity');
               } else {
-                print(
-                    'WARNING: Unknown muscle group "$muscleKey" found in CSV');
+                // Try alternative mappings for common variations
+                String? mappedKey = _mapMuscleGroupName(muscleKey);
+                if (mappedKey != null && muscleMap.containsKey(mappedKey)) {
+                  muscleMap[mappedKey] = intensity;
+                  print('DEBUG: Mapped $muscleKey -> $mappedKey = $intensity');
+                } else {
+                  print(
+                      'WARNING: Unknown muscle group "$muscleKey" found in CSV');
+                }
               }
             }
 
@@ -901,8 +922,7 @@ Future<void> restoreData(
               gluteusMaximus: muscleMap["Gluteus maximus"] ?? 0.0,
               hamstrings: muscleMap["Hamstrings"] ?? 0.0,
               quadriceps: muscleMap["Quadriceps"] ?? 0.0,
-              forearms: muscleMap["Forearms"] ??
-                  0.0, // FIXED: Added missing forearms parameter
+              forearms: muscleMap["Forearms"] ?? 0.0,
               calves: muscleMap["Calves"] ?? 0.0,
             );
             importedCount++;
@@ -1193,6 +1213,87 @@ List<double> parseCSVMuscleIntensities(String input) {
       .toList();
 
   return parts;
+}
+
+/// Maps alternative muscle group names to standard names
+String? _mapMuscleGroupName(String inputName) {
+  final Map<String, String> muscleNameMappings = {
+    // Handle variations in naming
+    'Pectoralis Major': 'Pectoralis major',
+    'pectoralis major': 'Pectoralis major',
+    'Chest': 'Pectoralis major',
+    'chest': 'Pectoralis major',
+
+    'trapezius': 'Trapezius',
+    'Traps': 'Trapezius',
+    'traps': 'Trapezius',
+
+    'biceps': 'Biceps',
+    'Bicep': 'Biceps',
+    'bicep': 'Biceps',
+
+    'abdominals': 'Abdominals',
+    'Abs': 'Abdominals',
+    'abs': 'Abdominals',
+    'Core': 'Abdominals',
+    'core': 'Abdominals',
+
+    'Front Deltoids': 'Front Delts',
+    'front delts': 'Front Delts',
+    'Anterior Delts': 'Front Delts',
+    'anterior delts': 'Front Delts',
+
+    'deltoids': 'Deltoids',
+    'Delts': 'Deltoids',
+    'delts': 'Deltoids',
+    'Shoulders': 'Deltoids',
+    'shoulders': 'Deltoids',
+
+    'Back Deltoids': 'Back Delts',
+    'back delts': 'Back Delts',
+    'Rear Delts': 'Back Delts',
+    'rear delts': 'Back Delts',
+    'Posterior Delts': 'Back Delts',
+    'posterior delts': 'Back Delts',
+
+    'latissimus dorsi': 'Latissimus dorsi',
+    'Lats': 'Latissimus dorsi',
+    'lats': 'Latissimus dorsi',
+    'Lat': 'Latissimus dorsi',
+    'lat': 'Latissimus dorsi',
+
+    'triceps': 'Triceps',
+    'Tricep': 'Triceps',
+    'tricep': 'Triceps',
+
+    'gluteus maximus': 'Gluteus maximus',
+    'Glutes': 'Gluteus maximus',
+    'glutes': 'Gluteus maximus',
+    'Glute': 'Gluteus maximus',
+    'glute': 'Gluteus maximus',
+
+    'hamstrings': 'Hamstrings',
+    'Hamstring': 'Hamstrings',
+    'hamstring': 'Hamstrings',
+    'Hams': 'Hamstrings',
+    'hams': 'Hamstrings',
+
+    'quadriceps': 'Quadriceps',
+    'Quads': 'Quadriceps',
+    'quads': 'Quadriceps',
+    'Quad': 'Quadriceps',
+    'quad': 'Quadriceps',
+
+    'forearms': 'Forearms',
+    'Forearm': 'Forearms',
+    'forearm': 'Forearms',
+
+    'calves': 'Calves',
+    'Calf': 'Calves',
+    'calf': 'Calves',
+  };
+
+  return muscleNameMappings[inputName];
 }
 
 /// List of muscle group names for mapping

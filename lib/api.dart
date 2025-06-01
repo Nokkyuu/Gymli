@@ -162,32 +162,43 @@ class ExerciseService {
     required double forearms,
     required double calves,
   }) async {
+    final requestBody = {
+      'user_name': userName,
+      'name': name,
+      'type': type,
+      'default_rep_base': defaultRepBase,
+      'default_rep_max': defaultRepMax,
+      'default_increment': defaultIncrement,
+      'pectoralis_major': pectoralisMajor,
+      'trapezius': trapezius,
+      'biceps': biceps,
+      'abdominals': abdominals,
+      'front_delts': frontDelts,
+      'deltoids': deltoids,
+      'back_delts': backDelts,
+      'latissimus_dorsi': latissimusDorsi,
+      'triceps': triceps,
+      'gluteus_maximus': gluteusMaximus,
+      'hamstrings': hamstrings,
+      'quadriceps': quadriceps,
+      'forearms': forearms,
+      'calves': calves,
+    };
+
+    // Add debug logging to see exactly what's being sent
+    print(
+        'DEBUG API: Creating exercise "${name}" with forearms value: $forearms');
+    print('DEBUG API: Full request body: ${json.encode(requestBody)}');
+
     final response = await http.post(
       Uri.parse('$baseUrl/exercises'),
       headers: {'Content-Type': 'application/json'},
-      body: json.encode({
-        'user_name': userName,
-        'name': name,
-        'type': type,
-        'default_rep_base': defaultRepBase,
-        'default_rep_max': defaultRepMax,
-        'default_increment': defaultIncrement,
-        'pectoralis_major': pectoralisMajor,
-        'trapezius': trapezius,
-        'biceps': biceps,
-        'abdominals': abdominals,
-        'front_delts': frontDelts,
-        'deltoids': deltoids,
-        'back_delts': backDelts,
-        'latissimus_dorsi': latissimusDorsi,
-        'triceps': triceps,
-        'gluteus_maximus': gluteusMaximus,
-        'hamstrings': hamstrings,
-        'quadriceps': quadriceps,
-        'forearms': forearms,
-        'calves': calves,
-      }),
+      body: json.encode(requestBody),
     );
+
+    print('DEBUG API: Response status: ${response.statusCode}');
+    print('DEBUG API: Response body: ${response.body}');
+
     if (response.statusCode != 200 && response.statusCode != 201) {
       throw Exception('Failed to create exercise');
     }

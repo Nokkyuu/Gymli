@@ -77,33 +77,65 @@ void add_exercise(String exerciseName, ExerciseDevice chosenDevice, int minRep,
       muscleIntensities.add(0.0);
     }
 
-    await userService.createExercise(
-      name: exerciseName,
-      type: exerciseType,
-      defaultRepBase: minRep,
-      defaultRepMax: maxRep,
-      defaultIncrement: weightInc,
-      pectoralisMajor:
-          muscleIntensities.isNotEmpty ? muscleIntensities[0] : 0.0,
-      trapezius: muscleIntensities.length > 1 ? muscleIntensities[1] : 0.0,
-      biceps: muscleIntensities.length > 2 ? muscleIntensities[2] : 0.0,
-      abdominals: muscleIntensities.length > 3 ? muscleIntensities[3] : 0.0,
-      frontDelts: muscleIntensities.length > 4 ? muscleIntensities[4] : 0.0,
-      deltoids: muscleIntensities.length > 5 ? muscleIntensities[5] : 0.0,
-      backDelts: muscleIntensities.length > 6 ? muscleIntensities[6] : 0.0,
-      latissimusDorsi:
-          muscleIntensities.length > 7 ? muscleIntensities[7] : 0.0,
-      triceps: muscleIntensities.length > 8 ? muscleIntensities[8] : 0.0,
-      gluteusMaximus: muscleIntensities.length > 9 ? muscleIntensities[9] : 0.0,
-      hamstrings: muscleIntensities.length > 10 ? muscleIntensities[10] : 0.0,
-      quadriceps: muscleIntensities.length > 11 ? muscleIntensities[11] : 0.0,
-      forearms: muscleIntensities.length > 12 ? muscleIntensities[12] : 0.0,
-      calves: muscleIntensities.length > 13 ? muscleIntensities[13] : 0.0,
+    // Check if exercise exists
+    final exercises = await userService.getExercises();
+    final existing = exercises.firstWhere(
+      (e) => e['name'] == exerciseName,
+      orElse: () => null,
     );
+
+    if (existing != null && existing['id'] != null) {
+      // Update existing exercise
+      await userService.updateExercise(existing['id'], {
+        'user_name': userService.userName,
+        'name': exerciseName,
+        'type': exerciseType,
+        'default_rep_base': minRep,
+        'default_rep_max': maxRep,
+        'default_increment': weightInc,
+        'pectoralis_major': muscleIntensities[0],
+        'trapezius': muscleIntensities[1],
+        'biceps': muscleIntensities[2],
+        'abdominals': muscleIntensities[3],
+        'front_delts': muscleIntensities[4],
+        'deltoids': muscleIntensities[5],
+        'back_delts': muscleIntensities[6],
+        'latissimus_dorsi': muscleIntensities[7],
+        'triceps': muscleIntensities[8],
+        'gluteus_maximus': muscleIntensities[9],
+        'hamstrings': muscleIntensities[10],
+        'quadriceps': muscleIntensities[11],
+        'forearms': muscleIntensities[12],
+        'calves': muscleIntensities[13],
+      });
+    } else {
+      // Create new exercise
+      await userService.createExercise(
+        name: exerciseName,
+        type: exerciseType,
+        defaultRepBase: minRep,
+        defaultRepMax: maxRep,
+        defaultIncrement: weightInc,
+        pectoralisMajor: muscleIntensities[0],
+        trapezius: muscleIntensities[1],
+        biceps: muscleIntensities[2],
+        abdominals: muscleIntensities[3],
+        frontDelts: muscleIntensities[4],
+        deltoids: muscleIntensities[5],
+        backDelts: muscleIntensities[6],
+        latissimusDorsi: muscleIntensities[7],
+        triceps: muscleIntensities[8],
+        gluteusMaximus: muscleIntensities[9],
+        hamstrings: muscleIntensities[10],
+        quadriceps: muscleIntensities[11],
+        forearms: muscleIntensities[12],
+        calves: muscleIntensities[13],
+      );
+    }
     // Notify that data has changed
     UserService().notifyDataChanged();
   } catch (e) {
-    print('Error adding exercise: $e');
+    print('Error adding/updating exercise: $e');
   }
 }
 
@@ -313,7 +345,9 @@ class _ExerciseSetupScreenState extends State<ExerciseSetupScreen> {
                 ),
               ),
             ),
-            child: const MuscleSelectionWidget(),
+            child: MuscleSelectionWidget(
+                key: ValueKey(exerciseTitleController.text +
+                    globals.muscle_val.values.join(','))),
           ),
         ),
       ],
@@ -764,14 +798,14 @@ class _BottomSheetState extends State<BottomSheet> {
     ['images/muscles/Back_triceps.png', 'Triceps'],
   ];
   final List<List> frontButtons = [
-    [0.35, 0.4, 'Biceps'], //Biceps
-    [0.46, 0.4, 'Calves'], //Calves
-    [0.25, 0.4, 'Front Delts'], //Front Delts
-    [0.28, 0.7, 'Pectoralis major'], // Pectoralis major
-    [0.4, 0.7, 'Abdominals'], //abdominals
-    [0.2, 0.7, 'Trapezius'], //Trapezius
-    [0.6, 0.62, 'Quadriceps'], //Quadriceps
-    [0.8, 0.58, 'Calves'], //Calves
+    [0.35, 0.4, 'Biceps'],
+    [0.46, 0.4, 'Forearms'], // <-- fix here
+    [0.25, 0.4, 'Front Delts'],
+    [0.28, 0.7, 'Pectoralis major'],
+    [0.4, 0.7, 'Abdominals'],
+    [0.2, 0.7, 'Trapezius'],
+    [0.6, 0.62, 'Quadriceps'],
+    [0.8, 0.58, 'Calves'],
   ];
   final List<List> backButtons = [
     [0.82, 0.6, 'Calves'], //Calves

@@ -160,7 +160,8 @@ class ApiExercise {
     return [
       pectoralisMajor, trapezius, biceps, abdominals, frontDelts,
       deltoids, backDelts, latissimusDorsi, triceps, gluteusMaximus,
-      hamstrings, quadriceps, 0.0, calves // 0.0 for forearms placeholder
+      hamstrings, quadriceps, forearms,
+      calves // FIXED: Use actual forearms value
     ];
   }
 
