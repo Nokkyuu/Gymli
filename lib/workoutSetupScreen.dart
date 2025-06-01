@@ -12,8 +12,6 @@
  * - Workout template saving and loading
  * - Exercise parameter customization (warmup, work sets, drop sets)
  * - Interactive workout builder interface
- * - Real-time workout preview and validation
- * - Integration with exercise database
  * - Workout metadata management (name, description, tags)
  * 
  * The screen enables users to design structured workout routines that can
