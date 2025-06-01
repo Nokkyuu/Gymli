@@ -35,6 +35,7 @@ import 'globals.dart' as globals;
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'dart:convert'; // Add this import for utf8
 import 'package:flutter/foundation.dart'; // Add this import for kIsWeb
+import 'dart:math' as Math;
 
 enum DisplayMode { light, dark }
 
@@ -332,7 +333,19 @@ Future<void> backup(String dataType, BuildContext context) async {
     }
 
     print('Converting ${datalist.length} items to CSV...');
-    String csvData = const ListToCsvConverter().convert(datalist);
+
+    // IMPROVED: Use proper CSV formatting with explicit line endings
+    String csvData = const ListToCsvConverter(
+      eol: '\n', // Force Unix line endings
+      fieldDelimiter: ',',
+      textDelimiter: '"',
+      textEndDelimiter: '"',
+    ).convert(datalist);
+
+    // ADDED: Ensure the CSV ends with a newline
+    if (!csvData.endsWith('\n')) {
+      csvData += '\n';
+    }
 
     final fileName =
         "${dataType}_${DateFormat('yyyy-MM-dd_HH-mm-ss').format(DateTime.now())}.csv";
@@ -344,13 +357,14 @@ Future<void> backup(String dataType, BuildContext context) async {
       try {
         print('Using web download approach...');
 
-        // Convert string to bytes
+        // Convert string to bytes with explicit UTF-8 encoding
         final bytes = utf8.encode(csvData);
 
         // Try direct save with just bytes and filename
         final params = SaveFileDialogParams(
           data: bytes,
           fileName: fileName,
+          mimeTypesFilter: ['text/csv'], // ADDED: Specify MIME type
         );
 
         final result = await FlutterFileDialog.saveFile(params: params);
@@ -383,11 +397,6 @@ Future<void> backup(String dataType, BuildContext context) async {
         // Fallback: try to trigger browser download
         try {
           print('Attempting browser download fallback...');
-
-          // Create a data URL for potential web download
-          // final dataUrl = 'data:text/csv;charset=utf-8,${Uri.encodeComponent(csvData)}';
-
-          // This is a simplified approach - showing data in a dialog that users can copy
 
           if (context.mounted) {
             Navigator.of(context).pop(); // Close loading dialog
@@ -422,8 +431,10 @@ Future<void> backup(String dataType, BuildContext context) async {
                         Navigator.of(context).pop();
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
-                            content: Text('CSV data copied to clipboard'),
+                            content: Text(
+                                'CSV data copied to clipboard - paste into a text editor and save as .csv'),
                             backgroundColor: Colors.green,
+                            duration: Duration(seconds: 5),
                           ),
                         );
                       },
@@ -451,13 +462,15 @@ Future<void> backup(String dataType, BuildContext context) async {
         print('Creating file at: $path');
 
         final File file = File(path);
-        await file.writeAsString(csvData);
+        // IMPROVED: Write with explicit UTF-8 encoding
+        await file.writeAsString(csvData, encoding: utf8);
         print('File written successfully');
 
         // Save file dialog
         final params = SaveFileDialogParams(
           sourceFilePath: path,
           fileName: fileName,
+          mimeTypesFilter: ['text/csv'], // ADDED: Specify MIME type
         );
 
         final result = await FlutterFileDialog.saveFile(params: params);
@@ -658,10 +671,15 @@ Future<void> restoreData(
       List<Map<String, dynamic>> trainingSetsToCreate = [];
 
       for (List<String> row in csvTable) {
+        // Remove all trailing empty columns
+        while (row.isNotEmpty && row.last.trim().isEmpty) {
+          row.removeLast();
+        }
+
         if (row.length >= 8) {
+          // Handle current format with 8+ columns (without machine name)
           try {
-            // OPTIMIZED: Use lookup map instead of API call
-            final exerciseId = exerciseNameToIdMap[row[0]];
+            final exerciseId = exerciseNameToIdMap[row[0].trim()];
 
             if (exerciseId != null) {
               trainingSetsToCreate.add({
@@ -673,9 +691,36 @@ Future<void> restoreData(
                 'baseReps': int.parse(row[5]),
                 'maxReps': int.parse(row[6]),
                 'increment': double.parse(row[7]),
-                'machineName': row.length > 8 ? row[8] : "",
+                // Note: row[8] (machine name) is ignored if present
               });
               print('Prepared training set for exercise: ${row[0]}');
+            } else {
+              print(
+                  'Warning: Exercise "${row[0]}" not found, skipping training set');
+              skippedCount++;
+            }
+          } catch (e) {
+            print('Error preparing training set for exercise "${row[0]}": $e');
+            skippedCount++;
+          }
+        } else if (row.length >= 7) {
+          // Handle legacy format with exactly 7 columns
+          try {
+            final exerciseId = exerciseNameToIdMap[row[0].trim()];
+
+            if (exerciseId != null) {
+              trainingSetsToCreate.add({
+                'exerciseId': exerciseId,
+                'date': DateTime.parse(row[1]).toIso8601String(),
+                'weight': double.parse(row[2]),
+                'repetitions': int.parse(row[3]),
+                'setType': int.parse(row[4]),
+                'baseReps': int.parse(row[5]),
+                'maxReps': int.parse(row[6]),
+                'increment': 5.0, // Default increment for legacy data
+              });
+              print(
+                  'Prepared training set for exercise: ${row[0]} (legacy format)');
             } else {
               print(
                   'Warning: Exercise "${row[0]}" not found, skipping training set');
@@ -820,7 +865,9 @@ Future<void> restoreData(
       }
 
       for (int index = 0; index < csvTable.length; index++) {
-        List<String> row = csvTable[index];
+        List<String> row =
+            csvTable[index].map((e) => e is String ? e.trim() : e).toList();
+        ;
 
         // Update progress every 10 exercises
         if (index % 10 == 0 && context.mounted) {
@@ -1000,7 +1047,9 @@ Future<void> restoreData(
       }
 
       for (int index = 0; index < csvTable.length; index++) {
-        List<String> row = csvTable[index];
+        List<String> row =
+            csvTable[index].map((e) => e is String ? e.trim() : e).toList();
+        ;
 
         // Update progress for each workout
         if (context.mounted) {
@@ -1504,5 +1553,57 @@ class _SettingsScreen extends State<SettingsScreen> {
             const Spacer(),
           ]),
     );
+  }
+}
+
+// TEMPORARY: Add this function to fix malformed CSV files
+Future<void> fixCSVFile() async {
+  try {
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['csv'],
+    );
+
+    if (result != null && result.files.isNotEmpty) {
+      String content;
+      if (result.files.first.bytes != null) {
+        content = String.fromCharCodes(result.files.first.bytes!);
+      } else {
+        content = await File(result.files.first.path!).readAsString();
+      }
+
+      // Fix the content by ensuring proper line breaks
+      List<String> lines =
+          content.split(RegExp(r'[,](?=\w+,\d{4}-\d{2}-\d{2})'));
+
+      // Reconstruct with proper line endings
+      String fixedContent = '';
+      for (int i = 0; i < lines.length; i++) {
+        String line = lines[i].trim();
+        if (line.isNotEmpty) {
+          if (i > 0) {
+            // Add back the comma that was removed by split, but as line ending
+            fixedContent += '\n';
+          }
+          fixedContent += line;
+        }
+      }
+
+      // Add final newline
+      if (!fixedContent.endsWith('\n')) {
+        fixedContent += '\n';
+      }
+
+      // Save fixed version
+      final directory = await getApplicationSupportDirectory();
+      final fixedFile = File('${directory.path}/test_fixed.csv');
+      await fixedFile.writeAsString(fixedContent, encoding: utf8);
+
+      print('Fixed CSV saved to: ${fixedFile.path}');
+      print('First few lines of fixed CSV:');
+      print(fixedContent.split('\n').take(5).join('\n'));
+    }
+  } catch (e) {
+    print('Error fixing CSV: $e');
   }
 }
