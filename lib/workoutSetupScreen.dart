@@ -270,16 +270,31 @@ class _WorkoutSetupScreenState extends State<WorkoutSetupScreen> {
                 ExerciseChoiceMobile(context),
               ])
             : Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                SizedBox(width: 40),
+                SizedBox(width: 60),
+                ExerciseChoiceDesktop(context),
+                SizedBox(width: 20),
                 SetNumberPickerDesktop(),
                 SizedBox(width: 20),
-                ExerciseChoiceDesktop(context),
+                AddExercise(),
                 SizedBox(width: 20),
               ]),
         const SizedBox(height: 20),
-        TextButton.icon(
-          icon: const Icon(Icons.add),
-          label: const Text("Add Exercise"),
+      ],
+    );
+  }
+
+  Widget AddExercise() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 20.0),
+      child: SizedBox(
+        width: 100,
+        height: 200,
+        child: ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            minimumSize: Size.zero,
+            padding: EdgeInsets.zero,
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          ),
           onPressed: () {
             setState(() {
               if (selectedExercise != null) {
@@ -304,8 +319,9 @@ class _WorkoutSetupScreenState extends State<WorkoutSetupScreen> {
               }
             });
           },
+          child: const Icon(Icons.arrow_forward),
         ),
-      ],
+      ),
     );
   }
 
@@ -445,21 +461,46 @@ class _WorkoutSetupScreenState extends State<WorkoutSetupScreen> {
         Column(
           children: [
             const Text('Warm Ups'),
-            NumberPicker(
-              decoration: BoxDecoration(border: Border.all()),
-              value: warmUpS,
-              minValue: 0,
-              maxValue: 10,
-              onChanged: (value) => setState(() => warmUpS = value),
+            SizedBox(
+              width: 80,
+              child: TextField(
+                textAlign: TextAlign.center,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+                  contentPadding:
+                      EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                ),
+                controller: TextEditingController(text: warmUpS.toString()),
+                onChanged: (value) {
+                  final intValue = int.tryParse(value) ?? 0;
+                  if (intValue >= 0 && intValue <= 10) {
+                    setState(() => warmUpS = intValue);
+                  }
+                },
+              ),
+            ),
+            const SizedBox(height: 20),
+            SizedBox(
+              width: 80,
+              child: TextField(
+                textAlign: TextAlign.center,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+                  contentPadding:
+                      EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                ),
+                controller: TextEditingController(text: workS.toString()),
+                onChanged: (value) {
+                  final intValue = int.tryParse(value) ?? 1;
+                  if (intValue >= 0 && intValue <= 10) {
+                    setState(() => workS = intValue);
+                  }
+                },
+              ),
             ),
             const Text('Work Sets'),
-            NumberPicker(
-              decoration: BoxDecoration(border: Border.all()),
-              value: workS,
-              minValue: 0,
-              maxValue: 10,
-              onChanged: (value) => setState(() => workS = value),
-            ),
           ],
         ),
       ],

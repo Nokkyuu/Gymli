@@ -67,6 +67,9 @@ double itemHeight = 35.0;
 double itemWidth = 50.0;
 
 class _ExerciseScreen extends State<ExerciseScreen> {
+  // Add a controller for the reps wheel
+  late FixedExtentScrollController _repsWheelController;
+
   //final String exerciseName;
   final ScrollController _scrollController = ScrollController();
   int weightKg = 40;
@@ -435,9 +438,10 @@ class _ExerciseScreen extends State<ExerciseScreen> {
 
   @override
   void dispose() {
-    timer.cancel(); // Cancel the timer when the state is disposed
+    timer.cancel();
     _weightController.dispose();
     _repsController.dispose();
+    _repsWheelController.dispose(); // Don't forget to dispose
     super.dispose();
   }
 
@@ -517,15 +521,70 @@ class _ExerciseScreen extends State<ExerciseScreen> {
     int reps = _currentExercise!.defaultRepBase;
 
     if (_cachedTodaysTrainingSetsForExercise.isNotEmpty) {
-      final lastSet = _cachedTodaysTrainingSetsForExercise.last;
-      weight = lastSet.weight;
-      reps = lastSet.repetitions;
-    }
+      if (_selected.first == ExerciseType.warmup) {
+        // For warmup: Look for the most recent warmup set (setType == 0) in cached data
+        final warmupSets = _cachedTodaysTrainingSetsForExercise
+            .where((set) => set.setType == 0)
+            .toList();
 
-    if (_selected.first == ExerciseType.warmup) {
-      weight /= 2.0;
-      weight = (weight / _currentExercise!.defaultIncrement).round() *
-          _currentExercise!.defaultIncrement;
+        if (warmupSets.isNotEmpty) {
+          // Use the most recent warmup set
+          final lastWarmupSet = warmupSets.last;
+          weight = lastWarmupSet.weight;
+          reps = lastWarmupSet.repetitions;
+        } else {
+          // Fallback to current behavior: halve the weight if no warmup sets exist
+          final lastSet = _cachedTodaysTrainingSetsForExercise.last;
+          weight = lastSet.weight / 2.0;
+          weight = (weight / _currentExercise!.defaultIncrement).round() *
+              _currentExercise!.defaultIncrement;
+          reps = _currentExercise!.defaultRepBase;
+        }
+      } else {
+        // For work sets: Find the best set from the most recent workout day
+        final workSets = _cachedTodaysTrainingSetsForExercise
+            .where((set) => set.setType > 0) // Only work sets
+            .toList();
+
+        if (workSets.isNotEmpty) {
+          // Group by date to find the most recent workout day
+          Map<String, List<ApiTrainingSet>> setsByDate = {};
+          for (var set in workSets) {
+            String dateKey =
+                "${set.date.year}-${set.date.month.toString().padLeft(2, '0')}-${set.date.day.toString().padLeft(2, '0')}";
+            if (!setsByDate.containsKey(dateKey)) {
+              setsByDate[dateKey] = [];
+            }
+            setsByDate[dateKey]!.add(set);
+          }
+
+          // Get the most recent workout date
+          final sortedDates = setsByDate.keys.toList()..sort();
+          final mostRecentDate = sortedDates.last;
+          final mostRecentSets = setsByDate[mostRecentDate]!;
+
+          // Find the best set from the most recent workout day
+          ApiTrainingSet? bestSet;
+          for (var set in mostRecentSets) {
+            if (bestSet == null ||
+                set.weight > bestSet.weight ||
+                (set.weight == bestSet.weight &&
+                    set.repetitions > bestSet.repetitions)) {
+              bestSet = set;
+            }
+          }
+
+          if (bestSet != null) {
+            weight = bestSet.weight;
+            reps = bestSet.repetitions;
+          }
+        } else {
+          // Fallback to last set if no work sets exist
+          final lastSet = _cachedTodaysTrainingSetsForExercise.last;
+          weight = lastSet.weight;
+          reps = lastSet.repetitions;
+        }
+      }
     }
 
     setState(() {
@@ -536,6 +595,13 @@ class _ExerciseScreen extends State<ExerciseScreen> {
       // Update text controllers to match the new values
       _weightController.text = weight.toString();
       _repsController.text = reps.toString();
+
+      // Update reps wheel controller
+      _repsWheelController.animateToItem(
+        (reps - 1).clamp(0, _values.length - 1),
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
     });
   }
 
@@ -592,6 +658,10 @@ class _ExerciseScreen extends State<ExerciseScreen> {
     // Initialize text controllers for persistent input fields
     _weightController = TextEditingController();
     _repsController = TextEditingController();
+
+    // Initialize reps wheel controller
+    _repsWheelController =
+        FixedExtentScrollController(initialItem: repetitions - 1);
 
     // Parse workout context and set UI immediately
     _parseWorkoutDescription();
@@ -696,9 +766,60 @@ class _ExerciseScreen extends State<ExerciseScreen> {
 
         // Adjust for warmup if selected
         if (_selected.first == ExerciseType.warmup) {
-          weight /= 2.0;
-          weight = (weight / exercise.defaultIncrement).round() *
-              exercise.defaultIncrement;
+          // Look for the most recent warmup set (setType == 0) in cached data
+          final warmupSets =
+              todaysSetsForExercise.where((set) => set.setType == 0).toList();
+
+          if (warmupSets.isNotEmpty) {
+            // Use the most recent warmup set
+            final lastWarmupSet = warmupSets.last;
+            weight = lastWarmupSet.weight;
+            reps = lastWarmupSet.repetitions;
+          } else {
+            // Fallback to current behavior: halve the weight if no warmup sets exist
+            weight /= 2.0;
+            weight = (weight / exercise.defaultIncrement).round() *
+                exercise.defaultIncrement;
+          }
+        } else {
+          // For work sets: Find the best set from the most recent workout day
+          final workSets = todaysSetsForExercise
+              .where((set) => set.setType > 0) // Only work sets
+              .toList();
+
+          if (workSets.isNotEmpty) {
+            // Group by date to find the most recent workout day
+            Map<String, List<ApiTrainingSet>> setsByDate = {};
+            for (var set in workSets) {
+              String dateKey =
+                  "${set.date.year}-${set.date.month.toString().padLeft(2, '0')}-${set.date.day.toString().padLeft(2, '0')}";
+              if (!setsByDate.containsKey(dateKey)) {
+                setsByDate[dateKey] = [];
+              }
+              setsByDate[dateKey]!.add(set);
+            }
+
+            // Get the most recent workout date
+            final sortedDates = setsByDate.keys.toList()..sort();
+            final mostRecentDate = sortedDates.last;
+            final mostRecentSets = setsByDate[mostRecentDate]!;
+
+            // Find the best set from the most recent workout day
+            ApiTrainingSet? bestSet;
+            for (var set in mostRecentSets) {
+              if (bestSet == null ||
+                  set.weight > bestSet.weight ||
+                  (set.weight == bestSet.weight &&
+                      set.repetitions > bestSet.repetitions)) {
+                bestSet = set;
+              }
+            }
+
+            if (bestSet != null) {
+              weight = bestSet.weight;
+              reps = bestSet.repetitions;
+            }
+          }
         }
       }
 
@@ -723,6 +844,17 @@ class _ExerciseScreen extends State<ExerciseScreen> {
         weightKg = weight.toInt();
         weightDg = (weight * 100.0).toInt() % 100;
         repetitions = reps;
+
+        // Update text controllers to match the new values
+        _weightController.text = weight.toString();
+        _repsController.text = reps.toString();
+
+        // Update reps wheel controller
+        _repsWheelController.animateToItem(
+          (reps - 1).clamp(0, _values.length - 1),
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+        );
 
         // Update workout texts
         _updateWorkoutTexts();
@@ -1210,7 +1342,7 @@ class _ExerciseScreen extends State<ExerciseScreen> {
                 width: 100,
                 child: ListWheelScrollView.useDelegate(
                   controller:
-                      FixedExtentScrollController(initialItem: repetitions - 1),
+                      _repsWheelController, // Use the persistent controller
                   itemExtent: 40,
                   physics: const FixedExtentScrollPhysics(),
                   useMagnifier: true,
@@ -1219,7 +1351,6 @@ class _ExerciseScreen extends State<ExerciseScreen> {
                     setState(() {
                       repetitions = _values[index];
                       HapticFeedback.selectionClick();
-                      // print(_currentValue);
                     });
                   },
                   childDelegate: ListWheelChildBuilderDelegate(
