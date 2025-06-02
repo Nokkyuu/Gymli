@@ -320,7 +320,7 @@ class _StatisticsScreen extends State<StatisticsScreen> {
         if (endingDate != null) {
           var tokens = endingDate!.split("-");
           String endingDateString =
-              "${tokens[2]}-${tokens[1]}-${tokens[0]}T00:00:00";
+              "${tokens[2]}-${tokens[1]}-${tokens[0]}T23:59:59";
           DateTime end = DateTime.parse(endingDateString);
           filteredTrainingDates = filteredTrainingDates
               .where((d) => d.isBefore(end) || d.isAtSameMomentAs(end))
@@ -492,7 +492,7 @@ class _StatisticsScreen extends State<StatisticsScreen> {
         if (endingDate != null) {
           var tokens = endingDate!.split("-");
           String endingDateString =
-              "${tokens[2]}-${tokens[1]}-${tokens[0]}T00:00:00";
+              "${tokens[2]}-${tokens[1]}-${tokens[0]}T23:59:59";
           DateTime end = DateTime.parse(endingDateString);
           filteredTrainingDates = filteredTrainingDates
               .where((d) => d.isBefore(end) || d.isAtSameMomentAs(end))
@@ -634,7 +634,7 @@ class _StatisticsScreen extends State<StatisticsScreen> {
         if (endingDate != null) {
           var tokens = endingDate!.split("-");
           String endingDateString =
-              "${tokens[2]}-${tokens[1]}-${tokens[0]}T00:00:00";
+              "${tokens[2]}-${tokens[1]}-${tokens[0]}T23:59:59";
           DateTime end = DateTime.parse(endingDateString);
           filteredActivityLogs = filteredActivityLogs
               .where((log) =>
@@ -782,43 +782,43 @@ class _StatisticsScreen extends State<StatisticsScreen> {
     }
 
     // Handle empty data case
-    if (numberOfTrainingDays == 0) {
-      return Scaffold(
-        appBar: AppBar(
-          leading: InkWell(
-            onTap: () {
-              Navigator.pop(context);
-            },
-            child: const Icon(
-              Icons.arrow_back_ios,
-            ),
-          ),
-          title: const Text("Statistics"),
-        ),
-        body: const Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.bar_chart,
-                size: 64,
-                color: Colors.grey,
-              ),
-              SizedBox(height: 16),
-              Text(
-                "No training data available",
-                style: TextStyle(fontSize: 18, color: Colors.grey),
-              ),
-              SizedBox(height: 8),
-              Text(
-                "Start adding workouts to see your statistics",
-                style: TextStyle(fontSize: 14, color: Colors.grey),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
+    // if (numberOfTrainingDays == 0) {
+    //   return Scaffold(
+    //     appBar: AppBar(
+    //       leading: InkWell(
+    //         onTap: () {
+    //           Navigator.pop(context);
+    //         },
+    //         child: const Icon(
+    //           Icons.arrow_back_ios,
+    //         ),
+    //       ),
+    //       title: const Text("Statistics"),
+    //     ),
+    //     body: const Center(
+    //       child: Column(
+    //         mainAxisAlignment: MainAxisAlignment.center,
+    //         children: [
+    //           Icon(
+    //             Icons.bar_chart,
+    //             size: 64,
+    //             color: Colors.grey,
+    //           ),
+    //           SizedBox(height: 16),
+    //           Text(
+    //             "No training data available",
+    //             style: TextStyle(fontSize: 18, color: Colors.grey),
+    //           ),
+    //           SizedBox(height: 8),
+    //           Text(
+    //             "Start adding workouts to see your statistics",
+    //             style: TextStyle(fontSize: 14, color: Colors.grey),
+    //           ),
+    //         ],
+    //       ),
+    //     ),
+    //   );
+    // }
 
     List<List> muscleHistoryScore = globals.muscleHistoryScore;
 
@@ -1103,114 +1103,222 @@ class _StatisticsScreen extends State<StatisticsScreen> {
       return const Center(child: CircularProgressIndicator());
     }
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          "Activities Overview",
-          style: subStyle,
-        ),
-        const SizedBox(height: 10),
-        // Activity statistics cards
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            _buildActivityStatCard("Total Sessions",
-                _activityStats['total_sessions']?.toString() ?? "0"),
-            _buildActivityStatCard(
-                "Total Calories", _getCaloriesDisplayValue()),
-          ],
-        ),
-        const SizedBox(height: 20),
-        Text(
-          "Trends",
-          style: subStyle,
-        ),
-        const SizedBox(height: 10),
-        // Calories trend chart
-        Text("Calories Burned Over Time"),
-        SizedBox(
-          width: MediaQuery.of(context).size.width,
-          height: 200,
-          child: LineChart(
-            LineChartData(
-              borderData: FlBorderData(show: false),
-              titlesData: const FlTitlesData(
-                topTitles:
-                    AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                rightTitles:
-                    AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                bottomTitles:
-                    AxisTitles(sideTitles: SideTitles(showTitles: true)),
-                leftTitles:
-                    AxisTitles(sideTitles: SideTitles(showTitles: true)),
-              ),
-              lineBarsData: [
-                LineChartBarData(
-                  spots: _caloriesTrendData,
-                  isCurved: true,
-                  color: Colors.red,
-                  barWidth: 2,
-                  isStrokeCapRound: true,
-                  belowBarData: BarAreaData(show: false),
-                  dotData: const FlDotData(show: false),
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            "Activities Overview",
+            style: subStyle,
+          ),
+          const SizedBox(height: 10),
+          // Activity statistics cards
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _buildActivityStatCard("Total Sessions",
+                  _activityStats['total_sessions']?.toString() ?? "0"),
+              _buildActivityStatCard(
+                  "Total Calories", _getCaloriesDisplayValue()),
+            ],
+          ),
+          const SizedBox(height: 20),
+          Text(
+            "Trends",
+            style: subStyle,
+          ),
+          const SizedBox(height: 10),
+          // Calories trend chart
+          Text("Calories Burned Over Time"),
+          const SizedBox(height: 10),
+          SizedBox(
+            width: MediaQuery.of(context).size.width,
+            height: 200,
+            child: Padding(
+              padding: const EdgeInsets.only(
+                  left: 10, right: 20, bottom: 20, top: 10),
+              child: LineChart(
+                LineChartData(
+                  borderData: FlBorderData(show: false),
+                  titlesData: FlTitlesData(
+                    topTitles: const AxisTitles(
+                        sideTitles: SideTitles(showTitles: false)),
+                    rightTitles: const AxisTitles(
+                        sideTitles: SideTitles(showTitles: false)),
+                    bottomTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        reservedSize: 35,
+                        interval: _caloriesTrendData.length > 10
+                            ? (_caloriesTrendData.last.x -
+                                    _caloriesTrendData.first.x) /
+                                5
+                            : 1,
+                        getTitlesWidget: (double value, TitleMeta meta) {
+                          if (_caloriesTrendData.isEmpty) return const Text('');
+
+                          // Find the earliest date from the activity logs
+                          final dayIndex = value.round();
+                          if (dayIndex < 0 ||
+                              dayIndex >= _caloriesTrendData.length) {
+                            return const Text('');
+                          }
+
+                          // Calculate the actual date
+                          final DateTime baseDate = DateTime.now().subtract(
+                              Duration(
+                                  days: (_caloriesTrendData.last.x - value)
+                                      .round()));
+
+                          return Transform.rotate(
+                            angle: -0.3,
+                            child: Text(
+                              '${baseDate.day}/${baseDate.month}',
+                              style: const TextStyle(fontSize: 10),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    leftTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        reservedSize: 50,
+                        interval: _caloriesTrendData.isNotEmpty
+                            ? (_caloriesTrendData.map((e) => e.y).reduce(max) /
+                                4)
+                            : 50,
+                        getTitlesWidget: (double value, TitleMeta meta) {
+                          return Text(
+                            value.toInt().toString(),
+                            style: const TextStyle(fontSize: 10),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                  lineBarsData: [
+                    LineChartBarData(
+                      spots: _caloriesTrendData,
+                      isCurved: true,
+                      color: Colors.red,
+                      barWidth: 2,
+                      isStrokeCapRound: true,
+                      belowBarData: BarAreaData(show: false),
+                      dotData: const FlDotData(show: false),
+                    ),
+                  ],
+                  minX: _caloriesTrendData.isNotEmpty
+                      ? _caloriesTrendData.first.x
+                      : 0,
+                  maxX: _caloriesTrendData.isNotEmpty
+                      ? _caloriesTrendData.last.x
+                      : 0,
+                  minY: 0,
+                  maxY: _caloriesTrendData.isNotEmpty
+                      ? (_caloriesTrendData.map((e) => e.y).reduce(max) * 1.1)
+                      : 100,
                 ),
-              ],
-              minX: _caloriesTrendData.isNotEmpty
-                  ? _caloriesTrendData.first.x
-                  : 0,
-              maxX:
-                  _caloriesTrendData.isNotEmpty ? _caloriesTrendData.last.x : 0,
-              minY: 0,
-              maxY: _caloriesTrendData.isNotEmpty
-                  ? (_caloriesTrendData.map((e) => e.y).reduce(max) * 1.1)
-                  : 100,
+              ),
             ),
           ),
-        ),
-        const SizedBox(height: 20),
-        // Duration trend chart
-        Text("Activity Duration Over Time"),
-        SizedBox(
-          width: MediaQuery.of(context).size.width,
-          height: 200,
-          child: LineChart(
-            LineChartData(
-              borderData: FlBorderData(show: false),
-              titlesData: const FlTitlesData(
-                topTitles:
-                    AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                rightTitles:
-                    AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                bottomTitles:
-                    AxisTitles(sideTitles: SideTitles(showTitles: true)),
-                leftTitles:
-                    AxisTitles(sideTitles: SideTitles(showTitles: true)),
-              ),
-              lineBarsData: [
-                LineChartBarData(
-                  spots: _durationTrendData,
-                  isCurved: true,
-                  color: Colors.blue,
-                  barWidth: 2,
-                  isStrokeCapRound: true,
-                  belowBarData: BarAreaData(show: false),
-                  dotData: const FlDotData(show: false),
+          const SizedBox(height: 20),
+          // Duration trend chart
+          Text("Activity Duration Over Time"),
+          const SizedBox(height: 10),
+          SizedBox(
+            width: MediaQuery.of(context).size.width,
+            height: 200,
+            child: Padding(
+              padding: const EdgeInsets.only(
+                  left: 10, right: 20, bottom: 20, top: 10),
+              child: LineChart(
+                LineChartData(
+                  borderData: FlBorderData(show: false),
+                  titlesData: FlTitlesData(
+                    topTitles: const AxisTitles(
+                        sideTitles: SideTitles(showTitles: false)),
+                    rightTitles: const AxisTitles(
+                        sideTitles: SideTitles(showTitles: false)),
+                    bottomTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        reservedSize: 35,
+                        interval: _durationTrendData.length > 10
+                            ? (_durationTrendData.last.x -
+                                    _durationTrendData.first.x) /
+                                5
+                            : 1,
+                        getTitlesWidget: (double value, TitleMeta meta) {
+                          if (_durationTrendData.isEmpty) return const Text('');
+
+                          // Find the earliest date from the activity logs
+                          final dayIndex = value.round();
+                          if (dayIndex < 0 ||
+                              dayIndex >= _durationTrendData.length) {
+                            return const Text('');
+                          }
+
+                          // Calculate the actual date
+                          final DateTime baseDate = DateTime.now().subtract(
+                              Duration(
+                                  days: (_durationTrendData.last.x - value)
+                                      .round()));
+
+                          return Transform.rotate(
+                            angle: -0.3,
+                            child: Text(
+                              '${baseDate.day}/${baseDate.month}',
+                              style: const TextStyle(fontSize: 10),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    leftTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        reservedSize: 50,
+                        interval: _durationTrendData.isNotEmpty
+                            ? (_durationTrendData.map((e) => e.y).reduce(max) /
+                                4)
+                            : 20,
+                        getTitlesWidget: (double value, TitleMeta meta) {
+                          return Text(
+                            '${value.toInt()}m',
+                            style: const TextStyle(fontSize: 10),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                  lineBarsData: [
+                    LineChartBarData(
+                      spots: _durationTrendData,
+                      isCurved: true,
+                      color: Colors.blue,
+                      barWidth: 2,
+                      isStrokeCapRound: true,
+                      belowBarData: BarAreaData(show: false),
+                      dotData: const FlDotData(show: false),
+                    ),
+                  ],
+                  minX: _durationTrendData.isNotEmpty
+                      ? _durationTrendData.first.x
+                      : 0,
+                  maxX: _durationTrendData.isNotEmpty
+                      ? _durationTrendData.last.x
+                      : 0,
+                  minY: 0,
+                  maxY: _durationTrendData.isNotEmpty
+                      ? (_durationTrendData.map((e) => e.y).reduce(max) * 1.1)
+                      : 100,
                 ),
-              ],
-              minX: _durationTrendData.isNotEmpty
-                  ? _durationTrendData.first.x
-                  : 0,
-              maxX:
-                  _durationTrendData.isNotEmpty ? _durationTrendData.last.x : 0,
-              minY: 0,
-              maxY: _durationTrendData.isNotEmpty
-                  ? (_durationTrendData.map((e) => e.y).reduce(max) * 1.1)
-                  : 100,
+              ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -1437,7 +1545,7 @@ class _StatisticsScreen extends State<StatisticsScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const SizedBox(width: 16),
-        // Left side - dropdowns with constraints
+        // Left side - date pickers with constraints
         Flexible(
           flex: 3,
           child: ConstrainedBox(
@@ -1447,44 +1555,88 @@ class _StatisticsScreen extends State<StatisticsScreen> {
             ),
             child: Column(
               children: [
-                DropdownMenu<String>(
-                  label: const Text("Start Date"),
-                  onSelected: (String? date) {
-                    _tempStartingDate = date;
+                // Start Date Picker
+                InkWell(
+                  onTap: () async {
+                    final DateTime? picked = await showDatePicker(
+                      context: context,
+                      initialDate: _tempStartingDate != null
+                          ? _parseDate(_tempStartingDate!)
+                          : DateTime.now(),
+                      firstDate: DateTime(2020),
+                      lastDate: DateTime.now(),
+                      helpText: 'Select Start Date',
+                    );
+                    if (picked != null) {
+                      setState(() {
+                        _tempStartingDate =
+                            DateFormat('dd-MM-yyyy').format(picked);
+                      });
+                    }
                   },
-                  dropdownMenuEntries: trainingDates
-                      .map<DropdownMenuEntry<String>>((String name) {
-                    return DropdownMenuEntry<String>(value: name, label: name);
-                  }).toList(),
-                  menuHeight: 200,
-                  inputDecorationTheme: InputDecorationTheme(
-                    isDense: true,
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-                    constraints:
-                        BoxConstraints.tight(const Size.fromHeight(40)),
-                    border: OutlineInputBorder(
+                  child: Container(
+                    height: 40,
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey),
                       borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          _tempStartingDate ?? 'Select Start Date',
+                          style: TextStyle(
+                            color: _tempStartingDate != null
+                                ? Colors.black
+                                : Colors.grey[600],
+                          ),
+                        ),
+                        const Icon(Icons.calendar_today, size: 20),
+                      ],
                     ),
                   ),
                 ),
                 const SizedBox(height: 10),
-                DropdownMenu<String>(
-                  label: const Text("End Date"),
-                  onSelected: (String? date) {
-                    _tempEndingDate = date;
+                // End Date Picker
+                InkWell(
+                  onTap: () async {
+                    final DateTime? picked = await showDatePicker(
+                      context: context,
+                      initialDate: _tempEndingDate != null
+                          ? _parseDate(_tempEndingDate!)
+                          : DateTime.now(),
+                      firstDate: DateTime(2020),
+                      lastDate: DateTime.now(),
+                      helpText: 'Select End Date',
+                    );
+                    if (picked != null) {
+                      setState(() {
+                        _tempEndingDate =
+                            DateFormat('dd-MM-yyyy').format(picked);
+                      });
+                    }
                   },
-                  dropdownMenuEntries: trainingDates
-                      .map<DropdownMenuEntry<String>>((String name) {
-                    return DropdownMenuEntry<String>(value: name, label: name);
-                  }).toList(),
-                  menuHeight: 200,
-                  inputDecorationTheme: InputDecorationTheme(
-                    isDense: true,
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-                    constraints:
-                        BoxConstraints.tight(const Size.fromHeight(40)),
-                    border: OutlineInputBorder(
+                  child: Container(
+                    height: 40,
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey),
                       borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          _tempEndingDate ?? 'Select End Date',
+                          style: TextStyle(
+                            color: _tempEndingDate != null
+                                ? Colors.black
+                                : Colors.grey[600],
+                          ),
+                        ),
+                        const Icon(Icons.calendar_today, size: 20),
+                      ],
                     ),
                   ),
                 ),
@@ -1493,48 +1645,97 @@ class _StatisticsScreen extends State<StatisticsScreen> {
           ),
         ),
         const SizedBox(width: 16),
-        // Right side - button with constraints
+        // Right side - buttons with constraints
         ConstrainedBox(
           constraints: const BoxConstraints(
             minWidth: 80,
             maxWidth: 120,
           ),
-          child: Padding(
-            padding: const EdgeInsets.only(top: 25),
-            child: ElevatedButton(
-              onPressed: () {
-                setState(() {
-                  startingDate = _tempStartingDate;
-                  endingDate = _tempEndingDate;
-                  // Disable default filtering when user selects custom dates
-                  _useDefaultDateFilter = false;
-                });
-                // Call _loadStatistics() to update all statistics
-                _loadStatistics();
+          child: Column(
+            children: [
+              // Confirm button
+              ElevatedButton(
+                onPressed: () {
+                  setState(() {
+                    startingDate = _tempStartingDate;
+                    endingDate = _tempEndingDate;
+                    // Disable default filtering when user selects custom dates
+                    _useDefaultDateFilter = false;
+                  });
+                  // Call _loadStatistics() to update all statistics
+                  _loadStatistics();
 
-                // Also update exercise graph if one is selected
-                if (_selectedExerciseForGraph != null) {
-                  _loadExerciseGraphData(_selectedExerciseForGraph!);
-                }
+                  // Also update exercise graph if one is selected
+                  if (_selectedExerciseForGraph != null) {
+                    _loadExerciseGraphData(_selectedExerciseForGraph!);
+                  }
 
-                // Reload activity data if Activities view is selected
-                if (_selectedWidgetIndex == 5) {
-                  _loadActivityData();
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                minimumSize: const Size(double.infinity, 40),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+                  // Reload activity data if Activities view is selected
+                  if (_selectedWidgetIndex == 5) {
+                    _loadActivityData();
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  minimumSize: const Size(double.infinity, 40),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                 ),
+                child: const Text("Confirm"),
               ),
-              child: const Text("Confirm"),
-            ),
+              const SizedBox(height: 8),
+              // Clear button
+              TextButton(
+                onPressed: () {
+                  setState(() {
+                    _tempStartingDate = null;
+                    _tempEndingDate = null;
+                    startingDate = null;
+                    endingDate = null;
+                    // Re-enable default filtering when clearing dates
+                    _useDefaultDateFilter = true;
+                  });
+                  // Reload statistics with default filter
+                  _loadStatistics();
+
+                  // Also update exercise graph if one is selected
+                  if (_selectedExerciseForGraph != null) {
+                    _loadExerciseGraphData(_selectedExerciseForGraph!);
+                  }
+
+                  // Reload activity data if Activities view is selected
+                  if (_selectedWidgetIndex == 5) {
+                    _loadActivityData();
+                  }
+                },
+                style: TextButton.styleFrom(
+                  minimumSize: const Size(double.infinity, 32),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: const Text("Clear", style: TextStyle(fontSize: 12)),
+              ),
+            ],
           ),
         ),
         const SizedBox(width: 16),
       ],
     );
+  }
+
+  // Helper method to parse date from string format
+  DateTime _parseDate(String dateString) {
+    try {
+      final parts = dateString.split('-');
+      return DateTime(
+        int.parse(parts[2]), // year
+        int.parse(parts[1]), // month
+        int.parse(parts[0]), // day
+      );
+    } catch (e) {
+      return DateTime.now();
+    }
   }
 
   // Add new methods for exercise progress functionality
@@ -1739,7 +1940,7 @@ class _StatisticsScreen extends State<StatisticsScreen> {
             if (endingDate != null) {
               var tokens = endingDate!.split("-");
               String endingDateString =
-                  "${tokens[2]}-${tokens[1]}-${tokens[0]}T00:00:00";
+                  "${tokens[2]}-${tokens[1]}-${tokens[0]}T23:59:59";
               DateTime end = DateTime.parse(endingDateString);
               includeSet = includeSet &&
                   (date.isBefore(end) || date.isAtSameMomentAs(end));
