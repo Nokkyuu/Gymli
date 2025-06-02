@@ -4,6 +4,7 @@ import 'package:Gymli/exerciseSetupScreen.dart';
 import 'package:Gymli/settingsScreen.dart';
 import 'package:Gymli/workoutSetupScreen.dart';
 import 'package:Gymli/statisticsScreen.dart';
+import 'package:Gymli/activityScreen.dart';
 import 'globals.dart' as globals;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
@@ -345,6 +346,18 @@ class _MainAppState extends State<MainApp> {
           //     });
           //   },
           // ),
+          ListTile(
+            title: const Text('Activity Tracker'),
+            onTap: () {
+              setState(() {
+                Navigator.pop(context);
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => const ActivityScreen()));
+              });
+            },
+          ),
           ListTile(
             title: const Text('Statistics'),
             onTap: () {

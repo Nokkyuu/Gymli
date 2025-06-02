@@ -1153,12 +1153,32 @@ class UserService {
   }
 
   /// Retrieves all activities for the current user
+  /// Automatically initializes default activities if none exist
   /// Returns a list of activity objects with name and kcal_per_hour
   Future<List<dynamic>> getActivities() async {
     if (isLoggedIn) {
-      return await api.ActivityService().getActivities(userName: userName);
+      try {
+        final activities =
+            await api.ActivityService().getActivities(userName: userName);
+
+        // If no activities exist, initialize them first
+        if (activities.isEmpty) {
+          await api.ActivityService()
+              .initializeUserActivities(userName: userName);
+          // Get the activities again after initialization
+          return await api.ActivityService().getActivities(userName: userName);
+        }
+
+        return activities;
+      } catch (e) {
+        if (e.toString().contains('already has activities initialized')) {
+          // If we get this error, just try to get activities again
+          return await api.ActivityService().getActivities(userName: userName);
+        }
+        rethrow;
+      }
     } else {
-      // Return in-memory activities for non-authenticated users
+      // For non-authenticated users
       final inMemoryActivities =
           _inMemoryData['activities'] as List<dynamic>? ?? [];
       if (inMemoryActivities.isEmpty) {
@@ -1178,13 +1198,20 @@ class UserService {
     required String name,
     required double kcalPerHour,
   }) async {
+    print(
+        'UserService.createActivity called with name: $name, kcal: $kcalPerHour'); // Debug
+
     if (isLoggedIn) {
-      return await api.ActivityService().createActivity(
+      print('User is logged in, calling API service'); // Debug
+      final result = await api.ActivityService().createActivity(
         userName: userName,
         name: name,
         kcalPerHour: kcalPerHour,
       );
+      print('API service returned: $result'); // Debug
+      return result;
     } else {
+      print('User not logged in, storing in memory'); // Debug
       // For non-authenticated users, store in memory
       final activities = _inMemoryData['activities'] as List<dynamic>;
       final newId = activities.isEmpty
@@ -1202,6 +1229,7 @@ class UserService {
       };
 
       activities.add(activity);
+      print('Added activity to memory: $activity'); // Debug
       return activity;
     }
   }
