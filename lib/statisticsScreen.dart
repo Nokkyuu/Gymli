@@ -97,6 +97,12 @@ class _StatisticsScreen extends State<StatisticsScreen> {
   final TextEditingController MuscleController = TextEditingController();
   final UserService userService = UserService();
 
+  // Activity-related variables for _buildActivitiesView
+  Map<String, dynamic> _activityStats = {};
+  List<FlSpot> _caloriesTrendData = [];
+  List<FlSpot> _durationTrendData = [];
+  bool _isLoadingActivityData = false;
+
   // Caching variables to prevent redundant API calls
   // This solves the issue of thousands of "Enriched training set" debug messages
   // when adjusting date intervals by avoiding repeated API calls for the same data
@@ -573,6 +579,152 @@ class _StatisticsScreen extends State<StatisticsScreen> {
     });
   }
 
+  // Method to load activity statistics and trend data
+  Future<void> _loadActivityData() async {
+    setState(() {
+      _isLoadingActivityData = true;
+    });
+
+    try {
+      // Load activity statistics
+      final statsData = await userService.getActivityStats();
+      print('Activity stats loaded: $statsData'); // Debug log
+
+      // Add detailed debugging to see what fields are available
+      print('Available fields in statsData:');
+      if (statsData is Map) {
+        for (var key in statsData.keys) {
+          print('  $key: ${statsData[key]} (${statsData[key].runtimeType})');
+        }
+      }
+
+      // Load activity logs for trend data
+      final logsData = await userService.getActivityLogs();
+      print('Activity logs count: ${logsData.length}'); // Debug log
+
+      // Convert logs to ApiActivityLog objects and sort by date
+      final activityLogs =
+          logsData.map((data) => ApiActivityLog.fromJson(data)).toList();
+      activityLogs.sort((a, b) => a.date.compareTo(b.date));
+
+      // Apply date filtering (same logic as other statistics)
+      List<ApiActivityLog> filteredActivityLogs = List.from(activityLogs);
+
+      // Apply the same filtering logic as in _loadStatistics
+      if (_useDefaultDateFilter && startingDate == null && endingDate == null) {
+        // Use last 30 days by default
+        final cutoffDate = DateTime.now().subtract(const Duration(days: 30));
+        filteredActivityLogs = filteredActivityLogs
+            .where((log) =>
+                log.date.isAfter(cutoffDate) ||
+                log.date.isAtSameMomentAs(cutoffDate))
+            .toList();
+      } else {
+        // Apply custom date filtering
+        if (startingDate != null) {
+          var tokens = startingDate!.split("-");
+          String startingDateString =
+              "${tokens[2]}-${tokens[1]}-${tokens[0]}T00:00:00";
+          DateTime start = DateTime.parse(startingDateString);
+          filteredActivityLogs = filteredActivityLogs
+              .where((log) =>
+                  log.date.isAfter(start) || log.date.isAtSameMomentAs(start))
+              .toList();
+        }
+        if (endingDate != null) {
+          var tokens = endingDate!.split("-");
+          String endingDateString =
+              "${tokens[2]}-${tokens[1]}-${tokens[0]}T00:00:00";
+          DateTime end = DateTime.parse(endingDateString);
+          filteredActivityLogs = filteredActivityLogs
+              .where((log) =>
+                  log.date.isBefore(end) || log.date.isAtSameMomentAs(end))
+              .toList();
+        }
+      }
+
+      // Calculate filtered statistics from the filtered activity logs
+      Map<String, dynamic> filteredStats = {
+        'total_sessions': filteredActivityLogs.length,
+        'total_duration_minutes': filteredActivityLogs.fold(
+            0, (sum, log) => sum + log.durationMinutes),
+        'total_calories_burned': filteredActivityLogs.fold(
+            0.0, (sum, log) => sum + log.caloriesBurned),
+      };
+
+      // Calculate averages if we have data
+      if (filteredStats['total_sessions'] > 0) {
+        filteredStats['average_session_duration'] =
+            filteredStats['total_duration_minutes'] /
+                filteredStats['total_sessions'];
+        filteredStats['average_calories_per_session'] =
+            filteredStats['total_calories_burned'] /
+                filteredStats['total_sessions'];
+      } else {
+        filteredStats['average_session_duration'] = 0.0;
+        filteredStats['average_calories_per_session'] = 0.0;
+      }
+
+      // Group activities by day and aggregate values for chart data
+      Map<String, Map<String, double>> dailyAggregates = {};
+
+      for (final log in filteredActivityLogs) {
+        // Create date key (YYYY-MM-DD)
+        final dateKey =
+            "${log.date.year}-${log.date.month.toString().padLeft(2, '0')}-${log.date.day.toString().padLeft(2, '0')}";
+
+        if (!dailyAggregates.containsKey(dateKey)) {
+          dailyAggregates[dateKey] = {
+            'calories': 0.0,
+            'duration': 0.0,
+          };
+        }
+
+        // Aggregate values for the day
+        dailyAggregates[dateKey]!['calories'] =
+            dailyAggregates[dateKey]!['calories']! + log.caloriesBurned;
+        dailyAggregates[dateKey]!['duration'] =
+            dailyAggregates[dateKey]!['duration']! +
+                log.durationMinutes.toDouble();
+      }
+
+      // Create chart data points from aggregated daily data
+      final caloriesTrendData = <FlSpot>[];
+      final durationTrendData = <FlSpot>[];
+
+      if (dailyAggregates.isNotEmpty) {
+        // Sort dates and create points
+        final sortedDates = dailyAggregates.keys.toList()..sort();
+        final earliestDate = DateTime.parse(sortedDates.first);
+
+        for (final dateKey in sortedDates) {
+          final date = DateTime.parse(dateKey);
+          final dayIndex = date.difference(earliestDate).inDays.toDouble();
+          final dailyData = dailyAggregates[dateKey]!;
+
+          caloriesTrendData.add(FlSpot(dayIndex, dailyData['calories']!));
+          durationTrendData.add(FlSpot(dayIndex, dailyData['duration']!));
+        }
+      }
+
+      setState(() {
+        _activityStats =
+            filteredStats; // Use filtered stats instead of raw API response
+        _caloriesTrendData = caloriesTrendData;
+        _durationTrendData = durationTrendData;
+        _isLoadingActivityData = false;
+      });
+    } catch (e) {
+      print('Error loading activity data: $e');
+      setState(() {
+        _activityStats = {};
+        _caloriesTrendData = [];
+        _durationTrendData = [];
+        _isLoadingActivityData = false;
+      });
+    }
+  }
+
   @override
   void dispose() {
     userService.authStateNotifier.removeListener(_onDataChanged);
@@ -698,14 +850,14 @@ class _StatisticsScreen extends State<StatisticsScreen> {
           }
         }
 
-        // Debug all muscle scores
-        print("All muscle scores:");
-        for (int i = 0;
-            i < min(muscleHistoryScoreCum.length, barChartMuscleNames.length);
-            i++) {
-          print(
-              "${barChartMuscleNames[i]}: ${muscleHistoryScoreCum[i]} (${(heatMapMulti[i] * 100).round()}%)");
-        }
+        // // Debug all muscle scores
+        // print("All muscle scores:");
+        // for (int i = 0;
+        //     i < min(muscleHistoryScoreCum.length, barChartMuscleNames.length);
+        //     i++) {
+        //   print(
+        //       "${barChartMuscleNames[i]}: ${muscleHistoryScoreCum[i]} (${(heatMapMulti[i] * 100).round()}%)");
+        // }
       }
     } else {
       // Initialize empty heatmap data
@@ -825,6 +977,7 @@ class _StatisticsScreen extends State<StatisticsScreen> {
                       _buildListTile("Muscle Usage per Exercise", 2),
                       _buildListTile("Muscle Heatmap", 3),
                       _buildListTile("Exercise Progress", 4),
+                      _buildListTile("Activities", 5),
                     ],
                   ),
                 ),
@@ -860,6 +1013,10 @@ class _StatisticsScreen extends State<StatisticsScreen> {
           // Load exercises when Exercise Progress is selected
           if (index == 4) {
             _loadAvailableExercises();
+          }
+          // Load activity data when Activities is selected
+          if (index == 5) {
+            _loadActivityData();
           }
         });
       },
@@ -933,9 +1090,175 @@ class _StatisticsScreen extends State<StatisticsScreen> {
         );
       case 4:
         return _buildExerciseProgressView();
+      case 5:
+        return _buildActivitiesView();
       default:
         return Container();
     }
+  }
+
+  // Add this new method for Activities view
+  Widget _buildActivitiesView() {
+    if (_isLoadingActivityData) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          "Activities Overview",
+          style: subStyle,
+        ),
+        const SizedBox(height: 10),
+        // Activity statistics cards
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            _buildActivityStatCard("Total Sessions",
+                _activityStats['total_sessions']?.toString() ?? "0"),
+            _buildActivityStatCard(
+                "Total Calories", _getCaloriesDisplayValue()),
+          ],
+        ),
+        const SizedBox(height: 20),
+        Text(
+          "Trends",
+          style: subStyle,
+        ),
+        const SizedBox(height: 10),
+        // Calories trend chart
+        Text("Calories Burned Over Time"),
+        SizedBox(
+          width: MediaQuery.of(context).size.width,
+          height: 200,
+          child: LineChart(
+            LineChartData(
+              borderData: FlBorderData(show: false),
+              titlesData: const FlTitlesData(
+                topTitles:
+                    AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                rightTitles:
+                    AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                bottomTitles:
+                    AxisTitles(sideTitles: SideTitles(showTitles: true)),
+                leftTitles:
+                    AxisTitles(sideTitles: SideTitles(showTitles: true)),
+              ),
+              lineBarsData: [
+                LineChartBarData(
+                  spots: _caloriesTrendData,
+                  isCurved: true,
+                  color: Colors.red,
+                  barWidth: 2,
+                  isStrokeCapRound: true,
+                  belowBarData: BarAreaData(show: false),
+                  dotData: const FlDotData(show: false),
+                ),
+              ],
+              minX: _caloriesTrendData.isNotEmpty
+                  ? _caloriesTrendData.first.x
+                  : 0,
+              maxX:
+                  _caloriesTrendData.isNotEmpty ? _caloriesTrendData.last.x : 0,
+              minY: 0,
+              maxY: _caloriesTrendData.isNotEmpty
+                  ? (_caloriesTrendData.map((e) => e.y).reduce(max) * 1.1)
+                  : 100,
+            ),
+          ),
+        ),
+        const SizedBox(height: 20),
+        // Duration trend chart
+        Text("Activity Duration Over Time"),
+        SizedBox(
+          width: MediaQuery.of(context).size.width,
+          height: 200,
+          child: LineChart(
+            LineChartData(
+              borderData: FlBorderData(show: false),
+              titlesData: const FlTitlesData(
+                topTitles:
+                    AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                rightTitles:
+                    AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                bottomTitles:
+                    AxisTitles(sideTitles: SideTitles(showTitles: true)),
+                leftTitles:
+                    AxisTitles(sideTitles: SideTitles(showTitles: true)),
+              ),
+              lineBarsData: [
+                LineChartBarData(
+                  spots: _durationTrendData,
+                  isCurved: true,
+                  color: Colors.blue,
+                  barWidth: 2,
+                  isStrokeCapRound: true,
+                  belowBarData: BarAreaData(show: false),
+                  dotData: const FlDotData(show: false),
+                ),
+              ],
+              minX: _durationTrendData.isNotEmpty
+                  ? _durationTrendData.first.x
+                  : 0,
+              maxX:
+                  _durationTrendData.isNotEmpty ? _durationTrendData.last.x : 0,
+              minY: 0,
+              maxY: _durationTrendData.isNotEmpty
+                  ? (_durationTrendData.map((e) => e.y).reduce(max) * 1.1)
+                  : 100,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // Helper method to get properly formatted calories value
+  String _getCaloriesDisplayValue() {
+    final calories = _activityStats['total_calories_burned'];
+    print(
+        'Debug - calories value: $calories (type: ${calories.runtimeType})'); // Debug log
+
+    if (calories == null) return "0";
+
+    // Handle both int and double types
+    if (calories is num) {
+      return calories.toStringAsFixed(0);
+    }
+
+    // Fallback - try to parse as string
+    final parsed = double.tryParse(calories.toString());
+    return parsed?.toStringAsFixed(0) ?? "0";
+  }
+
+  // Helper method to build activity statistic cards
+  Widget _buildActivityStatCard(String title, String value) {
+    return Expanded(
+      child: Card(
+        margin: const EdgeInsets.symmetric(horizontal: 5.0),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                title,
+                style: const TextStyle(fontSize: 14, color: Colors.grey),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                value,
+                style:
+                    const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   Center MuscleHeatMap(BuildContext context, double width, double height) {
@@ -1192,6 +1515,11 @@ class _StatisticsScreen extends State<StatisticsScreen> {
                 // Also update exercise graph if one is selected
                 if (_selectedExerciseForGraph != null) {
                   _loadExerciseGraphData(_selectedExerciseForGraph!);
+                }
+
+                // Reload activity data if Activities view is selected
+                if (_selectedWidgetIndex == 5) {
+                  _loadActivityData();
                 }
               },
               style: ElevatedButton.styleFrom(

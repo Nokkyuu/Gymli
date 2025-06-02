@@ -263,7 +263,7 @@ class _ActivityScreenState extends State<ActivityScreen>
       const Tab(icon: Icon(FontAwesomeIcons.plus), text: 'Log'),
       if (ResponsiveHelper.isMobile(context))
         const Tab(icon: Icon(FontAwesomeIcons.list), text: 'History'),
-      const Tab(icon: Icon(FontAwesomeIcons.chartLine), text: 'Stats'),
+      //const Tab(icon: Icon(FontAwesomeIcons.chartLine), text: 'Stats'),
       const Tab(icon: Icon(FontAwesomeIcons.gear), text: 'Manage'),
     ];
 
@@ -271,7 +271,7 @@ class _ActivityScreenState extends State<ActivityScreen>
     final List<Widget> tabViews = [
       _buildLogTab(),
       if (ResponsiveHelper.isMobile(context)) _buildHistoryTab(),
-      _buildStatsTab(),
+      //_buildStatsTab(),
       _buildManageTab(),
     ];
 
@@ -301,13 +301,14 @@ class _ActivityScreenState extends State<ActivityScreen>
       padding: const EdgeInsets.all(16.0),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           // Log form takes 2/3 of the width
           Expanded(
             flex: 2,
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Card(
                   child: Padding(
@@ -399,13 +400,13 @@ class _ActivityScreenState extends State<ActivityScreen>
                                     style:
                                         TextStyle(fontWeight: FontWeight.w500)),
                                 SizedBox(
-                                  width: 250,
+                                  width: 150,
                                   child: TextField(
                                     controller: durationController,
                                     keyboardType: TextInputType.number,
                                     decoration: const InputDecoration(
                                       border: OutlineInputBorder(),
-                                      hintText: 'Enter duration in minutes',
+                                      //hintText: 'Enter duration in minutes',
                                       contentPadding: EdgeInsets.symmetric(
                                           horizontal: 12, vertical: 8),
                                     ),
