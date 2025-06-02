@@ -582,3 +582,225 @@ class WorkoutUnitService {
     }
   }
 }
+
+//----------------- Activity Service -----------------//
+
+/// ActivityService - Manages activity types and activity logs
+///
+/// This service handles all CRUD operations for activities and activity logs,
+/// which are used for tracking cardio and other physical activities.
+class ActivityService {
+  /// Initializes default activities for a new user
+  /// [userName] - The username to initialize activities for
+  /// Returns a success message with count of initialized activities
+  Future<Map<String, dynamic>> initializeUserActivities({
+    required String userName,
+  }) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/users/$userName/initialize_activities'),
+      headers: {'Content-Type': 'application/json'},
+    );
+    if (response.statusCode == 200) {
+      return json.decode(response.body);
+    } else {
+      throw Exception('Failed to initialize activities: ${response.body}');
+    }
+  }
+
+  /// Retrieves all activities for a user
+  /// [userName] - The username to fetch activities for
+  /// Returns a list of activity objects
+  Future<List<dynamic>> getActivities({required String userName}) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/activities?user_name=$userName'),
+      headers: {'Content-Type': 'application/json'},
+    );
+    if (response.statusCode == 200) {
+      return json.decode(response.body);
+    } else {
+      throw Exception('Failed to load activities: ${response.body}');
+    }
+  }
+
+  /// Creates a new custom activity for a user
+  /// [userName] - The username associated with the activity
+  /// [name] - The name of the activity
+  /// [kcalPerHour] - Calories burned per hour for this activity
+  /// Returns the created activity data
+  Future<Map<String, dynamic>> createActivity({
+    required String userName,
+    required String name,
+    required double kcalPerHour,
+  }) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/activities'),
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode({
+        'user_name': userName,
+        'name': name,
+        'kcal_per_hour': kcalPerHour,
+      }),
+    );
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return json.decode(response.body);
+    } else {
+      throw Exception('Failed to create activity: ${response.body}');
+    }
+  }
+
+  /// Updates an existing activity
+  /// [activityId] - The ID of the activity to update
+  /// [userName] - The username for authorization
+  /// [name] - The updated name of the activity
+  /// [kcalPerHour] - The updated calories per hour
+  /// Returns the updated activity data
+  Future<Map<String, dynamic>> updateActivity({
+    required int activityId,
+    required String userName,
+    required String name,
+    required double kcalPerHour,
+  }) async {
+    final response = await http.put(
+      Uri.parse('$baseUrl/activities/$activityId?user_name=$userName'),
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode({
+        'name': name,
+        'kcal_per_hour': kcalPerHour,
+      }),
+    );
+    if (response.statusCode == 200) {
+      return json.decode(response.body);
+    } else {
+      throw Exception('Failed to update activity: ${response.body}');
+    }
+  }
+
+  /// Deletes an activity
+  /// [activityId] - The ID of the activity to delete
+  /// [userName] - The username for authorization
+  Future<void> deleteActivity({
+    required int activityId,
+    required String userName,
+  }) async {
+    final response = await http.delete(
+      Uri.parse('$baseUrl/activities/$activityId?user_name=$userName'),
+      headers: {'Content-Type': 'application/json'},
+    );
+    if (response.statusCode != 200 && response.statusCode != 204) {
+      throw Exception('Failed to delete activity: ${response.body}');
+    }
+  }
+
+  /// Retrieves activity logs with optional filtering
+  /// [userName] - The username to fetch logs for
+  /// [activityName] - Optional filter by specific activity name
+  /// [startDate] - Optional filter from this date
+  /// [endDate] - Optional filter until this date
+  /// Returns a list of activity log objects
+  Future<List<dynamic>> getActivityLogs({
+    required String userName,
+    String? activityName,
+    DateTime? startDate,
+    DateTime? endDate,
+  }) async {
+    String url = '$baseUrl/activity_logs?user_name=$userName';
+
+    if (activityName != null) {
+      url += '&activity_name=${Uri.encodeComponent(activityName)}';
+    }
+    if (startDate != null) {
+      url += '&start_date=${startDate.toIso8601String()}';
+    }
+    if (endDate != null) {
+      url += '&end_date=${endDate.toIso8601String()}';
+    }
+
+    final response = await http.get(
+      Uri.parse(url),
+      headers: {'Content-Type': 'application/json'},
+    );
+    if (response.statusCode == 200) {
+      return json.decode(response.body);
+    } else {
+      throw Exception('Failed to load activity logs: ${response.body}');
+    }
+  }
+
+  /// Creates a new activity log entry
+  /// [userName] - The username associated with the log
+  /// [activityName] - The name of the activity performed
+  /// [date] - The date of the activity session
+  /// [durationMinutes] - Duration of the activity in minutes
+  /// [notes] - Optional notes about the session
+  /// Returns the created activity log with calculated calories
+  Future<Map<String, dynamic>> createActivityLog({
+    required String userName,
+    required String activityName,
+    required DateTime date,
+    required int durationMinutes,
+    String? notes,
+  }) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/activity_logs'),
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode({
+        'user_name': userName,
+        'activity_name': activityName,
+        'date': date.toIso8601String(),
+        'duration_minutes': durationMinutes,
+        'notes': notes,
+      }),
+    );
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return json.decode(response.body);
+    } else {
+      throw Exception('Failed to create activity log: ${response.body}');
+    }
+  }
+
+  /// Retrieves activity statistics for a user
+  /// [userName] - The username to get stats for
+  /// [startDate] - Optional stats from this date
+  /// [endDate] - Optional stats until this date
+  /// Returns activity statistics including totals and averages
+  Future<Map<String, dynamic>> getActivityStats({
+    required String userName,
+    DateTime? startDate,
+    DateTime? endDate,
+  }) async {
+    String url = '$baseUrl/activity_logs/stats?user_name=$userName';
+
+    if (startDate != null) {
+      url += '&start_date=${startDate.toIso8601String()}';
+    }
+    if (endDate != null) {
+      url += '&end_date=${endDate.toIso8601String()}';
+    }
+
+    final response = await http.get(
+      Uri.parse(url),
+      headers: {'Content-Type': 'application/json'},
+    );
+    if (response.statusCode == 200) {
+      return json.decode(response.body);
+    } else {
+      throw Exception('Failed to load activity stats: ${response.body}');
+    }
+  }
+
+  /// Deletes an activity log entry
+  /// [logId] - The ID of the log entry to delete
+  /// [userName] - The username for authorization
+  Future<void> deleteActivityLog({
+    required int logId,
+    required String userName,
+  }) async {
+    final response = await http.delete(
+      Uri.parse('$baseUrl/activity_logs/$logId?user_name=$userName'),
+      headers: {'Content-Type': 'application/json'},
+    );
+    if (response.statusCode != 200 && response.statusCode != 204) {
+      throw Exception('Failed to delete activity log: ${response.body}');
+    }
+  }
+}
