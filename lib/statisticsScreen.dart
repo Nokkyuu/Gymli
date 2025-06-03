@@ -98,6 +98,12 @@ class _StatisticsScreen extends State<StatisticsScreen> {
   final TextEditingController MuscleController = TextEditingController();
   final UserService userService = UserService();
 
+  // Equipment usage count variables
+  int _freeWeightsCount = 0;
+  int _machinesCount = 0;
+  int _cablesCount = 0;
+  int _bodyweightCount = 0;
+
   // Activity-related variables for _buildActivitiesView
   Map<String, dynamic> _activityStats = {};
   List<FlSpot> _caloriesTrendData = [];
@@ -173,6 +179,121 @@ class _StatisticsScreen extends State<StatisticsScreen> {
     print('Data cache invalidated');
   }
 
+  // Method to calculate equipment usage counts from training sets
+  Future<void> _calculateEquipmentUsage() async {
+    try {
+      // Get all training sets and exercises
+      final allTrainingSets = await _getTrainingSetsWithCache();
+      final exercises = await _getExercisesWithCache();
+
+      // Create a map of exercise names to their types
+      final Map<String, int> exerciseNameToType = {};
+      for (var exercise in exercises) {
+        exerciseNameToType[exercise.name] = exercise.type;
+      }
+
+      // Count unique exercises by type from training sets
+      final Set<String> freeWeightExercises = {};
+      final Set<String> machineExercises = {};
+      final Set<String> cableExercises = {};
+      final Set<String> bodyweightExercises = {};
+
+      // Apply the same date filtering as other statistics
+      List<Map<String, dynamic>> filteredTrainingSets =
+          List.from(allTrainingSets);
+
+      if (_useDefaultDateFilter && startingDate == null && endingDate == null) {
+        // Use last 30 days by default (same as other statistics)
+        final cutoffDate = DateTime.now().subtract(const Duration(days: 30));
+        filteredTrainingSets = filteredTrainingSets.where((trainingSet) {
+          try {
+            final date = DateTime.parse(trainingSet['date']);
+            return (date.isAfter(cutoffDate) ||
+                    date.isAtSameMomentAs(cutoffDate)) &&
+                trainingSet['set_type'] > 0; // Only count work sets
+          } catch (e) {
+            return false;
+          }
+        }).toList();
+      } else {
+        // Apply custom date filtering (same logic as _loadStatistics)
+        if (startingDate != null) {
+          var tokens = startingDate!.split("-");
+          String startingDateString =
+              "${tokens[2]}-${tokens[1]}-${tokens[0]}T00:00:00";
+          DateTime start = DateTime.parse(startingDateString);
+          filteredTrainingSets = filteredTrainingSets.where((trainingSet) {
+            try {
+              final date = DateTime.parse(trainingSet['date']);
+              return (date.isAfter(start) || date.isAtSameMomentAs(start)) &&
+                  trainingSet['set_type'] > 0; // Only count work sets
+            } catch (e) {
+              return false;
+            }
+          }).toList();
+        }
+        if (endingDate != null) {
+          var tokens = endingDate!.split("-");
+          String endingDateString =
+              "${tokens[2]}-${tokens[1]}-${tokens[0]}T23:59:59";
+          DateTime end = DateTime.parse(endingDateString);
+          filteredTrainingSets = filteredTrainingSets.where((trainingSet) {
+            try {
+              final date = DateTime.parse(trainingSet['date']);
+              return (date.isBefore(end) || date.isAtSameMomentAs(end)) &&
+                  trainingSet['set_type'] > 0; // Only count work sets
+            } catch (e) {
+              return false;
+            }
+          }).toList();
+        }
+      }
+
+      // Count unique exercises by type from filtered training sets
+      for (var trainingSet in filteredTrainingSets) {
+        String? exerciseName = trainingSet['exercise_name'];
+        if (exerciseName != null) {
+          int? exerciseType = exerciseNameToType[exerciseName];
+          if (exerciseType != null) {
+            switch (exerciseType) {
+              case 0: // Free weights
+                freeWeightExercises.add(exerciseName);
+                break;
+              case 1: // Machine
+                machineExercises.add(exerciseName);
+                break;
+              case 2: // Cable
+                cableExercises.add(exerciseName);
+                break;
+              case 3: // Bodyweight
+                bodyweightExercises.add(exerciseName);
+                break;
+            }
+          }
+        }
+      }
+
+      // Update the counts
+      setState(() {
+        _freeWeightsCount = freeWeightExercises.length;
+        _machinesCount = machineExercises.length;
+        _cablesCount = cableExercises.length;
+        _bodyweightCount = bodyweightExercises.length;
+      });
+
+      print(
+          'Equipment usage calculated: Free: $_freeWeightsCount, Machine: $_machinesCount, Cable: $_cablesCount, Bodyweight: $_bodyweightCount');
+    } catch (e) {
+      print('Error calculating equipment usage: $e');
+      setState(() {
+        _freeWeightsCount = 0;
+        _machinesCount = 0;
+        _cablesCount = 0;
+        _bodyweightCount = 0;
+      });
+    }
+  }
+
   // Check if cache is expired (5 minutes for freshness)
   bool _isCacheExpired() {
     if (_lastCacheTime == null) return true;
@@ -212,7 +333,6 @@ class _StatisticsScreen extends State<StatisticsScreen> {
     // This calculates the ISO week number (week 1 is the first week with Thursday)
     DateTime jan1 = DateTime(date.year, 1, 1);
     int dayOfYear = date.difference(jan1).inDays + 1;
-    int weekDay = jan1.weekday;
 
     // Adjust for ISO week calculation
     int week = ((dayOfYear - date.weekday + 10) / 7).floor();
@@ -590,6 +710,9 @@ class _StatisticsScreen extends State<StatisticsScreen> {
       // Calculate heat map data
       _updateHeatMapData();
 
+      // Calculate equipment usage counts
+      await _calculateEquipmentUsage();
+
       // Trigger UI update
       if (mounted) {
         setState(() {
@@ -633,10 +756,8 @@ class _StatisticsScreen extends State<StatisticsScreen> {
 
       // Add detailed debugging to see what fields are available
       print('Available fields in statsData:');
-      if (statsData is Map) {
-        for (var key in statsData.keys) {
-          print('  $key: ${statsData[key]} (${statsData[key].runtimeType})');
-        }
+      for (var key in statsData.keys) {
+        print('  $key: ${statsData[key]} (${statsData[key].runtimeType})');
       }
 
       // Load activity logs for trend data
@@ -755,6 +876,9 @@ class _StatisticsScreen extends State<StatisticsScreen> {
         _durationTrendData = durationTrendData;
         _isLoadingActivityData = false;
       });
+
+      // Also update equipment usage when activity data is loaded
+      await _calculateEquipmentUsage();
     } catch (e) {
       print('Error loading activity data: $e');
       setState(() {
@@ -1526,10 +1650,24 @@ class _StatisticsScreen extends State<StatisticsScreen> {
 
   Column StatisticTexts() {
     return Column(
+      spacing: 8,
       children: [
+        const SizedBox(height: 10),
         Text("Number of training days: $numberOfTrainingDays",
             style: subStyle, textAlign: TextAlign.center),
+
         Text(trainingDuration, style: subStyle, textAlign: TextAlign.center),
+        Text(
+            "Used $_freeWeightsCount Free Weights, $_machinesCount Machines, $_cablesCount Cables and $_bodyweightCount Bodyweight Exercises",
+            style: subStyle,
+            textAlign: TextAlign.center),
+        Text(
+            "${_activityStats['total_sessions'] ?? 0} Activities for a total of ${_activityStats['total_duration_minutes'] ?? 0} Minutes and an additonal Kalorie burn of ${_getCaloriesDisplayValue()} kcal",
+            style: subStyle,
+            textAlign: TextAlign.center),
+        //add how many types are used (free, machine etc)
+        //add activity statistics
+        //add food statistics
       ],
     );
   }
@@ -1667,7 +1805,7 @@ class _StatisticsScreen extends State<StatisticsScreen> {
                   }
 
                   // Reload activity data if Activities view is selected
-                  if (_selectedWidgetIndex == 5) {
+                  if (_selectedWidgetIndex == 5 || _selectedWidgetIndex == 0) {
                     _loadActivityData();
                   }
                 },
