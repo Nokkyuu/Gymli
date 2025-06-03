@@ -203,8 +203,8 @@ class _StatisticsScreen extends State<StatisticsScreen> {
           List.from(allTrainingSets);
 
       if (_useDefaultDateFilter && startingDate == null && endingDate == null) {
-        // Use last 30 days by default (same as other statistics)
-        final cutoffDate = DateTime.now().subtract(const Duration(days: 30));
+        // Use last 90 calendar days by default (same as other statistics)
+        final cutoffDate = DateTime.now().subtract(const Duration(days: 90));
         filteredTrainingSets = filteredTrainingSets.where((trainingSet) {
           try {
             final date = DateTime.parse(trainingSet['date']);
@@ -216,7 +216,7 @@ class _StatisticsScreen extends State<StatisticsScreen> {
           }
         }).toList();
       } else {
-        // Apply custom date filtering (same logic as _loadStatistics)
+        // Apply custom date filtering using the DatePicker logic
         if (startingDate != null) {
           var tokens = startingDate!.split("-");
           String startingDateString =
@@ -426,41 +426,28 @@ class _StatisticsScreen extends State<StatisticsScreen> {
       // Apply date filtering to training dates for calculations
       List<DateTime> filteredTrainingDates = List.from(_trainingDates);
 
-      // Track original length for snackbar message
-      int originalLength = filteredTrainingDates.length;
-
-      // If no custom dates are set and we should use default filter, use last 30 training dates
+      // If no custom dates are set and we should use default filter, use last 90 calendar days
       if (_useDefaultDateFilter && startingDate == null && endingDate == null) {
-        if (filteredTrainingDates.length > 30) {
-          filteredTrainingDates =
-              filteredTrainingDates.sublist(filteredTrainingDates.length - 30);
+        final cutoffDate = DateTime.now().subtract(const Duration(days: 90));
+        final originalCount = filteredTrainingDates.length;
 
-          // Show snackbar informing user about the 30-day limit
-          if (mounted) {
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                      'Showing last 30 training days (${originalLength} total available)'),
-                  duration: const Duration(seconds: 3),
-                  backgroundColor: Colors.blue.shade600,
-                ),
-              );
-            });
-          }
-        } else {
-          // Show snackbar informing user about all days being loaded
-          if (mounted) {
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('Showing all ${originalLength} training days'),
-                  duration: const Duration(seconds: 3),
-                  backgroundColor: Colors.green.shade600,
-                ),
-              );
-            });
-          }
+        filteredTrainingDates = filteredTrainingDates
+            .where(
+                (d) => d.isAfter(cutoffDate) || d.isAtSameMomentAs(cutoffDate))
+            .toList();
+
+        // Show snackbar informing user about the 90-day limit
+        if (mounted) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                    'Showing last 90 calendar days (${filteredTrainingDates.length} training days from ${originalCount} total)'),
+                duration: const Duration(seconds: 3),
+                backgroundColor: Colors.blue.shade600,
+              ),
+            );
+          });
         }
       } else {
         // Apply custom date filtering
@@ -628,14 +615,15 @@ class _StatisticsScreen extends State<StatisticsScreen> {
       // Apply the same filtering logic as in _loadStatistics
       List<DateTime> filteredTrainingDates = List.from(allTrainingDates);
 
-      // If no custom dates are set and we should use default filter, use last 30 training dates
+      // If no custom dates are set and we should use default filter, use last 90 calendar days
       if (_useDefaultDateFilter && startingDate == null && endingDate == null) {
-        if (filteredTrainingDates.length > 30) {
-          filteredTrainingDates =
-              filteredTrainingDates.sublist(filteredTrainingDates.length - 30);
-        }
+        final cutoffDate = DateTime.now().subtract(const Duration(days: 90));
+        filteredTrainingDates = filteredTrainingDates
+            .where(
+                (d) => d.isAfter(cutoffDate) || d.isAtSameMomentAs(cutoffDate))
+            .toList();
       } else {
-        // Apply custom date filtering
+        // Apply custom date filtering using the DatePicker logic
         if (startingDate != null) {
           var tokens = startingDate!.split("-");
           String startingDateString =
@@ -733,7 +721,7 @@ class _StatisticsScreen extends State<StatisticsScreen> {
   void initState() {
     super.initState();
     _loadStatistics();
-
+    _loadActivityData();
     // Listen for route changes to refresh data when returning to this screen
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
@@ -774,15 +762,15 @@ class _StatisticsScreen extends State<StatisticsScreen> {
 
       // Apply the same filtering logic as in _loadStatistics
       if (_useDefaultDateFilter && startingDate == null && endingDate == null) {
-        // Use last 30 days by default
-        final cutoffDate = DateTime.now().subtract(const Duration(days: 30));
+        // Use last 90 calendar days by default
+        final cutoffDate = DateTime.now().subtract(const Duration(days: 90));
         filteredActivityLogs = filteredActivityLogs
             .where((log) =>
                 log.date.isAfter(cutoffDate) ||
                 log.date.isAtSameMomentAs(cutoffDate))
             .toList();
       } else {
-        // Apply custom date filtering
+        // Apply custom date filtering using the DatePicker logic
         if (startingDate != null) {
           var tokens = startingDate!.split("-");
           String startingDateString =
@@ -901,6 +889,7 @@ class _StatisticsScreen extends State<StatisticsScreen> {
       // Invalidate cache when data changes externally (e.g., new workouts added)
       _invalidateCache();
       _loadStatistics();
+      _loadActivityData();
     }
   }
 
@@ -2086,29 +2075,17 @@ class _StatisticsScreen extends State<StatisticsScreen> {
           }
         }).toList();
       } else if (_useDefaultDateFilter) {
-        // Apply 30-day default filter for exercise graph too
-        exerciseTrainingSets.sort((a, b) =>
-            DateTime.parse(b['date']).compareTo(DateTime.parse(a['date'])));
-        if (exerciseTrainingSets.length > 30) {
-          // Get unique training dates first
-          Set<String> uniqueDates = {};
-          List<Map<String, dynamic>> filteredSets = [];
-
-          for (var set in exerciseTrainingSets) {
-            final date = DateTime.parse(set['date']);
-            String dateKey =
-                "${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}";
-            if (!uniqueDates.contains(dateKey)) {
-              uniqueDates.add(dateKey);
-              if (uniqueDates.length <= 30) {
-                filteredSets.add(set);
-              }
-            } else if (uniqueDates.length <= 30) {
-              filteredSets.add(set);
-            }
+        // Use last 90 calendar days by default (same as other statistics)
+        final cutoffDate = DateTime.now().subtract(const Duration(days: 90));
+        exerciseTrainingSets = exerciseTrainingSets.where((trainingSet) {
+          try {
+            final date = DateTime.parse(trainingSet['date']);
+            return date.isAfter(cutoffDate) ||
+                date.isAtSameMomentAs(cutoffDate);
+          } catch (e) {
+            return false;
           }
-          exerciseTrainingSets = filteredSets;
-        }
+        }).toList();
       }
 
       // Group by date and find best set per day
