@@ -30,6 +30,11 @@ import 'api_models.dart';
 class UserService {
   static UserService? _instance;
 
+  // Add this to your UserService class if it doesn't exist
+  void notifyAuthStateChanged() {
+    authStateNotifier.value = !authStateNotifier.value;
+  }
+
   // Updated singleton pattern that's more web-friendly
   factory UserService() {
     _instance ??= UserService._internal();

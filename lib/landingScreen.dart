@@ -326,9 +326,12 @@ class _LandingScreenState extends State<LandingScreen> {
         _loadWorkouts(),
       ]);
 
+      // Clear current selections when loading new user data
       setState(() {
-        MuscleController.value = TextEditingValue.empty;
-        WorkoutController.value = TextEditingValue.empty;
+        MuscleController.clear();
+        WorkoutController.clear();
+        selectedWorkout = null;
+        selectedMuscle = null;
         _isLoading = false;
       });
 

@@ -120,8 +120,16 @@ class _MainAppState extends State<MainApp> {
     // Refresh exercise list
     get_exercise_list();
 
-    // Notify the landing screen to refresh its data
-    // This will be handled by the LandingScreen listening to auth state changes
+    // Force refresh of the landing screen by rebuilding the entire app
+    setState(() {
+      // This will trigger a rebuild and the landing screen will reload its data
+    });
+
+    // Small delay to ensure state is updated before notifying listeners
+    await Future.delayed(const Duration(milliseconds: 100));
+
+    // Notify all listeners that auth state has changed
+    userService.notifyAuthStateChanged();
   }
 
   Future<void> _loadStoredAuthState() async {
