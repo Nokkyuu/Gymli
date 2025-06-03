@@ -92,6 +92,7 @@ class _StatisticsScreen extends State<StatisticsScreen> {
   String? _tempStartingDate;
   String? _tempEndingDate;
   List<double> heatMapMulti = [];
+  List<List<double>> _muscleHistoryScore = [];
   bool isLoading = true;
   // ignore: non_constant_identifier_names
   final TextEditingController MuscleController = TextEditingController();
@@ -128,6 +129,40 @@ class _StatisticsScreen extends State<StatisticsScreen> {
   ];
 
   void updateView() {}
+
+  // Helper method to calculate heat map data from muscle history scores
+  void _updateHeatMapData() {
+    if (_muscleHistoryScore.isEmpty || _muscleHistoryScore[0].isEmpty) {
+      heatMapMulti = List.filled(14, 0.0);
+      return;
+    }
+
+    List<double> muscleHistoryScoreCum = [];
+    for (int i = 0; i < _muscleHistoryScore[0].length; i++) {
+      double item = 0;
+      for (int j = 0; j < _muscleHistoryScore.length; j++) {
+        if (i < _muscleHistoryScore[j].length) {
+          item += _muscleHistoryScore[j][i];
+        }
+      }
+      muscleHistoryScoreCum.add(item);
+    }
+
+    if (muscleHistoryScoreCum.isNotEmpty) {
+      var highestValue = muscleHistoryScoreCum.reduce(max);
+      heatMapMulti = muscleHistoryScoreCum
+          .map((score) => highestValue > 0 ? score / highestValue : 0.0)
+          .toList();
+
+      // Debug output for forearms (index 12)
+      if (muscleHistoryScoreCum.length > 12) {
+        print("Forearms debug - Raw score: ${muscleHistoryScoreCum[12]}, "
+            "Normalized: ${heatMapMulti[12]}, Highest: $highestValue");
+      }
+    } else {
+      heatMapMulti = List.filled(14, 0.0);
+    }
+  }
 
   // Cache invalidation method
   void _invalidateCache() {
@@ -241,6 +276,7 @@ class _StatisticsScreen extends State<StatisticsScreen> {
           trainingsPerWeekChart.clear();
           barChartStatistics.clear();
           heatMapMulti.clear();
+          _muscleHistoryScore.clear();
         });
         return;
       }
@@ -547,7 +583,12 @@ class _StatisticsScreen extends State<StatisticsScreen> {
         barChartStatistics
             .add(generateBars(i, accumulatedScore, barChartMuscleColors));
       }
-      globals.muscleHistoryScore = muscleHistoryScore;
+
+      // Store muscle history score in class member instead of global
+      _muscleHistoryScore = muscleHistoryScore;
+
+      // Calculate heat map data
+      _updateHeatMapData();
 
       // Trigger UI update
       if (mounted) {
@@ -820,54 +861,9 @@ class _StatisticsScreen extends State<StatisticsScreen> {
     //   );
     // }
 
-    List<List> muscleHistoryScore = globals.muscleHistoryScore;
+    // Heat map data is now calculated in updateBarStatistics and stored in heatMapMulti
+    // No need to recalculate in build() method
 
-    List<double> muscleHistoryScoreCum = [];
-    if (muscleHistoryScore.isNotEmpty && muscleHistoryScore[0].isNotEmpty) {
-      for (int i = 0; i < muscleHistoryScore[0].length; i++) {
-        double item = 0;
-        for (int j = 0; j < muscleHistoryScore.length; j++) {
-          if (i < muscleHistoryScore[j].length) {
-            item = item + muscleHistoryScore[j][i];
-          }
-        }
-        muscleHistoryScoreCum.add(item);
-      }
-
-      if (muscleHistoryScoreCum.isNotEmpty) {
-        var highestValue = muscleHistoryScoreCum.reduce(max);
-        heatMapMulti = [];
-        for (int i = 0; i < muscleHistoryScoreCum.length; i++) {
-          double normalizedValue =
-              highestValue > 0 ? muscleHistoryScoreCum[i] / highestValue : 0.0;
-          heatMapMulti.add(normalizedValue);
-
-          // Debug output
-          if (i == 12) {
-            // Forearms index
-            print(
-                "Forearms debug - Raw score: ${muscleHistoryScoreCum[i]}, Normalized: $normalizedValue, Highest: $highestValue");
-          }
-        }
-
-        // // Debug all muscle scores
-        // print("All muscle scores:");
-        // for (int i = 0;
-        //     i < min(muscleHistoryScoreCum.length, barChartMuscleNames.length);
-        //     i++) {
-        //   print(
-        //       "${barChartMuscleNames[i]}: ${muscleHistoryScoreCum[i]} (${(heatMapMulti[i] * 100).round()}%)");
-        // }
-      }
-    } else {
-      // Initialize empty heatmap data
-      heatMapMulti = List.filled(14, 0.0);
-    }
-
-    //print(highestValue);
-    //print(globals.muscleHistoryScore);
-    //print(heatMapCood);
-    //print(heatMapMulti);
     return Scaffold(
         appBar: AppBar(
           leading: InkWell(
