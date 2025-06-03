@@ -142,7 +142,7 @@ class _StatisticsScreen extends State<StatisticsScreen> {
       heatMapMulti = List.filled(14, 0.0);
       return;
     }
-
+    print("DEBUG _muscleHistoryScore $_muscleHistoryScore");
     List<double> muscleHistoryScoreCum = [];
     for (int i = 0; i < _muscleHistoryScore[0].length; i++) {
       double item = 0;
@@ -155,16 +155,16 @@ class _StatisticsScreen extends State<StatisticsScreen> {
     }
 
     if (muscleHistoryScoreCum.isNotEmpty) {
+      print("DEBUG muscleHistoryScoreCum $muscleHistoryScoreCum");
       var highestValue = muscleHistoryScoreCum.reduce(max);
       heatMapMulti = muscleHistoryScoreCum
           .map((score) => highestValue > 0 ? score / highestValue : 0.0)
           .toList();
 
-      // Debug output for forearms (index 12)
-      if (muscleHistoryScoreCum.length > 12) {
-        print("Forearms debug - Raw score: ${muscleHistoryScoreCum[12]}, "
-            "Normalized: ${heatMapMulti[12]}, Highest: $highestValue");
-      }
+      // // Debug output for forearms (index 12)
+      // if (muscleHistoryScoreCum.length > 12) {
+      //   print("Forearms debug - Raw score: ${muscleHistoryScoreCum[12]}, "
+      //       "Normalized: ${heatMapMulti[12]}, Highest: $highestValue");
     } else {
       heatMapMulti = List.filled(14, 0.0);
     }
@@ -203,8 +203,8 @@ class _StatisticsScreen extends State<StatisticsScreen> {
           List.from(allTrainingSets);
 
       if (_useDefaultDateFilter && startingDate == null && endingDate == null) {
-        // Use last 90 calendar days by default (same as other statistics)
-        final cutoffDate = DateTime.now().subtract(const Duration(days: 90));
+        // Use last 30 days by default (same as other statistics)
+        final cutoffDate = DateTime.now().subtract(const Duration(days: 30));
         filteredTrainingSets = filteredTrainingSets.where((trainingSet) {
           try {
             final date = DateTime.parse(trainingSet['date']);
@@ -216,7 +216,7 @@ class _StatisticsScreen extends State<StatisticsScreen> {
           }
         }).toList();
       } else {
-        // Apply custom date filtering using the DatePicker logic
+        // Apply custom date filtering (same logic as _loadStatistics)
         if (startingDate != null) {
           var tokens = startingDate!.split("-");
           String startingDateString =
@@ -581,15 +581,24 @@ class _StatisticsScreen extends State<StatisticsScreen> {
 
       Map<String, List<Tuple2<int, double>>> exerciseMapping = {};
       for (var e in exercises) {
+        // print("DEBUG Exercise: ${e.name}");
+        // print("DEBUG muscleGroups: ${e.muscleGroups}");
+        // print("DEBUG muscleIntensities: ${e.muscleIntensities}");
+        // print("DEBUG muscleIntensities length: ${e.muscleIntensities.length}");
+        // print("DEBUG muscleGroups length: ${e.muscleGroups.length}");
+
         List<Tuple2<int, double>> intermediateMap = [];
         for (int i = 0; i < e.muscleGroups.length; ++i) {
           String which = e.muscleGroups[i];
           var val = muscleMapping[which];
           if (val != null) {
-            intermediateMap
-                .add(Tuple2<int, double>(val, e.muscleIntensities[i]));
+            double intensity = val < e.muscleIntensities.length
+                ? e.muscleIntensities[val]
+                : 0.0;
+            intermediateMap.add(Tuple2<int, double>(val, intensity));
           }
         }
+        //print("DEBUG intermediateMap for ${e.name}: $intermediateMap");
         exerciseMapping[e.name] = intermediateMap;
       }
 
@@ -663,11 +672,17 @@ class _StatisticsScreen extends State<StatisticsScreen> {
         List<double> dailyMuscleScores = List.filled(14, 0.0);
 
         for (var trainingSet in dayTrainingSets) {
+          print("DEBUG trainingSet: $trainingSet");
           // Use exercise_name from the enriched training set
           String? exerciseName = trainingSet['exercise_name'];
           if (exerciseName != null) {
             List<Tuple2<int, double>>? muscleInvolved =
                 exerciseMapping[exerciseName];
+            print("DEBUG exerciseName: $exerciseName");
+            print("DEBUG muscleInvolved: $muscleInvolved");
+            //print(
+            //    "DEBUG exerciseMapping[exerciseName]: $exerciseMapping[exerciseName] ");
+
             if (muscleInvolved != null) {
               for (Tuple2<int, double> pair in muscleInvolved) {
                 if (pair.item1 < dailyMuscleScores.length) {
@@ -721,7 +736,7 @@ class _StatisticsScreen extends State<StatisticsScreen> {
   void initState() {
     super.initState();
     _loadStatistics();
-    _loadActivityData();
+
     // Listen for route changes to refresh data when returning to this screen
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
@@ -762,15 +777,15 @@ class _StatisticsScreen extends State<StatisticsScreen> {
 
       // Apply the same filtering logic as in _loadStatistics
       if (_useDefaultDateFilter && startingDate == null && endingDate == null) {
-        // Use last 90 calendar days by default
-        final cutoffDate = DateTime.now().subtract(const Duration(days: 90));
+        // Use last 30 days by default
+        final cutoffDate = DateTime.now().subtract(const Duration(days: 30));
         filteredActivityLogs = filteredActivityLogs
             .where((log) =>
                 log.date.isAfter(cutoffDate) ||
                 log.date.isAtSameMomentAs(cutoffDate))
             .toList();
       } else {
-        // Apply custom date filtering using the DatePicker logic
+        // Apply custom date filtering
         if (startingDate != null) {
           var tokens = startingDate!.split("-");
           String startingDateString =
@@ -889,7 +904,6 @@ class _StatisticsScreen extends State<StatisticsScreen> {
       // Invalidate cache when data changes externally (e.g., new workouts added)
       _invalidateCache();
       _loadStatistics();
-      _loadActivityData();
     }
   }
 
@@ -2075,17 +2089,29 @@ class _StatisticsScreen extends State<StatisticsScreen> {
           }
         }).toList();
       } else if (_useDefaultDateFilter) {
-        // Use last 90 calendar days by default (same as other statistics)
-        final cutoffDate = DateTime.now().subtract(const Duration(days: 90));
-        exerciseTrainingSets = exerciseTrainingSets.where((trainingSet) {
-          try {
-            final date = DateTime.parse(trainingSet['date']);
-            return date.isAfter(cutoffDate) ||
-                date.isAtSameMomentAs(cutoffDate);
-          } catch (e) {
-            return false;
+        // Apply 30-day default filter for exercise graph too
+        exerciseTrainingSets.sort((a, b) =>
+            DateTime.parse(b['date']).compareTo(DateTime.parse(a['date'])));
+        if (exerciseTrainingSets.length > 30) {
+          // Get unique training dates first
+          Set<String> uniqueDates = {};
+          List<Map<String, dynamic>> filteredSets = [];
+
+          for (var set in exerciseTrainingSets) {
+            final date = DateTime.parse(set['date']);
+            String dateKey =
+                "${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}";
+            if (!uniqueDates.contains(dateKey)) {
+              uniqueDates.add(dateKey);
+              if (uniqueDates.length <= 30) {
+                filteredSets.add(set);
+              }
+            } else if (uniqueDates.length <= 30) {
+              filteredSets.add(set);
+            }
           }
-        }).toList();
+          exerciseTrainingSets = filteredSets;
+        }
       }
 
       // Group by date and find best set per day
