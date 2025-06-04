@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../globals.dart' as globals;
+import '../../../globals.dart' as globals;
 
 /// Controller for managing timer functionality and idle notifications
 class ExerciseTimerController extends ChangeNotifier {

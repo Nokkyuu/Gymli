@@ -24,7 +24,6 @@ import 'user_service.dart';
 import 'api_models.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:Gymli/workoutSetupScreen.dart';
-import 'database.dart' as db;
 import 'responsive_helper.dart';
 
 enum MuscleList {
@@ -150,7 +149,7 @@ class _LandingScreenState extends State<LandingScreen> {
 
       // Fetch last training days for all exercises in one batch call
       final lastTrainingDays =
-          await db.getLastTrainingDaysForExercises(exerciseNames);
+          await userService.getLastTrainingDaysForExercises(exerciseNames);
 
       // Build metainfo for each exercise
       for (var ex in filteredExercises) {
@@ -206,7 +205,7 @@ class _LandingScreenState extends State<LandingScreen> {
 
       // Fetch last training days for all exercises in one batch call
       final lastTrainingDays =
-          await db.getLastTrainingDaysForExercises(exerciseNames);
+          await userService.getLastTrainingDaysForExercises(exerciseNames);
 
       // Build metainfo for each exercise (same format as showAllExercises)
       for (var ex in filteredExercises) {

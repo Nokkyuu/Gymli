@@ -1,7 +1,7 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'dart:math';
-import '../api_models.dart';
-import '../globals.dart' as globals;
+import '../../../api_models.dart';
+import '../../../globals.dart' as globals;
 import 'package:flutter/material.dart';
 
 /// Controller for managing exercise graph data and calculations

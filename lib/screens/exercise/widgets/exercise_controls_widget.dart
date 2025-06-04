@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:numberpicker/numberpicker.dart';
-import '../exerciseS_controllers/exercise_controller.dart';
+import '../controllers/exercise_controller.dart';
 
 /// Widget for exercise input controls (weight, reps, submit)
 class ExerciseControlsWidget extends StatefulWidget {
@@ -113,7 +113,7 @@ class _ExerciseControlsWidgetState extends State<ExerciseControlsWidget> {
       if (_repsWheelController.hasClients) {
         final currentIndex = _repsWheelController.selectedItem;
         if (currentIndex != repsIndex) {
-          // Use jumpToItem for immediate update without animation during initialization
+          // Use animateToItem for smooth updates
           if (_repsWheelController.positions.isNotEmpty) {
             _repsWheelController.animateToItem(
               repsIndex,
@@ -129,6 +129,13 @@ class _ExerciseControlsWidgetState extends State<ExerciseControlsWidget> {
             });
           }
         }
+      } else {
+        // If no clients, defer the update to next frame
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted && _repsWheelController.hasClients) {
+            _repsWheelController.jumpToItem(repsIndex);
+          }
+        });
       }
     } catch (e) {
       // Handle case where scroll controller isn't ready yet

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../api_models.dart';
-import '../exerciseS_repositories/exercise_repository.dart';
+import '../../../api_models.dart';
+import '../repositories/exercise_repository.dart';
 import 'exercise_graph_controller.dart';
 
 enum ExerciseType { warmup, work }
@@ -73,7 +73,7 @@ class ExerciseController extends ChangeNotifier {
       _updateWorkoutTiming();
 
       // Set initial weight and reps
-      _updateWeightAndReps();
+      await _updateWeightAndReps();
 
       // Update workout counts
       _updateWorkoutCounts();
@@ -85,6 +85,10 @@ class ExerciseController extends ChangeNotifier {
 
       // Update color mapping
       _updateColorMapping();
+
+      // Explicitly notify listeners after full initialization to ensure
+      // widgets receive the updated weight and reps values
+      notifyListeners();
     } catch (e) {
       _setError('Failed to initialize exercise: $e');
     } finally {
@@ -178,8 +182,10 @@ class ExerciseController extends ChangeNotifier {
   void updateSelectedType(Set<ExerciseType> newSelection) {
     if (_selectedType != newSelection) {
       _selectedType = newSelection;
-      _updateWeightAndReps();
-      notifyListeners();
+      // Update weight and reps based on the new exercise type selection
+      _updateWeightAndReps().then((_) {
+        notifyListeners();
+      });
     }
   }
 
@@ -280,11 +286,15 @@ class ExerciseController extends ChangeNotifier {
     }
   }
 
-  void _updateWeightAndReps() {
+  /// Set initial weight and reps - now async to get recent values if needed
+  Future<void> _updateWeightAndReps() async {
     if (_currentExercise == null) return;
 
     double weight = _currentExercise!.defaultIncrement;
     int reps = _currentExercise!.defaultRepBase;
+
+    // First, try to get values from today's sets
+    bool foundValuesFromToday = false;
 
     if (_todaysTrainingSets.isNotEmpty) {
       if (_selectedType.first == ExerciseType.warmup) {
@@ -296,16 +306,10 @@ class ExerciseController extends ChangeNotifier {
           final lastWarmupSet = warmupSets.last;
           weight = lastWarmupSet.weight;
           reps = lastWarmupSet.repetitions;
-        } else {
-          // Fallback: halve the weight if no warmup sets exist
-          final lastSet = _todaysTrainingSets.last;
-          weight = lastSet.weight / 2.0;
-          weight = (weight / _currentExercise!.defaultIncrement).round() *
-              _currentExercise!.defaultIncrement;
-          reps = _currentExercise!.defaultRepBase;
+          foundValuesFromToday = true;
         }
       } else {
-        // For work sets: Find the best set from recent sessions
+        // For work sets: Find the best set from today's sessions
         final workSets =
             _todaysTrainingSets.where((set) => set.setType > 0).toList();
 
@@ -324,8 +328,18 @@ class ExerciseController extends ChangeNotifier {
           if (bestSet != null) {
             weight = bestSet.weight;
             reps = bestSet.repetitions;
+            foundValuesFromToday = true;
           }
         }
+      }
+    }
+
+    // If no appropriate values found from today, look at recent training history
+    if (!foundValuesFromToday) {
+      final recentValues = await _loadRecentTrainingValues();
+      if (recentValues != null) {
+        weight = recentValues['weight'];
+        reps = recentValues['reps'];
       }
     }
 
@@ -344,6 +358,86 @@ class ExerciseController extends ChangeNotifier {
       } else if (set.setType == 1) {
         _numWorkSets = (_numWorkSets - 1).clamp(0, originalWorkSets);
       }
+    }
+  }
+
+  /// Load recent training values for weight and reps based on exercise type
+  Future<Map<String, dynamic>?> _loadRecentTrainingValues() async {
+    if (_currentExercise == null) return null;
+
+    try {
+      // Get all training sets for this exercise
+      final allTrainingSets =
+          await _repository.getTrainingSetsForExercise(_currentExercise!.name);
+
+      if (allTrainingSets.isEmpty) return null;
+
+      // Sort by date (most recent first)
+      allTrainingSets.sort((a, b) => b.date.compareTo(a.date));
+
+      if (_selectedType.first == ExerciseType.warmup) {
+        // For warmup: Look for the most recent warmup set
+        final recentWarmupSets = allTrainingSets
+            .where((set) => set.setType == 0)
+            .take(5) // Look at last 5 warmup sets
+            .toList();
+
+        if (recentWarmupSets.isNotEmpty) {
+          final lastWarmupSet = recentWarmupSets.first;
+          return {
+            'weight': lastWarmupSet.weight,
+            'reps': lastWarmupSet.repetitions,
+          };
+        } else {
+          // Fallback: Use the most recent work set and halve the weight
+          final recentWorkSets =
+              allTrainingSets.where((set) => set.setType > 0).take(5).toList();
+
+          if (recentWorkSets.isNotEmpty) {
+            final lastWorkSet = recentWorkSets.first;
+            double warmupWeight = lastWorkSet.weight / 2.0;
+            // Round to nearest increment
+            warmupWeight =
+                (warmupWeight / _currentExercise!.defaultIncrement).round() *
+                    _currentExercise!.defaultIncrement;
+            return {
+              'weight': warmupWeight,
+              'reps': _currentExercise!.defaultRepBase,
+            };
+          }
+        }
+      } else {
+        // For work sets: Find the best recent work set
+        final recentWorkSets = allTrainingSets
+            .where((set) => set.setType > 0)
+            .take(10) // Look at last 10 work sets
+            .toList();
+
+        if (recentWorkSets.isNotEmpty) {
+          // Find the best set (highest weight, then most reps)
+          ApiTrainingSet? bestSet;
+          for (var set in recentWorkSets) {
+            if (bestSet == null ||
+                set.weight > bestSet.weight ||
+                (set.weight == bestSet.weight &&
+                    set.repetitions > bestSet.repetitions)) {
+              bestSet = set;
+            }
+          }
+
+          if (bestSet != null) {
+            return {
+              'weight': bestSet.weight,
+              'reps': bestSet.repetitions,
+            };
+          }
+        }
+      }
+
+      return null;
+    } catch (e) {
+      print('Error loading recent training values: $e');
+      return null;
     }
   }
 

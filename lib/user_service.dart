@@ -602,6 +602,39 @@ class UserService {
     }
   }
 
+  /// Optimized batch function to get last training days for multiple exercises
+  /// This replaces the functionality from database.dart for better integration
+  Future<Map<String, DateTime>> getLastTrainingDaysForExercises(
+      List<String> exerciseNames) async {
+    try {
+      // Use the existing optimized method that gets all last training dates at once
+      final allLastDates = await getLastTrainingDatesPerExercise();
+
+      Map<String, DateTime> result = {};
+      final now = DateTime.now();
+
+      for (String exerciseName in exerciseNames) {
+        // Check if we have a last training date for this exercise
+        if (allLastDates.containsKey(exerciseName)) {
+          result[exerciseName] = allLastDates[exerciseName]!;
+        } else {
+          // Fallback to current date if no training data exists
+          result[exerciseName] = now;
+        }
+      }
+
+      return result;
+    } catch (e) {
+      print('Error getting last training days for exercises: $e');
+      // Return fallback dates for all exercises
+      Map<String, DateTime> fallback = {};
+      for (String exerciseName in exerciseNames) {
+        fallback[exerciseName] = DateTime.now();
+      }
+      return fallback;
+    }
+  }
+
   Future<List<dynamic>> _enrichTrainingSetsWithExerciseNames(
       List<dynamic> trainingSets) async {
     try {
