@@ -68,6 +68,7 @@ class _LandingScreenState extends State<LandingScreen> {
   List<String> metainfo = [];
   bool _isLoading = true;
   DateTime? _lastDataLoad; // Cache timestamp
+  bool _hasShownWelcomeMessage = false; // Add this flag
 
   Future<void> updateAllExercises({bool forceReload = false}) async {
     try {
@@ -307,6 +308,8 @@ class _LandingScreenState extends State<LandingScreen> {
   }
 
   void _onAuthStateChanged() {
+    // Reset the welcome message flag when auth state changes
+    _hasShownWelcomeMessage = false;
     // Force reload data when authentication state changes (ignore cache)
     _loadData(forceReload: true);
   }
@@ -338,8 +341,9 @@ class _LandingScreenState extends State<LandingScreen> {
       // Load exercise details after UI is responsive
       await showAllExercises();
 
-      // Show success message after login
-      if (mounted && userService.isLoggedIn) {
+      // Show success message after login (only once per session)
+      if (mounted && userService.isLoggedIn && !_hasShownWelcomeMessage) {
+        _hasShownWelcomeMessage = true;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
