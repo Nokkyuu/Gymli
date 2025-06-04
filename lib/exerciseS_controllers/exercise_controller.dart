@@ -1,0 +1,360 @@
+import 'package:flutter/material.dart';
+import '../api_models.dart';
+import '../exerciseS_repositories/exercise_repository.dart';
+import 'exercise_graph_controller.dart';
+
+enum ExerciseType { warmup, work }
+
+/// Controller for managing exercise screen state and business logic
+class ExerciseController extends ChangeNotifier {
+  final ExerciseRepository _repository;
+  final ExerciseGraphController _graphController;
+
+  // Exercise data
+  ApiExercise? _currentExercise;
+  List<ApiTrainingSet> _todaysTrainingSets = [];
+  bool _isLoading = false;
+  String? _errorMessage;
+
+  // Workout state
+  Set<ExerciseType> _selectedType = {ExerciseType.work};
+  int _weightKg = 40;
+  int _weightDg = 0;
+  int _repetitions = 10;
+
+  // Workout context
+  int _numWarmUps = 0;
+  int _numWorkSets = 0;
+  DateTime _lastActivity = DateTime.now();
+  DateTime _workoutStartTime = DateTime.now();
+
+  // Color mapping for reps
+  final Map<int, Color> _colorMap = {};
+
+  ExerciseController({
+    ExerciseRepository? repository,
+    ExerciseGraphController? graphController,
+  })  : _repository = repository ?? ExerciseRepository(),
+        _graphController = graphController ?? ExerciseGraphController();
+
+  // Getters
+  ApiExercise? get currentExercise => _currentExercise;
+  List<ApiTrainingSet> get todaysTrainingSets => _todaysTrainingSets;
+  bool get isLoading => _isLoading;
+  String? get errorMessage => _errorMessage;
+  Set<ExerciseType> get selectedType => _selectedType;
+  int get weightKg => _weightKg;
+  int get weightDg => _weightDg;
+  int get repetitions => _repetitions;
+  int get numWarmUps => _numWarmUps;
+  int get numWorkSets => _numWorkSets;
+  DateTime get lastActivity => _lastActivity;
+  DateTime get workoutStartTime => _workoutStartTime;
+  Map<int, Color> get colorMap => _colorMap;
+  ExerciseGraphController get graphController => _graphController;
+
+  /// Initialize the exercise screen with data
+  Future<void> initialize(
+      String exerciseName, String workoutDescription) async {
+    _setLoading(true);
+    _clearError();
+
+    try {
+      // Parse workout description
+      _parseWorkoutDescription(workoutDescription);
+
+      // Load exercise and training data
+      await Future.wait([
+        _loadExerciseData(exerciseName),
+        _loadTodaysTrainingSets(exerciseName),
+      ]);
+
+      // Update workout timing
+      _updateWorkoutTiming();
+
+      // Set initial weight and reps
+      _updateWeightAndReps();
+
+      // Update workout counts
+      _updateWorkoutCounts();
+
+      // Update graph
+      final allTrainingSets =
+          await _repository.getTrainingSetsForExercise(exerciseName);
+      _graphController.updateGraphFromTrainingSets(allTrainingSets);
+
+      // Update color mapping
+      _updateColorMapping();
+    } catch (e) {
+      _setError('Failed to initialize exercise: $e');
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+  /// Add a new training set
+  Future<bool> addTrainingSet(
+    String exerciseName,
+    double weight,
+    int repetitions,
+    int setType,
+    String when,
+  ) async {
+    if (_currentExercise == null) {
+      _setError('Exercise data not loaded');
+      return false;
+    }
+
+    try {
+      final newSet = await _repository.createTrainingSet(
+        exerciseId: _currentExercise!.id!,
+        date: when,
+        weight: weight,
+        repetitions: repetitions,
+        setType: setType,
+        baseReps: _currentExercise!.defaultRepBase,
+        maxReps: _currentExercise!.defaultRepMax,
+        increment: _currentExercise!.defaultIncrement,
+      );
+
+      if (newSet == null) {
+        _setError('Failed to create training set');
+        return false;
+      }
+
+      // Update local cache
+      _todaysTrainingSets.add(newSet);
+      _lastActivity = DateTime.now();
+
+      // Update graph efficiently
+      final graphUpdated = _graphController.updateGraphWithNewSet(newSet);
+      if (!graphUpdated) {
+        // Fallback to full graph update
+        final allTrainingSets =
+            await _repository.getTrainingSetsForExercise(exerciseName);
+        _graphController.updateGraphFromTrainingSets(allTrainingSets);
+      }
+
+      // Update workout counts
+      _updateWorkoutCounts();
+
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _setError('Failed to add training set: $e');
+      return false;
+    }
+  }
+
+  /// Delete a training set
+  Future<bool> deleteTrainingSet(ApiTrainingSet trainingSet) async {
+    try {
+      final success = await _repository.deleteTrainingSet(trainingSet.id!);
+
+      if (success) {
+        _todaysTrainingSets.removeWhere((set) => set.id == trainingSet.id);
+
+        // Update graph
+        if (_currentExercise != null) {
+          final allTrainingSets = await _repository
+              .getTrainingSetsForExercise(_currentExercise!.name);
+          _graphController.updateGraphFromTrainingSets(allTrainingSets);
+        }
+
+        // Update workout counts
+        _updateWorkoutCounts();
+
+        notifyListeners();
+      }
+
+      return success;
+    } catch (e) {
+      _setError('Failed to delete training set: $e');
+      return false;
+    }
+  }
+
+  /// Update selected exercise type
+  void updateSelectedType(Set<ExerciseType> newSelection) {
+    if (_selectedType != newSelection) {
+      _selectedType = newSelection;
+      _updateWeightAndReps();
+      notifyListeners();
+    }
+  }
+
+  /// Update weight values
+  void updateWeight(int kg, int dg) {
+    _weightKg = kg;
+    _weightDg = dg;
+    notifyListeners();
+  }
+
+  /// Update repetitions
+  void updateRepetitions(int reps) {
+    _repetitions = reps;
+    notifyListeners();
+  }
+
+  /// Get formatted weight as double
+  double get weightAsDouble =>
+      _weightKg.toDouble() + _weightDg.toDouble() / 100.0;
+
+  /// Refresh graph data with latest training sets
+  Future<void> refreshGraphData(String exerciseName) async {
+    try {
+      final allTrainingSets =
+          await _repository.getTrainingSetsForExercise(exerciseName);
+      _graphController.updateGraphFromTrainingSets(allTrainingSets);
+    } catch (e) {
+      print('Error refreshing graph data: $e');
+    }
+  }
+
+  /// Get warm/work text labels
+  Text get warmText =>
+      _numWarmUps > 0 ? Text("${_numWarmUps}x Warm") : const Text("Warm");
+  Text get workText =>
+      _numWorkSets > 0 ? Text("${_numWorkSets}x Work") : const Text("Work");
+
+  // Private methods
+
+  void _setLoading(bool loading) {
+    _isLoading = loading;
+    notifyListeners();
+  }
+
+  void _setError(String error) {
+    _errorMessage = error;
+    notifyListeners();
+  }
+
+  void _clearError() {
+    _errorMessage = null;
+  }
+
+  Future<void> _loadExerciseData(String exerciseName) async {
+    _currentExercise = await _repository.getExerciseByName(exerciseName);
+  }
+
+  Future<void> _loadTodaysTrainingSets(String exerciseName) async {
+    _todaysTrainingSets =
+        await _repository.getTodaysTrainingSetsForExercise(exerciseName);
+  }
+
+  void _parseWorkoutDescription(String workoutDescription) {
+    _numWarmUps = 0;
+    _numWorkSets = 0;
+
+    if (workoutDescription.isNotEmpty &&
+        workoutDescription.startsWith("Warm:")) {
+      try {
+        final parts = workoutDescription.split(", ");
+        if (parts.length == 2) {
+          // Parse warmups
+          final warmPart = parts[0];
+          if (warmPart.contains(":")) {
+            final warmValue = warmPart.split(":")[1].trim();
+            _numWarmUps = int.tryParse(warmValue) ?? 0;
+          }
+
+          // Parse worksets
+          final workPart = parts[1];
+          if (workPart.contains(":")) {
+            final workValue = workPart.split(":")[1].trim();
+            _numWorkSets = int.tryParse(workValue) ?? 0;
+          }
+        }
+      } catch (e) {
+        print('Error parsing workout description: $e');
+        _numWarmUps = 0;
+        _numWorkSets = 0;
+      }
+    }
+  }
+
+  void _updateWorkoutTiming() {
+    if (_todaysTrainingSets.isNotEmpty) {
+      _workoutStartTime = _todaysTrainingSets.first.date;
+      _lastActivity = _todaysTrainingSets.last.date;
+    }
+  }
+
+  void _updateWeightAndReps() {
+    if (_currentExercise == null) return;
+
+    double weight = _currentExercise!.defaultIncrement;
+    int reps = _currentExercise!.defaultRepBase;
+
+    if (_todaysTrainingSets.isNotEmpty) {
+      if (_selectedType.first == ExerciseType.warmup) {
+        // For warmup: Look for the most recent warmup set
+        final warmupSets =
+            _todaysTrainingSets.where((set) => set.setType == 0).toList();
+
+        if (warmupSets.isNotEmpty) {
+          final lastWarmupSet = warmupSets.last;
+          weight = lastWarmupSet.weight;
+          reps = lastWarmupSet.repetitions;
+        } else {
+          // Fallback: halve the weight if no warmup sets exist
+          final lastSet = _todaysTrainingSets.last;
+          weight = lastSet.weight / 2.0;
+          weight = (weight / _currentExercise!.defaultIncrement).round() *
+              _currentExercise!.defaultIncrement;
+          reps = _currentExercise!.defaultRepBase;
+        }
+      } else {
+        // For work sets: Find the best set from recent sessions
+        final workSets =
+            _todaysTrainingSets.where((set) => set.setType > 0).toList();
+
+        if (workSets.isNotEmpty) {
+          // Find the best set (highest weight, then most reps)
+          ApiTrainingSet? bestSet;
+          for (var set in workSets) {
+            if (bestSet == null ||
+                set.weight > bestSet.weight ||
+                (set.weight == bestSet.weight &&
+                    set.repetitions > bestSet.repetitions)) {
+              bestSet = set;
+            }
+          }
+
+          if (bestSet != null) {
+            weight = bestSet.weight;
+            reps = bestSet.repetitions;
+          }
+        }
+      }
+    }
+
+    _weightKg = weight.toInt();
+    _weightDg = (weight * 100.0).toInt() % 100;
+    _repetitions = reps;
+  }
+
+  void _updateWorkoutCounts() {
+    int originalWarmUps = _numWarmUps;
+    int originalWorkSets = _numWorkSets;
+
+    for (var set in _todaysTrainingSets) {
+      if (set.setType == 0) {
+        _numWarmUps = (_numWarmUps - 1).clamp(0, originalWarmUps);
+      } else if (set.setType == 1) {
+        _numWorkSets = (_numWorkSets - 1).clamp(0, originalWorkSets);
+      }
+    }
+  }
+
+  void _updateColorMapping() {
+    if (_currentExercise != null) {
+      _colorMap.clear();
+      for (int i = _currentExercise!.defaultRepBase;
+          i <= _currentExercise!.defaultRepMax;
+          ++i) {
+        _colorMap[i] = Colors.red;
+      }
+    }
+  }
+}
