@@ -12,6 +12,7 @@ import 'package:auth0_flutter/auth0_flutter.dart';
 import 'package:auth0_flutter/auth0_flutter_web.dart';
 import 'themeColors.dart';
 import 'user_service.dart';
+import 'config/api_config.dart';
 
 bool state = false;
 
@@ -54,6 +55,7 @@ Future<void> getPreferences() async {
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   getPreferences();
+  ApiConfig.initialize(); // Initialize API configuration
   runApp(const MainApp());
 }
 

@@ -44,7 +44,7 @@ jobs:
           ${{ runner.os }}-pub-
 
     - name: Build Flutter Web
-      run: flutter build web
+      run:  flutter build web --dart-define=GYMLI_API_KEY=${{ secrets.GYMLI_API_KEY }}
 
     - name: Build And Deploy
       id: builddeploy
