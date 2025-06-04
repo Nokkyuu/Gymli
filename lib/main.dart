@@ -18,6 +18,13 @@ bool state = false;
 
 void get_exercise_list() async {
   try {
+    // Check if API is configured before making calls
+    if (!ApiConfig.isConfigured) {
+      print('API not configured, skipping exercise list load');
+      globals.exerciseList = [];
+      return;
+    }
+
     // Add a small delay to ensure UserService singleton is properly initialized
     await Future.delayed(const Duration(milliseconds: 100));
 
@@ -54,8 +61,18 @@ Future<void> getPreferences() async {
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  getPreferences();
-  ApiConfig.initialize(); // Initialize API configuration
+
+  try {
+    await getPreferences();
+    ApiConfig.initialize(); // Initialize API configuration
+  } catch (e) {
+    print('Initialization error: $e');
+    // Continue app startup even if API config fails in debug mode
+    if (!kDebugMode) {
+      rethrow;
+    }
+  }
+
   runApp(const MainApp());
 }
 
