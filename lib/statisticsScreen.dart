@@ -24,14 +24,13 @@ library;
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-//import 'package:file_picker/file_picker.dart';
 import 'package:time_machine/time_machine.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'dart:math';
 import 'user_service.dart';
 import 'api_models.dart';
 import 'responsive_helper.dart';
-import 'screens/statistics/constants/muscle_constants.dart';
+//import 'screens/statistics/constants/muscle_constants.dart';
 import 'screens/statistics/constants/chart_constants.dart';
 import 'screens/statistics/services/statistics_data_service.dart';
 import 'screens/statistics/services/statistics_filter_service.dart';
@@ -268,9 +267,22 @@ class _StatisticsScreen extends State<StatisticsScreen> {
         });
         return;
       }
+      DateTime startDate;
+      DateTime endDate;
+      if (_useDefaultDateFilter) {
+        // Use the default 3-month range
+        endDate = DateTime.now();
+        startDate = endDate.subtract(const Duration(days: 90));
+      } else {
+        // Use the selected dates from date picker
+        startDate = startingDate != null
+            ? _parseDate(startingDate!)
+            : DateTime.now().subtract(const Duration(days: 90));
+        endDate = endingDate != null ? _parseDate(endingDate!) : DateTime.now();
+      }
 
-      Period diff = LocalDate.dateTime(filteredTrainingDates.last)
-          .periodSince(LocalDate.dateTime(filteredTrainingDates.first));
+      Period diff = LocalDate.dateTime(endDate!)
+          .periodSince(LocalDate.dateTime(startDate!));
       trainingDuration =
           "Over the period of ${diff.months} month and ${diff.days} days";
 
@@ -602,7 +614,7 @@ class _StatisticsScreen extends State<StatisticsScreen> {
     return ListView(children: <Widget>[
       Text(
         "Selected Training Interval",
-        style: subStyle,
+        style: ThemeData().textTheme.bodyMedium,
         textAlign: TextAlign.center,
       ),
       const SizedBox(height: 5),
@@ -612,7 +624,7 @@ class _StatisticsScreen extends State<StatisticsScreen> {
       const Divider(),
       Text(
         "Number of Trainings per Week",
-        style: subStyle,
+        style: ThemeData().textTheme.bodyMedium,
         textAlign: TextAlign.center,
       ),
       SizedBox(
@@ -628,7 +640,7 @@ class _StatisticsScreen extends State<StatisticsScreen> {
       const SizedBox(height: 20),
       // Text(
       //   "Muscle usage per Exercise",
-      //   style: subStyle,
+      //   style: ThemeData().textTheme.bodyMedium,),
       //   textAlign: TextAlign.center,
       // ),
       const SizedBox(height: 5),
@@ -636,9 +648,9 @@ class _StatisticsScreen extends State<StatisticsScreen> {
       const SizedBox(
         height: 20,
       ),
-      const Text(
+      Text(
         "Heatmap: relative to most used muscle",
-        style: subStyle,
+        style: ThemeData().textTheme.bodyMedium,
         textAlign: TextAlign.center,
       ),
       const SizedBox(
@@ -668,7 +680,7 @@ class _StatisticsScreen extends State<StatisticsScreen> {
                 // DatePicker at the top
                 Text(
                   "Selected Training Interval",
-                  style: subStyle,
+                  style: ThemeData().textTheme.bodyMedium,
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 5),
@@ -679,7 +691,7 @@ class _StatisticsScreen extends State<StatisticsScreen> {
                 // List of selectable widgets
                 Text(
                   "Statistics Views",
-                  style: subStyle,
+                  style: ThemeData().textTheme.bodyMedium,
                 ),
                 const SizedBox(height: 10),
                 Expanded(
@@ -748,7 +760,7 @@ class _StatisticsScreen extends State<StatisticsScreen> {
           children: [
             Text(
               "Statistics Overview",
-              style: subStyle,
+              style: ThemeData().textTheme.bodyMedium,
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 20),
@@ -760,7 +772,7 @@ class _StatisticsScreen extends State<StatisticsScreen> {
           children: [
             Text(
               "Number of Trainings per Week",
-              style: subStyle,
+              style: ThemeData().textTheme.bodyMedium,
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 20),
@@ -778,7 +790,7 @@ class _StatisticsScreen extends State<StatisticsScreen> {
       //     children: [
       //       Text(
       //         "Muscle usage per Exercise",
-      //         style: subStyle,
+      //         style: ThemeData().textTheme.bodyMedium,),
       //         textAlign: TextAlign.center,
       //       ),
       //       const SizedBox(height: 20),
@@ -792,7 +804,7 @@ class _StatisticsScreen extends State<StatisticsScreen> {
           children: [
             Text(
               "Heatmap: relative to most used muscle",
-              style: subStyle,
+              style: ThemeData().textTheme.bodyMedium,
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 20),
@@ -822,8 +834,9 @@ class _StatisticsScreen extends State<StatisticsScreen> {
         children: [
           Text(
             "Activities Overview",
-            style: subStyle,
+            style: ThemeData().textTheme.bodyMedium,
           ),
+
           const SizedBox(height: 10),
           // Activity statistics cards
           Row(
@@ -838,7 +851,7 @@ class _StatisticsScreen extends State<StatisticsScreen> {
           const SizedBox(height: 20),
           Text(
             "Trends",
-            style: subStyle,
+            style: ThemeData().textTheme.bodyMedium,
           ),
           const SizedBox(height: 10),
           // Calories trend chart
@@ -1245,16 +1258,19 @@ class _StatisticsScreen extends State<StatisticsScreen> {
       children: [
         const SizedBox(height: 10),
         Text("Number of training days: $numberOfTrainingDays",
-            style: subStyle, textAlign: TextAlign.center),
+            style: ThemeData().textTheme.bodyMedium,
+            textAlign: TextAlign.center),
 
-        Text(trainingDuration, style: subStyle, textAlign: TextAlign.center),
+        Text(trainingDuration,
+            style: ThemeData().textTheme.bodyMedium,
+            textAlign: TextAlign.center),
         Text(
             "Used $_freeWeightsCount Free Weights, $_machinesCount Machines, $_cablesCount Cables and $_bodyweightCount Bodyweight Exercises",
-            style: subStyle,
+            style: ThemeData().textTheme.bodyMedium,
             textAlign: TextAlign.center),
         Text(
             "${_activityStats['total_sessions'] ?? 0} Activities for a total of ${_activityStats['total_duration_minutes'] ?? 0} Minutes and an additonal Kalorie burn of ${_getCaloriesDisplayValue()} kcal",
-            style: subStyle,
+            style: ThemeData().textTheme.bodyMedium,
             textAlign: TextAlign.center),
         //add how many types are used (free, machine etc)
         //add activity statistics
@@ -1487,7 +1503,7 @@ class _StatisticsScreen extends State<StatisticsScreen> {
       children: [
         Text(
           "Exercise Progress",
-          style: subStyle,
+          style: ThemeData().textTheme.bodyMedium,
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 20),
