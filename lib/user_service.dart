@@ -60,6 +60,8 @@ class UserService {
     'groups': <Map<String, dynamic>>[],
     'activities': <Map<String, dynamic>>[],
     'activityLogs': <Map<String, dynamic>>[],
+    'foods': <Map<String, dynamic>>[],
+    'foodLogs': <Map<String, dynamic>>[],
   };
 
   void setCredentials(Credentials? credentials) {
@@ -230,6 +232,8 @@ class UserService {
       'groups': <Map<String, dynamic>>[],
       'activities': <Map<String, dynamic>>[],
       'activityLogs': <Map<String, dynamic>>[],
+      'foods': <Map<String, dynamic>>[],
+      'foodLogs': <Map<String, dynamic>>[],
     };
   }
 
@@ -1519,5 +1523,280 @@ class UserService {
     // Trigger the auth state notifier to refresh all listening screens
     authStateNotifier.value = !authStateNotifier.value;
     print('Data change notification sent to all listeners');
+  }
+
+  //----------------- Food Services -----------------//
+
+  /// Retrieves all food items for the current user
+  /// Returns a list of food item objects
+  Future<List<dynamic>> getFoods() async {
+    if (isLoggedIn) {
+      return await api.FoodService().getFoods(userName: userName);
+    } else {
+      // When not logged in, prioritize in-memory data if it exists
+      final inMemoryFoods = _inMemoryData['foods'] as List<dynamic>? ?? [];
+      if (inMemoryFoods.isNotEmpty) {
+        return inMemoryFoods;
+      } else {
+        // Only try API if no in-memory data exists
+        try {
+          return await api.FoodService().getFoods(userName: 'DefaultUser');
+        } catch (e) {
+          // If API fails, return empty in-memory data
+          return inMemoryFoods;
+        }
+      }
+    }
+  }
+
+  /// Creates a new food item
+  Future<Map<String, dynamic>> createFood({
+    required String name,
+    required double kcalPer100g,
+    required double proteinPer100g,
+    required double carbsPer100g,
+    required double fatPer100g,
+    String? notes,
+  }) async {
+    if (isLoggedIn) {
+      return await api.FoodService().createFood(
+        userName: userName,
+        name: name,
+        kcalPer100g: kcalPer100g,
+        proteinPer100g: proteinPer100g,
+        carbsPer100g: carbsPer100g,
+        fatPer100g: fatPer100g,
+        notes: notes,
+      );
+    } else {
+      // For non-authenticated users, store in memory only
+      final foods = _inMemoryData['foods'] as List<dynamic>? ?? [];
+      final newId = foods.isEmpty
+          ? 1
+          : (foods.map((f) => f['id'] as int).reduce((a, b) => a > b ? a : b) +
+              1);
+
+      final food = {
+        'id': newId,
+        'user_name': 'DefaultUser',
+        'name': name,
+        'kcal_per_100g': kcalPer100g,
+        'protein_per_100g': proteinPer100g,
+        'carbs_per_100g': carbsPer100g,
+        'fat_per_100g': fatPer100g,
+        'notes': notes,
+      };
+
+      if (_inMemoryData['foods'] == null) {
+        _inMemoryData['foods'] = <Map<String, dynamic>>[];
+      }
+      (_inMemoryData['foods'] as List<dynamic>).add(food);
+      return food;
+    }
+  }
+
+  /// Deletes a food item
+  Future<void> deleteFood(int foodId) async {
+    if (isLoggedIn) {
+      await api.FoodService().deleteFood(
+        foodId: foodId,
+        userName: userName,
+      );
+    } else {
+      // Remove from memory
+      final foods = _inMemoryData['foods'] as List<dynamic>? ?? [];
+      foods.removeWhere((f) => f['id'] == foodId);
+    }
+  }
+
+  /// Retrieves food logs with optional filtering
+  Future<List<dynamic>> getFoodLogs({
+    String? foodName,
+    DateTime? startDate,
+    DateTime? endDate,
+  }) async {
+    if (isLoggedIn) {
+      return await api.FoodService().getFoodLogs(
+        userName: userName,
+        foodName: foodName,
+        startDate: startDate,
+        endDate: endDate,
+      );
+    } else {
+      // Filter in-memory food logs
+      List<dynamic> logs =
+          List.from(_inMemoryData['foodLogs'] as List<dynamic>? ?? []);
+
+      if (foodName != null) {
+        logs = logs.where((log) => log['food_name'] == foodName).toList();
+      }
+
+      if (startDate != null) {
+        logs = logs.where((log) {
+          final logDate = DateTime.parse(log['date']);
+          return logDate.isAfter(startDate) ||
+              logDate.isAtSameMomentAs(startDate);
+        }).toList();
+      }
+
+      if (endDate != null) {
+        logs = logs.where((log) {
+          final logDate = DateTime.parse(log['date']);
+          return logDate.isBefore(endDate) || logDate.isAtSameMomentAs(endDate);
+        }).toList();
+      }
+
+      return logs;
+    }
+  }
+
+  /// Creates a new food log entry
+  Future<Map<String, dynamic>> createFoodLog({
+    required String foodName,
+    required DateTime date,
+    required double grams,
+    required double kcalPer100g,
+    required double proteinPer100g,
+    required double carbsPer100g,
+    required double fatPer100g,
+  }) async {
+    if (isLoggedIn) {
+      return await api.FoodService().createFoodLog(
+        userName: userName,
+        foodName: foodName,
+        date: date,
+        grams: grams,
+        kcalPer100g: kcalPer100g,
+        proteinPer100g: proteinPer100g,
+        carbsPer100g: carbsPer100g,
+        fatPer100g: fatPer100g,
+      );
+    } else {
+      // For non-authenticated users, store in memory
+      final foodLogs = _inMemoryData['foodLogs'] as List<dynamic>? ?? [];
+      final newId = foodLogs.isEmpty
+          ? 1
+          : (foodLogs
+                  .map((l) => l['id'] as int)
+                  .reduce((a, b) => a > b ? a : b) +
+              1);
+
+      final log = {
+        'id': newId,
+        'user_name': 'DefaultUser',
+        'food_name': foodName,
+        'date': date.toIso8601String(),
+        'grams': grams,
+        'kcal_per_100g': kcalPer100g,
+        'protein_per_100g': proteinPer100g,
+        'carbs_per_100g': carbsPer100g,
+        'fat_per_100g': fatPer100g,
+      };
+
+      if (_inMemoryData['foodLogs'] == null) {
+        _inMemoryData['foodLogs'] = <Map<String, dynamic>>[];
+      }
+      (_inMemoryData['foodLogs'] as List<dynamic>).add(log);
+      return log;
+    }
+  }
+
+  /// Deletes a food log entry
+  Future<void> deleteFoodLog(int logId) async {
+    if (isLoggedIn) {
+      await api.FoodService().deleteFoodLog(
+        logId: logId,
+        userName: userName,
+      );
+    } else {
+      // Remove from memory
+      final foodLogs = _inMemoryData['foodLogs'] as List<dynamic>? ?? [];
+      foodLogs.removeWhere((log) => log['id'] == logId);
+    }
+  }
+
+  /// Gets nutrition statistics for food logs within a date range
+  /// Returns calculated totals for calories, protein, carbs, and fat
+  Future<Map<String, double>> getFoodLogStats({
+    DateTime? startDate,
+    DateTime? endDate,
+  }) async {
+    final logs = await getFoodLogs(
+      startDate: startDate,
+      endDate: endDate,
+    );
+
+    double totalCalories = 0.0;
+    double totalProtein = 0.0;
+    double totalCarbs = 0.0;
+    double totalFat = 0.0;
+
+    for (var log in logs) {
+      final grams = (log['grams'] as num).toDouble();
+      final kcalPer100g = (log['kcal_per_100g'] as num).toDouble();
+      final proteinPer100g = (log['protein_per_100g'] as num).toDouble();
+      final carbsPer100g = (log['carbs_per_100g'] as num).toDouble();
+      final fatPer100g = (log['fat_per_100g'] as num).toDouble();
+
+      final multiplier = grams / 100.0;
+      totalCalories += kcalPer100g * multiplier;
+      totalProtein += proteinPer100g * multiplier;
+      totalCarbs += carbsPer100g * multiplier;
+      totalFat += fatPer100g * multiplier;
+    }
+
+    return {
+      'total_calories': double.parse(totalCalories.toStringAsFixed(1)),
+      'total_protein': double.parse(totalProtein.toStringAsFixed(1)),
+      'total_carbs': double.parse(totalCarbs.toStringAsFixed(1)),
+      'total_fat': double.parse(totalFat.toStringAsFixed(1)),
+    };
+  }
+
+  /// Clears all food data (both foods and food logs)
+  Future<void> clearFoodData() async {
+    if (isLoggedIn) {
+      // Get all foods and food logs for this user and delete them
+      final foods = await getFoods();
+      final foodLogs = await getFoodLogs();
+
+      int deletedFoodsCount = 0;
+      int deletedLogsCount = 0;
+      int errorCount = 0;
+
+      // Delete all foods
+      for (var food in foods) {
+        if (food['id'] != null) {
+          try {
+            await deleteFood(food['id']);
+            deletedFoodsCount++;
+          } catch (e) {
+            errorCount++;
+            print('Warning: Failed to delete food ${food['id']}: $e');
+          }
+        }
+      }
+
+      // Delete all food logs
+      for (var log in foodLogs) {
+        if (log['id'] != null) {
+          try {
+            await deleteFoodLog(log['id']);
+            deletedLogsCount++;
+          } catch (e) {
+            errorCount++;
+            print('Warning: Failed to delete food log ${log['id']}: $e');
+          }
+        }
+      }
+
+      print(
+          'Cleared food data: $deletedFoodsCount foods, $deletedLogsCount logs deleted, $errorCount errors');
+    } else {
+      // Clear in-memory food data
+      _inMemoryData['foods'] = <Map<String, dynamic>>[];
+      _inMemoryData['foodLogs'] = <Map<String, dynamic>>[];
+      print('Cleared in-memory food data');
+    }
   }
 }

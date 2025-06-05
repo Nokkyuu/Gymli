@@ -881,3 +881,164 @@ class ActivityService {
     }
   }
 }
+
+//----------------- Food Service -----------------//
+
+/// FoodService - Manages food items and food logs
+///
+/// This service handles all CRUD operations for food items and food logs,
+/// which are used for nutrition tracking and calorie management.
+class FoodService {
+  /// Retrieves all food items for a user
+  /// [userName] - The username to fetch food items for
+  /// Returns a list of food item objects
+  Future<List<dynamic>> getFoods({required String userName}) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/foods?user_name=$userName'),
+      headers: {
+        'Content-Type': 'application/json',
+        'X-API-Key': ApiConfig.apiKey!,
+      },
+    );
+    if (response.statusCode == 200) {
+      return json.decode(response.body);
+    } else {
+      throw Exception('Failed to load foods: ${response.body}');
+    }
+  }
+
+  /// Creates a new food item
+  Future<Map<String, dynamic>> createFood({
+    required String userName,
+    required String name,
+    required double kcalPer100g,
+    required double proteinPer100g,
+    required double carbsPer100g,
+    required double fatPer100g,
+    String? notes,
+  }) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/foods'),
+      headers: {
+        'Content-Type': 'application/json',
+        'X-API-Key': ApiConfig.apiKey!,
+      },
+      body: json.encode({
+        'user_name': userName,
+        'name': name,
+        'kcal_per_100g': kcalPer100g,
+        'protein_per_100g': proteinPer100g,
+        'carbs_per_100g': carbsPer100g,
+        'fat_per_100g': fatPer100g,
+        'notes': notes,
+      }),
+    );
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return json.decode(response.body);
+    } else {
+      throw Exception('Failed to create food: ${response.body}');
+    }
+  }
+
+  /// Deletes a food item
+  Future<void> deleteFood({
+    required int foodId,
+    required String userName,
+  }) async {
+    final response = await http.delete(
+      Uri.parse('$baseUrl/foods/$foodId?user_name=$userName'),
+      headers: {
+        'Content-Type': 'application/json',
+        'X-API-Key': ApiConfig.apiKey!,
+      },
+    );
+    if (response.statusCode != 200 && response.statusCode != 204) {
+      throw Exception('Failed to delete food: ${response.body}');
+    }
+  }
+
+  /// Retrieves food logs with optional filtering
+  Future<List<dynamic>> getFoodLogs({
+    required String userName,
+    String? foodName,
+    DateTime? startDate,
+    DateTime? endDate,
+  }) async {
+    String url = '$baseUrl/food_logs?user_name=$userName';
+
+    if (foodName != null) {
+      url += '&food_name=${Uri.encodeComponent(foodName)}';
+    }
+    if (startDate != null) {
+      url += '&start_date=${startDate.toIso8601String()}';
+    }
+    if (endDate != null) {
+      url += '&end_date=${endDate.toIso8601String()}';
+    }
+
+    final response = await http.get(
+      Uri.parse(url),
+      headers: {
+        'Content-Type': 'application/json',
+        'X-API-Key': ApiConfig.apiKey!,
+      },
+    );
+    if (response.statusCode == 200) {
+      return json.decode(response.body);
+    } else {
+      throw Exception('Failed to load food logs: ${response.body}');
+    }
+  }
+
+  /// Creates a new food log entry
+  Future<Map<String, dynamic>> createFoodLog({
+    required String userName,
+    required String foodName,
+    required DateTime date,
+    required double grams,
+    required double kcalPer100g,
+    required double proteinPer100g,
+    required double carbsPer100g,
+    required double fatPer100g,
+  }) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/food_logs'),
+      headers: {
+        'Content-Type': 'application/json',
+        'X-API-Key': ApiConfig.apiKey!,
+      },
+      body: json.encode({
+        'user_name': userName,
+        'food_name': foodName,
+        'date': date.toIso8601String(),
+        'grams': grams,
+        'kcal_per_100g': kcalPer100g,
+        'protein_per_100g': proteinPer100g,
+        'carbs_per_100g': carbsPer100g,
+        'fat_per_100g': fatPer100g,
+      }),
+    );
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return json.decode(response.body);
+    } else {
+      throw Exception('Failed to create food log: ${response.body}');
+    }
+  }
+
+  /// Deletes a food log entry
+  Future<void> deleteFoodLog({
+    required int logId,
+    required String userName,
+  }) async {
+    final response = await http.delete(
+      Uri.parse('$baseUrl/food_logs/$logId?user_name=$userName'),
+      headers: {
+        'Content-Type': 'application/json',
+        'X-API-Key': ApiConfig.apiKey!,
+      },
+    );
+    if (response.statusCode != 200 && response.statusCode != 204) {
+      throw Exception('Failed to delete food log: ${response.body}');
+    }
+  }
+}
