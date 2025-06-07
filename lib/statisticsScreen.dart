@@ -37,6 +37,7 @@ import 'screens/statistics/services/statistics_filter_service.dart';
 import 'screens/statistics/services/statistics_calculation_service.dart';
 import 'screens/statistics/services/statistics_coordinator.dart';
 import 'screens/statistics/widgets/food.dart';
+import 'screens/statistics/widgets/calorie_balance.dart';
 
 class StatisticsScreen extends StatefulWidget {
   const StatisticsScreen({super.key});
@@ -663,6 +664,7 @@ class _StatisticsScreen extends State<StatisticsScreen> {
                       _buildListTile("Exercise Progress", 4),
                       _buildListTile("Activities", 5),
                       _buildListTile("Nutrition", 6),
+                      _buildListTile("Calorie Balance", 7),
                     ],
                   ),
                 ),
@@ -779,6 +781,13 @@ class _StatisticsScreen extends State<StatisticsScreen> {
         return _buildActivitiesView();
       case 6:
         return FoodStatsScreen(
+          key: ValueKey('${startingDate}_${endingDate}_$_useDefaultDateFilter'),
+          startingDate: startingDate,
+          endingDate: endingDate,
+          useDefaultDateFilter: _useDefaultDateFilter,
+        );
+      case 7:
+        return CalorieBalanceScreen(
           key: ValueKey('${startingDate}_${endingDate}_$_useDefaultDateFilter'),
           startingDate: startingDate,
           endingDate: endingDate,
