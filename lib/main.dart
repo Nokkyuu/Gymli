@@ -5,6 +5,7 @@ import 'package:Gymli/settingsScreen.dart';
 import 'package:Gymli/workoutSetupScreen.dart';
 import 'package:Gymli/statisticsScreen.dart';
 import 'package:Gymli/activityScreen.dart';
+import 'package:Gymli/foodScreen.dart';
 import 'globals.dart' as globals;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
@@ -382,6 +383,18 @@ class _MainAppState extends State<MainApp> {
                     context,
                     MaterialPageRoute(
                         builder: (context) => const ActivityScreen()));
+              });
+            },
+          ),
+          ListTile(
+            title: const Text('Food Tracker'),
+            onTap: () {
+              setState(() {
+                Navigator.pop(context);
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => const FoodScreen()));
               });
             },
           ),

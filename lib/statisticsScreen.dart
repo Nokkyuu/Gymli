@@ -31,11 +31,12 @@ import 'user_service.dart';
 import 'api_models.dart';
 import 'responsive_helper.dart';
 //import 'screens/statistics/constants/muscle_constants.dart';
-import 'screens/statistics/constants/chart_constants.dart';
+//import 'screens/statistics/constants/chart_constants.dart';
 import 'screens/statistics/services/statistics_data_service.dart';
 import 'screens/statistics/services/statistics_filter_service.dart';
 import 'screens/statistics/services/statistics_calculation_service.dart';
 import 'screens/statistics/services/statistics_coordinator.dart';
+import 'screens/statistics/widgets/food.dart';
 
 class StatisticsScreen extends StatefulWidget {
   const StatisticsScreen({super.key});
@@ -551,48 +552,6 @@ class _StatisticsScreen extends State<StatisticsScreen> {
       );
     }
 
-    // Handle empty data case
-    // if (numberOfTrainingDays == 0) {
-    //   return Scaffold(
-    //     appBar: AppBar(
-    //       leading: InkWell(
-    //         onTap: () {
-    //           Navigator.pop(context);
-    //         },
-    //         child: const Icon(
-    //           Icons.arrow_back_ios,
-    //         ),
-    //       ),
-    //       title: const Text("Statistics"),
-    //     ),
-    //     body: const Center(
-    //       child: Column(
-    //         mainAxisAlignment: MainAxisAlignment.center,
-    //         children: [
-    //           Icon(
-    //             Icons.bar_chart,
-    //             size: 64,
-    //             color: Colors.grey,
-    //           ),
-    //           SizedBox(height: 16),
-    //           Text(
-    //             "No training data available",
-    //             style: TextStyle(fontSize: 18, color: Colors.grey),
-    //           ),
-    //           SizedBox(height: 8),
-    //           Text(
-    //             "Start adding workouts to see your statistics",
-    //             style: TextStyle(fontSize: 14, color: Colors.grey),
-    //           ),
-    //         ],
-    //       ),
-    //     ),
-    //   );
-    // }
-
-    // Heat map data is now calculated in updateBarStatistics and stored in heatMapMulti
-    // No need to recalculate in build() method
-
     return Scaffold(
         appBar: AppBar(
           leading: InkWell(
@@ -703,6 +662,7 @@ class _StatisticsScreen extends State<StatisticsScreen> {
                       _buildListTile("Muscle Heatmap", 3),
                       _buildListTile("Exercise Progress", 4),
                       _buildListTile("Activities", 5),
+                      _buildListTile("Nutrition", 6),
                     ],
                   ),
                 ),
@@ -817,6 +777,8 @@ class _StatisticsScreen extends State<StatisticsScreen> {
         return _buildExerciseProgressView();
       case 5:
         return _buildActivitiesView();
+      case 6:
+        return FoodStatsScreen();
       default:
         return Container();
     }
@@ -1157,83 +1119,6 @@ class _StatisticsScreen extends State<StatisticsScreen> {
       ),
     );
   }
-
-  // Column MusclesPerExerciseChart(BuildContext context) {
-  //   return Column(
-  //     children: [
-  //       Row(
-  //         mainAxisAlignment: MainAxisAlignment.spaceAround,
-  //         children: (() {
-  //           List<Widget> widgets = [];
-  //           for (int i = 0; i < muscleColors.length / 2; i++) {
-  //             widgets.add(Wrap(children: [
-  //               Container(width: 14.0, height: 14.0, color: muscleColors[i]),
-  //               Text(" ${muscleNames[i]}",
-  //                   style: const TextStyle(fontSize: 10.0))
-  //             ]));
-  //             // widgets.add(Text(barChartMuscleMuscleNames[i]));
-  //           }
-  //           return widgets;
-  //         })(),
-  //       ),
-  //       const SizedBox(height: 2),
-  //       Row(
-  //         mainAxisAlignment: MainAxisAlignment.spaceAround,
-  //         children: (() {
-  //           List<Widget> widgets = [];
-  //           for (int i = muscleColors.length ~/ 2;
-  //               i < muscleColors.length;
-  //               i++) {
-  //             widgets.add(Wrap(children: [
-  //               Container(width: 14.0, height: 14.0, color: muscleColors[i]),
-  //               Text(" ${muscleNames[i]}",
-  //                   style: const TextStyle(fontSize: 10.0))
-  //             ]));
-  //             // widgets.add(Text(barChartMuscleMuscleNames[i]));
-  //           }
-  //           return widgets;
-  //         })(),
-  //       ),
-  //       SizedBox(
-  //         width: MediaQuery.of(context).size.width,
-  //         height: ResponsiveHelper.isMobile(context)
-  //             ? MediaQuery.of(context).size.height * 0.25
-  //             : MediaQuery.of(context).size.height * 0.65,
-  //         child: Padding(
-  //           padding: const EdgeInsets.only(
-  //               right: 10.0,
-  //               top: 5.0,
-  //               left: 10.0), // Hier das Padding rechts hinzufügen
-  //           child: BarChart(
-  //             BarChartData(
-  //               alignment: BarChartAlignment.spaceBetween,
-  //               titlesData: const FlTitlesData(
-  //                 topTitles:
-  //                     AxisTitles(sideTitles: SideTitles(showTitles: false)),
-  //                 rightTitles:
-  //                     AxisTitles(sideTitles: SideTitles(showTitles: false)),
-  //                 // bottomTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-  //                 leftTitles:
-  //                     AxisTitles(sideTitles: SideTitles(showTitles: false)),
-  //               ),
-  //               barGroups: barChartStatistics,
-  //             ),
-  //           ),
-  //         ),
-  //       ),
-  //       Column(
-  //         mainAxisAlignment: MainAxisAlignment.spaceAround,
-  //         children: (() {
-  //           List<Widget> widgets = [];
-  //           for (var d in exerciseDetails) {
-  //             widgets.add(d);
-  //           }
-  //           return widgets;
-  //         })(),
-  //       ),
-  //     ],
-  //   );
-  // }
 
   LineChart TrainingsPerWeekChart() {
     return LineChart(LineChartData(
