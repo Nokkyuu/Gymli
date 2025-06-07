@@ -48,6 +48,10 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
   // Selected food for logging
   String? selectedFoodName;
 
+  // Search functionality
+  String _foodSearchQuery = '';
+  final TextEditingController _searchController = TextEditingController();
+
   // Form controllers
   final TextEditingController gramsController = TextEditingController();
   final TextEditingController customFoodNameController =
@@ -69,6 +73,15 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
   List<FlSpot> caloriesTrendData = [];
   List<FlSpot> proteinTrendData = [];
 
+  // Filtered foods getter
+  List<ApiFood> get filteredFoods {
+    if (_foodSearchQuery.isEmpty) return foods;
+    return foods
+        .where((food) =>
+            food.name.toLowerCase().contains(_foodSearchQuery.toLowerCase()))
+        .toList();
+  }
+
   @override
   void initState() {
     super.initState();
@@ -79,6 +92,7 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
   @override
   void dispose() {
     _tabController.dispose();
+    _searchController.dispose();
     gramsController.dispose();
     customFoodNameController.dispose();
     customFoodCaloriesController.dispose();
@@ -363,23 +377,87 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
                         const Text('Food Item',
                             style: TextStyle(fontWeight: FontWeight.w500)),
                         const SizedBox(height: 8),
-                        DropdownButtonFormField<String>(
-                          value: selectedFoodName,
-                          decoration: const InputDecoration(
-                            border: OutlineInputBorder(),
-                            contentPadding: EdgeInsets.symmetric(
-                                horizontal: 12, vertical: 8),
-                          ),
-                          items: foods.map((food) {
-                            return DropdownMenuItem<String>(
-                              value: food.name,
-                              child: Text(
-                                  '${food.name} (${food.kcalPer100g.toInt()} kcal/100g)'),
+                        Autocomplete<ApiFood>(
+                          optionsBuilder: (TextEditingValue textEditingValue) {
+                            if (textEditingValue.text.isEmpty) {
+                              return foods;
+                            }
+                            return foods.where((ApiFood food) {
+                              return food.name.toLowerCase().contains(
+                                  textEditingValue.text.toLowerCase());
+                            });
+                          },
+                          displayStringForOption: (ApiFood food) => food.name,
+                          fieldViewBuilder: (BuildContext context,
+                              TextEditingController textEditingController,
+                              FocusNode focusNode,
+                              VoidCallback onFieldSubmitted) {
+                            return TextFormField(
+                              controller: textEditingController,
+                              focusNode: focusNode,
+                              decoration: const InputDecoration(
+                                border: OutlineInputBorder(),
+                                contentPadding: EdgeInsets.symmetric(
+                                    horizontal: 12, vertical: 8),
+                                hintText: 'Type to search foods...',
+                              ),
+                              onFieldSubmitted: (String value) {
+                                onFieldSubmitted();
+                              },
                             );
-                          }).toList(),
-                          onChanged: (value) {
+                          },
+                          optionsViewBuilder: (BuildContext context,
+                              AutocompleteOnSelected<ApiFood> onSelected,
+                              Iterable<ApiFood> options) {
+                            return Align(
+                              alignment: Alignment.topLeft,
+                              child: Material(
+                                elevation: 4.0,
+                                child: ConstrainedBox(
+                                  constraints:
+                                      const BoxConstraints(maxHeight: 200),
+                                  child: ListView.builder(
+                                    padding: EdgeInsets.zero,
+                                    shrinkWrap: true,
+                                    itemCount: options.length,
+                                    itemBuilder:
+                                        (BuildContext context, int index) {
+                                      final ApiFood food =
+                                          options.elementAt(index);
+                                      return InkWell(
+                                        onTap: () => onSelected(food),
+                                        child: Container(
+                                          padding: const EdgeInsets.all(16.0),
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                food.name,
+                                                style: const TextStyle(
+                                                    fontWeight:
+                                                        FontWeight.bold),
+                                              ),
+                                              Text(
+                                                '${food.kcalPer100g.toInt()} kcal/100g',
+                                                style: const TextStyle(
+                                                  fontSize: 12,
+                                                  color: Colors.grey,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                          onSelected: (ApiFood selectedFood) {
                             setState(() {
-                              selectedFoodName = value;
+                              selectedFoodName = selectedFood.name;
                             });
                           },
                         ),
@@ -492,10 +570,11 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
                       ],
                     ),
                   ),
-                ),
+                )
               ],
             ),
           ),
+
           const SizedBox(width: 24),
           // History panel takes 1/3 of the width (only on non-mobile)
           if (!ResponsiveHelper.isMobile(context))
@@ -1063,7 +1142,32 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 16),
-                  if (foods.isEmpty)
+
+                  // Search bar
+                  TextField(
+                    controller: _searchController,
+                    decoration: const InputDecoration(
+                      labelText: 'Search foods...',
+                      border: OutlineInputBorder(),
+                      prefixIcon: Icon(Icons.search),
+                      hintText: 'Type to filter foods',
+                    ),
+                    onChanged: (value) {
+                      setState(() {
+                        _foodSearchQuery = value;
+                      });
+                    },
+                  ),
+                  const SizedBox(height: 16),
+
+                  if (filteredFoods.isEmpty && _foodSearchQuery.isNotEmpty)
+                    const Center(
+                      child: Text(
+                        'No foods found matching your search',
+                        style: TextStyle(color: Colors.grey),
+                      ),
+                    )
+                  else if (foods.isEmpty)
                     const Center(
                       child: Text(
                         'No foods loaded yet',
@@ -1071,16 +1175,52 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
                       ),
                     )
                   else if (!ResponsiveHelper.isMobile(context))
-                    GridView.count(
-                      crossAxisCount: 2,
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      crossAxisSpacing: 12,
-                      mainAxisSpacing: 12,
-                      childAspectRatio: 2.5,
-                      children: foods.map((food) {
-                        return Card(
-                          child: ListTile(
+                    SizedBox(
+                      height: 300, // Fixed height
+                      child: GridView.builder(
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 3,
+                          crossAxisSpacing: 12,
+                          mainAxisSpacing: 12,
+                          childAspectRatio: 2.5,
+                        ),
+                        itemCount: filteredFoods.length,
+                        itemBuilder: (context, index) {
+                          final food = filteredFoods[index];
+                          return Card(
+                            child: ListTile(
+                              leading: CircleAvatar(
+                                backgroundColor: _getFoodColor(food.name),
+                                child: Icon(
+                                  _getFoodIcon(food.name),
+                                  color: Colors.white,
+                                  size: 20,
+                                ),
+                              ),
+                              title: Text(food.name),
+                              subtitle: Text(
+                                  '${food.kcalPer100g.toInt()} kcal/100g\nP:${food.proteinPer100g.toStringAsFixed(1)}g C:${food.carbsPer100g.toStringAsFixed(1)}g F:${food.fatPer100g.toStringAsFixed(1)}g'),
+                              trailing: IconButton(
+                                icon:
+                                    const Icon(Icons.delete, color: Colors.red),
+                                onPressed: () =>
+                                    _showDeleteFoodConfirmation(food),
+                              ),
+                              isThreeLine: true,
+                            ),
+                          );
+                        },
+                      ),
+                    )
+                  else
+                    SizedBox(
+                      height: 200,
+                      child: ListView.builder(
+                        itemCount: filteredFoods.length,
+                        itemBuilder: (context, index) {
+                          final food = filteredFoods[index];
+                          return ListTile(
                             leading: CircleAvatar(
                               backgroundColor: _getFoodColor(food.name),
                               child: Icon(
@@ -1098,29 +1238,10 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
                                   _showDeleteFoodConfirmation(food),
                             ),
                             isThreeLine: true,
-                          ),
-                        );
-                      }).toList(),
-                    )
-                  else
-                    ...foods.map((food) => ListTile(
-                          leading: CircleAvatar(
-                            backgroundColor: _getFoodColor(food.name),
-                            child: Icon(
-                              _getFoodIcon(food.name),
-                              color: Colors.white,
-                              size: 20,
-                            ),
-                          ),
-                          title: Text(food.name),
-                          subtitle: Text(
-                              '${food.kcalPer100g.toInt()} kcal/100g\nP:${food.proteinPer100g.toStringAsFixed(1)}g C:${food.carbsPer100g.toStringAsFixed(1)}g F:${food.fatPer100g.toStringAsFixed(1)}g'),
-                          trailing: IconButton(
-                            icon: const Icon(Icons.delete, color: Colors.red),
-                            onPressed: () => _showDeleteFoodConfirmation(food),
-                          ),
-                          isThreeLine: true,
-                        )),
+                          );
+                        },
+                      ),
+                    ),
                 ],
               ),
             ),
