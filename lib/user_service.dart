@@ -1799,4 +1799,91 @@ class UserService {
       print('Cleared in-memory food data');
     }
   }
+
+  /// Gets daily nutrition statistics for food logs within a date range
+  /// Returns a list of daily nutrition data for charting
+  Future<List<Map<String, dynamic>>> getDailyFoodLogStats({
+    DateTime? startDate,
+    DateTime? endDate,
+  }) async {
+    final logs = await getFoodLogs(
+      startDate: startDate,
+      endDate: endDate,
+    );
+
+    // Group logs by date
+    Map<String, Map<String, double>> dailyStats = {};
+
+    for (var log in logs) {
+      final dateString = log['date'] as String;
+      final date = DateTime.parse(dateString);
+      final dateKey =
+          '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+
+      final grams = (log['grams'] as num).toDouble();
+      final kcalPer100g = (log['kcal_per_100g'] as num).toDouble();
+      final proteinPer100g = (log['protein_per_100g'] as num).toDouble();
+      final carbsPer100g = (log['carbs_per_100g'] as num).toDouble();
+      final fatPer100g = (log['fat_per_100g'] as num).toDouble();
+
+      final multiplier = grams / 100.0;
+      final calories = kcalPer100g * multiplier;
+      final protein = proteinPer100g * multiplier;
+      final carbs = carbsPer100g * multiplier;
+      final fat = fatPer100g * multiplier;
+
+      if (!dailyStats.containsKey(dateKey)) {
+        dailyStats[dateKey] = {
+          'calories': 0.0,
+          'protein': 0.0,
+          'carbs': 0.0,
+          'fat': 0.0,
+        };
+      }
+
+      dailyStats[dateKey]!['calories'] =
+          dailyStats[dateKey]!['calories']! + calories;
+      dailyStats[dateKey]!['protein'] =
+          dailyStats[dateKey]!['protein']! + protein;
+      dailyStats[dateKey]!['carbs'] = dailyStats[dateKey]!['carbs']! + carbs;
+      dailyStats[dateKey]!['fat'] = dailyStats[dateKey]!['fat']! + fat;
+    }
+
+    // Convert to list format and fill in missing dates
+    List<Map<String, dynamic>> result = [];
+
+    if (startDate != null && endDate != null) {
+      DateTime currentDate = startDate;
+      while (currentDate.isBefore(endDate) ||
+          currentDate.isAtSameMomentAs(endDate)) {
+        final dateKey =
+            '${currentDate.year}-${currentDate.month.toString().padLeft(2, '0')}-${currentDate.day.toString().padLeft(2, '0')}';
+
+        result.add({
+          'date': dateKey,
+          'calories': dailyStats[dateKey]?['calories'] ?? 0.0,
+          'protein': dailyStats[dateKey]?['protein'] ?? 0.0,
+          'carbs': dailyStats[dateKey]?['carbs'] ?? 0.0,
+          'fat': dailyStats[dateKey]?['fat'] ?? 0.0,
+        });
+
+        currentDate = currentDate.add(const Duration(days: 1));
+      }
+    } else {
+      // If no date range specified, just return the days we have data for
+      for (var entry in dailyStats.entries) {
+        result.add({
+          'date': entry.key,
+          'calories': entry.value['calories'],
+          'protein': entry.value['protein'],
+          'carbs': entry.value['carbs'],
+          'fat': entry.value['fat'],
+        });
+      }
+      // Sort by date
+      result.sort((a, b) => a['date'].compareTo(b['date']));
+    }
+
+    return result;
+  }
 }

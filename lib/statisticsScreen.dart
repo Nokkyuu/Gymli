@@ -778,7 +778,12 @@ class _StatisticsScreen extends State<StatisticsScreen> {
       case 5:
         return _buildActivitiesView();
       case 6:
-        return FoodStatsScreen();
+        return FoodStatsScreen(
+          key: ValueKey('${startingDate}_${endingDate}_$_useDefaultDateFilter'),
+          startingDate: startingDate,
+          endingDate: endingDate,
+          useDefaultDateFilter: _useDefaultDateFilter,
+        );
       default:
         return Container();
     }
@@ -1295,6 +1300,11 @@ class _StatisticsScreen extends State<StatisticsScreen> {
                   if (_selectedExerciseForGraph != null) {
                     _loadExerciseGraphDataFromCoordinator(
                         _selectedExerciseForGraph!);
+                  }
+                  if (_selectedWidgetIndex == 6) {
+                    setState(() {
+                      // This will trigger a rebuild of FoodStatsScreen with new parameters
+                    });
                   }
                 },
                 style: ElevatedButton.styleFrom(
