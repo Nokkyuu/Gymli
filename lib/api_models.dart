@@ -564,6 +564,17 @@ class ApiFood {
       'notes': notes,
     };
   }
+
+  List<String> toCSVString() {
+    return [
+      name,
+      kcalPer100g.toString(),
+      proteinPer100g.toString(),
+      carbsPer100g.toString(),
+      fatPer100g.toString(),
+      notes ?? '',
+    ];
+  }
 }
 
 class ApiFoodLog {

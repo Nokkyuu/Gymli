@@ -940,6 +940,67 @@ class FoodService {
     }
   }
 
+  /// Creates multiple food items in a single batch operation
+  Future<List<Map<String, dynamic>>> createFoodsBulk({
+    required String userName,
+    required List<Map<String, dynamic>> foods,
+  }) async {
+    if (foods.isEmpty) {
+      throw Exception('Food items list cannot be empty');
+    }
+
+    if (foods.length > 1000) {
+      throw Exception(
+          'Cannot create more than 1000 food items in a single request');
+    }
+
+    // Ensure all food items have the required user_name field
+    final foodsWithUser = foods
+        .map((food) => {
+              'user_name': userName,
+              ...food,
+            })
+        .toList();
+
+    final response = await http.post(
+      Uri.parse('$baseUrl/foods/bulk'),
+      headers: {
+        'Content-Type': 'application/json',
+        'X-API-Key': ApiConfig.apiKey!,
+      },
+      body: json.encode(foodsWithUser),
+    );
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      final List<dynamic> responseData = json.decode(response.body);
+      return responseData.cast<Map<String, dynamic>>();
+    } else {
+      throw Exception('Failed to create foods in bulk: ${response.body}');
+    }
+  }
+
+  Future<Map<String, dynamic>> clearFoods({
+    required String userName,
+  }) async {
+    final response = await http.delete(
+      Uri.parse('$baseUrl/foods/bulk_clear?user_name=$userName'),
+      headers: {
+        'Content-Type': 'application/json',
+        'X-API-Key': ApiConfig.apiKey!,
+      },
+    );
+
+    if (response.statusCode == 200 || response.statusCode == 204) {
+      final result = response.body.isNotEmpty
+          ? json.decode(response.body)
+          : {'message': 'Food items cleared successfully'};
+      return result;
+    } else {
+      throw Exception(
+          'Failed to clear food items: ${response.statusCode} ${response.body}');
+    }
+  }
+
   /// Deletes a food item
   Future<void> deleteFood({
     required int foodId,

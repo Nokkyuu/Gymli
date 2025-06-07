@@ -893,7 +893,7 @@ class _StatisticsScreen extends State<StatisticsScreen> {
                   lineBarsData: [
                     LineChartBarData(
                       spots: _caloriesTrendData,
-                      isCurved: true,
+                      isCurved: false,
                       color: Colors.red,
                       barWidth: 2,
                       isStrokeCapRound: true,
@@ -988,7 +988,7 @@ class _StatisticsScreen extends State<StatisticsScreen> {
                   lineBarsData: [
                     LineChartBarData(
                       spots: _durationTrendData,
-                      isCurved: true,
+                      isCurved: false,
                       color: Colors.blue,
                       barWidth: 2,
                       isStrokeCapRound: true,

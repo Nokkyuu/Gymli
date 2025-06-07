@@ -315,6 +315,18 @@ Future<void> backup(String dataType, BuildContext context) async {
           print('Error converting workout to CSV: $e');
         }
       }
+    } else if (dataType == "Foods") {
+      final foods = await userService.getFoods();
+      print('Retrieved ${foods.length} foods');
+
+      for (var food in foods) {
+        try {
+          final apiFood = ApiFood.fromJson(food);
+          datalist.add(apiFood.toCSVString());
+        } catch (e) {
+          print('Error converting food to CSV: $e');
+        }
+      }
     }
 
     if (datalist.isEmpty) {
@@ -1174,6 +1186,185 @@ Future<void> restoreData(
           },
         );
       }
+    } else if (dataType == "Foods") {
+      // Clear existing food data with better error handling
+      print('Clearing existing food data...');
+      try {
+        await userService.clearFoodData();
+        print('Successfully cleared existing food data.');
+      } catch (e) {
+        print('Warning: Error clearing food data: $e');
+        print('Continuing with import anyway...');
+      }
+
+      // Update dialog to show total count
+      if (context.mounted) {
+        Navigator.of(context).pop(); // Close current dialog
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const CircularProgressIndicator(),
+                  const SizedBox(height: 20),
+                  Text('Importing ${csvTable.length} food items...'),
+                  const SizedBox(height: 10),
+                  const Text('Please wait...'),
+                ],
+              ),
+            );
+          },
+        );
+      }
+
+      // Prepare food items for bulk import
+      List<Map<String, dynamic>> foodsToCreate = [];
+
+      for (int index = 0; index < csvTable.length; index++) {
+        List<String> row =
+            csvTable[index].map((e) => e is String ? e.trim() : e).toList();
+
+        // Update progress every 10 foods
+        if (index % 10 == 0 && context.mounted) {
+          Navigator.of(context).pop(); // Close current dialog
+          showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (BuildContext context) {
+              return AlertDialog(
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const CircularProgressIndicator(),
+                    const SizedBox(height: 20),
+                    Text('Preparing food items...'),
+                    const SizedBox(height: 10),
+                    Text('${index + 1} of ${csvTable.length}'),
+                    const SizedBox(height: 10),
+                    LinearProgressIndicator(
+                      value: (index + 1) / csvTable.length,
+                    ),
+                  ],
+                ),
+              );
+            },
+          );
+        }
+
+        if (row.length >= 6) {
+          try {
+            foodsToCreate.add({
+              'name': row[0],
+              'kcalPer100g': double.parse(row[1]),
+              'proteinPer100g': double.parse(row[2]),
+              'carbsPer100g': double.parse(row[3]),
+              'fatPer100g': double.parse(row[4]),
+              'notes': row.length > 5 ? row[5] : null,
+            });
+            print('Prepared food item: ${row[0]}');
+          } catch (e) {
+            print('Error preparing food item "${row[0]}": $e');
+            skippedCount++;
+          }
+        } else {
+          print('Skipping row with insufficient data: $row');
+          skippedCount++;
+        }
+      }
+
+      // Create food items in bulk (batches of 1000) with progress updates
+      if (foodsToCreate.isNotEmpty) {
+        print('Creating ${foodsToCreate.length} food items in bulk...');
+
+        int batchSize = 1000;
+        int totalBatches = (foodsToCreate.length / batchSize).ceil();
+
+        for (int i = 0; i < foodsToCreate.length; i += batchSize) {
+          int endIndex = (i + batchSize < foodsToCreate.length)
+              ? i + batchSize
+              : foodsToCreate.length;
+
+          List<Map<String, dynamic>> batch = foodsToCreate.sublist(i, endIndex);
+          int currentBatch = (i / batchSize).floor() + 1;
+
+          // Update dialog to show current batch progress
+          if (context.mounted) {
+            Navigator.of(context).pop(); // Close current dialog
+            showDialog(
+              context: context,
+              barrierDismissible: false,
+              builder: (BuildContext context) {
+                return AlertDialog(
+                  content: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const CircularProgressIndicator(),
+                      const SizedBox(height: 20),
+                      Text('Importing batch $currentBatch of $totalBatches'),
+                      const SizedBox(height: 10),
+                      Text('${batch.length} food items'),
+                      const SizedBox(height: 10),
+                      LinearProgressIndicator(
+                        value: currentBatch / totalBatches,
+                      ),
+                    ],
+                  ),
+                );
+              },
+            );
+          }
+
+          try {
+            await userService.createFoodsBulk(batch);
+            importedCount += batch.length;
+            print(
+                'Successfully imported batch of ${batch.length} food items (${i + 1}-${endIndex} of ${foodsToCreate.length})');
+          } catch (e) {
+            print('Error importing batch ${i + 1}-${endIndex}: $e');
+            skippedCount += batch.length;
+          }
+
+          // Small delay to allow UI to update
+          await Future.delayed(const Duration(milliseconds: 100));
+        }
+
+        // Final completion dialog
+        if (context.mounted) {
+          Navigator.of(context).pop(); // Close progress dialog
+          showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (BuildContext context) {
+              return AlertDialog(
+                title: const Text('Food Import Complete'),
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('✅ Successfully imported: $importedCount food items'),
+                    if (skippedCount > 0)
+                      Text('⚠️ Skipped: $skippedCount items'),
+                    const SizedBox(height: 10),
+                    const Text(
+                        'All food items have been imported successfully!'),
+                  ],
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                    child: const Text('OK'),
+                  ),
+                ],
+              );
+            },
+          );
+        }
+      }
     }
 
     // Print import summary
@@ -1491,6 +1682,13 @@ class _SettingsScreen extends State<SettingsScreen> {
                   backup("Workouts", context);
                 },
               ),
+              TextButton.icon(
+                label: const Text('Foods'),
+                icon: const FaIcon(FontAwesomeIcons.utensils, size: 13),
+                onPressed: () {
+                  backup("Foods", context);
+                },
+              ),
             ]),
             const SizedBox(height: 10),
             const Row(mainAxisAlignment: MainAxisAlignment.center, children: [
@@ -1504,7 +1702,6 @@ class _SettingsScreen extends State<SettingsScreen> {
                 icon: const FaIcon(FontAwesomeIcons.chartLine, size: 13),
                 onPressed: () {
                   triggerLoad(context, "TrainingSets");
-                  //Navigator.pop(context);
                 },
               ),
               TextButton.icon(
@@ -1512,7 +1709,6 @@ class _SettingsScreen extends State<SettingsScreen> {
                 icon: const FaIcon(FontAwesomeIcons.list, size: 13),
                 onPressed: () {
                   triggerLoad(context, "Exercises");
-                  //Navigator.pop(context);
                 },
               ),
               TextButton.icon(
@@ -1520,6 +1716,13 @@ class _SettingsScreen extends State<SettingsScreen> {
                 icon: const FaIcon(FontAwesomeIcons.clipboardList, size: 13),
                 onPressed: () {
                   triggerLoad(context, "Workouts");
+                },
+              ),
+              TextButton.icon(
+                label: const Text('Foods'),
+                icon: const FaIcon(FontAwesomeIcons.utensils, size: 13),
+                onPressed: () {
+                  triggerLoad(context, "Foods");
                 },
               ),
             ]),
@@ -1549,6 +1752,13 @@ class _SettingsScreen extends State<SettingsScreen> {
                   onPressed: () {
                     wipeWorkouts(context);
                   }),
+              TextButton.icon(
+                label: const Text('Foods'),
+                icon: const FaIcon(FontAwesomeIcons.utensils, size: 13),
+                onPressed: () {
+                  wipeFoods(context);
+                },
+              ),
             ]),
             const Spacer(),
           ]),
@@ -1605,5 +1815,86 @@ Future<void> fixCSVFile() async {
     }
   } catch (e) {
     print('Error fixing CSV: $e');
+  }
+}
+
+Future<void> wipeFoods(BuildContext context) async {
+  if (await confirm(
+    context,
+    title: const Text('Clear Food Data'),
+    content: const Text(
+        'Are you sure you want to permanently delete all food items? This action cannot be undone.'),
+  )) {
+    // Show loading dialog
+    if (context.mounted) {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          return const AlertDialog(
+            content: Row(
+              children: [
+                CircularProgressIndicator(),
+                SizedBox(width: 20),
+                Text('Clearing food data...'),
+              ],
+            ),
+          );
+        },
+      );
+    }
+
+    try {
+      print('Starting to clear food data...');
+      final userService = UserService();
+      final currentUserName = userService.userName;
+      print('Clearing food data for user: $currentUserName');
+
+      await userService.clearFoodData();
+      print('Clear food data completed successfully');
+
+      await Future.delayed(const Duration(milliseconds: 500));
+
+      final remainingFoods = await userService.getFoods();
+      //final remainingLogs = await userService.getFoodLogs();
+      print('Remaining foods after clear: ${remainingFoods.length}');
+      // print('Remaining food logs after clear: ${remainingLogs.length}');
+
+      UserService().notifyDataChanged();
+
+      if (context.mounted) {
+        Navigator.of(context).pop();
+
+        if (remainingFoods.isEmpty) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Food data cleared successfully'),
+              backgroundColor: Colors.green,
+              duration: Duration(seconds: 3),
+            ),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                  'Warning: ${remainingFoods.length} foods may still remain'),
+              backgroundColor: Colors.orange,
+              duration: const Duration(seconds: 5),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (context.mounted) {
+        Navigator.of(context).pop();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error clearing food data: $e'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 5),
+          ),
+        );
+      }
+    }
   }
 }

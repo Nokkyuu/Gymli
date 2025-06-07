@@ -1756,48 +1756,40 @@ class UserService {
   /// Clears all food data (both foods and food logs)
   Future<void> clearFoodData() async {
     if (isLoggedIn) {
-      // Get all foods and food logs for this user and delete them
-      final foods = await getFoods();
-      final foodLogs = await getFoodLogs();
+      // OPTIMIZED: Use bulk delete endpoint instead of individual deletes
+      await api.FoodService().clearFoods(userName: userName);
+      print('Food items cleared using bulk delete endpoint');
 
-      int deletedFoodsCount = 0;
-      int deletedLogsCount = 0;
-      int errorCount = 0;
+      // Still need to delete food logs individually since we don't have bulk delete for them yet
+      // final foodLogs = await getFoodLogs();
+      // int deletedLogsCount = 0;
+      // int errorCount = 0;
 
-      // Delete all foods
-      for (var food in foods) {
-        if (food['id'] != null) {
-          try {
-            await deleteFood(food['id']);
-            deletedFoodsCount++;
-          } catch (e) {
-            errorCount++;
-            print('Warning: Failed to delete food ${food['id']}: $e');
-          }
-        }
-      }
+      // for (var log in foodLogs) {
+      //   if (log['id'] != null) {
+      //     try {
+      //       await deleteFoodLog(log['id']);
+      //       deletedLogsCount++;
+      //     } catch (e) {
+      //       errorCount++;
+      //       print('Warning: Failed to delete food log ${log['id']}: $e');
+      //     }
+      //   }
+      // }
 
-      // Delete all food logs
-      for (var log in foodLogs) {
-        if (log['id'] != null) {
-          try {
-            await deleteFoodLog(log['id']);
-            deletedLogsCount++;
-          } catch (e) {
-            errorCount++;
-            print('Warning: Failed to delete food log ${log['id']}: $e');
-          }
-        }
-      }
-
-      print(
-          'Cleared food data: $deletedFoodsCount foods, $deletedLogsCount logs deleted, $errorCount errors');
+      // print(
+      //     'Cleared food data: bulk delete for foods, $deletedLogsCount logs deleted, $errorCount errors');
     } else {
       // Clear in-memory food data
       _inMemoryData['foods'] = <Map<String, dynamic>>[];
-      _inMemoryData['foodLogs'] = <Map<String, dynamic>>[];
+      //_inMemoryData['foodLogs'] = <Map<String, dynamic>>[];
       print('Cleared in-memory food data');
     }
+
+    // Always clear in-memory data regardless of login status to prevent cache issues
+    _inMemoryData['foods'] = <Map<String, dynamic>>[];
+    //_inMemoryData['foodLogs'] = <Map<String, dynamic>>[];
+    print('Cleared in-memory food data cache');
   }
 
   /// Gets daily nutrition statistics for food logs within a date range
@@ -1885,5 +1877,72 @@ class UserService {
     }
 
     return result;
+  }
+
+  /// Creates multiple food items in a single batch operation
+  /// This method is optimized for bulk imports and significantly reduces
+  /// the number of HTTP requests compared to creating foods individually.
+  ///
+  /// [foods] - List of food data to create. Each item should contain:
+  ///   - name, kcalPer100g, proteinPer100g, carbsPer100g, fatPer100g, notes
+  ///
+  /// Returns a list of created food items with their assigned IDs
+  Future<List<Map<String, dynamic>>> createFoodsBulk(
+    List<Map<String, dynamic>> foods,
+  ) async {
+    if (foods.isEmpty) {
+      return [];
+    }
+
+    if (isLoggedIn) {
+      // Convert the foods to the format expected by the API
+      final apiFoods = foods
+          .map((food) => {
+                'name': food['name'],
+                'kcal_per_100g': food['kcalPer100g'],
+                'protein_per_100g': food['proteinPer100g'],
+                'carbs_per_100g': food['carbsPer100g'],
+                'fat_per_100g': food['fatPer100g'],
+                'notes': food['notes'],
+              })
+          .toList();
+
+      return await api.FoodService().createFoodsBulk(
+        userName: userName,
+        foods: apiFoods,
+      );
+    } else {
+      // For offline mode, add all foods to in-memory storage
+      final createdFoods = <Map<String, dynamic>>[];
+      final existingFoods = _inMemoryData['foods'] as List<dynamic>? ?? [];
+
+      int nextId = existingFoods.isEmpty
+          ? 1
+          : (existingFoods
+                  .map((f) => f['id'] as int)
+                  .reduce((a, b) => a > b ? a : b) +
+              1);
+
+      for (final food in foods) {
+        final newFood = {
+          'id': nextId++,
+          'user_name': 'DefaultUser',
+          'name': food['name'],
+          'kcal_per_100g': food['kcalPer100g'],
+          'protein_per_100g': food['proteinPer100g'],
+          'carbs_per_100g': food['carbsPer100g'],
+          'fat_per_100g': food['fatPer100g'],
+          'notes': food['notes'],
+        };
+
+        if (_inMemoryData['foods'] == null) {
+          _inMemoryData['foods'] = <Map<String, dynamic>>[];
+        }
+        (_inMemoryData['foods'] as List<dynamic>).add(newFood);
+        createdFoods.add(newFood);
+      }
+
+      return createdFoods;
+    }
   }
 }
