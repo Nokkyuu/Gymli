@@ -538,27 +538,46 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
                               ],
                             ),
                             const SizedBox(width: 16),
-                            Column(
-                              children: [
-                                Text(""),
-                                ElevatedButton(
-                                  onPressed: _logFood,
-                                  //icon: const Icon(FontAwesomeIcons.plus),
+                            if (!ResponsiveHelper.isMobile(context))
+                              Column(
+                                children: [
+                                  Text(""),
+                                  ElevatedButton(
+                                    onPressed: _logFood,
+                                    //icon: const Icon(FontAwesomeIcons.plus),
 
-                                  style: ElevatedButton.styleFrom(
-                                    padding: const EdgeInsets.symmetric(
-                                        vertical: 12),
+                                    style: ElevatedButton.styleFrom(
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 12),
+                                    ),
+                                    child: const Padding(
+                                      padding: EdgeInsets.all(5.0),
+                                      child: Text('Log Food'),
+                                    ),
                                   ),
-                                  child: const Padding(
-                                    padding: EdgeInsets.all(5.0),
-                                    child: Text('Log Food'),
-                                  ),
-                                ),
-                              ],
-                            ),
+                                ],
+                              ),
                           ],
                         ),
+                        if (ResponsiveHelper.isMobile(context))
+                          Column(
+                            children: [
+                              Text(""),
+                              ElevatedButton(
+                                onPressed: _logFood,
+                                //icon: const Icon(FontAwesomeIcons.plus),
 
+                                style: ElevatedButton.styleFrom(
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 12),
+                                ),
+                                child: const Padding(
+                                  padding: EdgeInsets.all(5.0),
+                                  child: Text('Log Food'),
+                                ),
+                              ),
+                            ],
+                          ),
                         const SizedBox(height: 16),
 
                         // Show calculated nutrition for the portion

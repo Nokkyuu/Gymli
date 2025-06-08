@@ -266,6 +266,7 @@ class _WorkoutSetupScreenState extends State<WorkoutSetupScreen> {
             ? Column(children: [
                 SetNumberPickerMobile(),
                 ExerciseChoiceMobile(context),
+                AddExerciseMobile(),
               ])
             : Row(mainAxisAlignment: MainAxisAlignment.center, children: [
                 SizedBox(width: 60),
@@ -318,6 +319,48 @@ class _WorkoutSetupScreenState extends State<WorkoutSetupScreen> {
             });
           },
           child: const Icon(Icons.arrow_forward),
+        ),
+      ),
+    );
+  }
+
+  Widget AddExerciseMobile() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 20.0),
+      child: SizedBox(
+        width: 100,
+        //height: 200,
+        child: ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            minimumSize: Size.zero,
+            padding: EdgeInsets.zero,
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          ),
+          onPressed: () {
+            setState(() {
+              if (selectedExercise != null) {
+                for (int i = 0; i < addedExercises.length; ++i) {
+                  if (addedExercises[i].exerciseName ==
+                      selectedExercise!.name) {
+                    return;
+                  }
+                }
+                addedExercises.add(ApiWorkoutUnit(
+                    id: 0,
+                    userName: "DefaultUser",
+                    workoutId: 0,
+                    exerciseId: selectedExercise!.id ?? 0,
+                    exerciseName: selectedExercise!.name,
+                    warmups: warmUpS,
+                    worksets: workS,
+                    type: selectedExercise!.type));
+                addRemEx.value = !addRemEx.value;
+              } else {
+                return;
+              }
+            });
+          },
+          child: const Icon(Icons.arrow_downward),
         ),
       ),
     );
