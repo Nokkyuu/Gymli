@@ -582,21 +582,28 @@ class _StatisticsScreen extends State<StatisticsScreen> {
       const SizedBox(height: 20),
       StatisticTexts(),
       const Divider(),
-      Text(
-        "Number of Trainings per Week",
-        style: ThemeData().textTheme.bodyMedium,
-        textAlign: TextAlign.center,
+      ExpansionTile(
+        title: Text(
+          "Number of Trainings per Week",
+          style: ThemeData().textTheme.bodyMedium,
+          textAlign: TextAlign.center,
+        ),
+        initiallyExpanded:
+            true, // Set to false if you want it collapsed by default
+        children: [
+          SizedBox(
+            width: MediaQuery.of(context).size.width,
+            height: MediaQuery.of(context).size.height * 0.15,
+            child: Padding(
+              padding: const EdgeInsets.only(
+                  right: 10.0,
+                  top: 15.0,
+                  left: 0.0), // Hier das Padding rechts hinzufügen
+              child: TrainingsPerWeekChart(),
+            ),
+          ),
+        ],
       ),
-      SizedBox(
-          width: MediaQuery.of(context).size.width,
-          height: MediaQuery.of(context).size.height * 0.15,
-          child: Padding(
-            padding: const EdgeInsets.only(
-                right: 10.0,
-                top: 15.0,
-                left: 0.0), // Hier das Padding rechts hinzufügen
-            child: TrainingsPerWeekChart(),
-          )),
       const SizedBox(height: 20),
       // Text(
       //   "Muscle usage per Exercise",
@@ -608,16 +615,29 @@ class _StatisticsScreen extends State<StatisticsScreen> {
       const SizedBox(
         height: 20,
       ),
-      Text(
-        "Heatmap: relative to most used muscle",
-        style: ThemeData().textTheme.bodyMedium,
-        textAlign: TextAlign.center,
+      ExpansionTile(
+        title: Text(
+          "Heatmap: relative to most used muscle",
+          style: ThemeData().textTheme.bodyMedium,
+          textAlign: TextAlign.center,
+        ),
+        initiallyExpanded: false,
+        children: [
+          MuscleHeatMap(context, (MediaQuery.of(context).size.width * 0.8),
+              (MediaQuery.of(context).size.height)),
+        ],
       ),
-      const SizedBox(
-        height: 20,
+      ExpansionTile(
+        title: Text(
+          "Activities Overview",
+          style: ThemeData().textTheme.bodyMedium,
+          textAlign: TextAlign.center,
+        ),
+        initiallyExpanded: false,
+        children: [
+          _buildActivitiesView(),
+        ],
       ),
-      MuscleHeatMap(context, (MediaQuery.of(context).size.width * 0.8),
-          (MediaQuery.of(context).size.height)),
     ]);
   }
 
