@@ -68,13 +68,7 @@ Want to look into your progress more detailed? here is the place to go.
 | Desktop | Mobile |
 |---------|--------|
 | ![Statistics Desktop](repo_images/StatisticsDesktop.png) | ![Statistics Mobile](repo_images/StatisticsMobile.png) |
-
-### More statistics in Desktop View
-*[Add description of the advanced statistics features here]*
-
-| Desktop |
-|---------|
-| ![Statistics 2 Desktop](repo_images/Statistics2Desktop.png) |
+| ![Statistics Desktop](repo_images/Statistics2Desktop.png) | ![Statistics Mobile](repo_images/Statistics2Mobile.png) |
 
 ### Food Tracker
 Keep track of your calorie and macro nutrient intake
