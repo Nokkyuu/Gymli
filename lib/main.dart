@@ -333,9 +333,11 @@ class _MainAppState extends State<MainApp> {
                   : 'images/Icon-App_3.png',
             )),
           ),
-          const Text("Gymli Gainson",
-              textAlign: TextAlign.center,
-              style: TextStyle(fontFamily: "Times New Roman", fontSize: 30)),
+          Text(
+            "Gymli Gainson",
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
           ListTile(
             title: const Text('Exercise Setup'),
             onTap: () {

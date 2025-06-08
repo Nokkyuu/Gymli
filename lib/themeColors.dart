@@ -70,12 +70,54 @@ ThemeData buildAppTheme(Brightness mode) {
         fontSize: 72,
         fontWeight: FontWeight.bold,
       ),
+      displayMedium: GoogleFonts.oswald(
+        fontSize: 45,
+        fontWeight: FontWeight.w600,
+      ),
+      displaySmall: GoogleFonts.pacifico(),
+      headlineLarge: GoogleFonts.oswald(
+        fontSize: 32,
+        fontWeight: FontWeight.w600,
+      ),
+      headlineMedium: GoogleFonts.oswald(
+        fontSize: 28,
+        fontWeight: FontWeight.w500,
+      ),
+      headlineSmall: GoogleFonts.oswald(
+        fontSize: 24,
+        fontWeight: FontWeight.w500,
+      ),
       titleLarge: GoogleFonts.oswald(
         fontSize: 30,
         fontStyle: FontStyle.italic,
       ),
+      titleMedium: GoogleFonts.oswald(
+        fontSize: 16,
+        fontWeight: FontWeight.w500,
+      ),
+      titleSmall: GoogleFonts.oswald(
+        fontSize: 14,
+        fontWeight: FontWeight.w500,
+      ),
+      bodyLarge: GoogleFonts.merriweather(
+        fontSize: 16,
+      ),
       bodyMedium: GoogleFonts.merriweather(),
-      displaySmall: GoogleFonts.pacifico(),
+      bodySmall: GoogleFonts.merriweather(
+        fontSize: 12,
+      ),
+      labelLarge: GoogleFonts.merriweather(
+        fontSize: 14,
+        fontWeight: FontWeight.w500,
+      ),
+      labelMedium: GoogleFonts.merriweather(
+        fontSize: 12,
+        fontWeight: FontWeight.w500,
+      ),
+      labelSmall: GoogleFonts.merriweather(
+        fontSize: 11,
+        fontWeight: FontWeight.w500,
+      ),
     ),
   );
 }
