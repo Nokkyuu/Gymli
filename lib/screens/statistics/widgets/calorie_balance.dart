@@ -319,6 +319,7 @@ class _CalorieBalanceScreenState extends State<CalorieBalanceScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Calorie Balance'),
+        automaticallyImplyLeading: false,
         actions: [
           IconButton(
             icon: const Icon(Icons.settings),

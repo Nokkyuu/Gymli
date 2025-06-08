@@ -94,105 +94,104 @@ class _StatsScreenState extends State<FoodStatsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Nutrition Stats'),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Nutrition Trend Chart
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Daily Nutrition Trends',
-                      style: const TextStyle(
-                          fontSize: 18, fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 16),
-                    // Calories Chart
-                    Text(
-                      'Daily Calories',
-                      style: const TextStyle(
-                          fontSize: 16, fontWeight: FontWeight.w600),
-                    ),
-                    const SizedBox(height: 8),
-                    SizedBox(
-                      height: 250,
-                      child: _buildCaloriesChart(),
-                    ),
-                    _buildCaloriesLegend(),
-                    const SizedBox(height: 24),
-                    // Macros Chart
-                    Text(
-                      'Daily Macronutrients',
-                      style: const TextStyle(
-                          fontSize: 16, fontWeight: FontWeight.w600),
-                    ),
-                    const SizedBox(height: 8),
-                    SizedBox(
-                      height: 250,
-                      child: _buildMacrosChart(),
-                    ),
-                    _buildMacrosLegend(),
-                  ],
-                ),
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Text(
+          //   'Nutrition Stats',
+          //   style: ThemeData().textTheme.displayLarge,
+          // ),
+          // Nutrition Trend Chart
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Daily Nutrition Trends',
+                    style: const TextStyle(
+                        fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 16),
+                  // Calories Chart
+                  Text(
+                    'Daily Calories',
+                    style: const TextStyle(
+                        fontSize: 16, fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    height: 250,
+                    child: _buildCaloriesChart(),
+                  ),
+                  _buildCaloriesLegend(),
+                  const SizedBox(height: 24),
+                  // Macros Chart
+                  Text(
+                    'Daily Macronutrients',
+                    style: const TextStyle(
+                        fontSize: 16, fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    height: 250,
+                    child: _buildMacrosChart(),
+                  ),
+                  _buildMacrosLegend(),
+                ],
               ),
             ),
-            const SizedBox(height: 16),
+          ),
+          const SizedBox(height: 16),
 
-            // Overall stats
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      widget.useDefaultDateFilter
-                          ? 'Overall Statistics (Last 90 Days)'
-                          : 'Statistics for Selected Period',
-                      style: const TextStyle(
-                          fontSize: 18, fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        _buildStatCard(
-                            'Total Calories',
-                            '${nutritionStats['total_calories']?.toStringAsFixed(0) ?? '0'}',
-                            'kcal',
-                            Colors.orange),
-                        _buildStatCard(
-                            'Total Protein',
-                            '${nutritionStats['total_protein']?.toStringAsFixed(1) ?? '0'}',
-                            'g',
-                            Colors.red),
-                        _buildStatCard(
-                            'Total Carbs',
-                            '${nutritionStats['total_carbs']?.toStringAsFixed(1) ?? '0'}',
-                            'g',
-                            Colors.green),
-                        _buildStatCard(
-                            'Total Fat',
-                            '${nutritionStats['total_fat']?.toStringAsFixed(1) ?? '0'}',
-                            'g',
-                            Colors.purple),
-                      ],
-                    ),
-                  ],
-                ),
+          // Overall stats
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    widget.useDefaultDateFilter
+                        ? 'Overall Statistics (Last 90 Days)'
+                        : 'Statistics for Selected Period',
+                    style: const TextStyle(
+                        fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      _buildStatCard(
+                          'Total Calories',
+                          '${nutritionStats['total_calories']?.toStringAsFixed(0) ?? '0'}',
+                          'kcal',
+                          Colors.orange),
+                      _buildStatCard(
+                          'Total Protein',
+                          '${nutritionStats['total_protein']?.toStringAsFixed(1) ?? '0'}',
+                          'g',
+                          Colors.red),
+                      _buildStatCard(
+                          'Total Carbs',
+                          '${nutritionStats['total_carbs']?.toStringAsFixed(1) ?? '0'}',
+                          'g',
+                          Colors.green),
+                      _buildStatCard(
+                          'Total Fat',
+                          '${nutritionStats['total_fat']?.toStringAsFixed(1) ?? '0'}',
+                          'g',
+                          Colors.purple),
+                    ],
+                  ),
+                ],
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
