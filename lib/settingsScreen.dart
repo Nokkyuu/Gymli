@@ -1254,7 +1254,7 @@ Future<void> restoreData(
           );
         }
 
-        if (row.length >= 6) {
+        if (row.length >= 5) {
           try {
             foodsToCreate.add({
               'name': row[0],
