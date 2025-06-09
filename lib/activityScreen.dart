@@ -286,7 +286,8 @@ class _ActivityScreenState extends State<ActivityScreen>
       appBar: AppBar(
         title: const Text('Activity Tracker'),
         actions: [
-          buildInfoButton(context, () => showInfoDialogActivitySetup(context)),
+          buildInfoButton('Activity Screen Info', context,
+              () => showInfoDialogActivitySetup(context)),
         ],
         bottom: TabBar(
           controller: _tabController,

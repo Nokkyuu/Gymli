@@ -549,7 +549,8 @@ class _StatisticsScreen extends State<StatisticsScreen> {
             ),
             title: const Text("Statistics"),
             actions: [
-              buildInfoButton(context, () => showInfoDialogStatistics(context)),
+              buildInfoButton('Statistics Info', context,
+                  () => showInfoDialogStatistics(context)),
             ]),
         body: const Center(
           child: CircularProgressIndicator(),
@@ -569,7 +570,8 @@ class _StatisticsScreen extends State<StatisticsScreen> {
             ),
             title: const Text("Statistics"),
             actions: [
-              buildInfoButton(context, () => showInfoDialogStatistics(context)),
+              buildInfoButton('Statistics Info', context,
+                  () => showInfoDialogStatistics(context)),
             ]),
         body: ResponsiveHelper.isMobile(context)
             ? MobileStatisticsLayout(context)

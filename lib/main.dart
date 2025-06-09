@@ -308,7 +308,8 @@ class _MainAppState extends State<MainApp> {
                 ],
               ),
               actions: [
-                buildInfoButton(context, () => showInfoDialogMain(context)),
+                buildInfoButton(
+                    'About Gymli', context, () => showInfoDialogMain(context)),
               ],
               centerTitle: true,
             ),

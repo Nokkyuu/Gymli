@@ -322,7 +322,8 @@ class _CalorieBalanceScreenState extends State<CalorieBalanceScreen> {
         title: const Text('Calorie Balance'),
         automaticallyImplyLeading: false,
         actions: [
-          buildInfoButton(context, () => showInfoDialogCalorieBalance(context)),
+          buildInfoButton('Calorie Balance Info', context,
+              () => showInfoDialogCalorieBalance(context)),
           IconButton(
             icon: const Icon(Icons.settings),
             onPressed: () {

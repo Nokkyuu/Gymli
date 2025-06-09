@@ -1587,7 +1587,8 @@ class _SettingsScreen extends State<SettingsScreen> {
         ),
         title: const Text("Settings"),
         actions: [
-          buildInfoButton(context, () => showInfoDialogSettingsSetup(context)),
+          buildInfoButton('Setting Screen info', context,
+              () => showInfoDialogSettingsSetup(context)),
         ],
       ),
       body: Column(

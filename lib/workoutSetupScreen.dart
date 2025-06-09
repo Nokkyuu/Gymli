@@ -190,7 +190,8 @@ class _WorkoutSetupScreenState extends State<WorkoutSetupScreen> {
         title: const Text(title),
         centerTitle: true,
         actions: [
-          buildInfoButton(context, () => showInfoDialogWorkoutSetup(context)),
+          buildInfoButton('Workout Setup Info', context,
+              () => showInfoDialogWorkoutSetup(context)),
           IconButton(
               onPressed: () async {
                 if (currentWorkout != null &&

@@ -3,15 +3,14 @@ import 'user_service.dart';
 
 final userService = UserService();
 
-Widget buildInfoButton(BuildContext context, VoidCallback onPressed) {
+Widget buildInfoButton(
+    String tooltip, BuildContext context, VoidCallback onPressed) {
   return IconButton(
     icon: const Icon(Icons.info_outline),
-    tooltip: 'About Gymli',
+    tooltip: tooltip,
     onPressed: onPressed,
   );
 }
-
-// ...existing code...
 
 void showInfoDialogCalorieBalance(BuildContext context) {
   showDialog(
@@ -99,8 +98,6 @@ void showInfoDialogCalorieBalance(BuildContext context) {
     },
   );
 }
-
-// ...existing code...
 
 void showInfoDialogStatistics(BuildContext context) {
   showDialog(

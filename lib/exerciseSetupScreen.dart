@@ -214,7 +214,8 @@ class _ExerciseSetupScreenState extends State<ExerciseSetupScreen> {
         ),
         title: const Text("Exercise Setup"),
         actions: [
-          buildInfoButton(context, () => showInfoDialogExerciseSetup(context)),
+          buildInfoButton('Exercise Setup Info', context,
+              () => showInfoDialogExerciseSetup(context)),
           IconButton(
               onPressed: () async {
                 if (currentExercise != null && currentExercise!.id != null) {

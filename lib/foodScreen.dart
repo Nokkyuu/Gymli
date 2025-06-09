@@ -335,7 +335,8 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
       appBar: AppBar(
         title: const Text('Food Tracker'),
         actions: [
-          buildInfoButton(context, () => showInfoDialogFoodSetup(context)),
+          buildInfoButton('Food Screen info', context,
+              () => showInfoDialogFoodSetup(context)),
         ],
         bottom: TabBar(
           controller: _tabController,
