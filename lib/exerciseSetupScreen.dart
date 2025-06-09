@@ -26,6 +26,7 @@ import 'globals.dart' as globals;
 import 'user_service.dart';
 import 'api_models.dart';
 import 'responsive_helper.dart';
+import 'info.dart';
 
 enum ExerciseDevice { free, machine, cable, body }
 
@@ -213,6 +214,7 @@ class _ExerciseSetupScreenState extends State<ExerciseSetupScreen> {
         ),
         title: const Text("Exercise Setup"),
         actions: [
+          buildInfoButton(context, () => showInfoDialogExerciseSetup(context)),
           IconButton(
               onPressed: () async {
                 if (currentExercise != null && currentExercise!.id != null) {

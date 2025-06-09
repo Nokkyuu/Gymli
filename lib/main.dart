@@ -14,7 +14,9 @@ import 'package:auth0_flutter/auth0_flutter_web.dart';
 import 'themeColors.dart';
 import 'user_service.dart';
 import 'config/api_config.dart';
+import 'info.dart';
 
+final userService = UserService();
 bool state = false;
 
 void get_exercise_list() async {
@@ -305,6 +307,9 @@ class _MainAppState extends State<MainApp> {
                   const Text('Gymli', textAlign: TextAlign.center),
                 ],
               ),
+              actions: [
+                buildInfoButton(context, () => showInfoDialogMain(context)),
+              ],
               centerTitle: true,
             ),
             body: landingScreen,
@@ -486,3 +491,11 @@ class _MainAppState extends State<MainApp> {
     );
   }
 }
+
+// Widget _buildInfoButton(context) {
+//   return IconButton(
+//     icon: const Icon(Icons.info_outline),
+//     tooltip: 'About Gymli',
+//     onPressed: () => showInfoDialogMain(context),
+//   );
+// }

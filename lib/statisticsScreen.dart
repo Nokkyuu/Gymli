@@ -22,6 +22,7 @@ library;
 
 // ignore_for_file: file_names
 
+import 'package:Gymli/info.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:time_machine/time_machine.dart';
@@ -38,6 +39,7 @@ import 'screens/statistics/services/statistics_calculation_service.dart';
 import 'screens/statistics/services/statistics_coordinator.dart';
 import 'screens/statistics/widgets/food.dart';
 import 'screens/statistics/widgets/calorie_balance.dart';
+import 'info.dart';
 
 class StatisticsScreen extends StatefulWidget {
   const StatisticsScreen({super.key});
@@ -537,16 +539,18 @@ class _StatisticsScreen extends State<StatisticsScreen> {
     if (isLoading) {
       return Scaffold(
         appBar: AppBar(
-          leading: InkWell(
-            onTap: () {
-              Navigator.pop(context);
-            },
-            child: const Icon(
-              Icons.arrow_back_ios,
+            leading: InkWell(
+              onTap: () {
+                Navigator.pop(context);
+              },
+              child: const Icon(
+                Icons.arrow_back_ios,
+              ),
             ),
-          ),
-          title: const Text("Statistics"),
-        ),
+            title: const Text("Statistics"),
+            actions: [
+              buildInfoButton(context, () => showInfoDialogStatistics(context)),
+            ]),
         body: const Center(
           child: CircularProgressIndicator(),
         ),
@@ -555,16 +559,18 @@ class _StatisticsScreen extends State<StatisticsScreen> {
 
     return Scaffold(
         appBar: AppBar(
-          leading: InkWell(
-            onTap: () {
-              Navigator.pop(context);
-            },
-            child: const Icon(
-              Icons.arrow_back_ios,
+            leading: InkWell(
+              onTap: () {
+                Navigator.pop(context);
+              },
+              child: const Icon(
+                Icons.arrow_back_ios,
+              ),
             ),
-          ),
-          title: const Text("Statistics"),
-        ),
+            title: const Text("Statistics"),
+            actions: [
+              buildInfoButton(context, () => showInfoDialogStatistics(context)),
+            ]),
         body: ResponsiveHelper.isMobile(context)
             ? MobileStatisticsLayout(context)
             : DesktopStatisticsLayout(context));

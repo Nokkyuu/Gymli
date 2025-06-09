@@ -24,6 +24,7 @@ import 'package:intl/intl.dart';
 import 'user_service.dart';
 import 'api_models.dart';
 import 'responsive_helper.dart';
+import 'info.dart';
 
 class FoodScreen extends StatefulWidget {
   const FoodScreen({super.key});
@@ -333,6 +334,9 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Food Tracker'),
+        actions: [
+          buildInfoButton(context, () => showInfoDialogFoodSetup(context)),
+        ],
         bottom: TabBar(
           controller: _tabController,
           tabs: tabs,

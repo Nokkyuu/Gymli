@@ -3,6 +3,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../user_service.dart';
+import '../../../info.dart';
 
 class CalorieBalanceScreen extends StatefulWidget {
   final String? startingDate;
@@ -321,6 +322,7 @@ class _CalorieBalanceScreenState extends State<CalorieBalanceScreen> {
         title: const Text('Calorie Balance'),
         automaticallyImplyLeading: false,
         actions: [
+          buildInfoButton(context, () => showInfoDialogCalorieBalance(context)),
           IconButton(
             icon: const Icon(Icons.settings),
             onPressed: () {

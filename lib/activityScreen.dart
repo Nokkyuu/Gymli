@@ -24,6 +24,7 @@ import 'package:intl/intl.dart';
 import 'user_service.dart';
 import 'api_models.dart';
 import 'responsive_helper.dart';
+import 'info.dart';
 
 class ActivityScreen extends StatefulWidget {
   const ActivityScreen({super.key});
@@ -284,6 +285,9 @@ class _ActivityScreenState extends State<ActivityScreen>
     return Scaffold(
       appBar: AppBar(
         title: const Text('Activity Tracker'),
+        actions: [
+          buildInfoButton(context, () => showInfoDialogActivitySetup(context)),
+        ],
         bottom: TabBar(
           controller: _tabController,
           tabs: tabs,

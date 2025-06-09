@@ -36,6 +36,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'dart:convert'; // Add this import for utf8
 import 'package:flutter/foundation.dart'; // Add this import for kIsWeb
 import 'dart:math' as Math;
+import 'info.dart';
 
 enum DisplayMode { light, dark }
 
@@ -1585,6 +1586,9 @@ class _SettingsScreen extends State<SettingsScreen> {
           ),
         ),
         title: const Text("Settings"),
+        actions: [
+          buildInfoButton(context, () => showInfoDialogSettingsSetup(context)),
+        ],
       ),
       body: Column(
           mainAxisAlignment: MainAxisAlignment.center,

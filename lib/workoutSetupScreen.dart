@@ -26,6 +26,7 @@ import 'package:numberpicker/numberpicker.dart';
 import 'package:Gymli/api_models.dart';
 import 'package:Gymli/user_service.dart';
 import 'responsive_helper.dart';
+import 'info.dart';
 
 // enum ExerciseList {
 //   Benchpress('Benchpress', 2, 3, 1),
@@ -189,6 +190,7 @@ class _WorkoutSetupScreenState extends State<WorkoutSetupScreen> {
         title: const Text(title),
         centerTitle: true,
         actions: [
+          buildInfoButton(context, () => showInfoDialogWorkoutSetup(context)),
           IconButton(
               onPressed: () async {
                 if (currentWorkout != null &&
