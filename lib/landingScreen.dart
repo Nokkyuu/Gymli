@@ -124,8 +124,7 @@ class _LandingScreenState extends State<LandingScreen> {
     for (int i = 0; i < metainfo.length; i++) {
       if (metainfo[i].isEmpty) {
         final ex = filteredExercises[i];
-        metainfo[i] =
-            '${ex.defaultRepBase}-${ex.defaultRepMax} Reps @ ${ex.defaultIncrement}kg';
+        metainfo[i] = '${ex.defaultRepBase}-${ex.defaultRepMax} Reps';
       }
     }
 
@@ -153,27 +152,30 @@ class _LandingScreenState extends State<LandingScreen> {
 
       // Build metainfo for each exercise
       for (var ex in filteredExercises) {
-        final lastTraining = lastTrainingDays[ex.name] ?? DateTime.now();
+        final lastTraining =
+            lastTrainingDays[ex.name]!['lastTrainingDate'] ?? DateTime.now();
+        final lastTrainingWeight =
+            lastTrainingDays[ex.name]!['highestWeight'] ?? 0.0;
         final dayDiff = DateTime.now().difference(lastTraining).inDays;
-        String dayInfo = dayDiff > 0 ? "$dayDiff days ago" : "today";
+        String dayInfo = dayDiff > 0 ? " - $dayDiff days ago" : "";
+        String weightInfo =
+            lastTrainingWeight > 0 ? " @ $lastTrainingWeight kg" : "";
         metainfo.add(
-            '${ex.defaultRepBase}-${ex.defaultRepMax} Reps @ ${ex.defaultIncrement}kg - $dayInfo');
+            '${ex.defaultRepBase}-${ex.defaultRepMax} Reps$weightInfo$dayInfo');
       }
     } catch (e) {
       print('Error in showAllExercises: $e');
       // Fallback metainfo without training dates - ensure same length as filteredExercises
       metainfo.clear();
       for (var ex in filteredExercises) {
-        metainfo.add(
-            '${ex.defaultRepBase}-${ex.defaultRepMax} Reps @ ${ex.defaultIncrement}kg');
+        metainfo.add('${ex.defaultRepBase}-${ex.defaultRepMax} Reps');
       }
     }
 
     // Ensure metainfo and filteredExercises are the same length
     while (metainfo.length < filteredExercises.length) {
       final ex = filteredExercises[metainfo.length];
-      metainfo.add(
-          '${ex.defaultRepBase}-${ex.defaultRepMax} Reps @ ${ex.defaultIncrement}kg');
+      metainfo.add('${ex.defaultRepBase}-${ex.defaultRepMax} Reps');
     }
 
     filterApplied.value = !filterApplied.value;
@@ -209,7 +211,8 @@ class _LandingScreenState extends State<LandingScreen> {
 
       // Build metainfo for each exercise (same format as showAllExercises)
       for (var ex in filteredExercises) {
-        final lastTraining = lastTrainingDays[ex.name] ?? DateTime.now();
+        final lastTraining =
+            lastTrainingDays[ex.name]!['lastTrainingDate'] ?? DateTime.now();
         final dayDiff = DateTime.now().difference(lastTraining).inDays;
         String dayInfo = dayDiff > 0 ? "$dayDiff days ago" : "today";
         metainfo.add(
@@ -583,7 +586,7 @@ class _LandingScreenState extends State<LandingScreen> {
     final currentData = items[index];
     final meta = index < metainfo.length
         ? metainfo[index]
-        : '${currentData.defaultRepBase}-${currentData.defaultRepMax} Reps @ ${currentData.defaultIncrement}kg';
+        : '${currentData.defaultRepBase}-${currentData.defaultRepMax} Reps';
     String description = "";
     if (meta.split(":")[0] == "Warm") {
       description = meta;

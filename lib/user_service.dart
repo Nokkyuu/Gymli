@@ -606,34 +606,65 @@ class UserService {
     }
   }
 
-  /// Optimized batch function to get last training days for multiple exercises
+  /// Optimized batch function to get last training days and highest weights for multiple exercises
   /// This replaces the functionality from database.dart for better integration
-  Future<Map<String, DateTime>> getLastTrainingDaysForExercises(
+  Future<Map<String, Map<String, dynamic>>> getLastTrainingDaysForExercises(
       List<String> exerciseNames) async {
     try {
-      // Use the existing optimized method that gets all last training dates at once
-      final allLastDates = await getLastTrainingDatesPerExercise();
-
-      Map<String, DateTime> result = {};
+      final trainingSets = await getTrainingSets();
+      Map<String, Map<String, dynamic>> result = {};
       final now = DateTime.now();
 
+      // Initialize result for all requested exercises
       for (String exerciseName in exerciseNames) {
-        // Check if we have a last training date for this exercise
-        if (allLastDates.containsKey(exerciseName)) {
-          result[exerciseName] = allLastDates[exerciseName]!;
-        } else {
-          // Fallback to current date if no training data exists
-          result[exerciseName] = now;
+        result[exerciseName] = {
+          'lastTrainingDate': now,
+          'highestWeight': 0.0,
+        };
+      }
+
+      // Process training sets to find last date and highest weight for each exercise
+      for (var trainingSet in trainingSets) {
+        final exerciseName = trainingSet['exercise_name'] as String?;
+        final dateString = trainingSet['date'] as String?;
+        final setType = trainingSet['set_type'] as int? ?? 0;
+        final weight = (trainingSet['weight'] as num?)?.toDouble() ?? 0.0;
+
+        // Only count actual work sets (set_type > 0), skip warmups
+        if (exerciseName != null &&
+            dateString != null &&
+            setType > 0 &&
+            exerciseNames.contains(exerciseName)) {
+          try {
+            final trainingDate = DateTime.parse(dateString);
+
+            // Update if this is the first date for this exercise or if it's more recent
+            if (trainingDate
+                    .isAfter(result[exerciseName]!['lastTrainingDate']) ||
+                result[exerciseName]!['lastTrainingDate'] == now) {
+              result[exerciseName]!['lastTrainingDate'] = trainingDate;
+            }
+
+            // Update highest weight if this is higher
+            if (weight > result[exerciseName]!['highestWeight']) {
+              result[exerciseName]!['highestWeight'] = weight;
+            }
+          } catch (e) {
+            print('Error parsing date for exercise $exerciseName: $e');
+          }
         }
       }
 
       return result;
     } catch (e) {
-      print('Error getting last training days for exercises: $e');
-      // Return fallback dates for all exercises
-      Map<String, DateTime> fallback = {};
+      print('Error getting last training days and weights for exercises: $e');
+      // Return fallback data for all exercises
+      Map<String, Map<String, dynamic>> fallback = {};
       for (String exerciseName in exerciseNames) {
-        fallback[exerciseName] = DateTime.now();
+        fallback[exerciseName] = {
+          'lastTrainingDate': DateTime.now(),
+          'highestWeight': 0.0,
+        };
       }
       return fallback;
     }
