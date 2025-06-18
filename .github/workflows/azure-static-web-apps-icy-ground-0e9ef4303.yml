@@ -43,6 +43,12 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-pub-
 
+    - name: Replace build timestamp
+      run: |
+        BUILD_TIMESTAMP=$(date +%s)
+        sed -i "s/{{BUILD_TIMESTAMP}}/$BUILD_TIMESTAMP/g" web/index.html
+        echo "Build timestamp: $BUILD_TIMESTAMP"
+
     - name: Build Flutter Web
       run:  flutter build web --dart-define=GYMLI_API_KEY=${{ secrets.GYMLI_API_KEY }}
 
