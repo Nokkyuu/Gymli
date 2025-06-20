@@ -1590,7 +1590,7 @@ class _StatisticsScreen extends State<StatisticsScreen> {
                         lineBarsData: _exerciseGraphData,
                         lineTouchData: LineTouchData(
                           touchTooltipData: LineTouchTooltipData(
-                            tooltipRoundedRadius: 0.0,
+                            //tooltipRoundedRadius: 0.0,
                             showOnTopOfTheChartBoxArea: false,
                             fitInsideVertically: true,
                             tooltipMargin: 0,

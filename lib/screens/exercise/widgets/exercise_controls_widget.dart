@@ -25,7 +25,7 @@ class _ExerciseControlsWidgetState extends State<ExerciseControlsWidget> {
   late TextEditingController _weightController;
   late TextEditingController _repsController;
   late FixedExtentScrollController _repsWheelController;
-  late TextEditingController _dateInputController;
+  //late TextEditingController _dateInputController;
 
   // Focus tracking to prevent overwriting during user input
   late FocusNode _weightFocusNode;
@@ -57,9 +57,9 @@ class _ExerciseControlsWidgetState extends State<ExerciseControlsWidget> {
     // Initialize with safe default value (index 9 = 10 reps)
     _repsWheelController = FixedExtentScrollController(initialItem: 9);
 
-    _dateInputController = TextEditingController(
-      text: DateTime.now().toIso8601String(),
-    );
+    // _dateInputController = TextEditingController(
+    //   text: DateTime.now().toIso8601String(),
+    // );
 
     // Listen to controller changes
     widget.controller.addListener(_updateControllersFromState);
@@ -76,7 +76,7 @@ class _ExerciseControlsWidgetState extends State<ExerciseControlsWidget> {
     _weightController.dispose();
     _repsController.dispose();
     _repsWheelController.dispose();
-    _dateInputController.dispose();
+    // _dateInputController.dispose();
     _weightFocusNode.dispose();
     _repsFocusNode.dispose();
     super.dispose();
@@ -404,13 +404,14 @@ class _ExerciseControlsWidgetState extends State<ExerciseControlsWidget> {
 
   Future<void> _handleSubmit() async {
     if (widget.controller.currentExercise == null) return;
+    final currentTimestamp = DateTime.now().toIso8601String();
 
     final success = await widget.controller.addTrainingSet(
       widget.controller.currentExercise!.name,
       widget.controller.weightAsDouble,
       widget.controller.repetitions,
       widget.controller.selectedType.first.index,
-      _dateInputController.text,
+      currentTimestamp,
     );
 
     if (success && mounted) {

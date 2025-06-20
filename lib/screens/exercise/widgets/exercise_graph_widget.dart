@@ -65,7 +65,7 @@ class ExerciseGraphWidget extends StatelessWidget {
               lineBarsData: barData,
               lineTouchData: LineTouchData(
                 touchTooltipData: LineTouchTooltipData(
-                  tooltipRoundedRadius: 0.0,
+                  //tooltipRoundedRadius: 0.0,
                   showOnTopOfTheChartBoxArea: false,
                   fitInsideVertically: true,
                   tooltipMargin: 0,

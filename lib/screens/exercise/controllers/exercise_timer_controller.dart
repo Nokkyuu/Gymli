@@ -1,12 +1,16 @@
 import 'dart:async';
+//import 'dart:js_interop';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+//import 'package:flutter/services.dart';
 import '../../../globals.dart' as globals;
+import 'package:web/web.dart' as html;
+import 'package:js/js_util.dart' as js_util;
 
 /// Controller for managing timer functionality and idle notifications
 class ExerciseTimerController extends ChangeNotifier {
   Timer? _timer;
-  DateTime _lastActivity = DateTime.now();
+  DateTime _lastActivity = DateTime
+      .now(); // TODO: change to a function getting the true last activity for the day?
   DateTime _workoutStartTime = DateTime.now();
   String _timerText = "";
 
@@ -61,13 +65,11 @@ class ExerciseTimerController extends ChangeNotifier {
 
   /// Send haptic feedback for idle notification
   void _notifyIdle() {
-    int numberOfNotifies = 3;
-    Timer.periodic(const Duration(milliseconds: 1000), (timer) {
-      HapticFeedback.vibrate();
-      if (--numberOfNotifies == 0) {
-        timer.cancel();
-      }
-    });
+    // if (html.window.navigator.vibrate != null) {
+    // Vibrate pattern: 500ms on, 500ms off, repeat 3 times
+    final pattern = js_util.jsify([500, 500, 500, 500, 500]);
+    html.window.navigator.vibrate(pattern);
+    // }
   }
 
   /// Dispose the timer
