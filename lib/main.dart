@@ -276,7 +276,7 @@ class _MainAppState extends State<MainApp> {
 
     return MaterialApp(
       theme: themeData,
-      title: 'Navigation Basics',
+      title: 'Gymli Gainson',
       home: Builder(
         builder: (context) {
           isDarkMode = Theme.of(context).brightness == Brightness.dark;

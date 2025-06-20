@@ -45,18 +45,37 @@ class ExerciseGraphWidget extends StatelessWidget {
             LineChartData(
               titlesData: FlTitlesData(
                 topTitles: const AxisTitles(
-                  sideTitles: SideTitles(showTitles: false),
+                  sideTitles: SideTitles(
+                    showTitles: false,
+                  ),
                 ),
                 rightTitles: const AxisTitles(
-                  sideTitles: SideTitles(showTitles: false),
+                  sideTitles: SideTitles(
+                    showTitles: false,
+                  ),
                 ),
                 bottomTitles: AxisTitles(
                   sideTitles: SideTitles(
                     showTitles: true,
                     reservedSize: 30,
-                    interval: graphController.maxHistoryDistance > 30 ? 14 : 7,
+                    //interval: graphController.maxHistoryDistance > 30 ? 14 : 7,
                     getTitlesWidget: (double value, TitleMeta meta) {
                       return _buildDateTitle(value);
+                    },
+                  ),
+                ),
+                leftTitles: AxisTitles(
+                  sideTitles: SideTitles(
+                    showTitles: true,
+                    reservedSize: 40,
+                    maxIncluded: false,
+                    minIncluded: false,
+                    getTitlesWidget: (double value, TitleMeta meta) {
+                      if (value % 1 == 0) {
+                        return Text('${value.toInt()}',
+                            style: const TextStyle(fontSize: 10));
+                      }
+                      return const SizedBox.shrink(); // Hide non-integer labels
                     },
                   ),
                 ),
