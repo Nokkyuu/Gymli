@@ -61,17 +61,23 @@ class ExerciseTimerController extends ChangeNotifier {
     _timerText = "Idle: $durationString";
   }
 
+  /// Send haptic feedback for idle notification
   /// Send browser notification for idle notification (Web only)
   void _notifyIdle() {
+    // Debug: Log the current permission status
+    print('Notification permission: ${html.Notification.permission}');
+
     // Check if Notification API is available
     if (html.Notification.permission == 'granted') {
+      print('Creating notification...');
       try {
         final notification = html.Notification(
           'Idle Alert',
           html.NotificationOptions(
             body: 'You have been idle for 90 seconds!',
-            icon: '/favicon.ico', // Optional: add an icon
-            tag: 'idle-alert', // Prevents duplicate notifications
+            //icon: '/favicon.ico', // Optional: add an icon
+            //tag: 'idle-alert', // Prevents duplicate notifications
+            tag: 'idle-alert-${DateTime.now().millisecondsSinceEpoch}',
             requireInteraction:
                 true, // Keeps notification visible until user interacts
           ),
@@ -79,12 +85,24 @@ class ExerciseTimerController extends ChangeNotifier {
 
         // Add event handlers to debug
         notification.onclick = (html.Event event) {
+          print('Notification clicked');
           notification.close();
         }.toJS;
+
+        notification.onshow = (html.Event event) {
+          print('Notification shown successfully');
+        }.toJS;
+
+        notification.onerror = (html.Event event) {
+          print('Notification error occurred');
+        }.toJS;
+
+        print('Notification object created: $notification');
       } catch (e) {
         print('Error creating notification: $e');
       }
     } else if (html.Notification.permission == 'default') {
+      print('Requesting permission...');
       html.Notification.requestPermission().toDart.then((permission) {
         print('Permission granted: $permission');
         if (permission == 'granted') {
