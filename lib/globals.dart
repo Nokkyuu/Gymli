@@ -15,7 +15,7 @@ library my_prj.globals;
 import 'package:Gymli/api_models.dart';
 
 // User preference settings
-int idleTimerWakeup = 10; // Idle timer wakeup time in seconds
+int idleTimerWakeup = 90; // Idle timer wakeup time in seconds
 int graphNumberOfDays = 300; // Number of days to show in statistics graphs
 bool detailedGraph = false; // Whether to show detailed graph view
 
