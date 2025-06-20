@@ -61,22 +61,38 @@ class ExerciseTimerController extends ChangeNotifier {
     _timerText = "Idle: $durationString";
   }
 
-  /// Send haptic feedback for idle notification
   /// Send browser notification for idle notification (Web only)
   void _notifyIdle() {
     // Check if Notification API is available
     if (html.Notification.permission == 'granted') {
-      html.Notification('Idle Alert',
-          html.NotificationOptions(body: 'You have been idle for 90 seconds!'));
-    } else if (html.Notification.permission != 'denied') {
+      try {
+        final notification = html.Notification(
+          'Idle Alert',
+          html.NotificationOptions(
+            body: 'You have been idle for 90 seconds!',
+            icon: '/favicon.ico', // Optional: add an icon
+            tag: 'idle-alert', // Prevents duplicate notifications
+            requireInteraction:
+                true, // Keeps notification visible until user interacts
+          ),
+        );
+
+        // Add event handlers to debug
+        notification.onclick = (html.Event event) {
+          notification.close();
+        }.toJS;
+      } catch (e) {
+        print('Error creating notification: $e');
+      }
+    } else if (html.Notification.permission == 'default') {
       html.Notification.requestPermission().toDart.then((permission) {
+        print('Permission granted: $permission');
         if (permission == 'granted') {
-          html.Notification(
-              'Idle Alert',
-              html.NotificationOptions(
-                  body: 'You have been idle for 90 seconds!'));
+          _notifyIdle(); // Recursively call to create notification
         }
       });
+    } else {
+      print('Notification permission denied or unsupported');
     }
   }
 
