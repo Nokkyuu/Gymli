@@ -22,7 +22,7 @@ class ExerciseGraphWidget extends StatelessWidget {
         return Column(
           children: [
             _buildGraphSection(context),
-            _buildGraphLegend(),
+            //_buildGraphLegend(),
           ],
         );
       },
@@ -35,7 +35,7 @@ class ExerciseGraphWidget extends StatelessWidget {
     return SizedBox(
       width: MediaQuery.of(context).size.width,
       height: ResponsiveHelper.isWebMobile(context)
-          ? MediaQuery.of(context).size.height * 0.20
+          ? MediaQuery.of(context).size.height * 0.25
           : MediaQuery.of(context).size.height * 0.50,
       child: Padding(
         padding: const EdgeInsets.all(10.0),
@@ -68,8 +68,8 @@ class ExerciseGraphWidget extends StatelessWidget {
                   sideTitles: SideTitles(
                     showTitles: true,
                     reservedSize: 40,
-                    maxIncluded: false,
-                    minIncluded: false,
+                    maxIncluded: true,
+                    minIncluded: true,
                     getTitlesWidget: (double value, TitleMeta meta) {
                       if (value % 1 == 0) {
                         return Text('${value.toInt()}',
@@ -82,31 +82,40 @@ class ExerciseGraphWidget extends StatelessWidget {
               ),
               clipData: const FlClipData.all(),
               lineBarsData: barData,
+              betweenBarsData: [
+                if (barData.length > 1)
+                  BetweenBarsData(
+                    fromIndex: 0, // best line
+                    toIndex: 1, // lowest line
+                    color: Colors.blue.withOpacity(0.15), // fixed area color
+                  ),
+              ],
               lineTouchData: LineTouchData(
                 touchTooltipData: LineTouchTooltipData(
                   //tooltipRoundedRadius: 0.0,
                   showOnTopOfTheChartBoxArea: false,
                   fitInsideVertically: true,
                   tooltipMargin: 0,
-                  getTooltipItems: (value) {
-                    return value
-                        .map((e) {
-                          final tooltip =
-                              graphController.graphToolTip[e.x.toInt()];
-                          if (tooltip != null && e.barIndex < tooltip.length) {
-                            return LineTooltipItem(
-                              tooltip[e.barIndex],
-                              const TextStyle(
-                                fontSize: 10,
-                                color: Colors.white,
-                              ),
-                            );
-                          }
-                          return null;
-                        })
-                        .where((item) => item != null)
-                        .cast<LineTooltipItem>()
-                        .toList();
+                  getTooltipItems: (touchedSpots) {
+                    return touchedSpots.map((touchedSpot) {
+                      // Only show tooltip for the best line (index 0), not the faint lowest line
+                      if (touchedSpot.barIndex == 0) {
+                        final x = touchedSpot.x.toInt();
+                        final tooltipText =
+                            graphController.graphToolTip[x]?.first ?? '';
+                        return LineTooltipItem(
+                          tooltipText,
+                          const TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        );
+                      } else {
+                        // Return null for the lowest line (index 1) - no tooltip
+                        return null;
+                      }
+                    }).toList();
                   },
                 ),
               ),

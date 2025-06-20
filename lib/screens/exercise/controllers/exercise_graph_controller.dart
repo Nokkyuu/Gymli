@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 /// Controller for managing exercise graph data and calculations
 class ExerciseGraphController extends ChangeNotifier {
   static const List<Color> graphColors = [
-    Color.fromARGB(255, 0, 109, 44),
+    Color.fromARGB(217, 33, 149, 243),
     Color.fromARGB(255, 44, 162, 95),
     Color.fromARGB(255, 102, 194, 164),
     Color.fromARGB(255, 153, 216, 201),
@@ -59,7 +59,8 @@ class ExerciseGraphController extends ChangeNotifier {
     final graphData = _processGraphData(dataByDate, detailedGraph);
 
     _updateGraphRanges(dataByDate);
-    _updateGraphPoints(graphData, detailedGraph);
+    _updateGraphPoints(
+        graphData, dataByDate, detailedGraph); // Pass dataByDate too
 
     notifyListeners();
   }
@@ -104,12 +105,89 @@ class ExerciseGraphController extends ChangeNotifier {
     }
   }
 
+  /// Update graph points from processed data
+  void _updateGraphPoints(Map<String, ApiTrainingSet> graphData,
+      Map<String, List<ApiTrainingSet>> dataByDate, bool detailedGraph) {
+    if (graphData.isEmpty || _mostRecentTrainingDate == null) return;
+
+    final List<FlSpot> bestPoints = [];
+    final List<FlSpot> secondBestPoints = [];
+    final Map<double, String> tooltipData = {};
+
+    final sortedDates = graphData.keys.toList()..sort();
+
+    for (String dateKey in sortedDates) {
+      final date = DateTime.parse(dateKey);
+      final setsForDay = dataByDate[dateKey] ?? [];
+      if (setsForDay.isEmpty) continue;
+
+      // Sort sets by score descending
+      final sortedSets = List<ApiTrainingSet>.from(setsForDay)
+        ..sort((a, b) =>
+            globals.calculateScore(b).compareTo(globals.calculateScore(a)));
+
+      final bestSet = sortedSets[0];
+      final secondBestSet =
+          sortedSets.length > 1 ? sortedSets[1] : sortedSets[0];
+
+      // Calculate x-coordinate as days from latest date (negative values)
+      double xValue =
+          -_mostRecentTrainingDate!.difference(date).inDays.toDouble();
+      double yBest = globals.calculateScore(bestSet);
+      double ySecondBest = globals.calculateScore(secondBestSet);
+
+      bestPoints.add(FlSpot(xValue, yBest));
+      secondBestPoints.add(FlSpot(xValue, ySecondBest));
+      tooltipData[xValue] =
+          "${bestSet.weight}kg @ ${bestSet.repetitions}reps ($dateKey)";
+    }
+
+    // Add points to training graph
+    if (bestPoints.isNotEmpty) {
+      _trainingGraphs[0].addAll(bestPoints);
+      for (var entry in tooltipData.entries) {
+        _graphToolTip[entry.key.toInt()] = [entry.value];
+      }
+    }
+    if (secondBestPoints.isNotEmpty) {
+      _trainingGraphs[1].addAll(secondBestPoints);
+    }
+
+    _updateMinMaxScores();
+  }
+
   /// Generate line chart bar data for FL Chart
   List<LineChartBarData> generateLineChartBarData(List<String> groupExercises) {
     final barData = <LineChartBarData>[];
 
-    // Create line chart bars from training graph data
-    for (int i = 0; i < _trainingGraphs.length; i++) {
+    // Best line (index 0)
+    if (_trainingGraphs[0].isNotEmpty) {
+      barData.add(LineChartBarData(
+        spots: _trainingGraphs[0],
+        isCurved: false,
+        color: graphColors[0],
+        barWidth: 2,
+        isStrokeCapRound: true,
+        belowBarData: BarAreaData(show: false),
+        dotData: const FlDotData(show: true),
+      ));
+    }
+
+    // Lowest line (index 1) - faint
+    if (_trainingGraphs.length > 1 && _trainingGraphs[1].isNotEmpty) {
+      barData.add(LineChartBarData(
+        spots: _trainingGraphs[1],
+        isCurved: false,
+        color: Colors.black.withOpacity(0.1), // faint color
+        barWidth: 1,
+        isStrokeCapRound: false,
+        belowBarData: BarAreaData(show: false),
+        dotData: const FlDotData(show: false),
+      ));
+    }
+
+    // Add remaining training graphs (indices 2 and 3)
+    for (int i = 2; i < _trainingGraphs.length; i++) {
       if (_trainingGraphs[i].isNotEmpty) {
         barData.add(LineChartBarData(
           spots: _trainingGraphs[i],
@@ -231,43 +309,6 @@ class ExerciseGraphController extends ChangeNotifier {
         max(2.0, latestDate.difference(startDate).inDays.toDouble());
   }
 
-  /// Update graph points from processed data
-  void _updateGraphPoints(
-      Map<String, ApiTrainingSet> graphData, bool detailedGraph) {
-    if (graphData.isEmpty || _mostRecentTrainingDate == null) return;
-
-    final List<FlSpot> graphPoints = [];
-    final Map<double, String> tooltipData = {};
-
-    final sortedDates = graphData.keys.toList()..sort();
-
-    for (String dateKey in sortedDates) {
-      final date = DateTime.parse(dateKey);
-      final bestSet = graphData[dateKey]!;
-
-      // Calculate x-coordinate as days from latest date (negative values)
-      double xValue =
-          -_mostRecentTrainingDate!.difference(date).inDays.toDouble();
-      double yValue = globals.calculateScore(bestSet);
-
-      graphPoints.add(FlSpot(xValue, yValue));
-      tooltipData[xValue] =
-          "${bestSet.weight}kg @ ${bestSet.repetitions}reps ($dateKey)";
-    }
-
-    // Add points to training graph
-    if (graphPoints.isNotEmpty) {
-      _trainingGraphs[0].addAll(graphPoints);
-
-      // Update tooltip data
-      for (var entry in tooltipData.entries) {
-        _graphToolTip[entry.key.toInt()] = [entry.value];
-      }
-    }
-
-    _updateMinMaxScores();
-  }
-
   /// Update min/max scores for proper graph scaling
   void _updateMinMaxScores() {
     double newMinScore = 1e6;
@@ -287,6 +328,12 @@ class ExerciseGraphController extends ChangeNotifier {
         newMaxScore = max(newMaxScore, spot.y);
       }
     }
+
+    // Round min down and max up to the next integer
+    newMinScore =
+        newMinScore.isFinite ? newMinScore.floorToDouble() : newMinScore;
+    newMaxScore =
+        newMaxScore.isFinite ? newMaxScore.ceilToDouble() : newMaxScore;
 
     // Set reasonable defaults if no data
     if (_trainingGraphs.every((graph) => graph.isEmpty) &&

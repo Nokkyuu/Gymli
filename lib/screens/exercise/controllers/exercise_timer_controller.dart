@@ -67,51 +67,51 @@ class ExerciseTimerController extends ChangeNotifier {
     // Debug: Log the current permission status
     print('Notification permission: ${html.Notification.permission}');
 
-    // Check if Notification API is available
-    if (html.Notification.permission == 'granted') {
-      print('Creating notification...');
-      try {
-        final notification = html.Notification(
-          'Idle Alert',
-          html.NotificationOptions(
-            body: 'You have been idle for 90 seconds!',
-            //icon: '/favicon.ico', // Optional: add an icon
-            //tag: 'idle-alert', // Prevents duplicate notifications
-            tag: 'idle-alert-${DateTime.now().millisecondsSinceEpoch}',
-            requireInteraction:
-                true, // Keeps notification visible until user interacts
-          ),
-        );
+    // // Check if Notification API is available
+    // if (html.Notification.permission == 'granted') {
+    //   print('Creating notification...');
+    //   try {
+    //     final notification = html.Notification(
+    //       'Idle Alert',
+    //       html.NotificationOptions(
+    //         body: 'You have been idle for 90 seconds!',
+    //         //icon: '/favicon.ico', // Optional: add an icon
+    //         //tag: 'idle-alert', // Prevents duplicate notifications
+    //         tag: 'idle-alert-${DateTime.now().millisecondsSinceEpoch}',
+    //         requireInteraction:
+    //             true, // Keeps notification visible until user interacts
+    //       ),
+    //     );
 
-        // Add event handlers to debug
-        notification.onclick = (html.Event event) {
-          print('Notification clicked');
-          notification.close();
-        }.toJS;
+    //     // Add event handlers to debug
+    //     notification.onclick = (html.Event event) {
+    //       print('Notification clicked');
+    //       notification.close();
+    //     }.toJS;
 
-        notification.onshow = (html.Event event) {
-          print('Notification shown successfully');
-        }.toJS;
+    //     notification.onshow = (html.Event event) {
+    //       print('Notification shown successfully');
+    //     }.toJS;
 
-        notification.onerror = (html.Event event) {
-          print('Notification error occurred');
-        }.toJS;
+    //     notification.onerror = (html.Event event) {
+    //       print('Notification error occurred');
+    //     }.toJS;
 
-        print('Notification object created: $notification');
-      } catch (e) {
-        print('Error creating notification: $e');
-      }
-    } else if (html.Notification.permission == 'default') {
-      print('Requesting permission...');
-      html.Notification.requestPermission().toDart.then((permission) {
-        print('Permission granted: $permission');
-        if (permission == 'granted') {
-          _notifyIdle(); // Recursively call to create notification
-        }
-      });
-    } else {
-      print('Notification permission denied or unsupported');
-    }
+    //     print('Notification object created: $notification');
+    //   } catch (e) {
+    //     print('Error creating notification: $e');
+    //   }
+    // } else if (html.Notification.permission == 'default') {
+    //   print('Requesting permission...');
+    //   html.Notification.requestPermission().toDart.then((permission) {
+    //     print('Permission granted: $permission');
+    //     if (permission == 'granted') {
+    //       _notifyIdle(); // Recursively call to create notification
+    //     }
+    //   });
+    // } else {
+    //   print('Notification permission denied or unsupported');
+    // }
   }
 
   /// Dispose the timer
