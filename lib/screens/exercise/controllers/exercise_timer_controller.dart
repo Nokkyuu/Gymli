@@ -1,10 +1,8 @@
 import 'dart:async';
-//import 'dart:js_interop';
+import 'dart:js_interop';
 import 'package:flutter/material.dart';
-//import 'package:flutter/services.dart';
 import '../../../globals.dart' as globals;
 import 'package:web/web.dart' as html;
-import 'package:js/js_util.dart' as js_util;
 
 /// Controller for managing timer functionality and idle notifications
 class ExerciseTimerController extends ChangeNotifier {
@@ -64,12 +62,22 @@ class ExerciseTimerController extends ChangeNotifier {
   }
 
   /// Send haptic feedback for idle notification
+  /// Send browser notification for idle notification (Web only)
   void _notifyIdle() {
-    // if (html.window.navigator.vibrate != null) {
-    // Vibrate pattern: 500ms on, 500ms off, repeat 3 times
-    final pattern = js_util.jsify([500, 500, 500, 500, 500]);
-    html.window.navigator.vibrate(pattern);
-    // }
+    // Check if Notification API is available
+    if (html.Notification.permission == 'granted') {
+      html.Notification('Idle Alert',
+          html.NotificationOptions(body: 'You have been idle for 90 seconds!'));
+    } else if (html.Notification.permission != 'denied') {
+      html.Notification.requestPermission().toDart.then((permission) {
+        if (permission == 'granted') {
+          html.Notification(
+              'Idle Alert',
+              html.NotificationOptions(
+                  body: 'You have been idle for 90 seconds!'));
+        }
+      });
+    }
   }
 
   /// Dispose the timer
