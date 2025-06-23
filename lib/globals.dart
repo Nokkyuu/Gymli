@@ -40,13 +40,13 @@ var muscle_val = {
 
 List<String> exerciseList = [];
 
-@Deprecated('Use calculateScoreWithExercise instead of calculateScore')
-double calculateScore(ApiTrainingSet trainingSet) {
-  return trainingSet.weight +
-      ((trainingSet.repetitions - trainingSet.baseReps) /
-              (trainingSet.maxReps - trainingSet.baseReps)) *
-          trainingSet.increment;
-}
+// @Deprecated('Use calculateScoreWithExercise instead of calculateScore')
+// double calculateScore(ApiTrainingSet trainingSet) {
+//   return trainingSet.weight +
+//       ((trainingSet.repetitions - trainingSet.baseReps) /
+//               (trainingSet.maxReps - trainingSet.baseReps)) *
+//           trainingSet.increment;
+// }
 
 double calculateScoreWithExercise(
     ApiTrainingSet trainingSet, ApiExercise exercise) {
