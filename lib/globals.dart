@@ -40,11 +40,20 @@ var muscle_val = {
 
 List<String> exerciseList = [];
 
+@Deprecated('Use calculateScoreWithExercise instead of calculateScore')
 double calculateScore(ApiTrainingSet trainingSet) {
   return trainingSet.weight +
       ((trainingSet.repetitions - trainingSet.baseReps) /
               (trainingSet.maxReps - trainingSet.baseReps)) *
           trainingSet.increment;
+}
+
+double calculateScoreWithExercise(
+    ApiTrainingSet trainingSet, ApiExercise exercise) {
+  return trainingSet.weight +
+      (((trainingSet.repetitions - exercise.defaultRepBase) /
+              (exercise.defaultRepMax - exercise.defaultRepBase)) *
+          exercise.defaultIncrement);
 }
 
 List<List> muscleHistoryScore = [];

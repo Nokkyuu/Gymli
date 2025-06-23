@@ -69,6 +69,9 @@ class ExerciseController extends ChangeNotifier {
         _loadTodaysTrainingSets(exerciseName),
       ]);
 
+      // Pass exercise data to graph controller
+      _graphController.setCurrentExercise(_currentExercise);
+
       // Update workout timing
       _updateWorkoutTiming();
 

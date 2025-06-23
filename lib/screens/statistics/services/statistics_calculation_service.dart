@@ -259,6 +259,7 @@ class StatisticsCalculationService {
   ExerciseProgressData calculateExerciseProgress(
     String exerciseName,
     List<Map<String, dynamic>> exerciseTrainingSets,
+    ApiExercise? exercise, // Add exercise parameter
   ) {
     if (exerciseTrainingSets.isEmpty) {
       return ExerciseProgressData.empty();
@@ -324,7 +325,7 @@ class StatisticsCalculationService {
         );
 
         double xValue = -latestDate.difference(date).inDays.toDouble();
-        double yValue = globals.calculateScore(trainingSet);
+        double yValue = _calculateScoreForSet(trainingSet, exercise);
 
         graphPoints.add(FlSpot(xValue, yValue));
         tooltipData[xValue.toInt()] = [
@@ -368,11 +369,20 @@ class StatisticsCalculationService {
   Future<ExerciseGraphDataResult> loadExerciseGraphData({
     required String exerciseName,
     required List<Map<String, dynamic>> allTrainingSets,
+    required List<ApiExercise> exercises, // Add exercises parameter
     String? startingDate,
     String? endingDate,
     bool useDefaultFilter = true,
   }) async {
     try {
+      // Find the exercise object for this exercise name
+      ApiExercise? exercise;
+      try {
+        exercise = exercises.firstWhere((e) => e.name == exerciseName);
+      } catch (e) {
+        exercise = null;
+      }
+
       // Filter for the selected exercise (exclude warmups)
       List<Map<String, dynamic>> exerciseTrainingSets = allTrainingSets
           .where((t) => t['exercise_name'] == exerciseName && t['set_type'] > 0)
@@ -497,7 +507,7 @@ class StatisticsCalculationService {
           );
 
           double xValue = -latestDate.difference(date).inDays.toDouble();
-          double yValue = globals.calculateScore(trainingSet);
+          double yValue = _calculateScoreForSet(trainingSet, exercise);
 
           graphPoints.add(FlSpot(xValue, yValue));
           tooltipData[xValue] =
@@ -543,6 +553,17 @@ class StatisticsCalculationService {
     } catch (e) {
       print('Error loading exercise graph data: $e');
       return ExerciseGraphDataResult.empty();
+    }
+  }
+
+  /// Calculate score for a training set using the appropriate method
+  double _calculateScoreForSet(
+      ApiTrainingSet trainingSet, ApiExercise? exercise) {
+    if (exercise != null) {
+      return globals.calculateScoreWithExercise(trainingSet, exercise);
+    } else {
+      // Fallback: return 0 or use a simple calculation
+      return 0.0;
     }
   }
 

@@ -28,6 +28,8 @@ class ExerciseGraphController extends ChangeNotifier {
   double _maxHistoryDistance = 90.0;
   DateTime? _mostRecentTrainingDate;
 
+  ApiExercise? _currentExercise; // Add this field
+
   // Getters
   List<List<FlSpot>> get trainingGraphs => _trainingGraphs;
   List<List<FlSpot>> get additionalGraphs => _additionalGraphs;
@@ -36,6 +38,13 @@ class ExerciseGraphController extends ChangeNotifier {
   double get maxScore => _maxScore;
   double get maxHistoryDistance => _maxHistoryDistance;
   DateTime? get mostRecentTrainingDate => _mostRecentTrainingDate;
+  ApiExercise? get currentExercise => _currentExercise;
+
+  /// Set the current exercise - call this when exercise data is available
+  void setCurrentExercise(ApiExercise? exercise) {
+    _currentExercise = exercise;
+    // Don't notify listeners here as this is just setting up data
+  }
 
   /// Update graph data from training sets
   void updateGraphFromTrainingSets(List<ApiTrainingSet> trainingSets,
@@ -78,7 +87,7 @@ class ExerciseGraphController extends ChangeNotifier {
       // If this is today's set, update the graph
       if (dateKey == todayKey) {
         final todayIndex = _trainingGraphs[0].indexWhere((spot) => spot.x == 0);
-        final score = globals.calculateScore(newSet);
+        final score = _calculateScoreForSet(newSet); // Use helper method
 
         if (todayIndex != -1) {
           // Update existing point if this set is better
@@ -105,6 +114,16 @@ class ExerciseGraphController extends ChangeNotifier {
     }
   }
 
+  /// Calculate score for a training set using the appropriate method
+  double _calculateScoreForSet(ApiTrainingSet trainingSet) {
+    if (_currentExercise != null) {
+      return globals.calculateScoreWithExercise(trainingSet, _currentExercise!);
+    } else {
+      // Fallback shows 0
+      return 0;
+    }
+  }
+
   /// Update graph points from processed data
   void _updateGraphPoints(Map<String, ApiTrainingSet> graphData,
       Map<String, List<ApiTrainingSet>> dataByDate, bool detailedGraph) {
@@ -121,10 +140,10 @@ class ExerciseGraphController extends ChangeNotifier {
       final setsForDay = dataByDate[dateKey] ?? [];
       if (setsForDay.isEmpty) continue;
 
-      // Sort sets by score descending
+      // Sort sets by score descending using the new score calculation
       final sortedSets = List<ApiTrainingSet>.from(setsForDay)
         ..sort((a, b) =>
-            globals.calculateScore(b).compareTo(globals.calculateScore(a)));
+            _calculateScoreForSet(b).compareTo(_calculateScoreForSet(a)));
 
       final bestSet = sortedSets[0];
       final secondBestSet =
@@ -133,8 +152,8 @@ class ExerciseGraphController extends ChangeNotifier {
       // Calculate x-coordinate as days from latest date (negative values)
       double xValue =
           -_mostRecentTrainingDate!.difference(date).inDays.toDouble();
-      double yBest = globals.calculateScore(bestSet);
-      double ySecondBest = globals.calculateScore(secondBestSet);
+      double yBest = _calculateScoreForSet(bestSet);
+      double ySecondBest = _calculateScoreForSet(secondBestSet);
 
       bestPoints.add(FlSpot(xValue, yBest));
       secondBestPoints.add(FlSpot(xValue, ySecondBest));
@@ -266,14 +285,12 @@ class ExerciseGraphController extends ChangeNotifier {
     return graphData;
   }
 
-  /// Find the best training set from a list (highest weight, then most reps)
+  /// Find the best training set from a list (highest score)
   ApiTrainingSet _findBestSet(List<ApiTrainingSet> sets) {
     ApiTrainingSet bestSet = sets.first;
 
     for (var set in sets) {
-      if (set.weight > bestSet.weight ||
-          (set.weight == bestSet.weight &&
-              set.repetitions > bestSet.repetitions)) {
+      if (_calculateScoreForSet(set) > _calculateScoreForSet(bestSet)) {
         bestSet = set;
       }
     }

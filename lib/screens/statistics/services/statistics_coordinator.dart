@@ -170,9 +170,11 @@ class StatisticsCoordinator {
   }) async {
     try {
       final allTrainingSets = await _dataService.getTrainingSets();
+      final exercises = await _dataService.getExercises();
       return await _calculationService.loadExerciseGraphData(
         exerciseName: exerciseName,
         allTrainingSets: allTrainingSets,
+        exercises: exercises,
         startingDate: startingDate,
         endingDate: endingDate,
         useDefaultFilter: useDefaultFilter,
