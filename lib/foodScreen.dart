@@ -33,10 +33,15 @@ class FoodScreen extends StatefulWidget {
   State<FoodScreen> createState() => _FoodScreenState();
 }
 
+class _FoodComponent {
+  ApiFood? food;
+  double grams = 0;
+}
+
 class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
   final UserService userService = UserService();
   late TabController _tabController;
-
+  List<_FoodComponent> _foodComponents = [_FoodComponent()];
   // Data lists
   List<ApiFood> foods = [];
   List<ApiFoodLog> foodLogs = [];
@@ -387,10 +392,9 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
                             if (textEditingValue.text.isEmpty) {
                               return foods;
                             }
-                            return foods.where((ApiFood food) {
-                              return food.name.toLowerCase().contains(
-                                  textEditingValue.text.toLowerCase());
-                            });
+                            return foods.where((ApiFood food) => food.name
+                                .toLowerCase()
+                                .contains(textEditingValue.text.toLowerCase()));
                           },
                           displayStringForOption: (ApiFood food) => food.name,
                           fieldViewBuilder: (BuildContext context,
@@ -1046,8 +1050,9 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Create custom food card
+          // Neues Food aus vorhandenen erstellen
           Card(
+            //surfaceTintColor: Color.fromARGB(217, 33, 149, 243),
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -1150,6 +1155,284 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
                         padding: const EdgeInsets.symmetric(vertical: 12),
                       ),
                     ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // Create custom food card
+          Card(
+            //surfaceTintColor: Theme.of(context).colorScheme.primaryContainer,
+            //shadowColor: Colors.black,
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Create Food item from Ingredients',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 16),
+                  ListView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: _foodComponents.length,
+                    itemBuilder: (context, index) {
+                      return Row(
+                        children: [
+                          Expanded(
+                            flex: 2,
+                            child: Autocomplete<ApiFood>(
+                              optionsBuilder:
+                                  (TextEditingValue textEditingValue) {
+                                if (textEditingValue.text.isEmpty) {
+                                  return foods;
+                                }
+                                return foods.where((ApiFood food) => food.name
+                                    .toLowerCase()
+                                    .contains(
+                                        textEditingValue.text.toLowerCase()));
+                              },
+                              displayStringForOption: (ApiFood food) =>
+                                  food.name,
+                              initialValue: _foodComponents[index].food != null
+                                  ? TextEditingValue(
+                                      text: _foodComponents[index].food!.name)
+                                  : const TextEditingValue(),
+                              onSelected: (ApiFood selected) {
+                                setState(() {
+                                  _foodComponents[index].food = selected;
+                                });
+                              },
+                              fieldViewBuilder: (context, controller, focusNode,
+                                  onFieldSubmitted) {
+                                // Keep the text in sync with the selected food
+                                if (_foodComponents[index].food != null &&
+                                    controller.text !=
+                                        _foodComponents[index].food!.name) {
+                                  controller.text =
+                                      _foodComponents[index].food!.name;
+                                }
+                                return TextField(
+                                  controller: controller,
+                                  focusNode: focusNode,
+                                  decoration: const InputDecoration(
+                                    border: OutlineInputBorder(),
+                                    hintText: 'Type to search foods...',
+                                  ),
+                                );
+                              },
+                              optionsViewBuilder:
+                                  (context, onSelected, options) {
+                                return Align(
+                                  alignment: Alignment.topLeft,
+                                  child: Material(
+                                    elevation: 4.0,
+                                    child: ConstrainedBox(
+                                      constraints:
+                                          const BoxConstraints(maxHeight: 200),
+                                      child: ListView.builder(
+                                        padding: EdgeInsets.zero,
+                                        shrinkWrap: true,
+                                        itemCount: options.length,
+                                        itemBuilder: (context, optIndex) {
+                                          final ApiFood food =
+                                              options.elementAt(optIndex);
+                                          return ListTile(
+                                            title: Text(food.name),
+                                            subtitle: Text(
+                                                '${food.kcalPer100g.toInt()} kcal/100g'),
+                                            onTap: () => onSelected(food),
+                                          );
+                                        },
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Column(
+                              children: [
+                                //SizedBox(height: 4),
+                                TextField(
+                                  keyboardType: TextInputType.number,
+                                  decoration: const InputDecoration(
+                                    //labelText: 'grams',
+                                    suffixText: 'grams',
+                                    border: OutlineInputBorder(),
+                                    //contentPadding: EdgeInsets.symmetric(
+                                    //   vertical: 8, horizontal: 8),
+                                  ),
+                                  onChanged: (val) {
+                                    setState(() {
+                                      _foodComponents[index].grams =
+                                          double.tryParse(val) ?? 0;
+                                    });
+                                  },
+                                ),
+                              ],
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.delete, color: Colors.red),
+                            onPressed: () {
+                              setState(() {
+                                _foodComponents.removeAt(index);
+                              });
+                            },
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 8),
+                  TextButton.icon(
+                    onPressed: () {
+                      setState(() {
+                        _foodComponents.add(_FoodComponent());
+                      });
+                    },
+                    icon: const Icon(Icons.add),
+                    label: const Text('Add Ingredient'),
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: _foodComponents
+                                .where((c) => c.food != null && c.grams > 0)
+                                .length >=
+                            2
+                        ? () async {
+                            // Berechnung
+                            final totalGrams = _foodComponents.fold<double>(
+                                0, (sum, c) => sum + c.grams);
+                            if (totalGrams == 0) return;
+                            double kcal = 0, protein = 0, carbs = 0, fat = 0;
+                            for (final c in _foodComponents) {
+                              if (c.food != null && c.grams > 0) {
+                                final factor = c.grams / 100.0;
+                                kcal += c.food!.kcalPer100g * factor;
+                                protein += c.food!.proteinPer100g * factor;
+                                carbs += c.food!.carbsPer100g * factor;
+                                fat += c.food!.fatPer100g * factor;
+                              }
+                            }
+                            // Runtergerechnet auf 100g
+                            final kcal100 = kcal / totalGrams * 100;
+                            final protein100 = protein / totalGrams * 100;
+                            final carbs100 = carbs / totalGrams * 100;
+                            final fat100 = fat / totalGrams * 100;
+
+                            // Dialog für Name
+                            String newName = '';
+                            String newNote = '';
+
+                            final result = await showDialog(
+                              context: context,
+                              builder: (context) {
+                                return StatefulBuilder(
+                                  builder: (context, setState) {
+                                    return AlertDialog(
+                                      title: const Text('Name the dish'),
+                                      content: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          TextField(
+                                            autofocus: true,
+                                            decoration: const InputDecoration(
+                                              labelText: 'Name',
+                                            ),
+                                            onChanged: (val) => newName = val,
+                                          ),
+                                          const SizedBox(height: 12),
+                                          TextField(
+                                            decoration: const InputDecoration(
+                                              labelText: 'Note (optional)',
+                                            ),
+                                            maxLines: 2,
+                                            onChanged: (val) => newNote = val,
+                                          ),
+                                          const SizedBox(height: 16),
+                                          // Anzeige der berechneten Werte
+                                          Card(
+                                            color: Colors.grey[100],
+                                            child: Padding(
+                                              padding:
+                                                  const EdgeInsets.all(8.0),
+                                              child: Column(
+                                                children: [
+                                                  Text(
+                                                    'Per 100g:',
+                                                    style: const TextStyle(
+                                                        fontWeight:
+                                                            FontWeight.bold),
+                                                  ),
+                                                  const SizedBox(height: 4),
+                                                  Text(
+                                                    'kcal: ${kcal100.toStringAsFixed(1)} kcal\n'
+                                                    'protein: ${protein100.toStringAsFixed(1)} g\n'
+                                                    'carbs: ${carbs100.toStringAsFixed(1)} g\n'
+                                                    'fat: ${fat100.toStringAsFixed(1)} g',
+                                                    textAlign: TextAlign.center,
+                                                    style: const TextStyle(
+                                                        fontSize: 13),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () =>
+                                              Navigator.pop(context),
+                                          child: const Text('Cancel'),
+                                        ),
+                                        TextButton(
+                                          onPressed: () => Navigator.pop(
+                                              context, {
+                                            'name': newName,
+                                            'note': newNote
+                                          }),
+                                          child: const Text('Add'),
+                                        ),
+                                      ],
+                                    );
+                                  },
+                                );
+                              },
+                            );
+                            if (result == null ||
+                                (result['name'] as String).trim().isEmpty)
+                              return;
+                            //final newName = result['name'] as String;
+                            //final newNote = result['note'] as String;
+
+                            // Food anlegen
+                            await userService.createFood(
+                              name: newName.trim(),
+                              kcalPer100g: kcal100,
+                              proteinPer100g: protein100,
+                              carbsPer100g: carbs100,
+                              fatPer100g: fat100,
+                              notes: newNote.trim().isNotEmpty
+                                  ? newNote.trim()
+                                  : null,
+                            );
+                            await _loadData();
+                            setState(() {
+                              _foodComponents = [_FoodComponent()];
+                            });
+                            _showSuccessSnackBar('created food item!');
+                          }
+                        : null,
+                    child: const Text('Name the dish and create'),
                   ),
                 ],
               ),

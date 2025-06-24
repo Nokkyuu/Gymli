@@ -14,6 +14,7 @@ const Color colorOrange = Color(0xE6FF6A00); // Main brand orange color
 const Color colorWhite = Colors.white; // Standard white
 const Color colorBlack =
     Color.fromARGB(255, 18, 25, 36); // Dark theme background
+const Color colorBlue = Color.fromARGB(217, 33, 149, 243);
 
 /**
  * Builds the application theme based on brightness mode
