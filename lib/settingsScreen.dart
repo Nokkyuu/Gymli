@@ -154,7 +154,7 @@ Future<void> wipeExercises(BuildContext context) async {
     context,
     title: const Text('Clear Exercises'),
     content: const Text(
-        'Are you sure you want to permanently delete all exercises? This action cannot be undone.'),
+        'Are you sure you want to permanently delete all exercises?\n\nATTENTION:\nThis will also delete all Training Sets and Workout !\n\nThis action cannot be undone.'),
   )) {
     // Show loading dialog
     if (context.mounted) {
@@ -176,6 +176,8 @@ Future<void> wipeExercises(BuildContext context) async {
     }
 
     try {
+      await UserService().clearWorkouts();
+      await UserService().clearTrainingSets();
       await UserService().clearExercises();
 
       // Notify that data has changed
@@ -546,6 +548,40 @@ Future<void> backup(String dataType, BuildContext context) async {
 }
 
 void triggerLoad(context, dataType) async {
+  // Show confirmation dialog before proceeding
+  bool confirmed = false;
+  if (context.mounted) {
+    confirmed = await showDialog<bool>(
+          context: context,
+          barrierDismissible: false,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: Text('Import $dataType'),
+              content: dataType == "Exercises"
+                  ? Text(
+                      'Importing $dataType will permanently delete all existing $dataType, Training Sets and Workout data. This action cannot be undone. Do you want to continue?')
+                  : Text(
+                      'Importing $dataType will permanently delete all existing $dataType data. This action cannot be undone. Do you want to continue?'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  child: const Text('Cancel'),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(true),
+                  child: const Text('Continue'),
+                ),
+              ],
+            );
+          },
+        ) ??
+        false;
+  }
+
+  if (!confirmed) {
+    return;
+  }
+
   String importData;
 
   // Use file_picker for cross-platform file picking (including web)
@@ -832,6 +868,8 @@ Future<void> restoreData(
       // Clear existing exercises with better error handling
       print('Clearing existing exercises...');
       try {
+        await userService.clearTrainingSets();
+        await userService.clearWorkouts();
         await userService.clearExercises();
         print('Successfully cleared existing exercises.');
       } catch (e) {
