@@ -37,6 +37,8 @@ import 'dart:convert'; // Add this import for utf8
 import 'package:flutter/foundation.dart'; // Add this import for kIsWeb
 import 'dart:math' as Math;
 import 'info.dart';
+import 'dart:html' as html;
+import 'dart:convert';
 
 enum DisplayMode { light, dark }
 
@@ -46,6 +48,16 @@ class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
   @override
   State<SettingsScreen> createState() => _SettingsScreen();
+}
+
+void downloadCsv(String csvData, String fileName) {
+  final bytes = utf8.encode(csvData);
+  final blob = html.Blob([bytes], 'text/csv');
+  final url = html.Url.createObjectUrlFromBlob(blob);
+  final anchor = html.AnchorElement(href: url)
+    ..setAttribute('download', fileName)
+    ..click();
+  html.Url.revokeObjectUrl(url);
 }
 
 Future<void> wipeTrainingSets(BuildContext context) async {
@@ -350,7 +362,7 @@ Future<void> backup(String dataType, BuildContext context) async {
     // IMPROVED: Use proper CSV formatting with explicit line endings
     String csvData = const ListToCsvConverter(
       eol: '\n', // Force Unix line endings
-      fieldDelimiter: ',',
+      fieldDelimiter: ';',
       textDelimiter: '"',
       textEndDelimiter: '"',
     ).convert(datalist);
@@ -379,7 +391,7 @@ Future<void> backup(String dataType, BuildContext context) async {
           fileName: fileName,
           mimeTypesFilter: ['text/csv'], // ADDED: Specify MIME type
         );
-
+        downloadCsv(csvData, fileName);
         final result = await FlutterFileDialog.saveFile(params: params);
 
         // Dismiss loading dialog
@@ -437,22 +449,22 @@ Future<void> backup(String dataType, BuildContext context) async {
                       },
                       child: const Text('Close'),
                     ),
-                    TextButton(
-                      onPressed: () async {
-                        // Copy to clipboard
-                        await Clipboard.setData(ClipboardData(text: csvData));
-                        Navigator.of(context).pop();
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text(
-                                'CSV data copied to clipboard - paste into a text editor and save as .csv'),
-                            backgroundColor: Colors.green,
-                            duration: Duration(seconds: 5),
-                          ),
-                        );
-                      },
-                      child: const Text('Copy to Clipboard'),
-                    ),
+                    // TextButton(
+                    //   onPressed: () async {
+                    //     // Copy to clipboard
+                    //     await Clipboard.setData(ClipboardData(text: csvData));
+                    //     Navigator.of(context).pop();
+                    //     ScaffoldMessenger.of(context).showSnackBar(
+                    //       const SnackBar(
+                    //         content: Text(
+                    //             'CSV data copied to clipboard - paste into a text editor and save as .csv'),
+                    //         backgroundColor: Colors.green,
+                    //         duration: Duration(seconds: 5),
+                    //       ),
+                    //     );
+                    //   },
+                    //   child: const Text('Copy to Clipboard'),
+                    // ),
                   ],
                 );
               },
@@ -630,8 +642,13 @@ Future<void> restoreData(
     String dataType, String data, BuildContext context) async {
   try {
     final userService = UserService();
-    List<List<String>> csvTable =
-        const CsvToListConverter(shouldParseNumbers: false).convert(data);
+    List<List<String>> csvTable = const CsvToListConverter(
+      shouldParseNumbers: false,
+      eol: '\n', // Force Unix line endings
+      fieldDelimiter: ';',
+      textDelimiter: '"',
+      textEndDelimiter: '"',
+    ).convert(data);
 
     int importedCount = 0;
     int skippedCount = 0;
@@ -689,8 +706,7 @@ Future<void> restoreData(
           row.removeLast();
         }
 
-        if (row.length >= 8) {
-          // Handle current format with 8+ columns (without machine name)
+        if (row.length == 5) {
           try {
             final exerciseId = exerciseNameToIdMap[row[0].trim()];
 
@@ -701,10 +717,6 @@ Future<void> restoreData(
                 'weight': double.parse(row[2]),
                 'repetitions': int.parse(row[3]),
                 'setType': int.parse(row[4]),
-                // 'baseReps': int.parse(row[5]),
-                // 'maxReps': int.parse(row[6]),
-                // 'increment': double.parse(row[7]),
-                // Note: row[8] (machine name) is ignored if present
               });
               print('Prepared training set for exercise: ${row[0]}');
             } else {
@@ -716,35 +728,8 @@ Future<void> restoreData(
             print('Error preparing training set for exercise "${row[0]}": $e');
             skippedCount++;
           }
-        } else if (row.length >= 7) {
-          // Handle legacy format with exactly 7 columns
-          try {
-            final exerciseId = exerciseNameToIdMap[row[0].trim()];
-
-            if (exerciseId != null) {
-              trainingSetsToCreate.add({
-                'exerciseId': exerciseId,
-                'date': DateTime.parse(row[1]).toIso8601String(),
-                'weight': double.parse(row[2]),
-                'repetitions': int.parse(row[3]),
-                'setType': int.parse(row[4]),
-                // 'baseReps': int.parse(row[5]),
-                // 'maxReps': int.parse(row[6]),
-                // 'increment': 5.0, // Default increment for legacy data
-              });
-              print(
-                  'Prepared training set for exercise: ${row[0]} (legacy format)');
-            } else {
-              print(
-                  'Warning: Exercise "${row[0]}" not found, skipping training set');
-              skippedCount++;
-            }
-          } catch (e) {
-            print('Error preparing training set for exercise "${row[0]}": $e');
-            skippedCount++;
-          }
         } else {
-          print('Skipping row with insufficient data: $row');
+          print('Skipping row with wrong data: $row');
           skippedCount++;
         }
       }
@@ -1772,56 +1757,56 @@ class _SettingsScreen extends State<SettingsScreen> {
 }
 
 // TEMPORARY: Add this function to fix malformed CSV files
-Future<void> fixCSVFile() async {
-  try {
-    final result = await FilePicker.platform.pickFiles(
-      type: FileType.custom,
-      allowedExtensions: ['csv'],
-    );
+// Future<void> fixCSVFile() async {
+//   try {
+//     final result = await FilePicker.platform.pickFiles(
+//       type: FileType.custom,
+//       allowedExtensions: ['csv'],
+//     );
 
-    if (result != null && result.files.isNotEmpty) {
-      String content;
-      if (result.files.first.bytes != null) {
-        content = String.fromCharCodes(result.files.first.bytes!);
-      } else {
-        content = await File(result.files.first.path!).readAsString();
-      }
+//     if (result != null && result.files.isNotEmpty) {
+//       String content;
+//       if (result.files.first.bytes != null) {
+//         content = String.fromCharCodes(result.files.first.bytes!);
+//       } else {
+//         content = await File(result.files.first.path!).readAsString();
+//       }
 
-      // Fix the content by ensuring proper line breaks
-      List<String> lines =
-          content.split(RegExp(r'[,](?=\w+,\d{4}-\d{2}-\d{2})'));
+//       // Fix the content by ensuring proper line breaks
+//       List<String> lines =
+//           content.split(RegExp(r'[,](?=\w+,\d{4}-\d{2}-\d{2})'));
 
-      // Reconstruct with proper line endings
-      String fixedContent = '';
-      for (int i = 0; i < lines.length; i++) {
-        String line = lines[i].trim();
-        if (line.isNotEmpty) {
-          if (i > 0) {
-            // Add back the comma that was removed by split, but as line ending
-            fixedContent += '\n';
-          }
-          fixedContent += line;
-        }
-      }
+//       // Reconstruct with proper line endings
+//       String fixedContent = '';
+//       for (int i = 0; i < lines.length; i++) {
+//         String line = lines[i].trim();
+//         if (line.isNotEmpty) {
+//           if (i > 0) {
+//             // Add back the comma that was removed by split, but as line ending
+//             fixedContent += '\n';
+//           }
+//           fixedContent += line;
+//         }
+//       }
 
-      // Add final newline
-      if (!fixedContent.endsWith('\n')) {
-        fixedContent += '\n';
-      }
+//       // Add final newline
+//       if (!fixedContent.endsWith('\n')) {
+//         fixedContent += '\n';
+//       }
 
-      // Save fixed version
-      final directory = await getApplicationSupportDirectory();
-      final fixedFile = File('${directory.path}/test_fixed.csv');
-      await fixedFile.writeAsString(fixedContent, encoding: utf8);
+//       // Save fixed version
+//       final directory = await getApplicationSupportDirectory();
+//       final fixedFile = File('${directory.path}/test_fixed.csv');
+//       await fixedFile.writeAsString(fixedContent, encoding: utf8);
 
-      print('Fixed CSV saved to: ${fixedFile.path}');
-      print('First few lines of fixed CSV:');
-      print(fixedContent.split('\n').take(5).join('\n'));
-    }
-  } catch (e) {
-    print('Error fixing CSV: $e');
-  }
-}
+//       print('Fixed CSV saved to: ${fixedFile.path}');
+//       print('First few lines of fixed CSV:');
+//       print(fixedContent.split('\n').take(5).join('\n'));
+//     }
+//   } catch (e) {
+//     print('Error fixing CSV: $e');
+//   }
+// }
 
 Future<void> wipeFoods(BuildContext context) async {
   if (await confirm(
