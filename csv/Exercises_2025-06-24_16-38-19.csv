@@ -1,0 +1,40 @@
+Incline Benchpress;0;"Pectoralis major;Front Delts;Deltoids;Triceps;";"1;0;0;0;0.5;0.25;0;0;0.25;0;0;0;0;0;";10;16;5
+Triceps Pull (Overhead);2;"Trapezius;Front Delts;Back Delts;Latissimus dorsi;Triceps;";"0;0.5;0;0;0.25;0;0.25;0.25;1;0;0;0;0;0;";10;16;2.5
+Lat Prayer;2;"Trapezius;Back Delts;Latissimus dorsi;Triceps;";"0;0.25;0;0;0;0;0.25;1;0.75;0;0;0;0;0;";10;16;5
+Biceps Curl (Super Incline) ;0;"Biceps;Front Delts;Forearms;";"0;0;1;0;0.25;0;0;0;0;0;0;0;0.25;0;";10;18;2
+Lunges;0;"Abdominals;Gluteus maximus;Hamstrings;Quadriceps;Forearms;Calves;";"0;0;0;0.25;0;0;0;0;0;1;0.25;0.5;0.25;0.25;";8;12;10
+Pull-ups (tight);1;"Trapezius;Biceps;Back Delts;Latissimus dorsi;";"0;0.5;0.5;0;0;0;0.25;0.75;0;0;0;0;0;0;";8;16;7
+Calf Raise;0;"Calves;";"0;0;0;0;0;0;0;0;0;0;0;0;0;1;";15;30;5
+Chest Press;1;"Pectoralis major;Abdominals;Front Delts;Triceps;";"1;0;0;0.25;0.25;0;0;0;0.25;0;0;0;0;0;";8;14;10
+Row machine;1;"Trapezius;Biceps;Back Delts;Latissimus dorsi;";"0;1;0.25;0;0;0;0.25;0.25;0;0;0;0;0;0;";11;16;5
+Lat Pull Machine;1;"Trapezius;Biceps;Latissimus dorsi;";"0;0.5;0.5;0;0;0;0;1;0;0;0;0;0;0;";11;16;10
+Rope row;2;"Trapezius;Biceps;Back Delts;Latissimus dorsi;Forearms;";"0;0.25;0.25;0;0;0;0.25;1;0;0;0;0;0.25;0;";10;16;2.5
+Horse Kickback;2;"Gluteus maximus;Hamstrings;";"0;0;0;0;0;0;0;0;0;1;0.75;0;0;0;";10;20;2.5
+Pull-ups (wide) ;3;"Trapezius;Biceps;Back Delts;Latissimus dorsi;Forearms;";"0;0.25;0.5;0;0;0;0.5;0.75;0;0;0;0;0.25;0;";8;12;7
+Leg Press;1;"Abdominals;Gluteus maximus;Hamstrings;Quadriceps;Calves;";"0;0;0;0.25;0;0;0;0;0;0.5;0.5;1;0;0.5;";8;12;10
+Lat Raise (Dumbbell) ;0;"Trapezius;Front Delts;Deltoids;Back Delts;Forearms;";"0;0.5;0;0;0.25;1;0.25;0;0;0;0;0;0.25;0;";10;18;2
+Lat Raise (Cable);2;"Trapezius;Biceps;Front Delts;Deltoids;Back Delts;Triceps;Forearms;";"0;0.25;0.25;0;0.25;1;0.25;0;0.25;0;0;0;0.25;0;";10;18;2.5
+Kettlebell Swings;0;"Trapezius;Abdominals;Latissimus dorsi;Gluteus maximus;Hamstrings;Quadriceps;";"0;0.5;0;0.5;0;0;0;0.5;0;0.25;0.25;0.25;0;0;";15;30;2
+Dips;1;"Pectoralis major;Trapezius;Abdominals;Front Delts;Deltoids;Triceps;";"0.75;0.25;0;0.25;0.25;0.25;0;0;0.75;0;0;0;0;0;";8;16;7
+Forearm Rotation;0;"Forearms;";"0;0;0;0;0;0;0;0;0;0;0;0;1;0;";15;30;2
+Cross-Arm Rear Delt;2;"Trapezius;Deltoids;Back Delts;Latissimus dorsi;Triceps;Forearms;";"0;0.75;0;0;0;0.25;1;0.25;0.25;0;0;0;0.25;0;";10;16;2.5
+Facepull;2;"Trapezius;Biceps;Deltoids;Back Delts;Triceps;Forearms;";"0;0.75;0.25;0;0;0.25;1;0;0.25;0;0;0;0.25;0;";10;15;2.5
+Cable Curl;2;"Trapezius;Biceps;Front Delts;Forearms;";"0;0.25;1;0;0.25;0;0;0;0;0;0;0;0.25;0;";12;20;2.5
+Shoulder Press ;1;"Trapezius;Front Delts;Deltoids;Back Delts;Triceps;";"0;0.25;0;0;0.75;0.75;0.5;0;0.5;0;0;0;0;0;";10;20;5
+Cable curl (stretch);2;"Biceps;";"0;0;1;0;0;0;0;0;0;0;0;0;0;0;";10;16;2.5
+Hip Thrust;1;"Abdominals;Latissimus dorsi;Gluteus maximus;Hamstrings;Quadriceps;";"0;0;0;0.25;0;0;0;0.25;0;1;0.5;0.25;0;0;";10;30;10
+Bentover Row;0;"Trapezius;Back Delts;Latissimus dorsi;";"0;0.75;0;0;0;0;0.5;0.5;0;0;0;0;0;0;";10;16;5
+Benchpress;0;"Pectoralis major;Biceps;Abdominals;Front Delts;Triceps;";"1;0;0.25;0.25;0.5;0;0;0;0.75;0;0;0;0;0;";8;12;5
+Biceps Curl (Incline) ;0;"Biceps;Front Delts;Forearms;";"0;0;1;0;0.25;0;0;0;0;0;0;0;0.25;0;";10;18;2
+Butterfly (ext);1;"Pectoralis major;Trapezius;Biceps;Abdominals;Deltoids;";"1;0.25;0.25;0.25;0;0.5;0;0;0;0;0;0;0;0;";10;16;5
+Lat Press;1;"Trapezius;Back Delts;Triceps;";"0;1;0;0;0;0;1;0;0.25;0;0;0;0;0;";10;16;5
+Ham Curls;1;"Gluteus maximus;Hamstrings;Quadriceps;Calves;";"0;0;0;0;0;0;0;0;0;0.25;1;0.25;0;0.25;";8;16;5
+Cable Flies;2;"Pectoralis major;Trapezius;Biceps;Front Delts;Deltoids;Forearms;";"1;0.25;0.25;0;0.25;0.25;0;0;0;0;0;0;0.25;0;";10;15;5
+Lat Pulldown;2;"Trapezius;Biceps;Back Delts;Latissimus dorsi;Forearms;";"0;0.5;0.25;0;0;0;0.25;1;0;0;0;0;0.25;0;";8;14;5
+Military Press;0;"Trapezius;Front Delts;Deltoids;Triceps;";"0;0.25;0;0;1;0.75;0;0;0.5;0;0;0;0;0;";10;15;5
+Preacher Curl;0;"Biceps;Forearms;";"0;0;1;0;0;0;0;0;0;0;0;0;0.25;0;";10;16;2
+Bicep Curls;0;"Biceps;Forearms;";"0;0;1;0;0;0;0;0;0;0;0;0;0.25;0;";10;15;2
+Skull Crusher;0;"Triceps;Forearms;";"0;0;0;0;0;0;0;0;1;0;0;0;0.25;0;";10;20;2
+Leg Extension;1;"Abdominals;Quadriceps;";"0;0;0;0.25;0;0;0;0;0;0;0;1;0;0;";10;20;5
+Deadlift;0;"Trapezius;Abdominals;Deltoids;Back Delts;Latissimus dorsi;Gluteus maximus;Hamstrings;Quadriceps;Forearms;Calves;";"0;0.5;0;0.25;0;0.25;0.5;0.25;0;0.5;1;0.25;0.25;0.25;";8;12;5
+Squads;0;"Abdominals;Gluteus maximus;Hamstrings;Quadriceps;Calves;";"0;0;0;0.25;0;0;0;0;0;0.75;0.25;1;0;0.25;";8;12;5

@@ -39,6 +39,7 @@ import 'screens/statistics/services/statistics_calculation_service.dart';
 import 'screens/statistics/services/statistics_coordinator.dart';
 import 'screens/statistics/widgets/food.dart';
 import 'screens/statistics/widgets/calorie_balance.dart';
+import 'screens/statistics/widgets/workout_analyzer.dart';
 import 'info.dart';
 
 class StatisticsScreen extends StatefulWidget {
@@ -690,6 +691,7 @@ class _StatisticsScreen extends State<StatisticsScreen> {
                       //_buildListTile("Muscle Usage per Exercise", 2),
                       _buildListTile("Muscle Heatmap", 3),
                       _buildListTile("Exercise Progress", 4),
+                      _buildListTile("Workout Analyzer", 8),
                       _buildListTile("Activities", 5),
                       _buildListTile("Nutrition", 6),
                       _buildListTile("Calorie Balance", 7),
@@ -816,6 +818,13 @@ class _StatisticsScreen extends State<StatisticsScreen> {
         );
       case 7:
         return CalorieBalanceScreen(
+          key: ValueKey('${startingDate}_${endingDate}_$_useDefaultDateFilter'),
+          startingDate: startingDate,
+          endingDate: endingDate,
+          useDefaultDateFilter: _useDefaultDateFilter,
+        );
+      case 8:
+        return WorkoutAnalyzerScreen(
           key: ValueKey('${startingDate}_${endingDate}_$_useDefaultDateFilter'),
           startingDate: startingDate,
           endingDate: endingDate,

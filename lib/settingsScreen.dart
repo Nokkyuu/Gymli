@@ -21,7 +21,7 @@ library;
 
 // ignore_for_file: file_names
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart'; // Add this for Clipboard
+//import 'package:flutter/services.dart'; // Add this for Clipboard
 import 'package:Gymli/user_service.dart';
 import 'package:Gymli/api_models.dart';
 import 'package:csv/csv.dart';
@@ -35,10 +35,10 @@ import 'globals.dart' as globals;
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'dart:convert'; // Add this import for utf8
 import 'package:flutter/foundation.dart'; // Add this import for kIsWeb
-import 'dart:math' as Math;
+//import 'dart:math' as Math;
 import 'info.dart';
 import 'dart:html' as html;
-import 'dart:convert';
+//import 'dart:convert';
 
 enum DisplayMode { light, dark }
 
@@ -932,84 +932,39 @@ Future<void> restoreData(
           );
         }
 
-        if (row.length >= 7) {
+        if (row.length >= 6) {
           try {
-            // FIXED: Use proper CSV parsing for semicolon-separated values
-            final muscleGroups = parseCSVMuscleGroups(row[2]);
-            final muscleIntensities = parseCSVMuscleIntensities(row[3]);
+            // Parse muscle intensities directly - no names needed
+            final muscleIntensities = parseCSVMuscleIntensities(row[2]);
 
-            // Add this debug code after parsing muscle groups and intensities
-            // print('DEBUG: Raw muscle groups string: "${row[2]}"');
-            // print('DEBUG: Raw muscle intensities string: "${row[3]}"');
-            // print('DEBUG: Parsed muscle groups: $muscleGroups');
-            // print('DEBUG: Parsed muscle intensities: $muscleIntensities');
-            // print(
-            //     'DEBUG: Available muscle group names: ${muscleGroupNames.join(", ")}');
-
-            // Check for exact matches
-            // for (String muscleGroup in muscleGroups) {
-            //   bool hasMatch = muscleGroupNames.contains(muscleGroup.trim());
-            //   print(
-            //       // 'DEBUG: Muscle group "$muscleGroup" has exact match: $hasMatch');
-            // }
-
-            // Map muscle groups to individual muscle fields
-            final Map<String, double> muscleMap = {};
-
-            // Initialize all muscle fields to 0.0
-            for (String muscleKey in muscleGroupNames) {
-              muscleMap[muscleKey] = 0.0;
+            // Ensure we have exactly 14 values (pad with 0.0 if needed)
+            while (muscleIntensities.length < 14) {
+              muscleIntensities.add(0.0);
             }
-
-            // FIXED: Set actual values from parsed data with proper name matching
-            for (int i = 0;
-                i < muscleGroups.length && i < muscleIntensities.length;
-                i++) {
-              final muscleKey = muscleGroups[i].trim(); // Remove any whitespace
-              final intensity = muscleIntensities[i];
-
-              // Direct match first
-              if (muscleMap.containsKey(muscleKey)) {
-                muscleMap[muscleKey] = intensity;
-                print('DEBUG: Set $muscleKey = $intensity');
-              } else {
-                // Try alternative mappings for common variations
-                String? mappedKey = _mapMuscleGroupName(muscleKey);
-                if (mappedKey != null && muscleMap.containsKey(mappedKey)) {
-                  muscleMap[mappedKey] = intensity;
-                  print('DEBUG: Mapped $muscleKey -> $mappedKey = $intensity');
-                } else {
-                  print(
-                      'WARNING: Unknown muscle group "$muscleKey" found in CSV');
-                }
-              }
-            }
-
-            print('DEBUG: Final muscle map: $muscleMap');
 
             await userService.createExercise(
               name: row[0],
               type: int.parse(row[1]),
-              defaultRepBase: int.parse(row[4]),
-              defaultRepMax: int.parse(row[5]),
-              defaultIncrement: double.parse(row[6]),
-              pectoralisMajor: muscleMap["Pectoralis major"] ?? 0.0,
-              trapezius: muscleMap["Trapezius"] ?? 0.0,
-              biceps: muscleMap["Biceps"] ?? 0.0,
-              abdominals: muscleMap["Abdominals"] ?? 0.0,
-              frontDelts: muscleMap["Front Delts"] ?? 0.0,
-              deltoids: muscleMap["Deltoids"] ?? 0.0,
-              backDelts: muscleMap["Back Delts"] ?? 0.0,
-              latissimusDorsi: muscleMap["Latissimus dorsi"] ?? 0.0,
-              triceps: muscleMap["Triceps"] ?? 0.0,
-              gluteusMaximus: muscleMap["Gluteus maximus"] ?? 0.0,
-              hamstrings: muscleMap["Hamstrings"] ?? 0.0,
-              quadriceps: muscleMap["Quadriceps"] ?? 0.0,
-              forearms: muscleMap["Forearms"] ?? 0.0,
-              calves: muscleMap["Calves"] ?? 0.0,
+              defaultRepBase: int.parse(row[3]),
+              defaultRepMax: int.parse(row[4]),
+              defaultIncrement: double.parse(row[5]),
+              pectoralisMajor: muscleIntensities[0],
+              trapezius: muscleIntensities[1],
+              biceps: muscleIntensities[2],
+              abdominals: muscleIntensities[3],
+              frontDelts: muscleIntensities[4],
+              deltoids: muscleIntensities[5],
+              backDelts: muscleIntensities[6],
+              latissimusDorsi: muscleIntensities[7],
+              triceps: muscleIntensities[8],
+              gluteusMaximus: muscleIntensities[9],
+              hamstrings: muscleIntensities[10],
+              quadriceps: muscleIntensities[11],
+              forearms: muscleIntensities[12],
+              calves: muscleIntensities[13],
             );
             importedCount++;
-            print('Successfully imported exercise: ${row[0]} with muscle data');
+            print('Successfully imported exercise: ${row[0]}');
           } catch (e) {
             print('Error importing exercise "${row[0]}": $e');
             skippedCount++;
@@ -1448,7 +1403,7 @@ List<String> parseCSVMuscleGroups(String input) {
 
   // Split by semicolon and filter out empty strings
   List<String> parts = cleaned
-      .split(';')
+      .split(',')
       .map((e) => e.trim())
       .where((e) => e.isNotEmpty)
       .toList();
@@ -1456,21 +1411,21 @@ List<String> parseCSVMuscleGroups(String input) {
   return parts;
 }
 
-/// Parses muscle intensities from CSV format (semicolon-separated)
+/// Parses muscle intensities from CSV format (comma-separated)
 List<double> parseCSVMuscleIntensities(String input) {
   if (input.isEmpty || input.trim().isEmpty) {
     return <double>[];
   }
 
-  // Remove any brackets and split by semicolon
+  // Remove any brackets and split by comma
   String cleaned = input.replaceAll('[', '').replaceAll(']', '').trim();
   if (cleaned.isEmpty) {
     return <double>[];
   }
 
-  // Split by semicolon and convert to doubles
+  // Split by COMMA, not empty string!
   List<double> parts = cleaned
-      .split(';')
+      .split(',')
       .map((e) => e.trim())
       .where((e) => e.isNotEmpty)
       .map((e) => double.tryParse(e) ?? 0.0)
@@ -1479,104 +1434,104 @@ List<double> parseCSVMuscleIntensities(String input) {
   return parts;
 }
 
-/// Maps alternative muscle group names to standard names
-String? _mapMuscleGroupName(String inputName) {
-  final Map<String, String> muscleNameMappings = {
-    // Handle variations in naming
-    'Pectoralis Major': 'Pectoralis major',
-    'pectoralis major': 'Pectoralis major',
-    'Chest': 'Pectoralis major',
-    'chest': 'Pectoralis major',
+// /// Maps alternative muscle group names to standard names
+// String? _mapMuscleGroupName(String inputName) {
+//   final Map<String, String> muscleNameMappings = {
+//     // Handle variations in naming
+//     'Pectoralis Major': 'Pectoralis major',
+//     'pectoralis major': 'Pectoralis major',
+//     'Chest': 'Pectoralis major',
+//     'chest': 'Pectoralis major',
 
-    'trapezius': 'Trapezius',
-    'Traps': 'Trapezius',
-    'traps': 'Trapezius',
+//     'trapezius': 'Trapezius',
+//     'Traps': 'Trapezius',
+//     'traps': 'Trapezius',
 
-    'biceps': 'Biceps',
-    'Bicep': 'Biceps',
-    'bicep': 'Biceps',
+//     'biceps': 'Biceps',
+//     'Bicep': 'Biceps',
+//     'bicep': 'Biceps',
 
-    'abdominals': 'Abdominals',
-    'Abs': 'Abdominals',
-    'abs': 'Abdominals',
-    'Core': 'Abdominals',
-    'core': 'Abdominals',
+//     'abdominals': 'Abdominals',
+//     'Abs': 'Abdominals',
+//     'abs': 'Abdominals',
+//     'Core': 'Abdominals',
+//     'core': 'Abdominals',
 
-    'Front Deltoids': 'Front Delts',
-    'front delts': 'Front Delts',
-    'Anterior Delts': 'Front Delts',
-    'anterior delts': 'Front Delts',
+//     'Front Deltoids': 'Front Delts',
+//     'front delts': 'Front Delts',
+//     'Anterior Delts': 'Front Delts',
+//     'anterior delts': 'Front Delts',
 
-    'deltoids': 'Deltoids',
-    'Delts': 'Deltoids',
-    'delts': 'Deltoids',
-    'Shoulders': 'Deltoids',
-    'shoulders': 'Deltoids',
+//     'deltoids': 'Deltoids',
+//     'Delts': 'Deltoids',
+//     'delts': 'Deltoids',
+//     'Shoulders': 'Deltoids',
+//     'shoulders': 'Deltoids',
 
-    'Back Deltoids': 'Back Delts',
-    'back delts': 'Back Delts',
-    'Rear Delts': 'Back Delts',
-    'rear delts': 'Back Delts',
-    'Posterior Delts': 'Back Delts',
-    'posterior delts': 'Back Delts',
+//     'Back Deltoids': 'Back Delts',
+//     'back delts': 'Back Delts',
+//     'Rear Delts': 'Back Delts',
+//     'rear delts': 'Back Delts',
+//     'Posterior Delts': 'Back Delts',
+//     'posterior delts': 'Back Delts',
 
-    'latissimus dorsi': 'Latissimus dorsi',
-    'Lats': 'Latissimus dorsi',
-    'lats': 'Latissimus dorsi',
-    'Lat': 'Latissimus dorsi',
-    'lat': 'Latissimus dorsi',
+//     'latissimus dorsi': 'Latissimus dorsi',
+//     'Lats': 'Latissimus dorsi',
+//     'lats': 'Latissimus dorsi',
+//     'Lat': 'Latissimus dorsi',
+//     'lat': 'Latissimus dorsi',
 
-    'triceps': 'Triceps',
-    'Tricep': 'Triceps',
-    'tricep': 'Triceps',
+//     'triceps': 'Triceps',
+//     'Tricep': 'Triceps',
+//     'tricep': 'Triceps',
 
-    'gluteus maximus': 'Gluteus maximus',
-    'Glutes': 'Gluteus maximus',
-    'glutes': 'Gluteus maximus',
-    'Glute': 'Gluteus maximus',
-    'glute': 'Gluteus maximus',
+//     'gluteus maximus': 'Gluteus maximus',
+//     'Glutes': 'Gluteus maximus',
+//     'glutes': 'Gluteus maximus',
+//     'Glute': 'Gluteus maximus',
+//     'glute': 'Gluteus maximus',
 
-    'hamstrings': 'Hamstrings',
-    'Hamstring': 'Hamstrings',
-    'hamstring': 'Hamstrings',
-    'Hams': 'Hamstrings',
-    'hams': 'Hamstrings',
+//     'hamstrings': 'Hamstrings',
+//     'Hamstring': 'Hamstrings',
+//     'hamstring': 'Hamstrings',
+//     'Hams': 'Hamstrings',
+//     'hams': 'Hamstrings',
 
-    'quadriceps': 'Quadriceps',
-    'Quads': 'Quadriceps',
-    'quads': 'Quadriceps',
-    'Quad': 'Quadriceps',
-    'quad': 'Quadriceps',
+//     'quadriceps': 'Quadriceps',
+//     'Quads': 'Quadriceps',
+//     'quads': 'Quadriceps',
+//     'Quad': 'Quadriceps',
+//     'quad': 'Quadriceps',
 
-    'forearms': 'Forearms',
-    'Forearm': 'Forearms',
-    'forearm': 'Forearms',
+//     'forearms': 'Forearms',
+//     'Forearm': 'Forearms',
+//     'forearm': 'Forearms',
 
-    'calves': 'Calves',
-    'Calf': 'Calves',
-    'calf': 'Calves',
-  };
+//     'calves': 'Calves',
+//     'Calf': 'Calves',
+//     'calf': 'Calves',
+//   };
 
-  return muscleNameMappings[inputName];
-}
+//   return muscleNameMappings[inputName];
+// }
 
 /// List of muscle group names for mapping
-const List<String> muscleGroupNames = [
-  "Pectoralis major",
-  "Trapezius",
-  "Biceps",
-  "Abdominals",
-  "Front Delts",
-  "Deltoids",
-  "Back Delts",
-  "Latissimus dorsi",
-  "Triceps",
-  "Gluteus maximus",
-  "Hamstrings",
-  "Quadriceps",
-  "Forearms",
-  "Calves"
-];
+// const List<String> muscleGroupNames = [
+//   "Pectoralis major",
+//   "Trapezius",
+//   "Biceps",
+//   "Abdominals",
+//   "Front Delts",
+//   "Deltoids",
+//   "Back Delts",
+//   "Latissimus dorsi",
+//   "Triceps",
+//   "Gluteus maximus",
+//   "Hamstrings",
+//   "Quadriceps",
+//   "Forearms",
+//   "Calves"
+// ];
 
 class _SettingsScreen extends State<SettingsScreen> {
   // final wakeUpTimeController = TextEditingController();

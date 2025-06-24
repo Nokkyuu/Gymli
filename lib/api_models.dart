@@ -166,19 +166,13 @@ class ApiExercise {
   }
 
   List<String> toCSVString() {
-    String muscleString = "";
-    String intensitiesString = "";
-    for (var s in muscleGroups) {
-      muscleString += "$s;";
-    }
-    for (var s in muscleIntensities) {
-      intensitiesString += "$s;";
-    }
+    // Remove muscle group names entirely - just export the 14 intensity values as comma-separated
+    String intensitiesString = muscleIntensities.join(',');
+
     return [
       name,
       "$type",
-      muscleString,
-      intensitiesString,
+      intensitiesString, // Only the intensity values, no names needed
       "$defaultRepBase",
       "$defaultRepMax",
       "$defaultIncrement"
