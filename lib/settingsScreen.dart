@@ -701,9 +701,9 @@ Future<void> restoreData(
                 'weight': double.parse(row[2]),
                 'repetitions': int.parse(row[3]),
                 'setType': int.parse(row[4]),
-                'baseReps': int.parse(row[5]),
-                'maxReps': int.parse(row[6]),
-                'increment': double.parse(row[7]),
+                // 'baseReps': int.parse(row[5]),
+                // 'maxReps': int.parse(row[6]),
+                // 'increment': double.parse(row[7]),
                 // Note: row[8] (machine name) is ignored if present
               });
               print('Prepared training set for exercise: ${row[0]}');
@@ -728,9 +728,9 @@ Future<void> restoreData(
                 'weight': double.parse(row[2]),
                 'repetitions': int.parse(row[3]),
                 'setType': int.parse(row[4]),
-                'baseReps': int.parse(row[5]),
-                'maxReps': int.parse(row[6]),
-                'increment': 5.0, // Default increment for legacy data
+                // 'baseReps': int.parse(row[5]),
+                // 'maxReps': int.parse(row[6]),
+                // 'increment': 5.0, // Default increment for legacy data
               });
               print(
                   'Prepared training set for exercise: ${row[0]} (legacy format)');

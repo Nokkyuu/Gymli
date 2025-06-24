@@ -119,9 +119,9 @@ class ExerciseController extends ChangeNotifier {
         weight: weight,
         repetitions: repetitions,
         setType: setType,
-        baseReps: _currentExercise!.defaultRepBase,
-        maxReps: _currentExercise!.defaultRepMax,
-        increment: _currentExercise!.defaultIncrement,
+        // baseReps: _currentExercise!.defaultRepBase,
+        // maxReps: _currentExercise!.defaultRepMax,
+        // increment: _currentExercise!.defaultIncrement,
       );
 
       if (newSet == null) {

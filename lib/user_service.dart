@@ -766,10 +766,10 @@ class UserService {
     required double weight,
     required int repetitions,
     required int setType,
-    required int baseReps,
-    required int maxReps,
-    required double increment,
-    String? machineName,
+    // required int baseReps,
+    // required int maxReps,
+    // required double increment,
+    // String? machineName,
   }) async {
     if (isLoggedIn) {
       // Return the created set from the API
@@ -780,10 +780,10 @@ class UserService {
         weight: weight,
         repetitions: repetitions,
         setType: setType,
-        baseReps: baseReps,
-        maxReps: maxReps,
-        increment: increment,
-        machineName: machineName,
+        // baseReps: baseReps,
+        // maxReps: maxReps,
+        // increment: increment,
+        // machineName: machineName,
       );
     } else {
       final trainingSet = {
@@ -794,10 +794,10 @@ class UserService {
         'weight': weight,
         'repetitions': repetitions,
         'set_type': setType,
-        'base_reps': baseReps,
-        'max_reps': maxReps,
-        'increment': increment,
-        'machine_name': machineName,
+        // 'base_reps': baseReps,
+        // 'max_reps': maxReps,
+        // 'increment': increment,
+        // 'machine_name': machineName,
       };
       (_inMemoryData['trainingSets'] as List<dynamic>).add(trainingSet);
       return trainingSet;
@@ -828,10 +828,10 @@ class UserService {
                 'weight': ts['weight'],
                 'repetitions': ts['repetitions'],
                 'set_type': ts['setType'],
-                'base_reps': ts['baseReps'],
-                'max_reps': ts['maxReps'],
-                'increment': ts['increment'],
-                'machine_name': ts['machineName'],
+                // 'base_reps': ts['baseReps'],
+                // 'max_reps': ts['maxReps'],
+                // 'increment': ts['increment'],
+                // 'machine_name': ts['machineName'],
               })
           .toList();
 
@@ -851,10 +851,10 @@ class UserService {
           'weight': ts['weight'],
           'repetitions': ts['repetitions'],
           'set_type': ts['setType'],
-          'base_reps': ts['baseReps'],
-          'max_reps': ts['maxReps'],
-          'increment': ts['increment'],
-          'machine_name': ts['machineName'],
+          // 'base_reps': ts['baseReps'],
+          // 'max_reps': ts['maxReps'],
+          // 'increment': ts['increment'],
+          // 'machine_name': ts['machineName'],
         };
         (_inMemoryData['trainingSets'] as List<dynamic>).add(trainingSet);
         createdSets.add(trainingSet);

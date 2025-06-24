@@ -70,10 +70,10 @@ class ExerciseRepository {
     required double weight,
     required int repetitions,
     required int setType,
-    required int baseReps,
-    required int maxReps,
-    required double increment,
-    String machineName = "",
+    // required int baseReps,
+    // required int maxReps,
+    // required double increment,
+    // String machineName = "",
   }) async {
     try {
       final createdSetData = await _userService.createTrainingSet(
@@ -82,10 +82,10 @@ class ExerciseRepository {
         weight: weight,
         repetitions: repetitions,
         setType: setType,
-        baseReps: baseReps,
-        maxReps: maxReps,
-        increment: increment,
-        machineName: machineName,
+        // baseReps: baseReps,
+        // maxReps: maxReps,
+        // increment: increment,
+        // machineName: machineName,
       );
 
       if (createdSetData == null) return null;
@@ -104,9 +104,9 @@ class ExerciseRepository {
         weight: weight,
         repetitions: repetitions,
         setType: setType,
-        baseReps: baseReps,
-        maxReps: maxReps,
-        increment: increment,
+        // baseReps: baseReps,
+        // maxReps: maxReps,
+        // increment: increment,
       );
 
       // Update cache

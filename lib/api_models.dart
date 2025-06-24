@@ -214,10 +214,10 @@ class ApiTrainingSet {
   final double weight;
   final int repetitions;
   final int setType;
-  final int baseReps;
-  final int maxReps;
-  final double increment;
-  final String? machineName;
+  // final int baseReps;
+  // final int maxReps;
+  // final double increment;
+  // final String? machineName;
 
   ApiTrainingSet({
     this.id,
@@ -228,10 +228,10 @@ class ApiTrainingSet {
     required this.weight,
     required this.repetitions,
     required this.setType,
-    required this.baseReps,
-    required this.maxReps,
-    required this.increment,
-    this.machineName,
+    // required this.baseReps,
+    // required this.maxReps,
+    // required this.increment,
+    // this.machineName,
   });
 
   factory ApiTrainingSet.fromJson(Map<String, dynamic> json) {
@@ -244,10 +244,10 @@ class ApiTrainingSet {
       weight: (json['weight'] ?? 0.0).toDouble(),
       repetitions: json['repetitions'] ?? 0,
       setType: json['set_type'] ?? 0,
-      baseReps: json['base_reps'] ?? 8,
-      maxReps: json['max_reps'] ?? 12,
-      increment: (json['increment'] ?? 0.0).toDouble(),
-      machineName: json['machine_name'],
+      // baseReps: json['base_reps'] ?? 8,
+      // maxReps: json['max_reps'] ?? 12,
+      // increment: (json['increment'] ?? 0.0).toDouble(),
+      // machineName: json['machine_name'],
     );
   }
 
@@ -260,10 +260,10 @@ class ApiTrainingSet {
       'weight': weight,
       'repetitions': repetitions,
       'set_type': setType,
-      'base_reps': baseReps,
-      'max_reps': maxReps,
-      'increment': increment,
-      'machine_name': machineName,
+      // 'base_reps': baseReps,
+      // 'max_reps': maxReps,
+      // 'increment': increment,
+      // 'machine_name': machineName,
     };
   }
 
@@ -277,10 +277,10 @@ class ApiTrainingSet {
       "$weight",
       "$repetitions",
       "$setType",
-      "$baseReps",
-      "$maxReps",
-      "$increment",
-      machineName ?? ""
+      // "$baseReps",
+      // "$maxReps",
+      // "$increment",
+      // machineName ?? ""
     ];
   }
 }

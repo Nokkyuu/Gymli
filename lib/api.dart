@@ -18,7 +18,7 @@ import 'config/api_config.dart';
 
 // Main API base URL - Azure hosted backend service
 const String baseUrl =
-    'https://gymliapi-gyg0ardqh5dadaba.germanywestcentral-01.azurewebsites.net/';
+    'https://gymliapi-gyg0ardqh5dadaba.germanywestcentral-01.azurewebsites.net';
 
 //----------------- Animals Service -----------------//
 
@@ -406,10 +406,10 @@ class TrainingSetService {
     required double weight,
     required int repetitions,
     required int setType,
-    required int baseReps,
-    required int maxReps,
-    required double increment,
-    String? machineName,
+    // required int baseReps,
+    // required int maxReps,
+    // required double increment,
+    // String? machineName,
   }) async {
     final response = await http.post(
       Uri.parse('$baseUrl/training_sets'),
@@ -424,10 +424,10 @@ class TrainingSetService {
         'weight': weight,
         'repetitions': repetitions,
         'set_type': setType,
-        'base_reps': baseReps,
-        'max_reps': maxReps,
-        'increment': increment,
-        'machine_name': machineName,
+        // 'base_reps': baseReps,
+        // 'max_reps': maxReps,
+        // 'increment': increment,
+        // 'machine_name': machineName,
       }),
     );
     if (response.statusCode != 200 && response.statusCode != 201) {
