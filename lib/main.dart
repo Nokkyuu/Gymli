@@ -15,6 +15,7 @@ import 'themeColors.dart';
 import 'user_service.dart';
 import 'config/api_config.dart';
 import 'info.dart';
+import 'calendarScreen.dart';
 
 final userService = UserService();
 bool state = false;
@@ -415,6 +416,20 @@ class _MainAppState extends State<MainApp> {
                     context,
                     MaterialPageRoute(
                         builder: (context) => const StatisticsScreen()));
+              });
+            },
+          ),
+          ListTile(
+            title: const Text('Calendar'),
+            onTap: () {
+              setState(() {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const CalendarScreen(),
+                  ),
+                );
               });
             },
           ),

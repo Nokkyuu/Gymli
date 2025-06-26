@@ -935,12 +935,13 @@ Future<void> restoreData(
         if (row.length >= 6) {
           try {
             // Parse muscle intensities directly - no names needed
+            // NOTE: THIS NEEDS TO BE CAREFULLY ADJUSTED IF THE MUSCLE GROUPS ARE EVER TO CHANGE
             final muscleIntensities = parseCSVMuscleIntensities(row[2]);
 
             // Ensure we have exactly 14 values (pad with 0.0 if needed)
-            while (muscleIntensities.length < 14) {
-              muscleIntensities.add(0.0);
-            }
+            // while (muscleIntensities.length < 14) {
+            //   muscleIntensities.add(0.0);
+            // }
 
             await userService.createExercise(
               name: row[0],

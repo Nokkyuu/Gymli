@@ -387,38 +387,38 @@ class ApiWorkout {
 /// ApiGroup - Represents a collection of exercises grouped together
 ///
 /// Contains details about a group of exercises, including the user, group name,
-/// and the list of exercises in the group.
-class ApiGroup {
-  final int? id;
-  final String userName;
-  final String name;
-  final List<String> exercises;
+// /// and the list of exercises in the group.
+// class ApiGroup {
+//   final int? id;
+//   final String userName;
+//   final String name;
+//   final List<String> exercises;
 
-  ApiGroup({
-    this.id,
-    required this.userName,
-    required this.name,
-    required this.exercises,
-  });
+//   ApiGroup({
+//     this.id,
+//     required this.userName,
+//     required this.name,
+//     required this.exercises,
+//   });
 
-  factory ApiGroup.fromJson(Map<String, dynamic> json) {
-    return ApiGroup(
-      id: json['id'],
-      userName: json['user_name'] ?? '',
-      name: json['name'] ?? '',
-      exercises: List<String>.from(json['exercises'] ?? []),
-    );
-  }
+//   factory ApiGroup.fromJson(Map<String, dynamic> json) {
+//     return ApiGroup(
+//       id: json['id'],
+//       userName: json['user_name'] ?? '',
+//       name: json['name'] ?? '',
+//       exercises: List<String>.from(json['exercises'] ?? []),
+//     );
+//   }
 
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'user_name': userName,
-      'name': name,
-      'exercises': exercises,
-    };
-  }
-}
+//   Map<String, dynamic> toJson() {
+//     return {
+//       'id': id,
+//       'user_name': userName,
+//       'name': name,
+//       'exercises': exercises,
+//     };
+//   }
+// }
 
 /// ApiActivity - Represents an activity type with calorie information
 ///
@@ -621,4 +621,98 @@ class ApiFoodLog {
       'fat_per_100g': fatPer100g,
     };
   }
+}
+
+class ApiPeriod {
+  final int? id;
+  final String userName;
+  // final String label;
+  final String type; // 'cut', 'bulk', etc.
+  final DateTime startDate;
+  final DateTime endDate;
+
+  ApiPeriod({
+    this.id,
+    required this.userName,
+    //required this.label,
+    required this.type,
+    required this.startDate,
+    required this.endDate,
+  });
+
+  factory ApiPeriod.fromJson(Map<String, dynamic> json) => ApiPeriod(
+        id: json['id'],
+        userName: json['user_name'],
+        //label: json['label'],
+        type: json['type'],
+        startDate: DateTime.parse(json['start_date']),
+        endDate: DateTime.parse(json['end_date']),
+      );
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'user_name': userName,
+        //'label': label,
+        'type': type,
+        'start_date': startDate.toIso8601String(),
+        'end_date': endDate.toIso8601String(),
+      };
+}
+
+class ApiCalendarNote {
+  final int? id;
+  final String userName;
+  final DateTime date;
+  final String note;
+
+  ApiCalendarNote({
+    this.id,
+    required this.userName,
+    required this.date,
+    required this.note,
+  });
+
+  factory ApiCalendarNote.fromJson(Map<String, dynamic> json) =>
+      ApiCalendarNote(
+        id: json['id'],
+        userName: json['user_name'],
+        date: DateTime.parse(json['date']),
+        note: json['note'],
+      );
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'user_name': userName,
+        'date': date.toIso8601String(),
+        'note': note,
+      };
+}
+
+class ApiCalendarWorkout {
+  final int? id;
+  final String userName;
+  final DateTime date;
+  final int workoutId;
+
+  ApiCalendarWorkout({
+    this.id,
+    required this.userName,
+    required this.date,
+    required this.workoutId,
+  });
+
+  factory ApiCalendarWorkout.fromJson(Map<String, dynamic> json) =>
+      ApiCalendarWorkout(
+        id: json['id'],
+        userName: json['user_name'],
+        date: DateTime.parse(json['date']),
+        workoutId: json['workout_id'],
+      );
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'user_name': userName,
+        'date': date.toIso8601String(),
+        'workout_id': workoutId,
+      };
 }

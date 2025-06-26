@@ -1022,24 +1022,124 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
   }
 
   IconData _getFoodIcon(String foodName) {
-    //ADD MORE ICONS?
     final name = foodName.toLowerCase();
-    if (name.contains('apple') || name.contains('fruit'))
-      return FontAwesomeIcons.appleWhole;
-    if (name.contains('bread') || name.contains('grain'))
-      return FontAwesomeIcons.breadSlice;
-    if (name.contains('chicken') || name.contains('meat'))
-      return FontAwesomeIcons.drumstickBite;
-    if (name.contains('fish')) return FontAwesomeIcons.fish;
-    if (name.contains('cheese') || name.contains('dairy'))
-      return FontAwesomeIcons.cheese;
-    if (name.contains('egg')) return FontAwesomeIcons.egg;
-    if (name.contains('rice') || name.contains('pasta'))
-      return FontAwesomeIcons.bowlRice;
-    if (name.contains('vegetable') || name.contains('carrot'))
-      return FontAwesomeIcons.carrot;
+
+    // Apple / Fruit
+    if (name.contains('apple') ||
+        name.contains('fruit') ||
+        name.contains('obst') ||
+        name.contains('apfel') ||
+        name.contains('banana') ||
+        name.contains('banane') ||
+        name.contains('orange') ||
+        name.contains('beere') ||
+        name.contains('berry') ||
+        name.contains('pear') ||
+        name.contains('birne')) return FontAwesomeIcons.appleWhole;
+
+    // Bread / Grain
+    if (name.contains('bread') ||
+        name.contains('grain') ||
+        name.contains('brot') ||
+        name.contains('brötchen') ||
+        name.contains('baguette') ||
+        name.contains('toast') ||
+        name.contains('weizen') ||
+        name.contains('roggen') ||
+        name.contains('bun') ||
+        name.contains('roll')) return FontAwesomeIcons.breadSlice;
+
+    // Chicken / Meat
+    if (name.contains('chicken') ||
+        name.contains('meat') ||
+        name.contains('huhn') ||
+        name.contains('hähnchen') ||
+        name.contains('fleisch') ||
+        name.contains('rind') ||
+        name.contains('beef') ||
+        name.contains('pork') ||
+        name.contains('schwein') ||
+        name.contains('lamm') ||
+        name.contains('turkey') ||
+        name.contains('haehnchen') ||
+        name.contains('pute')) return FontAwesomeIcons.drumstickBite;
+
+    // Fish
+    if (name.contains('fish') ||
+        name.contains('fisch') ||
+        name.contains('lachs') ||
+        name.contains('salmon') ||
+        name.contains('thunfisch') ||
+        name.contains('tuna') ||
+        name.contains('forelle') ||
+        name.contains('trout') ||
+        name.contains('hering') ||
+        name.contains('herring')) return FontAwesomeIcons.fish;
+
+    // Cheese / Dairy
+    if (name.contains('cheese') ||
+        name.contains('dairy') ||
+        name.contains('käse') ||
+        name.contains('milch') ||
+        name.contains('milk') ||
+        name.contains('joghurt') ||
+        name.contains('yogurt') ||
+        name.contains('quark') ||
+        name.contains('butter') ||
+        name.contains('cream') ||
+        name.contains('sahne')) return FontAwesomeIcons.cheese;
+
+    // Egg
+    if (name.contains('egg') ||
+        name.contains('ei') ||
+        name.contains('eier') ||
+        name.contains('omelette') ||
+        name.contains('omelet')) return FontAwesomeIcons.egg;
+
+    // Rice / Pasta
+    if (name.contains('rice') ||
+        name.contains('pasta') ||
+        name.contains('reis') ||
+        name.contains('nudel') ||
+        name.contains('spaghetti') ||
+        name.contains('penne') ||
+        name.contains('macaroni') ||
+        name.contains('lasagne') ||
+        name.contains('lasagna')) return FontAwesomeIcons.bowlRice;
+
+    // Vegetable / Carrot
+    if (name.contains('vegetable') ||
+        name.contains('carrot') ||
+        name.contains('gemüse') ||
+        name.contains('karotte') ||
+        name.contains('möhre') ||
+        name.contains('salat') ||
+        name.contains('lettuce') ||
+        name.contains('tomato') ||
+        name.contains('tomate') ||
+        name.contains('cucumber') ||
+        name.contains('gurke') ||
+        name.contains('broccoli') ||
+        name.contains('brokkoli') ||
+        name.contains('spinach') ||
+        name.contains('spinat') ||
+        name.contains('paprika') ||
+        name.contains('pepper')) return FontAwesomeIcons.carrot;
+
+    // Pizza
     if (name.contains('pizza')) return FontAwesomeIcons.pizzaSlice;
-    if (name.contains('burger')) return FontAwesomeIcons.burger;
+
+    // Burger
+    if (name.contains('burger') ||
+        name.contains('hamburger') ||
+        name.contains('cheeseburger')) return FontAwesomeIcons.burger;
+
+    // drinks
+    if (name.contains('ale') ||
+        name.contains('lager') ||
+        name.contains('bier') ||
+        name.contains('beer') ||
+        name.contains('cocktail')) return FontAwesomeIcons.beerMugEmpty;
 
     return FontAwesomeIcons.utensils;
   }
