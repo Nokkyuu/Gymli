@@ -1990,29 +1990,29 @@ class UserService {
     }
   }
 
-  Future<void> createCalendarNote({
+  Future<Map<String, dynamic>> createCalendarNote({
     required DateTime date,
     required String note,
   }) async {
     if (isLoggedIn) {
-      await api.CalendarNoteService().createCalendarNote(
+      return await api.CalendarNoteService().createCalendarNote(
         userName: userName,
         date: date,
         note: note,
       );
     } else {
       final notes = _inMemoryData['calendarNotes'] as List<dynamic>? ?? [];
-      notes.add({
+      final newNote = {
         'id': DateTime.now().millisecondsSinceEpoch,
         'user_name': 'DefaultUser',
         'date': date.toIso8601String(),
         'note': note,
-      });
+      };
+      notes.add(newNote);
       _inMemoryData['calendarNotes'] = notes;
+      return newNote;
     }
   }
-
-  // In UserService
 
   Future<void> deleteCalendarNote(int id) async {
     if (isLoggedIn) {
@@ -2029,9 +2029,27 @@ class UserService {
     required String note,
     required DateTime date,
   }) async {
-    deleteCalendarNote(id);
-    createCalendarNote(date: date, note: note);
-  } //TODO: Change to actually update instead of delete and create
+    if (isLoggedIn) {
+      await api.CalendarNoteService().updateCalendarNote(
+        id: id,
+        userName: userName,
+        date: date,
+        note: note,
+      );
+    } else {
+      final notes = _inMemoryData['calendarNotes'] as List<dynamic>? ?? [];
+      final noteIndex = notes.indexWhere((n) => n['id'] == id);
+      if (noteIndex != -1) {
+        notes[noteIndex] = {
+          'id': id,
+          'user_name': 'DefaultUser',
+          'date': date.toIso8601String(),
+          'note': note,
+        };
+        _inMemoryData['calendarNotes'] = notes;
+      }
+    }
+  }
 
   Future<List<dynamic>> getCalendarWorkouts() async {
     if (isLoggedIn) {
@@ -2042,12 +2060,12 @@ class UserService {
     }
   }
 
-  Future<void> createCalendarWorkout({
+  Future<Map<String, dynamic>> createCalendarWorkout({
     required DateTime date,
     required String workout,
   }) async {
     if (isLoggedIn) {
-      await api.CalendarWorkoutService().createCalendarWorkout(
+      return await api.CalendarWorkoutService().createCalendarWorkout(
         userName: userName,
         date: date,
         workout: workout,
@@ -2055,13 +2073,15 @@ class UserService {
     } else {
       final workouts =
           _inMemoryData['calendarWorkouts'] as List<dynamic>? ?? [];
-      workouts.add({
+      final newWorkout = {
         'id': DateTime.now().millisecondsSinceEpoch,
         'user_name': 'DefaultUser',
         'date': date.toIso8601String(),
         'workout': workout,
-      });
+      };
+      workouts.add(newWorkout);
       _inMemoryData['calendarWorkouts'] = workouts;
+      return newWorkout;
     }
   }
 
@@ -2076,7 +2096,7 @@ class UserService {
     }
   }
 
-//----------------- Periods Services -----------------//
+  //----------------- Periods Services -----------------//
   Future<List<dynamic>> getPeriods() async {
     if (isLoggedIn) {
       return await api.CalendarPeriodService()
@@ -2086,13 +2106,13 @@ class UserService {
     }
   }
 
-  Future<void> createPeriod({
+  Future<Map<String, dynamic>> createPeriod({
     required String type,
     required DateTime startDate,
     required DateTime endDate,
   }) async {
     if (isLoggedIn) {
-      await api.CalendarPeriodService().createCalendarPeriod(
+      return await api.CalendarPeriodService().createCalendarPeriod(
         userName: userName,
         type: type,
         start_date: startDate,
@@ -2100,14 +2120,16 @@ class UserService {
       );
     } else {
       final periods = _inMemoryData['periods'] as List<dynamic>? ?? [];
-      periods.add({
+      final newPeriod = {
         'id': DateTime.now().millisecondsSinceEpoch,
         'user_name': 'DefaultUser',
         'type': type,
         'start_date': startDate.toIso8601String(),
         'end_date': endDate.toIso8601String(),
-      });
+      };
+      periods.add(newPeriod);
       _inMemoryData['periods'] = periods;
+      return newPeriod;
     }
   }
 

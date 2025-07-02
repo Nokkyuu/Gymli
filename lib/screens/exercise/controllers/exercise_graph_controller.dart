@@ -3,6 +3,10 @@ import 'dart:math';
 import '../../../api_models.dart';
 import '../../../globals.dart' as globals;
 import 'package:flutter/material.dart';
+import '../../../user_service.dart';
+import '../../../themeColors.dart';
+
+final themeColors = ThemeColors();
 
 /// Controller for managing exercise graph data and calculations
 class ExerciseGraphController extends ChangeNotifier {
@@ -19,9 +23,17 @@ class ExerciseGraphController extends ChangeNotifier {
     Color.fromARGB(255, 215, 48, 31)
   ];
 
+  static final Map<String, Color> periodColors = {
+    'cut': themeColors.periodColors['cut']!, // Orange fallback
+    'bulk': themeColors.periodColors['bulk']!, // Green fallback
+    // 'maintenance': Color.fromARGB(80, 158, 158, 158), // Gray with transparency
+    // 'recovery': Color.fromARGB(80, 33, 150, 243), // Blue with transparency
+  };
+
   List<List<FlSpot>> _trainingGraphs = [[], [], [], []];
   List<List<FlSpot>> _additionalGraphs = [];
   Map<int, List<String>> _graphToolTip = {};
+  List<BetweenBarsData> _periodBarsData = [];
 
   double _minScore = 1e6;
   double _maxScore = 0.0;
@@ -30,10 +42,14 @@ class ExerciseGraphController extends ChangeNotifier {
 
   ApiExercise? _currentExercise; // Add this field
 
+  // Add this field to store period types
+  List<String> _periodTypes = [];
+
   // Getters
   List<List<FlSpot>> get trainingGraphs => _trainingGraphs;
   List<List<FlSpot>> get additionalGraphs => _additionalGraphs;
   Map<int, List<String>> get graphToolTip => _graphToolTip;
+  List<BetweenBarsData> get periodBarsData => _periodBarsData;
   double get minScore => _minScore;
   double get maxScore => _maxScore;
   double get maxHistoryDistance => _maxHistoryDistance;
@@ -47,11 +63,13 @@ class ExerciseGraphController extends ChangeNotifier {
   }
 
   /// Update graph data from training sets
-  void updateGraphFromTrainingSets(List<ApiTrainingSet> trainingSets,
-      {bool detailedGraph = false}) {
+  Future<void> updateGraphFromTrainingSets(List<ApiTrainingSet> trainingSets,
+      {bool detailedGraph = false}) async {
+    // Add async here
     _clearGraphData();
 
     if (trainingSets.isEmpty) {
+      await _loadPeriodData(); // Load periods even if no training data
       notifyListeners();
       return;
     }
@@ -59,6 +77,7 @@ class ExerciseGraphController extends ChangeNotifier {
     // Filter work sets only (exclude warmups)
     final workSets = trainingSets.where((set) => set.setType > 0).toList();
     if (workSets.isEmpty) {
+      await _loadPeriodData(); // Add await here too
       notifyListeners();
       return;
     }
@@ -70,11 +89,64 @@ class ExerciseGraphController extends ChangeNotifier {
     _updateGraphRanges(dataByDate);
     _updateGraphPoints(
         graphData, dataByDate, detailedGraph); // Pass dataByDate too
+    await _loadPeriodData(); // This await was missing proper async function
 
     notifyListeners();
   }
 
-  /// Efficiently update graph with a single new training set
+  /// Load period data and create helper lines with belowBarData
+  Future<void> _loadPeriodData() async {
+    try {
+      final userService = UserService();
+      final periods = await userService.getPeriods();
+      _periodTypes.clear(); // Clear period types
+
+      if (_mostRecentTrainingDate == null) return;
+
+      for (var period in periods) {
+        final type = period['type'] as String? ?? 'maintenance';
+        final startDateStr = period['start_date'] as String?;
+        final endDateStr = period['end_date'] as String?;
+
+        if (startDateStr == null || endDateStr == null) continue;
+
+        try {
+          final startDate = DateTime.parse(startDateStr);
+          final endDate = DateTime.parse(endDateStr);
+
+          // Convert dates to x-coordinates
+          final startX =
+              -_mostRecentTrainingDate!.difference(startDate).inDays.toDouble();
+          final endX =
+              -_mostRecentTrainingDate!.difference(endDate).inDays.toDouble();
+
+          // Check if period overlaps with graph range
+          final graphStartX = -_maxHistoryDistance;
+          final graphEndX = 0.0;
+
+          if (startX <= graphEndX && endX >= graphStartX) {
+            // Clamp the period to the visible range
+            final clampedStartX = max(startX, graphStartX);
+            final clampedEndX = min(endX, graphEndX);
+
+            // Create invisible helper line at the top of the graph
+            final List<FlSpot> periodSpots = [
+              FlSpot(clampedStartX, _maxScore + 10),
+              FlSpot(clampedEndX, _maxScore + 10),
+            ];
+
+            _additionalGraphs.add(periodSpots);
+            _periodTypes.add(type); // Store the period type
+          }
+        } catch (e) {
+          print('Error parsing period dates: $e');
+        }
+      }
+    } catch (e) {
+      print('Error loading period data: $e');
+    }
+  } // Efficiently update graph with a single new training set
+
   bool updateGraphWithNewSet(ApiTrainingSet newSet) {
     try {
       // Only update if this is a work set (not warmup)
@@ -220,14 +292,37 @@ class ExerciseGraphController extends ChangeNotifier {
       }
     }
 
-    // Add additional graph data if any
-    for (int i = 0; i < _additionalGraphs.length; i++) {
+    // Add period helper lines with belowBarData
+    for (int i = 0;
+        i < _periodTypes.length && i < _additionalGraphs.length;
+        i++) {
+      if (_additionalGraphs[i].isNotEmpty) {
+        barData.add(LineChartBarData(
+          spots: _additionalGraphs[i],
+          isCurved: false,
+          color: Colors.transparent, // Invisible line
+          barWidth: 0,
+          isStrokeCapRound: false,
+          belowBarData: BarAreaData(
+            show: true,
+            color: periodColors[_periodTypes[i]] ??
+                const Color.fromARGB(80, 158, 158, 158),
+            cutOffY: _minScore - 10, // Fill down to below visible area
+          ),
+          dotData: const FlDotData(show: false),
+        ));
+      }
+    }
+
+    // Add remaining non-period additional graphs
+    for (int i = _periodTypes.length; i < _additionalGraphs.length; i++) {
       if (_additionalGraphs[i].isNotEmpty) {
         barData.add(LineChartBarData(
           spots: _additionalGraphs[i],
           isCurved: true,
-          color:
-              i < additionalColors.length ? additionalColors[i] : Colors.grey,
+          color: (i - _periodTypes.length) < additionalColors.length
+              ? additionalColors[i - _periodTypes.length]
+              : Colors.grey,
           barWidth: 2,
           isStrokeCapRound: true,
           belowBarData: BarAreaData(show: false),
@@ -244,6 +339,11 @@ class ExerciseGraphController extends ChangeNotifier {
     for (var graph in _trainingGraphs) {
       graph.clear();
     }
+    for (var graph in _additionalGraphs) {
+      graph.clear();
+    }
+    _additionalGraphs.clear();
+    _periodBarsData.clear();
     _graphToolTip.clear();
   }
 

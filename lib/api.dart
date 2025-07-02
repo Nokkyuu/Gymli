@@ -1120,7 +1120,7 @@ class CalendarNoteService {
     }
   }
 
-  Future<void> createCalendarNote({
+  Future<Map<String, dynamic>> createCalendarNote({
     required String userName,
     required DateTime date,
     required String note,
@@ -1156,6 +1156,31 @@ class CalendarNoteService {
       throw Exception('Failed to delete calendar note');
     }
   }
+
+  Future<Map<String, dynamic>> updateCalendarNote({
+    required int id,
+    required String userName,
+    required DateTime date,
+    required String note,
+  }) async {
+    final response = await http.put(
+      Uri.parse('$baseUrl/calendar_notes/$id'),
+      headers: {
+        'Content-Type': 'application/json',
+        'X-API-Key': ApiConfig.apiKey!,
+      },
+      body: json.encode({
+        'user_name': userName,
+        'date': date.toIso8601String(),
+        'note': note,
+      }),
+    );
+    if (response.statusCode == 200) {
+      return json.decode(response.body);
+    } else {
+      throw Exception('Failed to update calendar note');
+    }
+  }
 }
 
 class CalendarWorkoutService {
@@ -1174,7 +1199,7 @@ class CalendarWorkoutService {
     }
   }
 
-  Future<void> createCalendarWorkout({
+  Future<Map<String, dynamic>> createCalendarWorkout({
     required String userName,
     required DateTime date,
     required String workout,
@@ -1228,7 +1253,7 @@ class CalendarPeriodService {
     }
   }
 
-  Future<void> createCalendarPeriod({
+  Future<Map<String, dynamic>> createCalendarPeriod({
     required String userName,
     required String type,
     required DateTime start_date,

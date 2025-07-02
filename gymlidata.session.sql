@@ -1,1 +1,0 @@
-ALTER TABLE periods DROP COLUMN label

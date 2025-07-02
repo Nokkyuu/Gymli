@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'user_service.dart';
+import 'themeColors.dart';
 
-//TODO: Changing the API to return IDs when adding items, so that there is no need for constant reloads
+final themeColors = ThemeColors();
 
 class _Period {
   final int? id;
@@ -124,32 +125,51 @@ class _CalendarScreenState extends State<CalendarScreen> {
           _notes[date] = {'note': note, 'id': existingNote['id']};
         });
       } else {
-        // Create new note
-        await userService.createCalendarNote(date: date, note: note);
-        await _loadCalendarNotes();
+        // Create new note - now returns the created note with ID
+        final createdNote =
+            await userService.createCalendarNote(date: date, note: note);
+        setState(() {
+          _notes[date] = {'note': note, 'id': createdNote['id']};
+        });
       }
     }
   }
 
   void _addWorkout(DateTime date, String workoutName) async {
     try {
-      await userService.createCalendarWorkout(date: date, workout: workoutName);
-      await _loadCalendarWorkouts();
+      final createdWorkout = await userService.createCalendarWorkout(
+          date: date, workout: workoutName);
+      setState(() {
+        _calendarWorkouts.add(_CalendarWorkout(
+          _normalize(date),
+          workoutName,
+          id: createdWorkout['id'],
+        ));
+      });
     } catch (e) {
-      print('Error adding workout: $e'); // Debug log
+      print('Error adding workout: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to add workout: $e')),
+      );
     }
   }
 
   void _addPeriod(String type, DateTime start, DateTime end) async {
     try {
-      print('Adding period: $type from $start to $end'); // Debug log
-      await userService.createPeriod(
+      print('Adding period: $type from $start to $end');
+      final createdPeriod = await userService.createPeriod(
           type: type, startDate: start, endDate: end);
 
-      await _loadPeriods();
+      setState(() {
+        _periods.add(_Period(
+          type,
+          start,
+          end,
+          id: createdPeriod['id'],
+        ));
+      });
     } catch (e) {
-      print('Error adding period: $e'); // Debug log
-      // Show error to user
+      print('Error adding period: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to add period: $e')),
       );
@@ -180,11 +200,11 @@ class _CalendarScreenState extends State<CalendarScreen> {
   Color? _periodColor(String type) {
     switch (type) {
       case 'cut':
-        return Color.fromARGB(105, 255, 66, 28);
+        return themeColors.periodColors['cut'];
       case 'bulk':
-        return const Color.fromARGB(143, 76, 175, 79).withOpacity(0.2);
+        return themeColors.periodColors['bulk'];
       default:
-        return Colors.orange.withOpacity(0.2);
+        return themeColors.periodColors['other'];
     }
   }
 

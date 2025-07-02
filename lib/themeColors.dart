@@ -12,9 +12,22 @@ import 'package:google_fonts/google_fonts.dart';
 // Primary application colors
 const Color colorOrange = Color(0xE6FF6A00); // Main brand orange color
 const Color colorWhite = Colors.white; // Standard white
-const Color colorBlack =
-    Color.fromARGB(255, 18, 25, 36); // Dark theme background
+const Color colorBlack = Color.fromRGBO(18, 25, 36, 1); // Dark theme background
 const Color colorBlue = Color.fromARGB(217, 33, 149, 243);
+
+class ThemeColors {
+  final Map<String, Color> periodColors = {
+    'cut': Color.fromARGB(16, 255, 86, 34),
+    'bulk': Color.fromARGB(26, 76, 175, 79),
+    'other': Color.fromARGB(72, 255, 153, 0)
+  };
+
+  final Color themeOrange = Color(0xE6FF6A00); // Main brand orange color
+  final Color themeWhite = Colors.white; // Standard white
+  final Color themeBlack =
+      Color.fromRGBO(18, 25, 36, 1); // Dark theme background
+  final Color themeBlue = Color.fromARGB(217, 33, 149, 243);
+}
 
 /**
  * Builds the application theme based on brightness mode
