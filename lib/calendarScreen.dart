@@ -215,7 +215,15 @@ class _CalendarScreenState extends State<CalendarScreen> {
       body: Column(
         children: [
           TableCalendar(
-            headerVisible: false,
+            headerVisible: true,
+            headerStyle: const HeaderStyle(
+              titleCentered: false,
+              formatButtonVisible: false,
+              leftChevronVisible: true,
+              rightChevronVisible: true,
+              leftChevronIcon: Icon(null),
+              rightChevronIcon: Icon(null),
+            ),
             firstDay: DateTime.utc(2020, 1, 1),
             lastDay: DateTime.utc(2100, 12, 31),
             focusedDay: _focusedDay,
@@ -435,45 +443,52 @@ class _CalendarScreenState extends State<CalendarScreen> {
             child: ListView(
               children: [
                 if (_notes.isNotEmpty)
-                  ..._notes.entries.map((e) => ListTile(
-                        leading: const Icon(Icons.note),
-                        title: Text('${e.key.toLocal()}'.split(' ')[0]),
-                        subtitle: Text(e.value['note']),
-                        trailing: IconButton(
-                          icon: const Icon(Icons.delete),
-                          onPressed: () {
-                            _saveNote(e.key,
-                                null); // This will delete using the stored ID
-                          },
-                        ),
-                      )),
+                  ...(_notes.entries.toList()
+                        ..sort((a, b) =>
+                            b.key.compareTo(a.key))) // Sort by date desc
+                      .map((e) => ListTile(
+                            leading: const Icon(Icons.note),
+                            title: Text('${e.key.toLocal()}'.split(' ')[0]),
+                            subtitle: Text(e.value['note']),
+                            trailing: IconButton(
+                              icon: const Icon(Icons.delete),
+                              onPressed: () {
+                                _saveNote(e.key,
+                                    null); // This will delete using the stored ID
+                              },
+                            ),
+                          )),
                 if (_calendarWorkouts.isNotEmpty)
-                  ..._calendarWorkouts.map((w) => ListTile(
-                        leading: const Icon(Icons.fitness_center),
-                        title: Text('${w.workoutName}'),
-                        subtitle: Text('${w.date.toLocal()}'.split(' ')[0]),
-                        trailing: IconButton(
-                          icon: const Icon(Icons.delete),
-                          onPressed: () {
-                            _deleteWorkout(w); // Uses stored ID directly
-                          },
-                        ),
-                      )),
+                  ...(_calendarWorkouts.toList()
+                        ..sort((a, b) => b.date.compareTo(a.date)))
+                      .map((w) => ListTile(
+                            leading: const Icon(Icons.fitness_center),
+                            title: Text('${w.workoutName}'),
+                            subtitle: Text('${w.date.toLocal()}'.split(' ')[0]),
+                            trailing: IconButton(
+                              icon: const Icon(Icons.delete),
+                              onPressed: () {
+                                _deleteWorkout(w); // Uses stored ID directly
+                              },
+                            ),
+                          )),
                 if (_periods.isNotEmpty)
-                  ..._periods.map((p) => ListTile(
-                        leading: const Icon(Icons.timeline),
-                        title: Text(
-                            '${p.type[0].toUpperCase()}${p.type.substring(1)} period'),
-                        subtitle: Text(
-                            '${p.start.toLocal()} - ${p.end.toLocal()}'
-                                .replaceAll(' 00:00:00.000', '')),
-                        trailing: IconButton(
-                          icon: const Icon(Icons.delete),
-                          onPressed: () {
-                            _deletePeriod(p); // Uses stored ID directly
-                          },
-                        ),
-                      )),
+                  ...(_periods.toList()
+                        ..sort((a, b) => b.start.compareTo(a.start)))
+                      .map((p) => ListTile(
+                            leading: const Icon(Icons.timeline),
+                            title: Text(
+                                '${p.type[0].toUpperCase()}${p.type.substring(1)} period'),
+                            subtitle: Text(
+                                '${p.start.toLocal()} - ${p.end.toLocal()}'
+                                    .replaceAll(' 00:00:00.000', '')),
+                            trailing: IconButton(
+                              icon: const Icon(Icons.delete),
+                              onPressed: () {
+                                _deletePeriod(p); // Uses stored ID directly
+                              },
+                            ),
+                          )),
                 if (_notes.isEmpty &&
                     _periods.isEmpty &&
                     _calendarWorkouts.isEmpty)
