@@ -812,37 +812,161 @@ class _CalendarScreenState extends State<CalendarScreen> {
   }
 
   // Separate dialog for adding a workout
+
   void _showWorkoutDialog(DateTime date) {
     String? selectedWorkout;
+    String repeatType = 'none'; // 'none', 'weekly', 'interval'
+    int intervalDays = 3;
+    int durationWeeks = 6;
+    final List<String> repeatTypes = ['none', 'weekly', 'interval'];
+    String? errorText;
+
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Add Workout'),
-        content: DropdownButtonFormField<String>(
-          value: null,
-          hint: const Text('Assign workout'),
-          items: _workoutNames
-              .map((w) => DropdownMenuItem(value: w, child: Text(w)))
-              .toList(),
-          onChanged: (val) {
-            selectedWorkout = val;
-          },
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              if (selectedWorkout != null) {
-                _addWorkout(date, selectedWorkout!);
-                // setState(() {
-                //   // _calendarWorkouts
-                //   //     .add(_CalendarWorkout(date, selectedWorkout!));
-                // });
-              }
-              Navigator.pop(context);
-            },
-            child: const Text('Add'),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setStateDialog) => AlertDialog(
+          title: const Text('Add Workout'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              DropdownButtonFormField<String>(
+                value: selectedWorkout,
+                hint: const Text('Assign workout'),
+                items: _workoutNames
+                    .map((w) => DropdownMenuItem(value: w, child: Text(w)))
+                    .toList(),
+                onChanged: (val) => setStateDialog(() => selectedWorkout = val),
+              ),
+              const SizedBox(height: 12),
+              DropdownButtonFormField<String>(
+                value: repeatType,
+                items: repeatTypes
+                    .map((t) => DropdownMenuItem(
+                          value: t,
+                          child: Text(
+                            t == 'none'
+                                ? 'No Repeat'
+                                : t == 'weekly'
+                                    ? 'Repeat Weekly'
+                                    : 'Repeat Every X Days',
+                          ),
+                        ))
+                    .toList(),
+                onChanged: (val) => setStateDialog(() => repeatType = val!),
+                decoration: const InputDecoration(labelText: 'Repeat'),
+              ),
+              if (repeatType == 'weekly') ...[
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    const Text('Duration (weeks):'),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: TextFormField(
+                        initialValue: durationWeeks.toString(),
+                        keyboardType: TextInputType.number,
+                        onChanged: (val) {
+                          final parsed = int.tryParse(val);
+                          if (parsed != null && parsed > 0) {
+                            setStateDialog(() => durationWeeks = parsed);
+                          }
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+              if (repeatType == 'interval') ...[
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    const Text('with'),
+                    const SizedBox(width: 8),
+                    SizedBox(
+                      width: 40,
+                      child: TextFormField(
+                        initialValue: intervalDays.toString(),
+                        keyboardType: TextInputType.number,
+                        onChanged: (val) {
+                          final parsed = int.tryParse(val);
+                          if (parsed != null && parsed > 0) {
+                            setStateDialog(() => intervalDays = parsed + 1);
+                          }
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    const Text('days rest'),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    const Text('Duration (weeks):'),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: TextFormField(
+                        initialValue: durationWeeks.toString(),
+                        keyboardType: TextInputType.number,
+                        onChanged: (val) {
+                          final parsed = int.tryParse(val);
+                          if (parsed != null && parsed > 0) {
+                            setStateDialog(() => durationWeeks = parsed);
+                          }
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+              if (errorText != null) ...[
+                const SizedBox(height: 8),
+                Text(errorText!, style: const TextStyle(color: Colors.red)),
+              ],
+            ],
           ),
-        ],
+          actions: [
+            TextButton(
+              onPressed: () async {
+                if (selectedWorkout == null) {
+                  setStateDialog(() => errorText = 'Please select a workout');
+                  return;
+                }
+                if (repeatType == 'none') {
+                  _addWorkout(date, selectedWorkout!);
+                } else {
+                  if (durationWeeks <= 0) {
+                    setStateDialog(
+                        () => errorText = 'Duration must be at least 1 week');
+                    return;
+                  }
+                  DateTime current = date;
+                  DateTime endDate1 =
+                      date.add(Duration(days: (durationWeeks * 7) - 7));
+                  DateTime endDate2 =
+                      date.add(Duration(days: (durationWeeks * 7)));
+                  List<DateTime> dates = [];
+                  if (repeatType == 'weekly') {
+                    while (!current.isAfter(endDate1)) {
+                      dates.add(current);
+                      current = current.add(const Duration(days: 7));
+                    }
+                  } else if (repeatType == 'interval') {
+                    while (!current.isAfter(endDate2)) {
+                      dates.add(current);
+                      current = current.add(Duration(days: intervalDays));
+                    }
+                  }
+                  for (final d in dates) {
+                    _addWorkout(d, selectedWorkout!);
+                  }
+                }
+                Navigator.pop(context);
+              },
+              child: const Text('Add'),
+            ),
+          ],
+        ),
       ),
     );
   }
