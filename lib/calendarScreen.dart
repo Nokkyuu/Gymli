@@ -439,62 +439,93 @@ class _CalendarScreenState extends State<CalendarScreen> {
           const SizedBox(height: 10),
           const Divider(),
           if (_selectedDay != null) _buildDayDetails(_normalize(_selectedDay!)),
-          Expanded(
-            child: ListView(
-              children: [
-                if (_notes.isNotEmpty)
-                  ...(_notes.entries.toList()
-                        ..sort((a, b) =>
-                            b.key.compareTo(a.key))) // Sort by date desc
-                      .map((e) => ListTile(
-                            leading: const Icon(Icons.note),
-                            title: Text('${e.key.toLocal()}'.split(' ')[0]),
-                            subtitle: Text(e.value['note']),
-                            trailing: IconButton(
-                              icon: const Icon(Icons.delete),
-                              onPressed: () {
-                                _saveNote(e.key,
-                                    null); // This will delete using the stored ID
-                              },
-                            ),
-                          )),
-                if (_calendarWorkouts.isNotEmpty)
-                  ...(_calendarWorkouts.toList()
-                        ..sort((a, b) => b.date.compareTo(a.date)))
-                      .map((w) => ListTile(
-                            leading: const Icon(Icons.fitness_center),
-                            title: Text('${w.workoutName}'),
-                            subtitle: Text('${w.date.toLocal()}'.split(' ')[0]),
-                            trailing: IconButton(
-                              icon: const Icon(Icons.delete),
-                              onPressed: () {
-                                _deleteWorkout(w); // Uses stored ID directly
-                              },
-                            ),
-                          )),
-                if (_periods.isNotEmpty)
-                  ...(_periods.toList()
-                        ..sort((a, b) => b.start.compareTo(a.start)))
-                      .map((p) => ListTile(
-                            leading: const Icon(Icons.timeline),
-                            title: Text(
-                                '${p.type[0].toUpperCase()}${p.type.substring(1)} period'),
-                            subtitle: Text(
-                                '${p.start.toLocal()} - ${p.end.toLocal()}'
-                                    .replaceAll(' 00:00:00.000', '')),
-                            trailing: IconButton(
-                              icon: const Icon(Icons.delete),
-                              onPressed: () {
-                                _deletePeriod(p); // Uses stored ID directly
-                              },
-                            ),
-                          )),
-                if (_notes.isEmpty &&
-                    _periods.isEmpty &&
-                    _calendarWorkouts.isEmpty)
-                  const ListTile(
-                      title: Text('No notes, workouts, or periods yet.')),
-              ],
+          DefaultTabController(
+            length: 3,
+            child: Expanded(
+              child: Column(
+                children: [
+                  TabBar(
+                    labelColor: Theme.of(context).colorScheme.primary,
+                    tabs: const [
+                      Tab(icon: Icon(Icons.note), text: 'Notes'),
+                      Tab(icon: Icon(Icons.fitness_center), text: 'Workouts'),
+                      Tab(icon: Icon(Icons.timeline), text: 'Periods'),
+                    ],
+                  ),
+                  Expanded(
+                    child: TabBarView(
+                      children: [
+                        // Notes Tab
+                        _notes.isNotEmpty
+                            ? ListView(
+                                children: (_notes.entries.toList()
+                                      ..sort((a, b) => b.key.compareTo(a.key)))
+                                    .map((e) => ListTile(
+                                          leading: const Icon(Icons.note),
+                                          title: Text('${e.key.toLocal()}'
+                                              .split(' ')[0]),
+                                          subtitle: Text(e.value['note']),
+                                          trailing: IconButton(
+                                            icon: const Icon(Icons.delete),
+                                            onPressed: () {
+                                              _saveNote(e.key, null);
+                                            },
+                                          ),
+                                        ))
+                                    .toList(),
+                              )
+                            : const Center(child: Text('No notes yet.')),
+                        // Workouts Tab
+                        _calendarWorkouts.isNotEmpty
+                            ? ListView(
+                                children: (_calendarWorkouts.toList()
+                                      ..sort(
+                                          (a, b) => b.date.compareTo(a.date)))
+                                    .map((w) => ListTile(
+                                          leading:
+                                              const Icon(Icons.fitness_center),
+                                          title: Text('${w.workoutName}'),
+                                          subtitle: Text('${w.date.toLocal()}'
+                                              .split(' ')[0]),
+                                          trailing: IconButton(
+                                            icon: const Icon(Icons.delete),
+                                            onPressed: () {
+                                              _deleteWorkout(w);
+                                            },
+                                          ),
+                                        ))
+                                    .toList(),
+                              )
+                            : const Center(child: Text('No workouts yet.')),
+                        // Periods Tab
+                        _periods.isNotEmpty
+                            ? ListView(
+                                children: (_periods.toList()
+                                      ..sort(
+                                          (a, b) => b.start.compareTo(a.start)))
+                                    .map((p) => ListTile(
+                                          leading: const Icon(Icons.timeline),
+                                          title: Text(
+                                              '${p.type[0].toUpperCase()}${p.type.substring(1)} period'),
+                                          subtitle: Text(
+                                              '${p.start.toLocal()} - ${p.end.toLocal()}'
+                                                  .replaceAll(
+                                                      ' 00:00:00.000', '')),
+                                          trailing: IconButton(
+                                            icon: const Icon(Icons.delete),
+                                            onPressed: () {
+                                              _deletePeriod(p);
+                                            },
+                                          ),
+                                        ))
+                                    .toList(),
+                              )
+                            : const Center(child: Text('No periods yet.')),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ],
@@ -558,6 +589,27 @@ class _CalendarScreenState extends State<CalendarScreen> {
     );
   }
 
+  void _clearNotesAndWorkoutsForDay(DateTime day) async {
+    // Remove note
+    if (_notes.containsKey(day)) {
+      await userService.deleteCalendarNote(_notes[day]!['id']);
+      setState(() {
+        _notes.remove(day);
+      });
+    }
+    // Remove all workouts for that day
+    final workoutsToRemove =
+        _calendarWorkouts.where((w) => _normalize(w.date) == day).toList();
+    for (final w in workoutsToRemove) {
+      if (w.id != null) {
+        await userService.deleteCalendarWorkout(w.id!);
+      }
+    }
+    setState(() {
+      _calendarWorkouts.removeWhere((w) => _normalize(w.date) == day);
+    });
+  }
+
   void _showDayActionDialog(DateTime date) {
     final normalized = _normalize(date);
     final noteData = _notes[normalized];
@@ -601,7 +653,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
       position: RelativeRect.fromLTRB(
           position.dx, position.dy, position.dx, position.dy),
       items: [
-        PopupMenuItem(
+        const PopupMenuItem(
           value: 'note',
           child: Row(
             children: const [
@@ -611,7 +663,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
             ],
           ),
         ),
-        PopupMenuItem(
+        const PopupMenuItem(
           value: 'workout',
           child: Row(
             children: const [
@@ -621,7 +673,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
             ],
           ),
         ),
-        PopupMenuItem(
+        const PopupMenuItem(
           value: 'period',
           child: Row(
             children: const [
@@ -631,6 +683,18 @@ class _CalendarScreenState extends State<CalendarScreen> {
             ],
           ),
         ),
+        if (_notes.containsKey(_normalize(day)) ||
+            _calendarWorkouts.any((w) => _normalize(w.date) == _normalize(day)))
+          const PopupMenuItem(
+            value: 'clear',
+            child: Row(
+              children: [
+                Icon(Icons.clear, size: 18, color: Colors.red),
+                SizedBox(width: 8),
+                Text('Clear Notes & Workouts'),
+              ],
+            ),
+          ),
       ],
     ).then((value) {
       if (value == 'note') {
@@ -639,6 +703,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
         _showWorkoutDialog(normalized);
       } else if (value == 'period') {
         _showAddPeriodDialog(startDate: normalized);
+      } else if (value == 'clear') {
+        _clearNotesAndWorkoutsForDay(normalized);
       }
     });
   }
@@ -647,6 +713,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
     DateTime? start = startDate;
     DateTime? end = startDate;
     String? type;
+    String? errorText;
+
     showDialog(
       context: context,
       builder: (context) => StatefulBuilder(
@@ -706,6 +774,13 @@ class _CalendarScreenState extends State<CalendarScreen> {
                   ),
                 ],
               ),
+              if (errorText != null) ...[
+                const SizedBox(height: 8),
+                Text(
+                  errorText!,
+                  style: const TextStyle(color: Colors.red),
+                ),
+              ],
             ],
           ),
           actions: [
@@ -715,10 +790,16 @@ class _CalendarScreenState extends State<CalendarScreen> {
                     start != null &&
                     end != null &&
                     !end!.isBefore(start!)) {
+                  // Check for overlap
+                  final hasOverlap = _periods.any(
+                      (p) => (start!.isBefore(p.end) && end!.isAfter(p.start)));
+                  if (hasOverlap) {
+                    setStateDialog(() {
+                      errorText = 'Periods cannot overlap!';
+                    });
+                    return;
+                  }
                   _addPeriod(type!, start!, end!);
-                  // setState(() {
-                  //   //_periods.add(_Period(type!, start!, end!));
-                  // });
                   Navigator.pop(context);
                 }
               },
