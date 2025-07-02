@@ -626,7 +626,6 @@ class ApiFoodLog {
 class ApiPeriod {
   final int? id;
   final String userName;
-  // final String label;
   final String type; // 'cut', 'bulk', etc.
   final DateTime startDate;
   final DateTime endDate;
@@ -634,7 +633,6 @@ class ApiPeriod {
   ApiPeriod({
     this.id,
     required this.userName,
-    //required this.label,
     required this.type,
     required this.startDate,
     required this.endDate,
@@ -643,7 +641,6 @@ class ApiPeriod {
   factory ApiPeriod.fromJson(Map<String, dynamic> json) => ApiPeriod(
         id: json['id'],
         userName: json['user_name'],
-        //label: json['label'],
         type: json['type'],
         startDate: DateTime.parse(json['start_date']),
         endDate: DateTime.parse(json['end_date']),
@@ -652,7 +649,6 @@ class ApiPeriod {
   Map<String, dynamic> toJson() => {
         'id': id,
         'user_name': userName,
-        //'label': label,
         'type': type,
         'start_date': startDate.toIso8601String(),
         'end_date': endDate.toIso8601String(),
@@ -692,13 +688,13 @@ class ApiCalendarWorkout {
   final int? id;
   final String userName;
   final DateTime date;
-  final int workoutId;
+  final String workout;
 
   ApiCalendarWorkout({
     this.id,
     required this.userName,
     required this.date,
-    required this.workoutId,
+    required this.workout,
   });
 
   factory ApiCalendarWorkout.fromJson(Map<String, dynamic> json) =>
@@ -706,13 +702,13 @@ class ApiCalendarWorkout {
         id: json['id'],
         userName: json['user_name'],
         date: DateTime.parse(json['date']),
-        workoutId: json['workout_id'],
+        workout: json['workout'],
       );
 
   Map<String, dynamic> toJson() => {
         'id': id,
         'user_name': userName,
         'date': date.toIso8601String(),
-        'workout_id': workoutId,
+        'workout': workout,
       };
 }

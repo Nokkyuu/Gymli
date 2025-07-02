@@ -16,6 +16,7 @@ import 'user_service.dart';
 import 'config/api_config.dart';
 import 'info.dart';
 import 'calendarScreen.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 final userService = UserService();
 bool state = false;
@@ -276,6 +277,16 @@ class _MainAppState extends State<MainApp> {
     final ThemeData themeData = buildAppTheme(mode);
 
     return MaterialApp(
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: [
+        const Locale('en', 'US'),
+        const Locale('en', 'GB'),
+        const Locale('de', 'DE'),
+      ],
       theme: themeData,
       title: 'Gymli Gainson',
       home: Builder(

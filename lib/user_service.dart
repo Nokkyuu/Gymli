@@ -62,6 +62,9 @@ class UserService {
     'activityLogs': <Map<String, dynamic>>[],
     'foods': <Map<String, dynamic>>[],
     'foodLogs': <Map<String, dynamic>>[],
+    'calendarNotes': <Map<String, dynamic>>[],
+    'calendarWorkouts': <Map<String, dynamic>>[],
+    'periods': <Map<String, dynamic>>[],
   };
 
   void setCredentials(Credentials? credentials) {
@@ -1974,6 +1977,147 @@ class UserService {
       }
 
       return createdFoods;
+    }
+  }
+
+//----------------- Calendar Notes Services -----------------//
+  Future<List<dynamic>> getCalendarNotes() async {
+    if (isLoggedIn) {
+      return await api.CalendarNoteService()
+          .getCalendarNotes(userName: userName);
+    } else {
+      return _inMemoryData['calendarNotes'] as List<dynamic>? ?? [];
+    }
+  }
+
+  Future<void> createCalendarNote({
+    required DateTime date,
+    required String note,
+  }) async {
+    if (isLoggedIn) {
+      await api.CalendarNoteService().createCalendarNote(
+        userName: userName,
+        date: date,
+        note: note,
+      );
+    } else {
+      final notes = _inMemoryData['calendarNotes'] as List<dynamic>? ?? [];
+      notes.add({
+        'id': DateTime.now().millisecondsSinceEpoch,
+        'user_name': 'DefaultUser',
+        'date': date.toIso8601String(),
+        'note': note,
+      });
+      _inMemoryData['calendarNotes'] = notes;
+    }
+  }
+
+  // In UserService
+
+  Future<void> deleteCalendarNote(int id) async {
+    if (isLoggedIn) {
+      await api.CalendarNoteService().deleteCalendarNote(id);
+    } else {
+      final notes = _inMemoryData['calendarNotes'] as List<dynamic>? ?? [];
+      notes.removeWhere((n) => n['id'] == id);
+      _inMemoryData['calendarNotes'] = notes;
+    }
+  }
+
+  Future<void> updateCalendarNote(
+    int id, {
+    required String note,
+    required DateTime date,
+  }) async {
+    deleteCalendarNote(id);
+    createCalendarNote(date: date, note: note);
+  } //TODO: Change to actually update instead of delete and create
+
+  Future<List<dynamic>> getCalendarWorkouts() async {
+    if (isLoggedIn) {
+      return await api.CalendarWorkoutService()
+          .getCalendarWorkouts(userName: userName);
+    } else {
+      return _inMemoryData['calendarWorkouts'] as List<dynamic>? ?? [];
+    }
+  }
+
+  Future<void> createCalendarWorkout({
+    required DateTime date,
+    required String workout,
+  }) async {
+    if (isLoggedIn) {
+      await api.CalendarWorkoutService().createCalendarWorkout(
+        userName: userName,
+        date: date,
+        workout: workout,
+      );
+    } else {
+      final workouts =
+          _inMemoryData['calendarWorkouts'] as List<dynamic>? ?? [];
+      workouts.add({
+        'id': DateTime.now().millisecondsSinceEpoch,
+        'user_name': 'DefaultUser',
+        'date': date.toIso8601String(),
+        'workout': workout,
+      });
+      _inMemoryData['calendarWorkouts'] = workouts;
+    }
+  }
+
+  Future<void> deleteCalendarWorkout(int id) async {
+    if (isLoggedIn) {
+      await api.CalendarWorkoutService().deleteCalendarWorkout(id);
+    } else {
+      final workouts =
+          _inMemoryData['calendarWorkouts'] as List<dynamic>? ?? [];
+      workouts.removeWhere((w) => w['id'] == id);
+      _inMemoryData['calendarWorkouts'] = workouts;
+    }
+  }
+
+//----------------- Periods Services -----------------//
+  Future<List<dynamic>> getPeriods() async {
+    if (isLoggedIn) {
+      return await api.CalendarPeriodService()
+          .getCalendarPeriods(userName: userName);
+    } else {
+      return _inMemoryData['periods'] as List<dynamic>? ?? [];
+    }
+  }
+
+  Future<void> createPeriod({
+    required String type,
+    required DateTime startDate,
+    required DateTime endDate,
+  }) async {
+    if (isLoggedIn) {
+      await api.CalendarPeriodService().createCalendarPeriod(
+        userName: userName,
+        type: type,
+        start_date: startDate,
+        end_date: endDate,
+      );
+    } else {
+      final periods = _inMemoryData['periods'] as List<dynamic>? ?? [];
+      periods.add({
+        'id': DateTime.now().millisecondsSinceEpoch,
+        'user_name': 'DefaultUser',
+        'type': type,
+        'start_date': startDate.toIso8601String(),
+        'end_date': endDate.toIso8601String(),
+      });
+      _inMemoryData['periods'] = periods;
+    }
+  }
+
+  Future<void> deletePeriod(int id) async {
+    if (isLoggedIn) {
+      await api.CalendarPeriodService().deleteCalendarPeriod(id);
+    } else {
+      final periods = _inMemoryData['periods'] as List<dynamic>? ?? [];
+      periods.removeWhere((p) => p['id'] == id);
+      _inMemoryData['periods'] = periods;
     }
   }
 }

@@ -1,17 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
+import 'user_service.dart';
+
+//TODO: Changing the API to return IDs when adding items, so that there is no need for constant reloads
 
 class _Period {
+  final int? id;
   final String type; // 'cut', 'bulk', 'other'
   final DateTime start;
   final DateTime end;
-  _Period(this.type, this.start, this.end);
+  _Period(this.type, this.start, this.end, {this.id});
 }
 
 class _CalendarWorkout {
+  final int? id;
   final DateTime date;
   final String workoutName;
-  _CalendarWorkout(this.date, this.workoutName);
+  _CalendarWorkout(this.date, this.workoutName, {this.id});
 }
 
 class CalendarScreen extends StatefulWidget {
@@ -24,18 +29,150 @@ class CalendarScreen extends StatefulWidget {
 class _CalendarScreenState extends State<CalendarScreen> {
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
-  final Map<DateTime, String> _notes = {};
+  final Map<DateTime, Map<String, dynamic>> _notes =
+      {}; // Store both note and id
   final List<_Period> _periods = [];
   final List<_CalendarWorkout> _calendarWorkouts = [];
 
   // Dummy workout list for demonstration
-  final List<String> _workouts = [
-    'Push Day',
-    'Pull Day',
-    'Leg Day',
-    'Full Body',
-    'Cardio'
-  ];
+  // final List<String> _workouts = [
+  //   'Push Day',
+  //   'Pull Day',
+  //   'Leg Day',
+  //   'Full Body',
+  //   'Cardio'
+  // ];
+  List<String> _workoutNames = [];
+  final userService = UserService();
+  @override
+  void initState() {
+    super.initState();
+    _loadWorkouts();
+    _loadCalendarNotes();
+    _loadCalendarWorkouts();
+    _loadPeriods();
+  }
+
+  Future<void> _loadWorkouts() async {
+    final workouts = await userService.getWorkouts();
+    setState(() {
+      _workoutNames = workouts.map<String>((w) => w['name'] as String).toList();
+    });
+  }
+
+  Future<void> _loadCalendarNotes() async {
+    final notes = await userService.getCalendarNotes();
+    setState(() {
+      _notes.clear();
+      for (var n in notes) {
+        final date = DateTime.parse(n['date']);
+        _notes[_normalize(date)] = {
+          'note': n['note'] as String,
+          'id': n['id'],
+        };
+      }
+    });
+  }
+
+  Future<void> _loadCalendarWorkouts() async {
+    final workouts = await userService.getCalendarWorkouts();
+    setState(() {
+      _calendarWorkouts.clear();
+      for (var w in workouts) {
+        final date = DateTime.parse(w['date']);
+        _calendarWorkouts.add(_CalendarWorkout(
+          _normalize(date),
+          w['workout'],
+          id: w['id'],
+        ));
+      }
+    });
+  }
+
+  Future<void> _loadPeriods() async {
+    final periods = await userService.getPeriods();
+    setState(() {
+      _periods.clear();
+      for (var p in periods) {
+        _periods.add(_Period(
+          p['type'],
+          DateTime.parse(p['start_date']),
+          DateTime.parse(p['end_date']),
+          id: p['id'],
+        ));
+      }
+    });
+  }
+
+  void _saveNote(DateTime date, String? note) async {
+    final existingNote = _notes[date];
+
+    if (note == null || note.trim().isEmpty) {
+      // Delete note
+      if (existingNote != null) {
+        await userService.deleteCalendarNote(existingNote['id']);
+      }
+      setState(() {
+        _notes.remove(date);
+      });
+    } else {
+      if (existingNote != null) {
+        // Update existing note
+        await userService.updateCalendarNote(existingNote['id'],
+            note: note, date: date);
+        setState(() {
+          _notes[date] = {'note': note, 'id': existingNote['id']};
+        });
+      } else {
+        // Create new note
+        await userService.createCalendarNote(date: date, note: note);
+        await _loadCalendarNotes();
+      }
+    }
+  }
+
+  void _addWorkout(DateTime date, String workoutName) async {
+    try {
+      await userService.createCalendarWorkout(date: date, workout: workoutName);
+      await _loadCalendarWorkouts();
+    } catch (e) {
+      print('Error adding workout: $e'); // Debug log
+    }
+  }
+
+  void _addPeriod(String type, DateTime start, DateTime end) async {
+    try {
+      print('Adding period: $type from $start to $end'); // Debug log
+      await userService.createPeriod(
+          type: type, startDate: start, endDate: end);
+
+      await _loadPeriods();
+    } catch (e) {
+      print('Error adding period: $e'); // Debug log
+      // Show error to user
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to add period: $e')),
+      );
+    }
+  }
+
+  void _deleteWorkout(_CalendarWorkout workout) async {
+    if (workout.id != null) {
+      await userService.deleteCalendarWorkout(workout.id!);
+    }
+    setState(() {
+      _calendarWorkouts.remove(workout);
+    });
+  }
+
+  void _deletePeriod(_Period period) async {
+    if (period.id != null) {
+      await userService.deletePeriod(period.id!);
+    }
+    setState(() {
+      _periods.remove(period);
+    });
+  }
 
   // Helper to normalize dates (remove time part)
   DateTime _normalize(DateTime dt) => DateTime(dt.year, dt.month, dt.day);
@@ -43,9 +180,9 @@ class _CalendarScreenState extends State<CalendarScreen> {
   Color? _periodColor(String type) {
     switch (type) {
       case 'cut':
-        return Color.fromARGB(217, 33, 149, 243);
+        return Color.fromARGB(105, 255, 66, 28);
       case 'bulk':
-        return Colors.green.withOpacity(0.2);
+        return const Color.fromARGB(143, 76, 175, 79).withOpacity(0.2);
       default:
         return Colors.orange.withOpacity(0.2);
     }
@@ -67,19 +204,11 @@ class _CalendarScreenState extends State<CalendarScreen> {
             selectedDayPredicate: (day) =>
                 _selectedDay != null &&
                 _normalize(day) == _normalize(_selectedDay!),
-            onDayLongPressed: (selectedDay, focusedDay) {
-              setState(() {
-                _selectedDay = selectedDay;
-                _focusedDay = focusedDay;
-              });
-              _showDayActionDialog(selectedDay);
-            },
             onDaySelected: (selectedDay, focusedDay) {
               setState(() {
                 _selectedDay = selectedDay;
                 _focusedDay = focusedDay;
               });
-              // _showDayActionDialog(selectedDay);
             },
             calendarBuilders: CalendarBuilders(
               defaultBuilder: (context, day, focusedDay) {
@@ -94,31 +223,52 @@ class _CalendarScreenState extends State<CalendarScreen> {
                   orElse: () => _Period('', DateTime(1900), DateTime(1900)),
                 );
                 final inPeriod = period.type.isNotEmpty;
-                return Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    Container(
-                      decoration: BoxDecoration(
-                        color: inPeriod ? _periodColor(period.type) : null,
-                        shape: BoxShape.rectangle,
+                return GestureDetector(
+                  onSecondaryTapDown: (details) async {
+                    setState(() {
+                      _selectedDay = day;
+                      _focusedDay = day;
+                    });
+                    // Right-click (desktop) or long-press (mobile)
+                    await _showDayPopupMenu(
+                        context, day, details.globalPosition);
+                  },
+                  onLongPress: () async {
+                    setState(() {
+                      _selectedDay = day;
+                      _focusedDay = day;
+                    });
+                    // Long-press (mobile)
+                    final box = context.findRenderObject() as RenderBox;
+                    final position = box.localToGlobal(Offset.zero);
+                    await _showDayPopupMenu(context, day, position);
+                  },
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      Container(
+                        decoration: BoxDecoration(
+                          color: inPeriod ? _periodColor(period.type) : null,
+                          shape: BoxShape.rectangle,
+                        ),
+                        alignment: Alignment.center,
+                        child: Text('${day.day}'),
                       ),
-                      alignment: Alignment.center,
-                      child: Text('${day.day}'),
-                    ),
-                    if (hasNote)
-                      Positioned(
-                        bottom: 4,
-                        left: 8,
-                        child: Icon(Icons.note, size: 14, color: Colors.blue),
-                      ),
-                    if (hasWorkout)
-                      Positioned(
-                        bottom: 4,
-                        right: 8,
-                        child: Icon(Icons.fitness_center,
-                            size: 14, color: Colors.deepPurple),
-                      ),
-                  ],
+                      if (hasNote)
+                        Positioned(
+                          bottom: 4,
+                          left: 8,
+                          child: Icon(Icons.note, size: 14, color: Colors.blue),
+                        ),
+                      if (hasWorkout)
+                        Positioned(
+                          bottom: 4,
+                          right: 8,
+                          child: Icon(Icons.fitness_center,
+                              size: 14, color: Colors.deepPurple),
+                        ),
+                    ],
+                  ),
                 );
               },
               selectedBuilder: (context, day, focusedDay) {
@@ -133,56 +283,110 @@ class _CalendarScreenState extends State<CalendarScreen> {
                   orElse: () => _Period('', DateTime(1900), DateTime(1900)),
                 );
                 final inPeriod = period.type.isNotEmpty;
-                return Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    Container(
-                      decoration: BoxDecoration(
-                        color: Theme.of(context)
-                            .colorScheme
-                            .primary, // <-- your selected day color
-                        shape: BoxShape.rectangle,
+                return GestureDetector(
+                  onSecondaryTapDown: (details) async {
+                    await _showDayPopupMenu(
+                        context, day, details.globalPosition);
+                  },
+                  onLongPress: () async {
+                    final box = context.findRenderObject() as RenderBox;
+                    final position = box.localToGlobal(Offset.zero);
+                    await _showDayPopupMenu(context, day, position);
+                  },
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.primary,
+                          shape: BoxShape.rectangle,
+                        ),
+                        alignment: Alignment.center,
+                        child: Text(
+                          '${day.day}',
+                          style: const TextStyle(color: Colors.white),
+                        ),
                       ),
-                      alignment: Alignment.center,
-                      child: Text(
-                        '${day.day}',
-                        style: const TextStyle(color: Colors.white),
-                      ),
-                    ),
-                    if (hasNote)
-                      Positioned(
-                        bottom: 4,
-                        left: 8,
-                        child: Icon(Icons.note, size: 14, color: Colors.blue),
-                      ),
-                    if (hasWorkout)
-                      Positioned(
-                        bottom: 4,
-                        right: 8,
-                        child: Icon(Icons.fitness_center,
-                            size: 14, color: Colors.white),
-                      ),
-                  ],
+                      if (hasNote)
+                        Positioned(
+                          bottom: 4,
+                          left: 8,
+                          child:
+                              Icon(Icons.note, size: 14, color: Colors.black),
+                        ),
+                      if (hasWorkout)
+                        Positioned(
+                          bottom: 4,
+                          right: 8,
+                          child: Icon(Icons.fitness_center,
+                              size: 14, color: Colors.white),
+                        ),
+                    ],
+                  ),
                 );
               },
               todayBuilder: (context, day, focusedDay) {
-                // Customize the appearance of the current day
-                return Container(
-                    decoration: BoxDecoration(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .surface, // <-- your custom color for today
-                      shape: BoxShape.circle,
-                    ),
+                final normalized = _normalize(day);
+                final hasNote = _notes.containsKey(normalized);
+                final hasWorkout = _calendarWorkouts
+                    .any((w) => _normalize(w.date) == normalized);
+                final period = _periods.firstWhere(
+                  (p) =>
+                      !normalized.isBefore(p.start) &&
+                      !normalized.isAfter(p.end),
+                  orElse: () => _Period('', DateTime(1900), DateTime(1900)),
+                );
+                final inPeriod = period.type.isNotEmpty;
+                return GestureDetector(
+                  onSecondaryTapDown: (details) async {
+                    setState(() {
+                      _selectedDay = day;
+                      _focusedDay = day;
+                    });
+                    // Right-click (desktop) or long-press (mobile)
+                    await _showDayPopupMenu(
+                        context, day, details.globalPosition);
+                  },
+                  onLongPress: () async {
+                    setState(() {
+                      _selectedDay = day;
+                      _focusedDay = day;
+                    });
+                    // Long-press (mobile)
+                    final box = context.findRenderObject() as RenderBox;
+                    final position = box.localToGlobal(Offset.zero);
+                    await _showDayPopupMenu(context, day, position);
+                  },
+                  child: Stack(
                     alignment: Alignment.center,
-                    child: Text(
-                      '${day.day}',
-                      style: TextStyle(
-                        color: Theme.of(context)
-                            .colorScheme
-                            .primary, // <-- text color),
+                    children: [
+                      Container(
+                        decoration: BoxDecoration(
+                          color: inPeriod ? _periodColor(period.type) : null,
+                          shape: BoxShape.rectangle,
+                        ),
+                        alignment: Alignment.center,
+                        child: Text('${day.day}',
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.primary,
+                            )),
                       ),
-                    ));
+                      if (hasNote)
+                        Positioned(
+                          bottom: 4,
+                          left: 8,
+                          child: Icon(Icons.note, size: 14, color: Colors.blue),
+                        ),
+                      if (hasWorkout)
+                        Positioned(
+                          bottom: 4,
+                          right: 8,
+                          child: Icon(Icons.fitness_center,
+                              size: 14, color: Colors.deepPurple),
+                        ),
+                    ],
+                  ),
+                );
               },
             ),
           ),
@@ -205,13 +409,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
             ),
           ),
           const SizedBox(height: 10),
-          ElevatedButton.icon(
-            icon: const Icon(Icons.timeline),
-            label: const Text('Add Time Period'),
-            onPressed: _showAddPeriodDialog,
-          ),
           const Divider(),
-          // Day details
           if (_selectedDay != null) _buildDayDetails(_normalize(_selectedDay!)),
           Expanded(
             child: ListView(
@@ -220,13 +418,12 @@ class _CalendarScreenState extends State<CalendarScreen> {
                   ..._notes.entries.map((e) => ListTile(
                         leading: const Icon(Icons.note),
                         title: Text('${e.key.toLocal()}'.split(' ')[0]),
-                        subtitle: Text(e.value),
+                        subtitle: Text(e.value['note']),
                         trailing: IconButton(
                           icon: const Icon(Icons.delete),
                           onPressed: () {
-                            setState(() {
-                              _notes.remove(e.key);
-                            });
+                            _saveNote(e.key,
+                                null); // This will delete using the stored ID
                           },
                         ),
                       )),
@@ -238,9 +435,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                         trailing: IconButton(
                           icon: const Icon(Icons.delete),
                           onPressed: () {
-                            setState(() {
-                              _calendarWorkouts.remove(w);
-                            });
+                            _deleteWorkout(w); // Uses stored ID directly
                           },
                         ),
                       )),
@@ -255,9 +450,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                         trailing: IconButton(
                           icon: const Icon(Icons.delete),
                           onPressed: () {
-                            setState(() {
-                              _periods.remove(p);
-                            });
+                            _deletePeriod(p); // Uses stored ID directly
                           },
                         ),
                       )),
@@ -287,7 +480,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
   }
 
   Widget _buildDayDetails(DateTime day) {
-    final note = _notes[day];
+    final noteData = _notes[day];
+    final note = noteData?['note'];
     final workouts = _calendarWorkouts
         .where((w) => _normalize(w.date) == day)
         .map((w) => w.workoutName)
@@ -331,13 +525,12 @@ class _CalendarScreenState extends State<CalendarScreen> {
 
   void _showDayActionDialog(DateTime date) {
     final normalized = _normalize(date);
-    final noteController =
-        TextEditingController(text: _notes[normalized] ?? '');
-    String? selectedWorkout;
+    final noteData = _notes[normalized];
+    final noteController = TextEditingController(text: noteData?['note'] ?? '');
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Day Actions (${normalized.toLocal()}'.split(' ')[0] + ')'),
+        title: Text('Note'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -345,33 +538,16 @@ class _CalendarScreenState extends State<CalendarScreen> {
               controller: noteController,
               decoration: const InputDecoration(hintText: 'Enter note...'),
             ),
-            const SizedBox(height: 8),
-            DropdownButtonFormField<String>(
-              value: null,
-              hint: const Text('Assign workout'),
-              items: _workouts
-                  .map((w) => DropdownMenuItem(value: w, child: Text(w)))
-                  .toList(),
-              onChanged: (val) {
-                selectedWorkout = val;
-              },
-            ),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () {
-              setState(() {
-                if (noteController.text.trim().isEmpty) {
-                  _notes.remove(normalized);
-                } else {
-                  _notes[normalized] = noteController.text.trim();
-                }
-                if (selectedWorkout != null) {
-                  _calendarWorkouts
-                      .add(_CalendarWorkout(normalized, selectedWorkout!));
-                }
-              });
+              _saveNote(
+                  normalized,
+                  noteController.text.trim().isEmpty
+                      ? null
+                      : noteController.text.trim());
               Navigator.pop(context);
             },
             child: const Text('Save'),
@@ -381,9 +557,60 @@ class _CalendarScreenState extends State<CalendarScreen> {
     );
   }
 
-  void _showAddPeriodDialog() {
-    DateTime? start;
-    DateTime? end;
+  // Popup menu for day cell
+  Future<void> _showDayPopupMenu(
+      BuildContext context, DateTime day, Offset position) async {
+    final normalized = _normalize(day);
+    await showMenu(
+      context: context,
+      position: RelativeRect.fromLTRB(
+          position.dx, position.dy, position.dx, position.dy),
+      items: [
+        PopupMenuItem(
+          value: 'note',
+          child: Row(
+            children: const [
+              Icon(Icons.note, size: 18, color: Colors.blue),
+              SizedBox(width: 8),
+              Text('Add/Edit Note'),
+            ],
+          ),
+        ),
+        PopupMenuItem(
+          value: 'workout',
+          child: Row(
+            children: const [
+              Icon(Icons.fitness_center, size: 18, color: Colors.deepPurple),
+              SizedBox(width: 8),
+              Text('Add Workout'),
+            ],
+          ),
+        ),
+        PopupMenuItem(
+          value: 'period',
+          child: Row(
+            children: const [
+              Icon(Icons.timeline, size: 18, color: Colors.orange),
+              SizedBox(width: 8),
+              Text('Add Time Period'),
+            ],
+          ),
+        ),
+      ],
+    ).then((value) {
+      if (value == 'note') {
+        _showDayActionDialog(normalized);
+      } else if (value == 'workout') {
+        _showWorkoutDialog(normalized);
+      } else if (value == 'period') {
+        _showAddPeriodDialog(startDate: normalized);
+      }
+    });
+  }
+
+  void _showAddPeriodDialog({DateTime? startDate}) {
+    DateTime? start = startDate;
+    DateTime? end = startDate;
     String? type;
     showDialog(
       context: context,
@@ -410,6 +637,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                   TextButton(
                     onPressed: () async {
                       final picked = await showDatePicker(
+                        locale: const Locale('en', 'GB'),
                         context: context,
                         initialDate: start ?? DateTime.now(),
                         firstDate: DateTime(2020),
@@ -429,6 +657,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                   TextButton(
                     onPressed: () async {
                       final picked = await showDatePicker(
+                        locale: const Locale('en', 'GB'),
                         context: context,
                         initialDate: end ?? DateTime.now(),
                         firstDate: DateTime(2020),
@@ -451,9 +680,10 @@ class _CalendarScreenState extends State<CalendarScreen> {
                     start != null &&
                     end != null &&
                     !end!.isBefore(start!)) {
-                  setState(() {
-                    _periods.add(_Period(type!, start!, end!));
-                  });
+                  _addPeriod(type!, start!, end!);
+                  // setState(() {
+                  //   //_periods.add(_Period(type!, start!, end!));
+                  // });
                   Navigator.pop(context);
                 }
               },
@@ -461,6 +691,42 @@ class _CalendarScreenState extends State<CalendarScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  // Separate dialog for adding a workout
+  void _showWorkoutDialog(DateTime date) {
+    String? selectedWorkout;
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Add Workout'),
+        content: DropdownButtonFormField<String>(
+          value: null,
+          hint: const Text('Assign workout'),
+          items: _workoutNames
+              .map((w) => DropdownMenuItem(value: w, child: Text(w)))
+              .toList(),
+          onChanged: (val) {
+            selectedWorkout = val;
+          },
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              if (selectedWorkout != null) {
+                _addWorkout(date, selectedWorkout!);
+                // setState(() {
+                //   // _calendarWorkouts
+                //   //     .add(_CalendarWorkout(date, selectedWorkout!));
+                // });
+              }
+              Navigator.pop(context);
+            },
+            child: const Text('Add'),
+          ),
+        ],
       ),
     );
   }

@@ -1103,3 +1103,167 @@ class FoodService {
     }
   }
 }
+
+class CalendarNoteService {
+  Future<List<dynamic>> getCalendarNotes({required String userName}) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/calendar_notes?user_name=$userName'),
+      headers: {
+        'Content-Type': 'application/json',
+        'X-API-Key': ApiConfig.apiKey!,
+      },
+    );
+    if (response.statusCode == 200) {
+      return json.decode(response.body);
+    } else {
+      throw Exception('Failed to load calendar notes');
+    }
+  }
+
+  Future<void> createCalendarNote({
+    required String userName,
+    required DateTime date,
+    required String note,
+  }) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/calendar_notes'),
+      headers: {
+        'Content-Type': 'application/json',
+        'X-API-Key': ApiConfig.apiKey!,
+      },
+      body: json.encode({
+        'user_name': userName,
+        'date': date.toIso8601String(),
+        'note': note,
+      }),
+    );
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return json.decode(response.body);
+    } else {
+      throw Exception('Failed to create calendar note');
+    }
+  }
+
+  Future<void> deleteCalendarNote(int id) async {
+    final response = await http.delete(
+      Uri.parse('$baseUrl/calendar_notes/$id'),
+      headers: {
+        'Content-Type': 'application/json',
+        'X-API-Key': ApiConfig.apiKey!,
+      },
+    );
+    if (response.statusCode != 200 && response.statusCode != 204) {
+      throw Exception('Failed to delete calendar note');
+    }
+  }
+}
+
+class CalendarWorkoutService {
+  Future<List<dynamic>> getCalendarWorkouts({required String userName}) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/calendar_workouts?user_name=$userName'),
+      headers: {
+        'Content-Type': 'application/json',
+        'X-API-Key': ApiConfig.apiKey!,
+      },
+    );
+    if (response.statusCode == 200) {
+      return json.decode(response.body);
+    } else {
+      throw Exception('Failed to load calendar workouts');
+    }
+  }
+
+  Future<void> createCalendarWorkout({
+    required String userName,
+    required DateTime date,
+    required String workout,
+  }) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/calendar_workouts'),
+      headers: {
+        'Content-Type': 'application/json',
+        'X-API-Key': ApiConfig.apiKey!,
+      },
+      body: json.encode({
+        'user_name': userName,
+        'date': date.toIso8601String(),
+        'workout': workout,
+      }),
+    );
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return json.decode(response.body);
+    } else {
+      throw Exception('Failed to create calendar workout');
+    }
+  }
+
+  Future<void> deleteCalendarWorkout(int id) async {
+    final response = await http.delete(
+      Uri.parse('$baseUrl/calendar_workouts/$id'),
+      headers: {
+        'Content-Type': 'application/json',
+        'X-API-Key': ApiConfig.apiKey!,
+      },
+    );
+    if (response.statusCode != 200 && response.statusCode != 204) {
+      throw Exception('Failed to delete calendar workout');
+    }
+  }
+}
+
+class CalendarPeriodService {
+  Future<List<dynamic>> getCalendarPeriods({required String userName}) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/periods?user_name=$userName'),
+      headers: {
+        'Content-Type': 'application/json',
+        'X-API-Key': ApiConfig.apiKey!,
+      },
+    );
+    if (response.statusCode == 200) {
+      return json.decode(response.body);
+    } else {
+      throw Exception('Failed to load calendar periods');
+    }
+  }
+
+  Future<void> createCalendarPeriod({
+    required String userName,
+    required String type,
+    required DateTime start_date,
+    required DateTime end_date,
+  }) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/periods'),
+      headers: {
+        'Content-Type': 'application/json',
+        'X-API-Key': ApiConfig.apiKey!,
+      },
+      body: json.encode({
+        'user_name': userName,
+        'type': type,
+        'start_date': start_date.toIso8601String(),
+        'end_date': end_date.toIso8601String(),
+      }),
+    );
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return json.decode(response.body);
+    } else {
+      throw Exception('Failed to create calendar period');
+    }
+  }
+
+  Future<void> deleteCalendarPeriod(int id) async {
+    final response = await http.delete(
+      Uri.parse('$baseUrl/periods/$id'),
+      headers: {
+        'Content-Type': 'application/json',
+        'X-API-Key': ApiConfig.apiKey!,
+      },
+    );
+    if (response.statusCode != 200 && response.statusCode != 204) {
+      throw Exception('Failed to delete calendar period');
+    }
+  }
+}

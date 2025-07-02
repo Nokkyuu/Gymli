@@ -1309,6 +1309,7 @@ class _StatisticsScreen extends State<StatisticsScreen> {
                 InkWell(
                   onTap: () async {
                     final DateTime? picked = await showDatePicker(
+                      locale: const Locale('en', 'GB'),
                       context: context,
                       initialDate: _tempStartingDate != null
                           ? _parseDate(_tempStartingDate!)
@@ -1352,6 +1353,7 @@ class _StatisticsScreen extends State<StatisticsScreen> {
                 InkWell(
                   onTap: () async {
                     final DateTime? picked = await showDatePicker(
+                      locale: const Locale('en', 'GB'),
                       context: context,
                       initialDate: _tempEndingDate != null
                           ? _parseDate(_tempEndingDate!)
