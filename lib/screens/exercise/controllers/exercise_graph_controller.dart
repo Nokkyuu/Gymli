@@ -45,6 +45,10 @@ class ExerciseGraphController extends ChangeNotifier {
   // Add this field to store period types
   List<String> _periodTypes = [];
 
+  // 1. Feld für Notiz-Daten
+  Set<String> _noteDates = {};
+  Map<String, String> _notesByDate = {};
+
   // Getters
   List<List<FlSpot>> get trainingGraphs => _trainingGraphs;
   List<List<FlSpot>> get additionalGraphs => _additionalGraphs;
@@ -56,6 +60,18 @@ class ExerciseGraphController extends ChangeNotifier {
   DateTime? get mostRecentTrainingDate => _mostRecentTrainingDate;
   ApiExercise? get currentExercise => _currentExercise;
 
+// 2. Methode zum Laden der Notizdaten
+  Future<void> loadNoteDates() async {
+    final notes = await UserService().getCalendarNotes();
+    _noteDates = notes
+        .map<String>((n) => (n['date'] as String).substring(0, 10))
+        .toSet();
+    _notesByDate = {
+      for (var n in notes)
+        (n['date'] as String).substring(0, 10): (n['note'] as String? ?? '')
+    };
+  }
+
   /// Set the current exercise - call this when exercise data is available
   void setCurrentExercise(ApiExercise? exercise) {
     _currentExercise = exercise;
@@ -65,6 +81,7 @@ class ExerciseGraphController extends ChangeNotifier {
   /// Update graph data from training sets
   Future<void> updateGraphFromTrainingSets(List<ApiTrainingSet> trainingSets,
       {bool detailedGraph = false}) async {
+    await loadNoteDates();
     // Add async here
     _clearGraphData();
 
@@ -229,8 +246,14 @@ class ExerciseGraphController extends ChangeNotifier {
 
       bestPoints.add(FlSpot(xValue, yBest));
       secondBestPoints.add(FlSpot(xValue, ySecondBest));
-      tooltipData[xValue] =
+      // Tooltip mit Notiz, falls vorhanden
+      String tooltip =
           "${bestSet.weight}kg @ ${bestSet.repetitions}reps ($dateKey)";
+      if (_notesByDate.containsKey(dateKey) &&
+          _notesByDate[dateKey]!.isNotEmpty) {
+        tooltip += "\n📝 ${_notesByDate[dateKey]}";
+      }
+      tooltipData[xValue] = tooltip;
     }
 
     // Add points to training graph
@@ -260,7 +283,32 @@ class ExerciseGraphController extends ChangeNotifier {
         barWidth: 2,
         isStrokeCapRound: true,
         belowBarData: BarAreaData(show: false),
-        dotData: const FlDotData(show: true),
+        dotData: FlDotData(
+          show: true,
+          getDotPainter: (spot, percent, bar, index) {
+            // Datum berechnen
+            final date =
+                _mostRecentTrainingDate?.add(Duration(days: spot.x.toInt()));
+            final dateKey = date != null
+                ? "${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}"
+                : "";
+            if (_noteDates.contains(dateKey)) {
+              // Spezieller Dot für Notiz
+              return FlDotCrossPainter(
+                size: 10,
+                width: 3,
+                color: themeColors.themeOrange,
+              );
+            }
+            // Standard-Dot
+            return FlDotCirclePainter(
+              radius: 4,
+              color: bar.color ?? Colors.blue,
+              strokeWidth: 0,
+              strokeColor: Colors.transparent,
+            );
+          },
+        ),
       ));
     }
 
