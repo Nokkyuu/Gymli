@@ -318,7 +318,7 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
       const Tab(icon: Icon(FontAwesomeIcons.plus), text: 'Log'),
       if (ResponsiveHelper.isMobile(context))
         const Tab(icon: Icon(FontAwesomeIcons.list), text: 'History'),
-      const Tab(icon: Icon(FontAwesomeIcons.chartLine), text: 'Stats'),
+      //const Tab(icon: Icon(FontAwesomeIcons.chartLine), text: 'Stats'),
       const Tab(icon: Icon(FontAwesomeIcons.gear), text: 'Manage'),
     ];
 
@@ -326,7 +326,7 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
     final List<Widget> tabViews = [
       _buildLogTab(),
       if (ResponsiveHelper.isMobile(context)) _buildHistoryTab(),
-      _buildStatsTab(),
+      //_buildStatsTab(),
       _buildManageTab(),
     ];
 
@@ -384,9 +384,9 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
                         const SizedBox(height: 16),
 
                         // Food selection dropdown
-                        const Text('Food Item',
-                            style: TextStyle(fontWeight: FontWeight.w500)),
-                        const SizedBox(height: 8),
+                        //const Text('Food Item',
+                        //    style: TextStyle(fontWeight: FontWeight.w500)),
+                        _buildStatsTab(),
                         Autocomplete<ApiFood>(
                           optionsBuilder: (TextEditingValue textEditingValue) {
                             if (textEditingValue.text.isEmpty) {
@@ -632,7 +632,7 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
     return Card(
       //color: Colors.blue,
       child: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(6),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           //mainAxisAlignment: MainAxisAlignment.center,
@@ -672,13 +672,10 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
                 selectedFood.notes!.isNotEmpty) ...[
               const SizedBox(height: 8),
               Center(
-                child: Card(
-                  //color: Colors.,
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Text(
-                      selectedFood.notes!,
-                    ),
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Text(
+                    selectedFood.notes!,
                   ),
                 ),
               ),
@@ -764,6 +761,40 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
     );
   }
 
+  Widget _buildStatsChip(
+    String label,
+    String value,
+    String unit,
+  ) {
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          //decoration: BoxDecoration(
+          //color: color.withOpacity(0.1),
+          //borderRadius: BorderRadius.circular(8),
+          //border: Border.all(color: color.black(0.3)),
+          //),
+          child: Text(
+            '$value$unit',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              //color: color,
+              fontSize: 12,
+            ),
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 11,
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildHistoryTab() {
     // Sort logs by date (newest first)
     final sortedLogs = List<ApiFoodLog>.from(foodLogs);
@@ -836,110 +867,72 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
   }
 
   Widget _buildStatsTab() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Today's nutrition summary
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Today\'s Nutrition',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 16),
-                  FutureBuilder<Map<String, double>>(
-                    future: userService.getFoodLogStats(
-                      startDate: DateTime.now()
-                          .subtract(Duration(hours: DateTime.now().hour)),
-                      endDate: DateTime.now(),
-                    ),
-                    builder: (context, snapshot) {
-                      if (snapshot.hasData) {
-                        final stats = snapshot.data!;
-                        return Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceAround,
-                          children: [
-                            _buildStatCard(
-                                'Calories',
-                                '${stats['total_calories']?.toStringAsFixed(0) ?? '0'}',
-                                'kcal',
-                                Colors.orange),
-                            _buildStatCard(
-                                'Protein',
-                                '${stats['total_protein']?.toStringAsFixed(1) ?? '0'}',
-                                'g',
-                                Colors.red),
-                            _buildStatCard(
-                                'Carbs',
-                                '${stats['total_carbs']?.toStringAsFixed(1) ?? '0'}',
-                                'g',
-                                Colors.green),
-                            _buildStatCard(
-                                'Fat',
-                                '${stats['total_fat']?.toStringAsFixed(1) ?? '0'}',
-                                'g',
-                                Colors.purple),
-                          ],
-                        );
-                      }
-                      return const CircularProgressIndicator();
-                    },
-                  ),
-                ],
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        // Today's nutrition summary
+        Padding(
+          padding: const EdgeInsets.all(3),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Text(
+                'Today:',
+                //style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
-            ),
+              const SizedBox(width: 16),
+              FutureBuilder<Map<String, double>>(
+                future: userService.getFoodLogStats(
+                  startDate: DateTime.now()
+                      .subtract(Duration(hours: DateTime.now().hour)),
+                  endDate: DateTime.now(),
+                ),
+                builder: (context, snapshot) {
+                  if (snapshot.hasData) {
+                    final stats = snapshot.data!;
+                    return Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        _buildStatsChip(
+                          'kcal',
+                          '${stats['total_calories']?.toStringAsFixed(0) ?? '0'}',
+                          '',
+                          // Colors.orange
+                        ),
+                        const SizedBox(width: 8),
+                        _buildStatsChip(
+                          'Protein',
+                          '${stats['total_protein']?.toStringAsFixed(1) ?? '0'}',
+                          'g',
+                          //Colors.red
+                        ),
+                        const SizedBox(width: 8),
+                        _buildStatsChip(
+                          'Carbs',
+                          '${stats['total_carbs']?.toStringAsFixed(1) ?? '0'}',
+                          'g',
+                          //Colors.green
+                        ),
+                        const SizedBox(width: 8),
+                        _buildStatsChip(
+                          'Fat',
+                          '${stats['total_fat']?.toStringAsFixed(1) ?? '0'}',
+                          'g',
+                          //Colors.purple
+                        ),
+                      ],
+                    );
+                  }
+                  return const CircularProgressIndicator();
+                },
+              ),
+            ],
           ),
-          const SizedBox(height: 16),
-
-          // Overall stats
-          // Card(
-          //   child: Padding(
-          //     padding: const EdgeInsets.all(16),
-          //     child: Column(
-          //       crossAxisAlignment: CrossAxisAlignment.start,
-          //       children: [
-          //         const Text(
-          //           'Overall Statistics',
-          //           style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-          //         ),
-          //         const SizedBox(height: 16),
-          //         Row(
-          //           mainAxisAlignment: MainAxisAlignment.spaceAround,
-          //           children: [
-          //             _buildStatCard(
-          //                 'Total Calories',
-          //                 '${nutritionStats['total_calories']?.toStringAsFixed(0) ?? '0'}',
-          //                 'kcal',
-          //                 Colors.orange),
-          //             _buildStatCard(
-          //                 'Total Protein',
-          //                 '${nutritionStats['total_protein']?.toStringAsFixed(1) ?? '0'}',
-          //                 'g',
-          //                 Colors.red),
-          //             _buildStatCard(
-          //                 'Total Carbs',
-          //                 '${nutritionStats['total_carbs']?.toStringAsFixed(1) ?? '0'}',
-          //                 'g',
-          //                 Colors.green),
-          //             _buildStatCard(
-          //                 'Total Fat',
-          //                 '${nutritionStats['total_fat']?.toStringAsFixed(1) ?? '0'}',
-          //                 'g',
-          //                 Colors.purple),
-          //           ],
-          //         ),
-          //       ],
-          //     ),
-          //   ),
-          // ),
-        ],
-      ),
+        ),
+        //const SizedBox(height: 16),
+      ],
     );
   }
 
