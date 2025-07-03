@@ -40,6 +40,7 @@ import 'screens/statistics/services/statistics_coordinator.dart';
 import 'screens/statistics/widgets/food.dart';
 import 'screens/statistics/widgets/calorie_balance.dart';
 import 'screens/statistics/widgets/workout_analyzer.dart';
+import 'screens/statistics/widgets/statistics_overview.dart';
 import 'info.dart';
 
 class StatisticsScreen extends StatefulWidget {
@@ -181,6 +182,7 @@ class _StatisticsScreen extends State<StatisticsScreen> {
   double _exerciseGraphMaxScore = 100;
   double _exerciseGraphMaxHistoryDistance = 90;
   DateTime? _exerciseGraphMostRecentDate;
+  int _totalWeightLiftedKg = 0;
 
   // Load all statistics data using the extracted services
   Future<void> _loadStatistics() async {
@@ -285,6 +287,12 @@ class _StatisticsScreen extends State<StatisticsScreen> {
             : DateTime.now().subtract(const Duration(days: 90));
         endDate = endingDate != null ? _parseDate(endingDate!) : DateTime.now();
       }
+
+      _totalWeightLiftedKg = await _calculateTotalWeightLiftedKg(
+        trainingSets: allTrainingSets,
+        startDate: startDate,
+        endDate: endDate,
+      );
 
       Period diff = LocalDate.dateTime(endDate!)
           .periodSince(LocalDate.dateTime(startDate!));
@@ -589,7 +597,17 @@ class _StatisticsScreen extends State<StatisticsScreen> {
       const SizedBox(height: 5),
       DatePicker(),
       const SizedBox(height: 20),
-      StatisticTexts(),
+      StatisticTexts(
+        numberOfTrainingDays: numberOfTrainingDays,
+        trainingDuration: trainingDuration,
+        freeWeightsCount: _freeWeightsCount,
+        machinesCount: _machinesCount,
+        cablesCount: _cablesCount,
+        bodyweightCount: _bodyweightCount,
+        activityStats: _activityStats,
+        getCaloriesDisplayValue: _getCaloriesDisplayValue,
+        totalWeightLiftedKg: _totalWeightLiftedKg,
+      ),
       const Divider(),
       ExpansionTile(
         title: Text(
@@ -756,7 +774,17 @@ class _StatisticsScreen extends State<StatisticsScreen> {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 20),
-            StatisticTexts(),
+            StatisticTexts(
+              numberOfTrainingDays: numberOfTrainingDays,
+              trainingDuration: trainingDuration,
+              freeWeightsCount: _freeWeightsCount,
+              machinesCount: _machinesCount,
+              cablesCount: _cablesCount,
+              bodyweightCount: _bodyweightCount,
+              activityStats: _activityStats,
+              getCaloriesDisplayValue: _getCaloriesDisplayValue,
+              totalWeightLiftedKg: _totalWeightLiftedKg,
+            ),
           ],
         );
       case 1:
@@ -833,6 +861,32 @@ class _StatisticsScreen extends State<StatisticsScreen> {
       default:
         return Container();
     }
+  }
+
+  Future<int> _calculateTotalWeightLiftedKg({
+    required List<Map<String, dynamic>> trainingSets,
+    required DateTime startDate,
+    required DateTime endDate,
+  }) async {
+    int total = 0;
+    for (final set in trainingSets) {
+      try {
+        // Only count work sets (set_type > 0)
+        if ((set['set_type'] ?? 0) > 0) {
+          final date = DateTime.parse(set['date']);
+          if (date.isAfter(startDate.subtract(const Duration(days: 1))) &&
+              date.isBefore(endDate.add(const Duration(days: 1)))) {
+            final reps = set['repetitions'] ?? 0;
+            final weight = set['weight'] ?? 0;
+            total += (reps as int) * (weight as int);
+          }
+        }
+      } catch (e) {
+        // Ignore malformed sets
+        continue;
+      }
+    }
+    return total;
   }
 
   // Add this new method for Activities view
@@ -1186,106 +1240,6 @@ class _StatisticsScreen extends State<StatisticsScreen> {
         lineBarsData: trainingsPerWeekChart,
         maxY: 7,
         minY: 0));
-  }
-
-  Column StatisticTexts() {
-    return Column(
-      spacing: 8,
-      children: [
-        const SizedBox(height: 10),
-        RichText(
-          textAlign: TextAlign.center,
-          text: TextSpan(
-            style: Theme.of(context).textTheme.titleMedium,
-            children: [
-              const TextSpan(text: "Number of training days: "),
-              TextSpan(
-                text: "$numberOfTrainingDays",
-                style: TextStyle(
-                  color: Colors.blue,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-        ),
-
-        RichText(
-          textAlign: TextAlign.center,
-          text: TextSpan(
-            style: Theme.of(context).textTheme.titleMedium,
-            children: [
-              TextSpan(text: trainingDuration),
-            ],
-          ),
-        ),
-
-        RichText(
-          textAlign: TextAlign.center,
-          text: TextSpan(
-            style: Theme.of(context).textTheme.titleMedium,
-            children: [
-              const TextSpan(text: "Used "),
-              TextSpan(
-                text: "$_freeWeightsCount",
-                style:
-                    TextStyle(color: Colors.green, fontWeight: FontWeight.bold),
-              ),
-              const TextSpan(text: " Free Weights, "),
-              TextSpan(
-                text: "$_machinesCount",
-                style: TextStyle(
-                    color: Colors.orange, fontWeight: FontWeight.bold),
-              ),
-              const TextSpan(text: " Machines, "),
-              TextSpan(
-                text: "$_cablesCount",
-                style: TextStyle(
-                    color: Colors.purple, fontWeight: FontWeight.bold),
-              ),
-              const TextSpan(text: " Cables and "),
-              TextSpan(
-                text: "$_bodyweightCount",
-                style:
-                    TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
-              ),
-              const TextSpan(text: " Bodyweight Exercises"),
-            ],
-          ),
-        ),
-
-        RichText(
-          textAlign: TextAlign.center,
-          text: TextSpan(
-            style: Theme.of(context).textTheme.titleMedium,
-            children: [
-              TextSpan(
-                text: "${_activityStats['total_sessions'] ?? 0}",
-                style:
-                    TextStyle(color: Colors.blue, fontWeight: FontWeight.bold),
-              ),
-              const TextSpan(text: " Activities for a total of "),
-              TextSpan(
-                text: "${_activityStats['total_duration_minutes'] ?? 0}",
-                style:
-                    TextStyle(color: Colors.green, fontWeight: FontWeight.bold),
-              ),
-              const TextSpan(
-                  text: " Minutes and an additional Kalorie burn of "),
-              TextSpan(
-                text: "${_getCaloriesDisplayValue()}",
-                style:
-                    TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
-              ),
-              const TextSpan(text: " kcal"),
-            ],
-          ),
-        ),
-        //add how many types are used (free, machine etc)
-        //add activity statistics
-        //add food statistics
-      ],
-    );
   }
 
   // Update the Confirm button in DatePicker to refresh exercise graph data

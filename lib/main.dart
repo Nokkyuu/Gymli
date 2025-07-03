@@ -192,11 +192,15 @@ class _MainAppState extends State<MainApp> {
                   const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
               decoration: BoxDecoration(
                 color: userService.isLoggedIn
-                    ? Colors.green.withValues(alpha: 0.1)
+                    ? ThemeColors.themeBlue
                     : Colors.grey.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8.0),
                 border: Border.all(
-                  color: userService.isLoggedIn ? Colors.green : Colors.grey,
+                  color: userService.isLoggedIn
+                      ? isDarkMode
+                          ? Colors.white
+                          : Colors.white
+                      : Colors.grey,
                   width: 1.0,
                 ),
               ),
@@ -209,8 +213,11 @@ class _MainAppState extends State<MainApp> {
                         userService.isLoggedIn
                             ? Icons.person
                             : Icons.person_outline,
-                        color:
-                            userService.isLoggedIn ? Colors.green : Colors.grey,
+                        color: userService.isLoggedIn
+                            ? isDarkMode
+                                ? Colors.white
+                                : Colors.white
+                            : Colors.grey,
                         size: 16,
                       ),
                       const SizedBox(width: 8),
@@ -221,7 +228,9 @@ class _MainAppState extends State<MainApp> {
                               : 'Not logged in (viewing defaults)',
                           style: TextStyle(
                             color: userService.isLoggedIn
-                                ? Colors.green[700]
+                                ? isDarkMode
+                                    ? Colors.white
+                                    : Colors.white
                                 : Colors.grey[600],
                             fontSize: 11,
                             fontWeight: FontWeight.w500,
@@ -235,7 +244,7 @@ class _MainAppState extends State<MainApp> {
                     Text(
                       '$exerciseCount exercises • $workoutCount workouts',
                       style: TextStyle(
-                        color: Colors.grey[600],
+                        color: isDarkMode ? Colors.white : Colors.white,
                         fontSize: 9,
                       ),
                     ),

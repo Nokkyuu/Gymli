@@ -18,6 +18,7 @@
 /// fitness tracking and workout management features of the application.
 library;
 
+import 'package:Gymli/calendarScreen.dart';
 import 'package:flutter/material.dart';
 import 'package:Gymli/exerciseScreen.dart';
 import 'user_service.dart';
@@ -25,6 +26,7 @@ import 'api_models.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:Gymli/workoutSetupScreen.dart';
 import 'responsive_helper.dart';
+import 'themeColors.dart';
 
 enum MuscleList {
   Pectoralis_major("Pectoralis major"),
@@ -350,7 +352,7 @@ class _LandingScreenState extends State<LandingScreen> {
           SnackBar(
             content: Text(
                 'Welcome ${userService.userName}! Your data has been loaded.'),
-            backgroundColor: Colors.green,
+            backgroundColor: ThemeColors.themeBlue,
             duration: const Duration(seconds: 2),
           ),
         );

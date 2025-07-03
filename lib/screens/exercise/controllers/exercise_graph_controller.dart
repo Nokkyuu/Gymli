@@ -297,7 +297,7 @@ class ExerciseGraphController extends ChangeNotifier {
               return FlDotCrossPainter(
                 size: 10,
                 width: 3,
-                color: themeColors.themeOrange,
+                color: ThemeColors.themeOrange,
               );
             }
             // Standard-Dot
