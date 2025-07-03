@@ -138,7 +138,7 @@ class StatisticTexts extends StatelessWidget {
 
     return Column(children: [
       Card(
-        color: Colors.white,
+        //color: Colors.white,
         shadowColor: blue,
         //surfaceTintColor: blue,
         elevation: 2,
@@ -148,7 +148,7 @@ class StatisticTexts extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(comparison['icon'], color: Colors.black, size: 32),
+              Icon(comparison['icon'], size: 32),
               const SizedBox(width: 12),
               Flexible(
                 child: Text(
@@ -166,7 +166,7 @@ class StatisticTexts extends StatelessWidget {
       ),
       const SizedBox(height: 10),
       Card(
-          color: Colors.white,
+          //color: Colors.white,
           shadowColor: orange,
           //surfaceTintColor: orange,
           elevation: 2,
@@ -177,7 +177,9 @@ class StatisticTexts extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.calendar_today, color: Colors.black),
+                  Icon(
+                    Icons.calendar_today,
+                  ),
                   const SizedBox(width: 8),
                   Text(
                     "Number of training days: $numberOfTrainingDays",
@@ -189,7 +191,9 @@ class StatisticTexts extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.timer, color: Colors.black),
+                  Icon(
+                    Icons.timer,
+                  ),
                   const SizedBox(width: 8),
                   Text(
                     trainingDuration,
@@ -203,20 +207,19 @@ class StatisticTexts extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.fitness_center, color: Colors.black, size: 20),
+                      Icon(Icons.fitness_center, size: 20),
                       const SizedBox(width: 4),
                       Text("$freeWeightsCount"),
                       const SizedBox(width: 8),
-                      Icon(Icons.forklift, color: Colors.black, size: 20),
+                      Icon(Icons.forklift, size: 20),
                       const SizedBox(width: 4),
                       Text("$machinesCount"),
                       const SizedBox(width: 8),
-                      Icon(Icons.cable, color: Colors.black, size: 20),
+                      Icon(Icons.cable, size: 20),
                       const SizedBox(width: 4),
                       Text("$cablesCount"),
                       const SizedBox(width: 8),
-                      Icon(Icons.sports_gymnastics,
-                          color: Colors.black, size: 20),
+                      Icon(Icons.sports_gymnastics, size: 20),
                       const SizedBox(width: 4),
                       Text("$bodyweightCount"),
                     ],
@@ -229,17 +232,16 @@ class StatisticTexts extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.sports, color: Colors.black, size: 20),
+                      Icon(Icons.sports, size: 20),
                       const SizedBox(width: 4),
                       Text("${activityStats['total_sessions'] ?? 0}"),
                       const SizedBox(width: 8),
-                      Icon(Icons.timer, color: Colors.black, size: 20),
+                      Icon(Icons.timer, size: 20),
                       const SizedBox(width: 4),
                       Text(
                           "${activityStats['total_duration_minutes'] ?? 0} min"),
                       const SizedBox(width: 8),
-                      Icon(Icons.local_fire_department,
-                          color: Colors.black, size: 20),
+                      Icon(Icons.local_fire_department, size: 20),
                       const SizedBox(width: 4),
                       Text("${getCaloriesDisplayValue()} kcal"),
                     ],

@@ -1613,8 +1613,6 @@ class _StatisticsScreen extends State<StatisticsScreen> {
       ],
     );
   }
-
-  // ...existing code...
 }
 
 // ignore: camel_case_types
