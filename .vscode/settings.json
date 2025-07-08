@@ -78,5 +78,6 @@
             "username": "gymcoach",
             "password": "!PushUp100!"
         }
-    ]
+    ],
+    "dart.flutterSdkPath": "~/.vscode/flutter"
 }

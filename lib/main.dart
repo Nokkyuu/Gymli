@@ -17,6 +17,7 @@ import 'config/api_config.dart';
 import 'info.dart';
 import 'calendarScreen.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'dart:math';
 
 final userService = UserService();
 bool state = false;
@@ -91,6 +92,7 @@ class MainApp extends StatefulWidget {
 }
 
 class _MainAppState extends State<MainApp> {
+  String? _drawerImage;
   Brightness mode = Brightness.light;
   Color themecolor = const Color(0xE6FF6A00);
   bool isDarkMode = false;
@@ -98,6 +100,13 @@ class _MainAppState extends State<MainApp> {
   late Auth0Web auth0;
   final userService = UserService();
   bool _authInitialized = false;
+  final List<String> drawerImages = [
+    'images/drawerlogo/gymli-biceps',
+    'images/drawerlogo/gymli-curl1',
+    'images/drawerlogo/gymli-curl2',
+    'images/drawerlogo/gymli-squat',
+    'images/drawerlogo/gymli-face',
+  ];
 
   @override
   void initState() {
@@ -336,6 +345,13 @@ class _MainAppState extends State<MainApp> {
             ),
             body: landingScreen,
             drawer: _buildDrawer(context),
+            onDrawerChanged: (isOpened) {
+    if (isOpened) {
+      setState(() {
+        _drawerImage = drawerImages[Random().nextInt(drawerImages.length)];
+      });
+    }
+  },
           );
         },
       ),
@@ -345,6 +361,7 @@ class _MainAppState extends State<MainApp> {
   Widget _buildDrawer(BuildContext context) {
     const redirectUrl =
         kDebugMode ? 'http://localhost:3000' : 'https://gymli.brgmnn.de/';
+    final imageToShow = _drawerImage ?? drawerImages[0];
     return Drawer(
       child: ListView(
         padding: EdgeInsets.zero,
@@ -356,8 +373,8 @@ class _MainAppState extends State<MainApp> {
             child: Image(
                 image: AssetImage(
               isDarkMode
-                  ? 'images/Icon-App_3_Darkmode.png'
-                  : 'images/Icon-App_3.png',
+                  ? '$imageToShow-dark.png'
+                  : '$imageToShow.png',
             )),
           ),
           Text(
