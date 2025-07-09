@@ -107,6 +107,7 @@ class _MainAppState extends State<MainApp> {
     'images/drawerlogo/gymli-squat',
     'images/drawerlogo/gymli-face',
     'images/drawerlogo/gymli-row',
+    'images/drawerlogo/gymli-row2',
     'images/drawerlogo/gymli-pullup',
   ];
 
