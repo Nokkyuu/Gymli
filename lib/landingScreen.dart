@@ -47,7 +47,8 @@ enum MuscleList {
 }
 
 class LandingScreen extends StatefulWidget {
-  const LandingScreen({super.key});
+  final void Function(Color)? onPhaseColorChanged;
+  const LandingScreen({super.key, this.onPhaseColorChanged});
 
   @override
   State<LandingScreen> createState() {
@@ -619,11 +620,13 @@ class _LandingScreenState extends State<LandingScreen> {
       ),
       onTap: () {
         Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) =>
-                        ExerciseScreen(currentData.name, description)))
-            .then((value) => _reload(value));
+            context,
+            MaterialPageRoute(
+                builder: (context) => ExerciseScreen(
+                      currentData.name,
+                      description,
+                      onPhaseColorChanged: widget.onPhaseColorChanged,
+                    ))).then((value) => _reload(value));
       },
     );
   }

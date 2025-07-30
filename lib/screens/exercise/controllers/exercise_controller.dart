@@ -15,7 +15,8 @@ class ExerciseController extends ChangeNotifier {
   List<ApiTrainingSet> _todaysTrainingSets = [];
   bool _isLoading = false;
   String? _errorMessage;
-
+  String? phase;
+  bool? myoreps;
   // Workout state
   Set<ExerciseType> _selectedType = {ExerciseType.work};
   int _weightKg = 40;
@@ -106,6 +107,8 @@ class ExerciseController extends ChangeNotifier {
     int repetitions,
     int setType,
     String when,
+    String? phase,
+    bool? myoreps,
   ) async {
     if (_currentExercise == null) {
       _setError('Exercise data not loaded');
@@ -119,6 +122,8 @@ class ExerciseController extends ChangeNotifier {
         weight: weight,
         repetitions: repetitions,
         setType: setType,
+        phase: phase,
+        myoreps: myoreps,
         // baseReps: _currentExercise!.defaultRepBase,
         // maxReps: _currentExercise!.defaultRepMax,
         // increment: _currentExercise!.defaultIncrement,
@@ -442,6 +447,16 @@ class ExerciseController extends ChangeNotifier {
       print('Error loading recent training values: $e');
       return null;
     }
+  }
+
+  void updatePhase(String? newPhase) {
+    phase = newPhase;
+    notifyListeners();
+  }
+
+  void updateMyoreps(bool? value) {
+    myoreps = value;
+    notifyListeners();
   }
 
   void _updateColorMapping() {

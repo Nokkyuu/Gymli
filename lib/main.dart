@@ -1,3 +1,5 @@
+//setPrimaryColor is a callback to change the primary color of the app Theme
+
 import 'package:flutter/material.dart';
 import 'package:Gymli/landingScreen.dart';
 import 'package:Gymli/exerciseSetupScreen.dart';
@@ -279,11 +281,18 @@ class _MainAppState extends State<MainApp> {
     });
   }
 
-  LandingScreen landingScreen = const LandingScreen();
+  Color primaryColor = ThemeColors.themeOrange;
+  //LandingScreen landingScreen = const LandingScreen();
   // StatisticsScreen landingScreen = const StatisticsScreen();
+  void setPrimaryColor(Color color) {
+    setState(() {
+      primaryColor = color;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    final ThemeData themeData = buildAppTheme(mode);
+    final ThemeData themeData = buildAppTheme(mode, primaryColor);
 
     return MaterialApp(
       localizationsDelegates: const [
@@ -334,7 +343,9 @@ class _MainAppState extends State<MainApp> {
               ],
               centerTitle: true,
             ),
-            body: landingScreen,
+            body: LandingScreen(
+              onPhaseColorChanged: setPrimaryColor,
+            ),
             drawer: _buildDrawer(context),
           );
         },
@@ -350,8 +361,8 @@ class _MainAppState extends State<MainApp> {
         padding: EdgeInsets.zero,
         children: [
           DrawerHeader(
-            decoration: const BoxDecoration(
-              color: colorOrange,
+            decoration: BoxDecoration(
+              color: ThemeColors.themeOrange,
             ),
             child: Image(
                 image: AssetImage(
@@ -484,9 +495,7 @@ class _MainAppState extends State<MainApp> {
           if (_credentials == null)
             Column(
               children: [
-                Divider(
-                  color: mode == Brightness.dark ? colorWhite : colorBlack,
-                ),
+                _coloredDivider(),
                 ListTile(
                   title: const Text('Login'),
                   onTap: () async {
@@ -502,9 +511,7 @@ class _MainAppState extends State<MainApp> {
           else
             Column(
               children: [
-                Divider(
-                  color: mode == Brightness.dark ? colorWhite : colorBlack,
-                ),
+                _coloredDivider(),
                 ListTile(
                   title: const Text('Logout'),
                   onTap: () async {
@@ -526,12 +533,21 @@ class _MainAppState extends State<MainApp> {
       ),
     );
   }
+
+  Divider _coloredDivider() {
+    return Divider(
+      color: mode == Brightness.dark
+          ? ThemeColors.themeWhite
+          : ThemeColors.themeBlack,
+    );
+  }
 }
 
-// Widget _buildInfoButton(context) {
+// Widget buildPhaseButton(
+//     String tooltip, BuildContext context, VoidCallback onPressed) {
 //   return IconButton(
-//     icon: const Icon(Icons.info_outline),
-//     tooltip: 'About Gymli',
-//     onPressed: () => showInfoDialogMain(context),
+//     icon: const Icon(Icons.fireplace),
+//     tooltip: tooltip,
+//     onPressed: onPressed,
 //   );
 // }

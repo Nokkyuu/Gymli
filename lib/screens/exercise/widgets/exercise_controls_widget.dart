@@ -412,6 +412,8 @@ class _ExerciseControlsWidgetState extends State<ExerciseControlsWidget> {
       widget.controller.repetitions,
       widget.controller.selectedType.first.index,
       currentTimestamp,
+      widget.controller.phase,
+      widget.controller.myoreps,
     );
 
     if (success && mounted) {
