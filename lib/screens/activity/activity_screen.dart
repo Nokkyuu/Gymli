@@ -21,10 +21,10 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
-import 'utils/user_service.dart';
-import 'utils/api_models.dart';
-import 'utils/responsive_helper.dart';
-import 'info.dart';
+import '../../utils/user/user_service.dart';
+import '../../utils/api/api_models.dart';
+import '../../utils/themes/responsive_helper.dart';
+import '../../utils/info_dialogues.dart';
 
 class ActivityScreen extends StatefulWidget {
   const ActivityScreen({super.key});

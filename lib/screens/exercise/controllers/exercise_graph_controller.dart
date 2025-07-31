@@ -1,10 +1,10 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'dart:math';
-import '../../../utils/api_models.dart';
+import '../../../utils/api/api_models.dart';
 import '../../../utils/globals.dart' as globals;
 import 'package:flutter/material.dart';
-import '../../../utils/user_service.dart';
-import '../../../utils/themes.dart';
+import '../../../utils/user/user_service.dart';
+import '../../../utils/themes/themes.dart';
 
 final themeColors = ThemeColors();
 

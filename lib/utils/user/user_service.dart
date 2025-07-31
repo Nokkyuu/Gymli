@@ -24,8 +24,8 @@ import 'package:auth0_flutter/auth0_flutter.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
-import 'api.dart' as api;
-import 'api_models.dart';
+import '../api/api.dart' as api;
+import '../api/api_models.dart';
 
 class UserService {
   static UserService? _instance;

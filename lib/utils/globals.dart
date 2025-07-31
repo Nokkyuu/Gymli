@@ -12,7 +12,7 @@
 // ignore_for_file: non_constant_identifier_names
 library my_prj.globals;
 
-import 'package:Gymli/utils/api_models.dart';
+import 'package:Gymli/utils/api/api_models.dart';
 
 // User preference settings
 int idleTimerWakeup = 90; // Idle timer wakeup time in seconds

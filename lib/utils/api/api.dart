@@ -8,7 +8,7 @@ library;
 
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import '../config/api_config.dart';
+import '../../config/api_config.dart';
 
 // Main API base URL - Azure hosted backend service
 const String baseUrl =

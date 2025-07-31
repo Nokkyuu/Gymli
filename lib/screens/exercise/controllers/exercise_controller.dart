@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../utils/api_models.dart';
+import '../../../utils/api/api_models.dart';
 import '../repositories/exercise_repository.dart';
 import 'exercise_graph_controller.dart';
 

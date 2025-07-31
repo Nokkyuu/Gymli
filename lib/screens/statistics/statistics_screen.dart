@@ -22,26 +22,26 @@ library;
 
 // ignore_for_file: file_names
 
-import 'package:Gymli/info.dart';
+import 'package:Gymli/utils/info_dialogues.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:time_machine/time_machine.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'dart:math';
-import 'utils/user_service.dart';
-import 'utils/api_models.dart';
-import 'utils/responsive_helper.dart';
+import '../../utils/user/user_service.dart';
+import '../../utils/api/api_models.dart';
+import '../../utils/themes/responsive_helper.dart';
 //import 'screens/statistics/constants/muscle_constants.dart';
 //import 'screens/statistics/constants/chart_constants.dart';
-import 'screens/statistics/services/statistics_data_service.dart';
-import 'screens/statistics/services/statistics_filter_service.dart';
-import 'screens/statistics/services/statistics_calculation_service.dart';
-import 'screens/statistics/services/statistics_coordinator.dart';
-import 'screens/statistics/widgets/food.dart';
-import 'screens/statistics/widgets/calorie_balance.dart';
-import 'screens/statistics/widgets/workout_analyzer.dart';
-import 'screens/statistics/widgets/statistics_overview.dart';
-import 'info.dart';
+import 'services/statistics_data_service.dart';
+import 'services/statistics_filter_service.dart';
+import 'services/statistics_calculation_service.dart';
+import 'services/statistics_coordinator.dart';
+import 'widgets/food.dart';
+import 'widgets/calorie_balance.dart';
+import 'widgets/workout_analyzer.dart';
+import 'widgets/statistics_overview.dart';
+import '../../utils/info_dialogues.dart';
 
 class StatisticsScreen extends StatefulWidget {
   const StatisticsScreen({super.key});

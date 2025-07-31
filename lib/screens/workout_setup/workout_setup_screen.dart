@@ -23,10 +23,10 @@
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:numberpicker/numberpicker.dart';
-import 'package:Gymli/utils/api_models.dart';
-import 'package:Gymli/utils/user_service.dart';
-import 'utils/responsive_helper.dart';
-import 'info.dart';
+import 'package:Gymli/utils/api/api_models.dart';
+import 'package:Gymli/utils/user/user_service.dart';
+import '../../utils/themes/responsive_helper.dart';
+import '../../utils/info_dialogues.dart';
 
 // enum ExerciseList {
 //   Benchpress('Benchpress', 2, 3, 1),
