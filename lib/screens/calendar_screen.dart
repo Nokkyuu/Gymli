@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
-import '../../utils/user/user_service.dart';
-import '../../utils/themes/themes.dart';
+import '../utils/user/user_service.dart';
+import '../utils/themes/themes.dart';
 
 final themeColors = ThemeColors();
 

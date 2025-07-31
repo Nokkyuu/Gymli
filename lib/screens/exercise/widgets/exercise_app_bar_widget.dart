@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../exercise_history/exercise_histroy_screen.dart';
-import '../../exercise_setup/exercise_setup_screen.dart';
+import '../../exercise_histroy_screen.dart';
+import '../../exercise_setup_screen.dart';
 import '../controllers/exercise_phase_controller.dart';
 import '../controllers/exercise_animation_controller.dart';
 import '../controllers/exercise_timer_controller.dart';

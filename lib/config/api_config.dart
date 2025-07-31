@@ -1,4 +1,8 @@
-// Create a new file: lib/config/api_config.dart
+///Config file for API key management
+///
+///This file handles the API key for the app, for the different build environments.
+library;
+
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 

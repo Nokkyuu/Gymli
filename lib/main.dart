@@ -1,13 +1,22 @@
-//setPrimaryColor is a callback to change the primary color of the app Theme
+/// Main entry point for the Gymli Gainson app
+///
+/// Contains the main function to run the app and intializes necessarry components such as:
+/// - Auth0 authentication
+/// - Navigation routes
+/// - Theme settings
+/// - Exercise list loading
+///
+///setPrimaryColor is a callback to change the primary color of the app Theme
+library;
 
 import 'package:flutter/material.dart';
-import 'package:Gymli/screens/landing/landing_screen.dart';
-import 'package:Gymli/screens/exercise_setup/exercise_setup_screen.dart';
-import 'package:Gymli/screens/settings/settings_screen.dart';
-import 'package:Gymli/screens/workout_setup/workout_setup_screen.dart';
-import 'package:Gymli/screens/statistics/statistics_screen.dart';
-import 'package:Gymli/screens/activity/activity_screen.dart';
-import 'package:Gymli/screens/food/food_screen.dart';
+import 'package:Gymli/screens/landing_screen.dart';
+import 'package:Gymli/screens/exercise_setup_screen.dart';
+import 'package:Gymli/screens/settings_screen.dart';
+import 'package:Gymli/screens/workout_setup_screen.dart';
+import 'package:Gymli/screens/statistics_screen.dart';
+import 'package:Gymli/screens/activity_screen.dart';
+import 'package:Gymli/screens/food_screen.dart';
 import 'utils/globals.dart' as globals;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
@@ -17,7 +26,7 @@ import 'utils/themes/themes.dart';
 import 'utils/user/user_service.dart';
 import 'config/api_config.dart';
 import 'utils/info_dialogues.dart';
-import 'screens/calendar/calendar_screen.dart';
+import 'screens/calendar_screen.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'dart:math';
 
@@ -26,7 +35,6 @@ bool state = false;
 
 void get_exercise_list() async {
   try {
-    // Check if API is configured before making calls
     if (!ApiConfig.isConfigured) {
       print('API not configured, skipping exercise list load');
       globals.exerciseList = [];
@@ -36,7 +44,6 @@ void get_exercise_list() async {
     // Add a small delay to ensure UserService singleton is properly initialized
     await Future.delayed(const Duration(milliseconds: 100));
 
-    final userService = UserService();
     final exercises = await userService.getExercises();
     List<String> exerciseList = [];
     for (var e in exercises) {
@@ -53,6 +60,7 @@ void get_exercise_list() async {
 }
 
 Future<void> getPreferences() async {
+  //TODO: this is not used anymore, remove it
   Future<SharedPreferences> prefs0 = SharedPreferences.getInstance();
   final SharedPreferences prefs = await prefs0;
   if (prefs.getInt('idleWakeTime') != null) {

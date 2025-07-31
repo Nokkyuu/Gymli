@@ -4,27 +4,22 @@
 /// cardio exercises and other physical activities outside of weight training.
 ///
 /// Key features:
-/// - Activity type management (walking, running, cycling, swimming, etc.)
-/// - Activity session logging with duration and automatic calorie calculation
-/// - Activity history display with filtering capabilities
-/// - Statistics and progress visualization
-/// - Custom activity creation and editing
-/// - Activity data export and management
-/// - Visual feedback with charts and performance indicators
-/// - Integration with user authentication and offline storage
+/// - Delete and Create custom activities
+/// - Log activities with duration and notes
+/// - View activity history
 ///
 /// The screen serves as the main interface for tracking cardio activities
-/// and provides insights into overall fitness activity beyond weight training.
+/// and provides insights into overall fitness activity beyond weight training for the purpose of extra calorie burn.
 library;
 
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
-import '../../utils/user/user_service.dart';
-import '../../utils/api/api_models.dart';
-import '../../utils/themes/responsive_helper.dart';
-import '../../utils/info_dialogues.dart';
+import '../utils/user/user_service.dart';
+import '../utils/api/api_models.dart';
+import '../utils/themes/responsive_helper.dart';
+import '../utils/info_dialogues.dart';
 
 class ActivityScreen extends StatefulWidget {
   const ActivityScreen({super.key});

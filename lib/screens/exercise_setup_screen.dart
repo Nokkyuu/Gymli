@@ -22,11 +22,11 @@ library;
 
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import '../../utils/globals.dart' as globals;
-import '../../utils/user/user_service.dart';
-import '../../utils/api/api_models.dart';
-import '../../utils/themes/responsive_helper.dart';
-import '../../utils/info_dialogues.dart';
+import '../utils/globals.dart' as globals;
+import '../utils/user/user_service.dart';
+import '../utils/api/api_models.dart';
+import '../utils/themes/responsive_helper.dart';
+import '../utils/info_dialogues.dart';
 
 enum ExerciseDevice { free, machine, cable, body }
 

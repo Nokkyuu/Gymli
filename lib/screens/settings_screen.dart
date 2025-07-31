@@ -31,12 +31,12 @@ import 'package:flutter_file_dialog/flutter_file_dialog.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:confirm_dialog/confirm_dialog.dart';
-import '../../utils/globals.dart' as globals;
+import '../utils/globals.dart' as globals;
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'dart:convert'; // Add this import for utf8
 import 'package:flutter/foundation.dart'; // Add this import for kIsWeb
 //import 'dart:math' as Math;
-import '../../utils/info_dialogues.dart';
+import '../utils/info_dialogues.dart';
 import 'dart:html' as html;
 //import 'dart:convert';
 

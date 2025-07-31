@@ -2,17 +2,17 @@
 library;
 
 import 'package:flutter/material.dart';
-import '../../utils/themes/responsive_helper.dart';
-import 'repositories/exercise_repository.dart';
-import 'controllers/exercise_controller.dart';
-import 'controllers/exercise_timer_controller.dart';
-import 'controllers/exercise_phase_controller.dart';
-import 'controllers/exercise_animation_controller.dart';
-import 'widgets/exercise_graph_widget.dart';
-import 'widgets/exercise_controls_widget.dart';
-import 'widgets/training_sets_list_widget.dart';
-import 'widgets/exercise_app_bar_widget.dart';
-import 'widgets/animated_text_widget.dart';
+import '../utils/themes/responsive_helper.dart';
+import 'exercise/repositories/exercise_repository.dart';
+import 'exercise/controllers/exercise_controller.dart';
+import 'exercise/controllers/exercise_timer_controller.dart';
+import 'exercise/controllers/exercise_phase_controller.dart';
+import 'exercise/controllers/exercise_animation_controller.dart';
+import 'exercise/widgets/exercise_graph_widget.dart';
+import 'exercise/widgets/exercise_controls_widget.dart';
+import 'exercise/widgets/training_sets_list_widget.dart';
+import 'exercise/widgets/exercise_app_bar_widget.dart';
+import 'exercise/widgets/animated_text_widget.dart';
 
 class ExerciseScreen extends StatefulWidget {
   final String exerciseName;

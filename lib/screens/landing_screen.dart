@@ -18,15 +18,15 @@
 /// fitness tracking and workout management features of the application.
 library;
 
-import 'package:Gymli/screens/calendar/calendar_screen.dart';
+import 'package:Gymli/screens/calendar_screen.dart';
 import 'package:flutter/material.dart';
-import 'package:Gymli/screens/exercise/exercise_screen.dart';
-import '../../utils/user/user_service.dart';
-import '../../utils/api/api_models.dart';
+import 'package:Gymli/screens/exercise_screen.dart';
+import '../utils/user/user_service.dart';
+import '../utils/api/api_models.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:Gymli/screens/workout_setup/workout_setup_screen.dart';
-import '../../utils/themes/responsive_helper.dart';
-import '../../utils/themes/themes.dart';
+import 'package:Gymli/screens/workout_setup_screen.dart';
+import '../utils/themes/responsive_helper.dart';
+import '../utils/themes/themes.dart';
 
 enum MuscleList {
   Pectoralis_major("Pectoralis major"),
