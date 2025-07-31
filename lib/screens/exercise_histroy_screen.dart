@@ -18,7 +18,7 @@ library;
 
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import '../utils/user/user_service.dart';
+import '../utils/services/user_service.dart';
 import '../utils/api/api_models.dart';
 
 final workIcons = [

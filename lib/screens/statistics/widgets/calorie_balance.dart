@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../../utils/user/user_service.dart';
+import '../../../utils/services/user_service.dart';
 import '../../../utils/info_dialogues.dart';
 
 class CalorieBalanceScreen extends StatefulWidget {

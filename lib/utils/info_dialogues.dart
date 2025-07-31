@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'user/user_service.dart';
+import 'services/user_service.dart';
 
 final userService = UserService();
 

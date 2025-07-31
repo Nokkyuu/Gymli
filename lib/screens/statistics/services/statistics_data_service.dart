@@ -9,7 +9,7 @@
 library;
 
 import 'package:fl_chart/fl_chart.dart';
-import '../../../utils/user/user_service.dart';
+import '../../../utils/services/user_service.dart';
 import '../../../utils/api/api_models.dart';
 import '../../../utils/api/api_models.dart';
 import 'statistics_filter_service.dart';

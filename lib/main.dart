@@ -1,4 +1,7 @@
-/// Main entry point for the Gymli Gainson app
+/// Main entry point for the Gymli app
+/// glues the app together and initializes services
+/// handles critical initialization errors
+/// and sets up the main app widgets
 library;
 
 import 'package:flutter/material.dart';
@@ -8,7 +11,8 @@ import 'utils/services/app_initializer.dart';
 import 'widgets/main_app_widget.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+  WidgetsFlutterBinding
+      .ensureInitialized(); //required for async initialization, ensures that the Flutter engine is ready
 
   final initResult = await AppInitializer.initialize();
 
@@ -29,7 +33,8 @@ void main() async {
   runApp(const MainApp());
 }
 
-/// Build error app for critical failures
+/// Builds a widget that is shown when initialization fails
+/// argument [error] contains the error message
 Widget _buildErrorApp(String error) {
   return MaterialApp(
     title: 'Gymli - Error',
@@ -55,19 +60,19 @@ class MainApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      localizationsDelegates: const [
+    return const MaterialApp(
+      localizationsDelegates: [
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      supportedLocales: const [
+      supportedLocales: [
         Locale('en', 'US'),
         Locale('en', 'GB'),
         Locale('de', 'DE'),
       ],
       title: 'Gymli Gainson',
-      home: const MainAppWidget(),
+      home: MainAppWidget(),
     );
   }
 }

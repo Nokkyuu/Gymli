@@ -3,7 +3,7 @@ import 'dart:math';
 import '../../../utils/api/api_models.dart';
 import '../../../utils/globals.dart' as globals;
 import 'package:flutter/material.dart';
-import '../../../utils/user/user_service.dart';
+import '../../../utils/services/user_service.dart';
 import '../../../utils/themes/themes.dart';
 
 final themeColors = ThemeColors();

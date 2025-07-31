@@ -22,7 +22,7 @@ library;
 // ignore_for_file: file_names
 import 'package:flutter/material.dart';
 //import 'package:flutter/services.dart'; // Add this for Clipboard
-import 'package:Gymli/utils/user/user_service.dart';
+import 'package:Gymli/utils/services/user_service.dart';
 import 'package:Gymli/utils/api/api_models.dart';
 import 'package:csv/csv.dart';
 import 'package:path_provider/path_provider.dart';

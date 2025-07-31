@@ -28,7 +28,7 @@ import 'package:intl/intl.dart';
 import 'package:time_machine/time_machine.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'dart:math';
-import '../utils/user/user_service.dart';
+import '../utils/services/user_service.dart';
 import '../utils/api/api_models.dart';
 import '../utils/themes/responsive_helper.dart';
 //import 'screens/statistics/constants/muscle_constants.dart';
