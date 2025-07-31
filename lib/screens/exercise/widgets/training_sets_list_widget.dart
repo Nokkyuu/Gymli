@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../controllers/exercise_controller.dart';
-import '../../../api_models.dart';
+import '../../../utils/api_models.dart';
 
 /// Widget for displaying the list of training sets
 class TrainingSetsListWidget extends StatefulWidget {

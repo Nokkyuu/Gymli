@@ -22,8 +22,8 @@ library;
 // ignore_for_file: file_names
 import 'package:flutter/material.dart';
 //import 'package:flutter/services.dart'; // Add this for Clipboard
-import 'package:Gymli/user_service.dart';
-import 'package:Gymli/api_models.dart';
+import 'package:Gymli/utils/user_service.dart';
+import 'package:Gymli/utils/api_models.dart';
 import 'package:csv/csv.dart';
 import 'package:path_provider/path_provider.dart';
 import 'dart:io';
@@ -31,7 +31,7 @@ import 'package:flutter_file_dialog/flutter_file_dialog.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:confirm_dialog/confirm_dialog.dart';
-import 'globals.dart' as globals;
+import 'utils/globals.dart' as globals;
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'dart:convert'; // Add this import for utf8
 import 'package:flutter/foundation.dart'; // Add this import for kIsWeb

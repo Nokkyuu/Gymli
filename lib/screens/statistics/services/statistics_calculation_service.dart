@@ -4,8 +4,8 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:time_machine/time_machine.dart';
 import 'package:tuple/tuple.dart';
 
-import '../../../api_models.dart';
-import '../../../globals.dart' as globals;
+import '../../../utils/api_models.dart';
+import '../../../utils/globals.dart' as globals;
 import '../constants/muscle_constants.dart';
 import '../constants/chart_constants.dart';
 import '../models/statistics_data.dart';

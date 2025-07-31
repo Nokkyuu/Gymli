@@ -8,13 +8,13 @@ import 'package:Gymli/workoutSetupScreen.dart';
 import 'package:Gymli/statisticsScreen.dart';
 import 'package:Gymli/activityScreen.dart';
 import 'package:Gymli/foodScreen.dart';
-import 'globals.dart' as globals;
+import 'utils/globals.dart' as globals;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:auth0_flutter/auth0_flutter.dart';
 import 'package:auth0_flutter/auth0_flutter_web.dart';
-import 'themeColors.dart';
-import 'user_service.dart';
+import 'utils/themes.dart';
+import 'utils/user_service.dart';
 import 'config/api_config.dart';
 import 'info.dart';
 import 'calendarScreen.dart';
@@ -360,12 +360,13 @@ class _MainAppState extends State<MainApp> {
             ),
             drawer: _buildDrawer(context),
             onDrawerChanged: (isOpened) {
-    if (isOpened) {
-      setState(() {
-        _drawerImage = drawerImages[Random().nextInt(drawerImages.length)];
-      });
-    }
-  },
+              if (isOpened) {
+                setState(() {
+                  _drawerImage =
+                      drawerImages[Random().nextInt(drawerImages.length)];
+                });
+              }
+            },
           );
         },
       ),
@@ -386,9 +387,7 @@ class _MainAppState extends State<MainApp> {
             ),
             child: Image(
                 image: AssetImage(
-              isDarkMode
-                  ? '$imageToShow-dark.png'
-                  : '$imageToShow.png',
+              isDarkMode ? '$imageToShow-dark.png' : '$imageToShow.png',
             )),
           ),
           Text(

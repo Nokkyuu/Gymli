@@ -9,14 +9,14 @@ library;
 import 'package:flutter/material.dart';
 import 'package:Gymli/exerciseListScreen.dart';
 import 'package:Gymli/exerciseSetupScreen.dart';
-import 'responsive_helper.dart';
+import 'utils/responsive_helper.dart';
 import 'screens/exercise/repositories/exercise_repository.dart';
 import 'screens/exercise/controllers/exercise_controller.dart';
 import 'screens/exercise/controllers/exercise_timer_controller.dart';
 import 'screens/exercise/widgets/exercise_graph_widget.dart';
 import 'screens/exercise/widgets/exercise_controls_widget.dart';
 import 'screens/exercise/widgets/training_sets_list_widget.dart';
-import 'themeColors.dart';
+import 'utils/themes.dart';
 import 'dart:math' as Math;
 
 enum ExercisePhase { normal, deload, power }

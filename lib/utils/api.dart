@@ -4,17 +4,11 @@
 /// with the Gymli backend server. Each service class manages CRUD operations
 /// for its respective entity type.
 ///
-/// Services included:
-/// - AnimalService: For animal data (testing/demo purposes)
-/// - ExerciseService: For exercise definitions and management
-/// - WorkoutService: For workout templates and management
-/// - TrainingSetService: For individual training set records
-/// - WorkoutUnitService: For workout unit associations
 library;
 
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'config/api_config.dart';
+import '../config/api_config.dart';
 
 // Main API base URL - Azure hosted backend service
 const String baseUrl =

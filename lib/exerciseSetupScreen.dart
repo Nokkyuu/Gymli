@@ -22,10 +22,10 @@ library;
 
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'globals.dart' as globals;
-import 'user_service.dart';
-import 'api_models.dart';
-import 'responsive_helper.dart';
+import 'utils/globals.dart' as globals;
+import 'utils/user_service.dart';
+import 'utils/api_models.dart';
+import 'utils/responsive_helper.dart';
 import 'info.dart';
 
 enum ExerciseDevice { free, machine, cable, body }

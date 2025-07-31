@@ -1,5 +1,5 @@
-import '../../../user_service.dart';
-import '../../../api_models.dart';
+import '../../../utils/user_service.dart';
+import '../../../utils/api_models.dart';
 
 /// Repository class that handles all exercise-related data operations
 /// Provides a clean interface between the UI and data sources

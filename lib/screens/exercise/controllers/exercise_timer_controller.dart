@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:js_interop';
 import 'package:flutter/material.dart';
-import '../../../globals.dart' as globals;
+import '../../../utils/globals.dart' as globals;
 import 'package:web/web.dart' as html;
 
 /// Controller for managing timer functionality and idle notifications

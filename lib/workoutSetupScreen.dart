@@ -23,9 +23,9 @@
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:numberpicker/numberpicker.dart';
-import 'package:Gymli/api_models.dart';
-import 'package:Gymli/user_service.dart';
-import 'responsive_helper.dart';
+import 'package:Gymli/utils/api_models.dart';
+import 'package:Gymli/utils/user_service.dart';
+import 'utils/responsive_helper.dart';
 import 'info.dart';
 
 // enum ExerciseList {

@@ -21,12 +21,12 @@ library;
 import 'package:Gymli/calendarScreen.dart';
 import 'package:flutter/material.dart';
 import 'package:Gymli/exerciseScreen.dart';
-import 'user_service.dart';
-import 'api_models.dart';
+import 'utils/user_service.dart';
+import 'utils/api_models.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:Gymli/workoutSetupScreen.dart';
-import 'responsive_helper.dart';
-import 'themeColors.dart';
+import 'utils/responsive_helper.dart';
+import 'utils/themes.dart';
 
 enum MuscleList {
   Pectoralis_major("Pectoralis major"),

@@ -9,9 +9,9 @@
 library;
 
 import 'package:fl_chart/fl_chart.dart';
-import '../../../user_service.dart';
-import '../../../api_models.dart';
-import '../../../api_models.dart';
+import '../../../utils/user_service.dart';
+import '../../../utils/api_models.dart';
+import '../../../utils/api_models.dart';
 import 'statistics_filter_service.dart';
 
 /// Service responsible for data fetching and caching for statistics

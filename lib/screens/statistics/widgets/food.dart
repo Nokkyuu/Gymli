@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
-import '../../../user_service.dart';
+import '../../../utils/user_service.dart';
 
 class FoodStatsScreen extends StatefulWidget {
   final String? startingDate;

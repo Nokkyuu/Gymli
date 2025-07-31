@@ -21,9 +21,9 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
-import 'user_service.dart';
-import 'api_models.dart';
-import 'responsive_helper.dart';
+import 'utils/user_service.dart';
+import 'utils/api_models.dart';
+import 'utils/responsive_helper.dart';
 import 'info.dart';
 
 class ActivityScreen extends StatefulWidget {

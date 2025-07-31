@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../controllers/exercise_graph_controller.dart';
-import '../../../responsive_helper.dart';
+import '../../../utils/responsive_helper.dart';
 
 /// Widget for displaying exercise progress graph
 class ExerciseGraphWidget extends StatelessWidget {
