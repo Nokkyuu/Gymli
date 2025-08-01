@@ -2,6 +2,8 @@
 /// It initializes the Auth0 client, manages user credentials, and provides methods to update authentication state
 /// and listen for changes in authentication status.
 ///
+library;
+
 import 'package:auth0_flutter/auth0_flutter.dart';
 import 'package:auth0_flutter/auth0_flutter_web.dart';
 import 'package:flutter/foundation.dart';
@@ -9,6 +11,15 @@ import 'user_service.dart';
 import 'app_initializer.dart';
 
 class AuthService extends ChangeNotifier {
+  /// Class for managing authentication using Auth0.
+  /// It initializes the Auth0 client, manages user credentials, and provides methods to update authentication
+  /// getters:
+  /// - [credentials]: Returns the current user credentials.
+  /// - [auth0]: Returns the Auth0 client instance.
+  /// methods:
+  /// - [initialize]: Initializes the Auth0 client and loads stored authentication state.
+  /// - [updateCredentials]: Updates the current user credentials and notifies listeners.
+  /// - [dispose]: Cleans up resources when the service is no longer needed.
   Credentials? _credentials;
   late Auth0Web _auth0;
   final UserService _userService;
@@ -25,7 +36,9 @@ class AuthService extends ChangeNotifier {
     _auth0.onLoad().then((credentials) {
       _setCredentials(credentials);
     }).catchError((error) {
-      print('Auth0 onLoad error: $error');
+      if (kDebugMode) {
+        print('Auth0 onLoad error: $error');
+      }
     });
 
     // Try to load stored auth state
@@ -37,10 +50,14 @@ class AuthService extends ChangeNotifier {
       final credentials = await _userService.loadStoredAuthState();
       if (credentials != null) {
         _setCredentials(credentials);
-        print('Loaded stored authentication state successfully');
+        if (kDebugMode) {
+          print('Loaded stored authentication state successfully');
+        }
       }
     } catch (e) {
-      print('Error loading stored authentication state: $e');
+      if (kDebugMode) {
+        print('Error loading stored authentication state: $e');
+      }
     }
   }
 
@@ -51,6 +68,12 @@ class AuthService extends ChangeNotifier {
   }
 
   void updateCredentials(Credentials? credentials) {
+    ///exposure of _setCredentials method to allow updating credentials from outside
     _setCredentials(credentials);
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
   }
 }

@@ -102,7 +102,8 @@ class AppInitializer {
     }
   }
 
-  /// Load initial data like exercise lists
+  /// Load initial exercise data
+  /// This will fetch the list of exercises from the API and store it in globals.exerciseList
   static Future<void> _loadInitialData() async {
     try {
       // Ensure API is configured before loading data, this should normaly be done in the AppInitializer
@@ -113,7 +114,7 @@ class AppInitializer {
         return;
       }
 
-      //await Future.delayed(const Duration(milliseconds: 100)); TODO: probably not needed anymore
+      //await Future.delayed(const Duration(milliseconds: 100)); TODO: probably not needed anymore, recheck later
 
       final exercises = await UserService().getExercises();
 

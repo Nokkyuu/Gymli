@@ -1,25 +1,3 @@
-/**
- * User Service for Authentication and Data Management
- * 
- * This service manages user authentication using Auth0 and provides
- * data persistence capabilities for both authenticated and anonymous users.
- * 
- * Key features:
- * - Auth0 integration for secure user authentication
- * - Singleton pattern for global access across the application
- * - In-memory data storage for non-authenticated users
- * - Real-time authentication state notifications
- * - User data synchronization between local and cloud storage
- * 
- * The service handles:
- * - Login/logout operations
- * - User credential management
- * - Data persistence (exercises, workouts, training sets)
- * - Authentication state broadcasting
- */
-
-// ignore_for_file: non_constant_identifier_names
-
 import 'package:auth0_flutter/auth0_flutter.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -28,20 +6,25 @@ import '../api/api.dart' as api;
 import '../api/api_models.dart';
 
 class UserService {
+  /// Singleton instance for UserService
+  /// Handles data management depending on authentication state
   static UserService? _instance;
 
-  // Add this to your UserService class if it doesn't exist
-  void notifyAuthStateChanged() {
-    authStateNotifier.value = !authStateNotifier.value;
-  }
-
-  // Updated singleton pattern that's more web-friendly
   factory UserService() {
     _instance ??= UserService._internal();
     return _instance!;
   }
 
   UserService._internal();
+
+  void notifyAuthStateChanged() {
+    /// notifies listeners about authentication state changes
+    authStateNotifier.value = !authStateNotifier.value;
+
+    ///TODO: This is used as a force refresh,
+    ///but maybe it should be changed into a different notifier to not
+    ///interfere with the actual authentication state
+  }
 
   Credentials? _credentials;
   bool get isLoggedIn => _credentials != null;
@@ -1563,6 +1546,11 @@ class UserService {
     // Trigger the auth state notifier to refresh all listening screens
     authStateNotifier.value = !authStateNotifier.value;
     print('Data change notification sent to all listeners');
+
+    ///TODO: This is used as a force refresh,
+    ///but maybe it should be changed into a different notifier to not
+    ///interfere with the actual authentication state
+    ///also its redundant
   }
 
   //----------------- Food Services -----------------//

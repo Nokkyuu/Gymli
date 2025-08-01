@@ -10,7 +10,7 @@ import '../screens/landing_screen.dart';
 import '../utils/themes/themes.dart';
 import '../utils/services/user_service.dart';
 import '../utils/info_dialogues.dart';
-import '../utils/services/auth_service.dart';
+import '../utils/services/auth0_service.dart';
 import '../utils/services/theme_service.dart';
 import 'navigation_drawer.dart';
 
@@ -26,7 +26,7 @@ class _MainAppWidgetState extends State<MainAppWidget> {
   late AuthService _authService;
   late ThemeService _themeService;
   final userService = UserService();
-
+//drawer images to circles through, without file extensions because they will be added dynamicly and switch for dark mode
   final List<String> drawerImages = [
     'images/drawerlogo/gymli-biceps',
     'images/drawerlogo/gymli-curl1',
