@@ -8,7 +8,7 @@ import 'dart:math';
 
 import '../screens/landing_screen.dart';
 import '../utils/themes/themes.dart';
-import '../utils/services/user_service.dart';
+import 'package:Gymli/utils/services/service_container.dart';
 import '../utils/info_dialogues.dart';
 import '../utils/services/auth0_service.dart';
 import '../utils/services/theme_service.dart';
@@ -23,9 +23,9 @@ class MainAppWidget extends StatefulWidget {
 
 class _MainAppWidgetState extends State<MainAppWidget> {
   String? _drawerImage;
-  late AuthService _authService;
+  late Auth0Service _authService;
   late ThemeService _themeService;
-  final userService = UserService();
+  final container = ServiceContainer();
 //drawer images to circles through, without file extensions because they will be added dynamicly and switch for dark mode
   final List<String> drawerImages = [
     'images/drawerlogo/gymli-biceps',
@@ -45,7 +45,7 @@ class _MainAppWidgetState extends State<MainAppWidget> {
   }
 
   Future<void> _initializeServices() async {
-    _authService = AuthService(userService);
+    _authService = Auth0Service(container);
     _themeService = ThemeService();
 
     await _themeService.loadThemePreference();
@@ -65,7 +65,7 @@ class _MainAppWidgetState extends State<MainAppWidget> {
     _getExerciseList();
     setState(() {}); // Trigger rebuild
     await Future.delayed(const Duration(milliseconds: 100));
-    userService.notifyAuthStateChanged();
+    container.authService.notifyAuthStateChanged();
   }
 
   void _getExerciseList() async {
@@ -84,9 +84,9 @@ class _MainAppWidgetState extends State<MainAppWidget> {
           final ThemeData themeData =
               buildAppTheme(themeService.mode, themeService.primaryColor);
 
-          return Theme(
-            data: themeData,
-            child: Consumer<AuthService>(
+          return MaterialApp(
+            theme: themeData,
+            home: Consumer<Auth0Service>(
               builder: (context, authService, _) {
                 return Scaffold(
                   appBar: _buildAppBar(context, themeService.isDarkMode),
@@ -95,7 +95,7 @@ class _MainAppWidgetState extends State<MainAppWidget> {
                   drawer: AppDrawer(
                     credentials: authService.credentials,
                     auth0: authService.auth0,
-                    userService: userService,
+                    container: container,
                     drawerImage: _drawerImage,
                     drawerImages: drawerImages,
                     isDarkMode: themeService.isDarkMode,

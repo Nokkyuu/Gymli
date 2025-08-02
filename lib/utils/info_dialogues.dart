@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'services/user_service.dart';
+//import 'services/user_service.dart';
+import 'package:Gymli/utils/services/service_container.dart';
 
-final userService = UserService();
+final container = ServiceContainer();
 
 Widget buildInfoButton(
     String tooltip, BuildContext context, VoidCallback onPressed) {
@@ -519,7 +520,7 @@ void showInfoDialogMain(BuildContext context) {
               const Text(
                   '• navigate to the other modules to create exercises, workout, log your nutrition or activities'),
               const SizedBox(height: 12),
-              if (!userService.isLoggedIn) ...[
+              if (!container.authService.isLoggedIn) ...[
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
@@ -541,7 +542,7 @@ void showInfoDialogMain(BuildContext context) {
                     border: Border.all(color: Colors.green.withOpacity(0.3)),
                   ),
                   child: Text(
-                    'Logged in as: ${userService.userName}',
+                    'Logged in as: ${container.authService.userName}',
                     style: const TextStyle(color: Colors.green, fontSize: 12),
                   ),
                 ),

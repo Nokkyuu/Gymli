@@ -1,28 +1,13 @@
-/// Settings Screen - Application Configuration and Data Management
+///Settings Screen, accessed from the navigation drawer.
+///Contains import and export functionality.
+///possibile usage for more user specific customizing settings
 ///
-/// This screen provides comprehensive application settings, user preferences,
-/// and data management capabilities for the Gymli fitness application.
-///
-/// Key features:
-/// - User authentication management (login/logout)
-/// - Display mode configuration (light/dark theme)
-/// - Graph visualization preferences (simple/detailed)
-/// - Data export functionality (CSV format)
-/// - Data import capabilities from CSV files
-/// - Training data management (clear/wipe options)
-/// - Application preferences persistence
-/// - File system operations for data backup/restore
-/// - User account information display
-/// - Confirmation dialogs for destructive operations
-///
-/// The screen serves as the central hub for customizing the application
-/// experience and managing user data across different devices and sessions.
 library;
 
-// ignore_for_file: file_names
 import 'package:flutter/material.dart';
 //import 'package:flutter/services.dart'; // Add this for Clipboard
-import 'package:Gymli/utils/services/user_service.dart';
+//import 'package:Gymli/utils/services/user_service.dart';
+import 'package:Gymli/utils/services/service_container.dart';
 import 'package:Gymli/utils/api/api_models.dart';
 import 'package:csv/csv.dart';
 import 'package:path_provider/path_provider.dart';
@@ -39,6 +24,8 @@ import 'package:flutter/foundation.dart'; // Add this import for kIsWeb
 import '../utils/info_dialogues.dart';
 import 'dart:html' as html;
 //import 'dart:convert';
+
+//TODO: More robust import and export funcitonality, more modular for future use with direct imports from a workout ladder system.
 
 enum DisplayMode { light, dark }
 
@@ -87,29 +74,32 @@ Future<void> wipeTrainingSets(BuildContext context) async {
     }
 
     try {
-      print('Starting to clear training sets...');
+      if (kDebugMode) print('Starting to clear training sets...');
       // Use the UserService which has the correct username handling
-      final userService = UserService();
+      final container = ServiceContainer();
 
       // Get the correct username from UserService
-      final currentUserName = userService.userName;
-      print('Clearing training sets for user: $currentUserName');
+      final currentUserName = container.authService.userName;
+      if (kDebugMode)
+        print('Clearing training sets for user: $currentUserName');
 
       // Use the UserService method which handles both API calls and in-memory data
-      await userService.clearTrainingSets();
-      print('Clear training sets completed successfully');
+      await container.trainingSetService.clearTrainingSets();
+      if (kDebugMode) print('Clear training sets completed successfully');
 
       // Wait a moment for the clear operation to fully complete
       await Future.delayed(const Duration(milliseconds: 500));
 
       // Verify that training sets were actually cleared
-      final remainingTrainingSets = await userService.getTrainingSets();
-      print(
-          'Remaining training sets after clear: ${remainingTrainingSets.length}');
+      final remainingTrainingSets =
+          await container.trainingSetService.getTrainingSets();
+      if (kDebugMode)
+        print(
+            'Remaining training sets after clear: ${remainingTrainingSets.length}');
 
       // Dismiss loading dialog
       // Notify that data has changed
-      UserService().notifyDataChanged();
+      container.dataService.notifyDataChanged();
 
       if (context.mounted) {
         Navigator.of(context).pop();
@@ -176,12 +166,12 @@ Future<void> wipeExercises(BuildContext context) async {
     }
 
     try {
-      await UserService().clearWorkouts();
-      await UserService().clearTrainingSets();
-      await UserService().clearExercises();
+      await container.workoutService.clearWorkouts();
+      await container.trainingSetService.clearTrainingSets();
+      await container.exerciseService.clearExercises();
 
       // Notify that data has changed
-      UserService().notifyDataChanged();
+      container.dataService.notifyDataChanged();
 
       // Dismiss loading dialog
       if (context.mounted) {
@@ -237,9 +227,9 @@ Future<void> wipeWorkouts(BuildContext context) async {
     }
 
     try {
-      await UserService().clearWorkouts();
+      await container.workoutService.clearWorkouts();
       // Notify that data has changed
-      UserService().notifyDataChanged();
+      container.dataService.notifyDataChanged();
 
       // Dismiss loading dialog
       if (context.mounted) {
@@ -289,57 +279,57 @@ Future<void> backup(String dataType, BuildContext context) async {
       );
     }
 
-    final userService = UserService();
+    final container = ServiceContainer(); //TODO: Check for redundancy
     List<List<String>> datalist = [];
 
     print('Starting backup for $dataType...');
 
     if (dataType == "TrainingSets") {
-      final trainingSets = await userService.getTrainingSets();
-      print('Retrieved ${trainingSets.length} training sets');
+      final trainingSets = await container.trainingSetService.getTrainingSets();
+      if (kDebugMode) print('Retrieved ${trainingSets.length} training sets');
 
       for (var ts in trainingSets) {
         try {
           final apiTrainingSet = ApiTrainingSet.fromJson(ts);
           datalist.add(apiTrainingSet.toCSVString());
         } catch (e) {
-          print('Error converting training set to CSV: $e');
+          if (kDebugMode) print('Error converting training set to CSV: $e');
         }
       }
     } else if (dataType == "Exercises") {
-      final exercises = await userService.getExercises();
-      print('Retrieved ${exercises.length} exercises');
+      final exercises = await container.exerciseService.getExercises();
+      if (kDebugMode) print('Retrieved ${exercises.length} exercises');
 
       for (var ex in exercises) {
         try {
           final apiExercise = ApiExercise.fromJson(ex);
           datalist.add(apiExercise.toCSVString());
         } catch (e) {
-          print('Error converting exercise to CSV: $e');
+          if (kDebugMode) print('Error converting exercise to CSV: $e');
         }
       }
     } else if (dataType == "Workouts") {
-      final workouts = await userService.getWorkouts();
-      print('Retrieved ${workouts.length} workouts');
+      final workouts = await container.workoutService.getWorkouts();
+      if (kDebugMode) print('Retrieved ${workouts.length} workouts');
 
       for (var wo in workouts) {
         try {
           final apiWorkout = ApiWorkout.fromJson(wo);
           datalist.add(apiWorkout.toCSVString());
         } catch (e) {
-          print('Error converting workout to CSV: $e');
+          if (kDebugMode) print('Error converting workout to CSV: $e');
         }
       }
     } else if (dataType == "Foods") {
-      final foods = await userService.getFoods();
-      print('Retrieved ${foods.length} foods');
+      final foods = await container.foodService.getFoods();
+      if (kDebugMode) print('Retrieved ${foods.length} foods');
 
       for (var food in foods) {
         try {
           final apiFood = ApiFood.fromJson(food);
           datalist.add(apiFood.toCSVString());
         } catch (e) {
-          print('Error converting food to CSV: $e');
+          if (kDebugMode) print('Error converting food to CSV: $e');
         }
       }
     }
@@ -359,7 +349,7 @@ Future<void> backup(String dataType, BuildContext context) async {
       return;
     }
 
-    print('Converting ${datalist.length} items to CSV...');
+    if (kDebugMode) print('Converting ${datalist.length} items to CSV...');
 
     // IMPROVED: Use proper CSV formatting with explicit line endings
     String csvData = const ListToCsvConverter(
@@ -377,12 +367,12 @@ Future<void> backup(String dataType, BuildContext context) async {
     final fileName =
         "${dataType}_${DateFormat('yyyy-MM-dd_HH-mm-ss').format(DateTime.now())}.csv";
 
-    print('Starting file save process...');
+    if (kDebugMode) print('Starting file save process...');
 
     if (kIsWeb) {
       // Web-specific implementation
       try {
-        print('Using web download approach...');
+        if (kDebugMode) print('Using web download approach...');
 
         // Convert string to bytes with explicit UTF-8 encoding
         final bytes = utf8.encode(csvData);
@@ -419,11 +409,11 @@ Future<void> backup(String dataType, BuildContext context) async {
           }
         }
       } catch (webError) {
-        print('Web export failed: $webError');
+        if (kDebugMode) print('Web export failed: $webError');
 
         // Fallback: try to trigger browser download
         try {
-          print('Attempting browser download fallback...');
+          if (kDebugMode) print('Attempting browser download fallback...');
 
           if (context.mounted) {
             Navigator.of(context).pop(); // Close loading dialog
@@ -473,25 +463,25 @@ Future<void> backup(String dataType, BuildContext context) async {
             );
           }
         } catch (fallbackError) {
-          print('Fallback also failed: $fallbackError');
+          if (kDebugMode) print('Fallback also failed: $fallbackError');
           rethrow;
         }
       }
     } else {
       // Mobile platform implementation
       try {
-        print('Using mobile file system approach...');
+        if (kDebugMode) print('Using mobile file system approach...');
 
         // Get platform-appropriate directory
         final directory = (await getApplicationSupportDirectory()).path;
         final path = "$directory/$fileName";
 
-        print('Creating file at: $path');
+        if (kDebugMode) print('Creating file at: $path');
 
         final File file = File(path);
         // IMPROVED: Write with explicit UTF-8 encoding
         await file.writeAsString(csvData, encoding: utf8);
-        print('File written successfully');
+        if (kDebugMode) print('File written successfully');
 
         // Save file dialog
         final params = SaveFileDialogParams(
@@ -637,7 +627,7 @@ void triggerLoad(context, dataType) async {
   try {
     await restoreData(dataType, importData, context);
     // Notify that data has changed
-    UserService().notifyDataChanged();
+    container.dataService.notifyDataChanged();
 
     // Dismiss loading dialog
     if (context.mounted) {
@@ -677,7 +667,7 @@ void triggerLoad(context, dataType) async {
 Future<void> restoreData(
     String dataType, String data, BuildContext context) async {
   try {
-    final userService = UserService();
+    final container = ServiceContainer();
     List<List<String>> csvTable = const CsvToListConverter(
       shouldParseNumbers: false,
       eol: '\n', // Force Unix line endings
@@ -693,7 +683,7 @@ Future<void> restoreData(
       // Clear existing training sets with better error handling
       print('Clearing existing training sets...');
       try {
-        await userService.clearTrainingSets();
+        await container.trainingSetService.clearTrainingSets();
         print('Successfully cleared existing training sets.');
       } catch (e) {
         print('Warning: Error clearing training sets: $e');
@@ -723,7 +713,7 @@ Future<void> restoreData(
 
       // OPTIMIZATION: Fetch all exercises once and create lookup map
       print('Fetching exercises for ID resolution...');
-      final exercises = await userService.getExercises();
+      final exercises = await container.exerciseService.getExercises();
       final Map<String, int> exerciseNameToIdMap = {};
 
       for (var exercise in exercises) {
@@ -816,12 +806,14 @@ Future<void> restoreData(
           }
 
           try {
-            await userService.createTrainingSetsBulk(batch);
+            await container.trainingSetService.createTrainingSetsBulk(batch);
             importedCount += batch.length;
-            print(
-                'Successfully imported batch of ${batch.length} training sets (${i + 1}-${endIndex} of ${trainingSetsToCreate.length})');
+            if (kDebugMode)
+              print(
+                  'Successfully imported batch of ${batch.length} training sets (${i + 1}-${endIndex} of ${trainingSetsToCreate.length})');
           } catch (e) {
-            print('Error importing batch ${i + 1}-${endIndex}: $e');
+            if (kDebugMode)
+              print('Error importing batch ${i + 1}-${endIndex}: $e');
             skippedCount += batch.length;
           }
 
@@ -868,13 +860,13 @@ Future<void> restoreData(
       // Clear existing exercises with better error handling
       print('Clearing existing exercises...');
       try {
-        await userService.clearTrainingSets();
-        await userService.clearWorkouts();
-        await userService.clearExercises();
-        print('Successfully cleared existing exercises.');
+        await container.trainingSetService.clearTrainingSets();
+        await container.workoutService.clearWorkouts();
+        await container.exerciseService.clearExercises();
+        if (kDebugMode) print('Successfully cleared existing exercises.');
       } catch (e) {
-        print('Warning: Error clearing exercises: $e');
-        print('Continuing with import anyway...');
+        if (kDebugMode) print('Warning: Error clearing exercises: $e');
+        if (kDebugMode) print('Continuing with import anyway...');
       }
 
       // Update dialog to show total count
@@ -943,7 +935,7 @@ Future<void> restoreData(
             //   muscleIntensities.add(0.0);
             // }
 
-            await userService.createExercise(
+            await container.exerciseService.createExercise(
               name: row[0],
               type: int.parse(row[1]),
               defaultRepBase: int.parse(row[3]),
@@ -1006,13 +998,13 @@ Future<void> restoreData(
       }
     } else if (dataType == "Workouts") {
       // Clear existing workouts with better error handling
-      print('Clearing existing workouts...');
+      if (kDebugMode) print('Clearing existing workouts...');
       try {
-        await userService.clearWorkouts();
-        print('Successfully cleared existing workouts.');
+        await container.workoutService.clearWorkouts();
+        if (kDebugMode) print('Successfully cleared existing workouts.');
       } catch (e) {
-        print('Warning: Error clearing workouts: $e');
-        print('Continuing with import anyway...');
+        if (kDebugMode) print('Warning: Error clearing workouts: $e');
+        if (kDebugMode) print('Continuing with import anyway...');
       }
 
       // Update dialog to show total count
@@ -1086,8 +1078,8 @@ Future<void> restoreData(
               final unitStr = row[i].split(", ");
               if (unitStr.length >= 5) {
                 // Use new helper method for name-based exercise resolution
-                final exerciseId =
-                    await userService.getExerciseIdByName(unitStr[0]);
+                final exerciseId = await container.exerciseService
+                    .getExerciseIdByName(unitStr[0]);
 
                 if (exerciseId != null) {
                   units.add({
@@ -1113,7 +1105,8 @@ Future<void> restoreData(
 
             if (units.isNotEmpty) {
               try {
-                final workoutData = await userService.createWorkout(
+                final workoutData =
+                    await container.workoutService.createWorkout(
                   name: workoutName,
                   units: units,
                 );
@@ -1168,13 +1161,13 @@ Future<void> restoreData(
       }
     } else if (dataType == "Foods") {
       // Clear existing food data with better error handling
-      print('Clearing existing food data...');
+      if (kDebugMode) print('Clearing existing food data...');
       try {
-        await userService.clearFoodData();
-        print('Successfully cleared existing food data.');
+        await container.foodService.clearFoodData();
+        if (kDebugMode) print('Successfully cleared existing food data.');
       } catch (e) {
-        print('Warning: Error clearing food data: $e');
-        print('Continuing with import anyway...');
+        if (kDebugMode) print('Warning: Error clearing food data: $e');
+        if (kDebugMode) print('Continuing with import anyway...');
       }
 
       // Update dialog to show total count
@@ -1298,7 +1291,7 @@ Future<void> restoreData(
           }
 
           try {
-            await userService.createFoodsBulk(batch);
+            await container.foodService.createFoodsBulk(batch);
             importedCount += batch.length;
             print(
                 'Successfully imported batch of ${batch.length} food items (${i + 1}-${endIndex} of ${foodsToCreate.length})');
@@ -1829,22 +1822,23 @@ Future<void> wipeFoods(BuildContext context) async {
     }
 
     try {
-      print('Starting to clear food data...');
-      final userService = UserService();
-      final currentUserName = userService.userName;
-      print('Clearing food data for user: $currentUserName');
+      if (kDebugMode) print('Starting to clear food data...');
+      final container = ServiceContainer();
+      final currentUserName = container.userName;
+      if (kDebugMode) print('Clearing food data for user: $currentUserName');
 
-      await userService.clearFoodData();
-      print('Clear food data completed successfully');
+      await container.foodService.clearFoodData();
+      if (kDebugMode) print('Clear food data completed successfully');
 
       await Future.delayed(const Duration(milliseconds: 500));
 
-      final remainingFoods = await userService.getFoods();
+      final remainingFoods = await container.foodService.getFoods();
       //final remainingLogs = await userService.getFoodLogs();
-      print('Remaining foods after clear: ${remainingFoods.length}');
+      if (kDebugMode)
+        print('Remaining foods after clear: ${remainingFoods.length}');
       // print('Remaining food logs after clear: ${remainingLogs.length}');
 
-      UserService().notifyDataChanged();
+      container.notifyDataChanged();
 
       if (context.mounted) {
         Navigator.of(context).pop();

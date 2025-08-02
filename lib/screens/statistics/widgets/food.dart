@@ -1,7 +1,8 @@
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
-import '../../../utils/services/user_service.dart';
+import 'package:Gymli/utils/services/service_container.dart';
 
 class FoodStatsScreen extends StatefulWidget {
   final String? startingDate;
@@ -20,7 +21,7 @@ class FoodStatsScreen extends StatefulWidget {
 }
 
 class _StatsScreenState extends State<FoodStatsScreen> {
-  final UserService userService = UserService();
+  final ServiceContainer container = ServiceContainer();
   Map<String, double> nutritionStats = {};
   List<Map<String, dynamic>> dailyNutritionData = [];
 
@@ -71,13 +72,13 @@ class _StatsScreenState extends State<FoodStatsScreen> {
   void _loadNutritionStats() async {
     try {
       final dateRange = _getDateRange();
-      final stats = await userService.getFoodLogStats(
+      final stats = await container.foodService.getFoodLogStats(
         startDate: dateRange['start']!,
         endDate: dateRange['end']!,
       );
 
       // Load daily data for the chart
-      final dailyData = await userService.getDailyFoodLogStats(
+      final dailyData = await container.foodService.getDailyFoodLogStats(
         startDate: dateRange['start']!,
         endDate: dateRange['end']!,
       );
@@ -88,7 +89,7 @@ class _StatsScreenState extends State<FoodStatsScreen> {
       });
     } catch (e) {
       // Handle error
-      print('Error loading nutrition stats: $e');
+      if (kDebugMode) print('Error loading nutrition stats: $e');
     }
   }
 

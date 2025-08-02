@@ -3,7 +3,7 @@ import 'dart:math';
 import '../../../utils/api/api_models.dart';
 import '../../../utils/globals.dart' as globals;
 import 'package:flutter/material.dart';
-import '../../../utils/services/user_service.dart';
+import 'package:Gymli/utils/services/service_container.dart';
 import '../../../utils/themes/themes.dart';
 
 final themeColors = ThemeColors();
@@ -62,7 +62,8 @@ class ExerciseGraphController extends ChangeNotifier {
 
 // 2. Methode zum Laden der Notizdaten
   Future<void> loadNoteDates() async {
-    final notes = await UserService().getCalendarNotes();
+    final container = ServiceContainer();
+    final notes = await container.calendarService.getCalendarNotes();
     _noteDates = notes
         .map<String>((n) => (n['date'] as String).substring(0, 10))
         .toSet();
@@ -114,8 +115,8 @@ class ExerciseGraphController extends ChangeNotifier {
   /// Load period data and create helper lines with belowBarData
   Future<void> _loadPeriodData() async {
     try {
-      final userService = UserService();
-      final periods = await userService.getPeriods();
+      final container = ServiceContainer();
+      final periods = await container.calendarService.getPeriods();
       _periodTypes.clear(); // Clear period types
 
       if (_mostRecentTrainingDate == null) return;

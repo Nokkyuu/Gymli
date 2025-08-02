@@ -12,11 +12,13 @@
 /// and provides insights into overall fitness activity beyond weight training for the purpose of extra calorie burn.
 library;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
-import '../utils/services/user_service.dart';
+//import '../utils/services/user_service.dart';
+import 'package:Gymli/utils/services/service_container.dart';
 import '../utils/api/api_models.dart';
 import '../utils/themes/responsive_helper.dart';
 import '../utils/info_dialogues.dart';
@@ -30,7 +32,7 @@ class ActivityScreen extends StatefulWidget {
 
 class _ActivityScreenState extends State<ActivityScreen>
     with TickerProviderStateMixin {
-  final UserService userService = UserService();
+  final ServiceContainer container = ServiceContainer();
   late TabController _tabController;
 
   // Data lists
@@ -82,9 +84,9 @@ class _ActivityScreenState extends State<ActivityScreen>
 
     try {
       // Load all data - getActivities will handle initialization if needed
-      final activitiesData = await userService.getActivities();
-      final logsData = await userService.getActivityLogs();
-      final statsData = await userService.getActivityStats();
+      final activitiesData = await container.activityService.getActivities();
+      final logsData = await container.activityService.getActivityLogs();
+      final statsData = await container.activityService.getActivityStats();
 
       setState(() {
         activities =
@@ -153,7 +155,7 @@ class _ActivityScreenState extends State<ActivityScreen>
     }
 
     try {
-      await userService.createActivityLog(
+      await container.activityService.createActivityLog(
         activityName: selectedActivityName!,
         date: selectedDate,
         durationMinutes: duration,
@@ -170,7 +172,7 @@ class _ActivityScreenState extends State<ActivityScreen>
 
       _showSuccessSnackBar('Activity logged successfully!');
     } catch (e) {
-      print('Error logging activity: $e');
+      if (kDebugMode) print('Error logging activity: $e');
       _showErrorSnackBar('Failed to log activity');
     }
   }
@@ -181,27 +183,31 @@ class _ActivityScreenState extends State<ActivityScreen>
     // Check if fields are empty
     if (customActivityNameController.text.isEmpty ||
         customActivityCaloriesController.text.isEmpty) {
-      print('Fields are empty - showing error'); // Debug print
+      if (kDebugMode) print('Fields are empty - showing error'); // Debug print
       _showErrorSnackBar('Please enter activity name and calories per hour');
       return;
     }
 
-    print('Activity name: ${customActivityNameController.text}'); // Debug print
-    print(
-        'Calories text: ${customActivityCaloriesController.text}'); // Debug print
+    if (kDebugMode)
+      print(
+          'Activity name: ${customActivityNameController.text}'); // Debug print
+    if (kDebugMode)
+      print(
+          'Calories text: ${customActivityCaloriesController.text}'); // Debug print
 
     final calories = double.tryParse(customActivityCaloriesController.text);
     if (calories == null || calories <= 0) {
-      print('Invalid calories value: $calories'); // Debug print
+      if (kDebugMode) print('Invalid calories value: $calories'); // Debug print
       _showErrorSnackBar('Please enter valid calories per hour');
       return;
     }
 
-    print('Parsed calories: $calories'); // Debug print
+    if (kDebugMode) print('Parsed calories: $calories'); // Debug print
 
     try {
-      print('Calling userService.createActivity...'); // Debug print
-      final result = await userService.createActivity(
+      if (kDebugMode)
+        print('Calling container.activityService.createActivity...');
+      final result = await container.activityService.createActivity(
         name: customActivityNameController.text,
         kcalPerHour: calories,
       );
@@ -225,11 +231,11 @@ class _ActivityScreenState extends State<ActivityScreen>
     if (log.id == null) return;
 
     try {
-      await userService.deleteActivityLog(log.id!);
+      await container.activityService.deleteActivityLog(log.id!);
       await _loadData();
       _showSuccessSnackBar('Activity log deleted');
     } catch (e) {
-      print('Error deleting activity log: $e');
+      if (kDebugMode) print('Error deleting activity log: $e');
       _showErrorSnackBar('Failed to delete activity log');
     }
   }
@@ -810,7 +816,7 @@ class _ActivityScreenState extends State<ActivityScreen>
   bool _shouldShowDeleteButton(ApiActivity activity) {
     if (activity.id == null) return false;
 
-    if (userService.isLoggedIn) {
+    if (container.authService.isLoggedIn) {
       // Logged-in users can delete any activity
       return true;
     } else {
@@ -875,11 +881,11 @@ class _ActivityScreenState extends State<ActivityScreen>
             onPressed: () async {
               Navigator.pop(context);
               try {
-                await userService.deleteActivity(activity.id!);
+                await container.activityService.deleteActivity(activity.id!);
                 await _loadData();
                 _showSuccessSnackBar('Activity deleted successfully');
               } catch (e) {
-                print('Error deleting activity: $e');
+                if (kDebugMode) print('Error deleting activity: $e');
                 _showErrorSnackBar(
                     'Failed to delete activity: ${e.toString()}');
               }

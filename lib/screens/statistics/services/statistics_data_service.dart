@@ -9,14 +9,15 @@
 library;
 
 import 'package:fl_chart/fl_chart.dart';
-import '../../../utils/services/user_service.dart';
+import 'package:Gymli/utils/services/service_container.dart';
+import 'package:flutter/foundation.dart' show kDebugMode;
 import '../../../utils/api/api_models.dart';
 import '../../../utils/api/api_models.dart';
 import 'statistics_filter_service.dart';
 
 /// Service responsible for data fetching and caching for statistics
 class StatisticsDataService {
-  final UserService _userService;
+  final ServiceContainer container;
 
   // Caching variables to prevent redundant API calls
   List<Map<String, dynamic>>? _cachedTrainingSets;
@@ -26,7 +27,7 @@ class StatisticsDataService {
   bool _dataCacheValid = false;
   DateTime? _lastCacheTime;
 
-  StatisticsDataService(this._userService);
+  StatisticsDataService(this.container);
 
   /// Check if cache is expired based on configured cache expiry time
   bool get _isCacheExpired {
@@ -43,19 +44,19 @@ class StatisticsDataService {
     _cachedActivityStats = null;
     _dataCacheValid = false;
     _lastCacheTime = null;
-    print('Statistics data cache invalidated');
+    if (kDebugMode) print('Statistics data cache invalidated');
   }
 
   /// Get training sets with smart caching
   Future<List<Map<String, dynamic>>> getTrainingSets() async {
     if (_cachedTrainingSets == null || !_dataCacheValid || _isCacheExpired) {
-      print('Loading training sets from API...');
-      final rawData = await _userService.getTrainingSets();
+      if (kDebugMode) print('Loading training sets from API...');
+      final rawData = await container.trainingSetService.getTrainingSets();
       _cachedTrainingSets = rawData.cast<Map<String, dynamic>>();
       _dataCacheValid = true;
       _lastCacheTime = DateTime.now();
     } else {
-      print('Using cached training sets');
+      if (kDebugMode) print('Using cached training sets');
     }
     return _cachedTrainingSets!;
   }
@@ -63,14 +64,14 @@ class StatisticsDataService {
   /// Get exercises with smart caching
   Future<List<ApiExercise>> getExercises() async {
     if (_cachedExercises == null || !_dataCacheValid || _isCacheExpired) {
-      print('Loading exercises from API...');
-      final exercisesData = await _userService.getExercises();
+      if (kDebugMode) print('Loading exercises from API...');
+      final exercisesData = await container.exerciseService.getExercises();
       _cachedExercises =
           exercisesData.map((e) => ApiExercise.fromJson(e)).toList();
       _dataCacheValid = true;
       _lastCacheTime = DateTime.now();
     } else {
-      print('Using cached exercises');
+      if (kDebugMode) print('Using cached exercises');
     }
     return _cachedExercises!;
   }
@@ -78,12 +79,12 @@ class StatisticsDataService {
   /// Get activity logs with caching
   Future<List<dynamic>> getActivityLogs() async {
     if (_cachedActivityLogs == null || !_dataCacheValid || _isCacheExpired) {
-      print('Loading activity logs from API...');
-      _cachedActivityLogs = await _userService.getActivityLogs();
+      if (kDebugMode) print('Loading activity logs from API...');
+      _cachedActivityLogs = await container.activityService.getActivityLogs();
       _dataCacheValid = true;
       _lastCacheTime = DateTime.now();
     } else {
-      print('Using cached activity logs');
+      if (kDebugMode) print('Using cached activity logs');
     }
     return _cachedActivityLogs!;
   }
@@ -91,12 +92,12 @@ class StatisticsDataService {
   /// Get activity statistics with caching
   Future<Map<String, dynamic>> getActivityStats() async {
     if (_cachedActivityStats == null || !_dataCacheValid || _isCacheExpired) {
-      print('Loading activity stats from API...');
-      _cachedActivityStats = await _userService.getActivityStats();
+      if (kDebugMode) print('Loading activity stats from API...');
+      _cachedActivityStats = await container.activityService.getActivityStats();
       _dataCacheValid = true;
       _lastCacheTime = DateTime.now();
     } else {
-      print('Using cached activity stats');
+      if (kDebugMode) print('Using cached activity stats');
     }
     return _cachedActivityStats!;
   }
@@ -110,12 +111,12 @@ class StatisticsDataService {
   }) async {
     try {
       // Load activity statistics from API
-      final statsData = await _userService.getActivityStats();
-      print('Activity stats loaded: $statsData');
+      final statsData = await container.activityService.getActivityStats();
+      if (kDebugMode) print('Activity stats loaded: $statsData');
 
       // Load activity logs for trend data
-      final logsData = await _userService.getActivityLogs();
-      print('Activity logs count: ${logsData.length}');
+      final logsData = await container.activityService.getActivityLogs();
+      if (kDebugMode) print('Activity logs count: ${logsData.length}');
 
       // Convert logs to ApiActivityLog objects and sort by date
       final activityLogs =
@@ -228,7 +229,7 @@ class StatisticsDataService {
         durationTrendData: durationTrendData,
       );
     } catch (e) {
-      print('Error loading activity data: $e');
+      if (kDebugMode) print('Error loading activity data: $e');
       return ActivityDataResult.empty();
     }
   }

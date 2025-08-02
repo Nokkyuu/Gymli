@@ -1,29 +1,13 @@
-/// Exercise Setup Screen - Exercise Configuration Interface
-///
-/// This screen provides a comprehensive interface for creating, editing, and
-/// configuring exercises within the workout application. It handles exercise
-/// metadata, muscle group assignments, and equipment specifications.
-///
-/// Key features:
-/// - Exercise creation and editing capabilities
-/// - Equipment type selection (free weights, machines, cables, bodyweight)
-/// - Muscle group activation mapping and visualization
-/// - Exercise name management and validation
-/// - Primary and secondary muscle group assignments
-/// - Visual muscle group selection interface
-/// - Integration with global exercise database
-/// - Real-time exercise data persistence
-///
-/// The screen enables users to customize their exercise library and ensure
-/// proper muscle group tracking for comprehensive workout analysis.
+///Exercise Setup screen, accessed via navigation drawer or from the ExerciseScreen.
+///Screen is used to create or update exercises.
 library;
 
-// ignore_for_file: file_names, non_constant_identifier_names
-
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../utils/globals.dart' as globals;
-import '../utils/services/user_service.dart';
+import 'package:Gymli/utils/services/service_container.dart';
+//import '../utils/services/user_service.dart';
 import '../utils/api/api_models.dart';
 import '../utils/themes/responsive_helper.dart';
 import '../utils/info_dialogues.dart';
@@ -37,7 +21,6 @@ final exerciseMap = [
   ExerciseDevice.body
 ];
 
-// ignore: must_be_immutable
 class ExerciseSetupScreen extends StatefulWidget {
   String exerciseName;
   ExerciseSetupScreen(this.exerciseName, {super.key});
@@ -46,49 +29,59 @@ class ExerciseSetupScreen extends StatefulWidget {
   State<ExerciseSetupScreen> createState() => _ExerciseSetupScreenState();
 }
 
-void get_exercise_list() async {
+Future<void> get_exercise_list() async {
   try {
-    final userService = UserService();
-    final exercises = await userService.getExercises();
+    final container = ServiceContainer();
+    final exercises = await container.exerciseService.getExercises();
     List<String> exerciseList = [];
     for (var e in exercises) {
       exerciseList.add(e['name']);
     }
     globals.exerciseList = exerciseList;
   } catch (e) {
-    print('Error loading exercise list: $e');
+    if (kDebugMode) print('Error loading exercise list: $e');
     globals.exerciseList = [];
   }
 }
 
-void add_exercise(String exerciseName, ExerciseDevice chosenDevice, int minRep,
-    int maxRep, double weightInc) async {
+Future<void> add_exercise(String exerciseName, ExerciseDevice chosenDevice,
+    int minRep, int maxRep, double weightInc) async {
+  if (kDebugMode) print('🔧 add_exercise: Starting with name: $exerciseName');
+
   try {
-    final userService = UserService();
+    final container = ServiceContainer();
     int exerciseType = chosenDevice.index;
+    if (kDebugMode) print('🔧 add_exercise: Exercise type: $exerciseType');
 
     // Get muscle group intensities
     final muscleIntensities = <double>[];
     for (var m in muscleGroupNames) {
       muscleIntensities.add(globals.muscle_val[m] ?? 0.0);
     }
+    if (kDebugMode)
+      print(
+          '🔧 add_exercise: Muscle intensities collected: ${muscleIntensities.length}');
 
     // Pad or trim to match expected muscle groups (14 total)
     while (muscleIntensities.length < 14) {
       muscleIntensities.add(0.0);
     }
 
+    if (kDebugMode) print('🔧 add_exercise: Getting existing exercises...');
     // Check if exercise exists
-    final exercises = await userService.getExercises();
+    final exercises = await container.exerciseService.getExercises();
     final existing = exercises.firstWhere(
       (e) => e['name'] == exerciseName,
       orElse: () => null,
     );
 
     if (existing != null && existing['id'] != null) {
+      if (kDebugMode)
+        print(
+            '🔧 add_exercise: Updating existing exercise with ID: ${existing['id']}');
       // Update existing exercise
-      await userService.updateExercise(existing['id'], {
-        'user_name': userService.userName,
+      await container.exerciseService.updateExercise(existing['id'], {
+        'user_name': container.authService.userName,
         'name': exerciseName,
         'type': exerciseType,
         'default_rep_base': minRep,
@@ -109,9 +102,11 @@ void add_exercise(String exerciseName, ExerciseDevice chosenDevice, int minRep,
         'forearms': muscleIntensities[12],
         'calves': muscleIntensities[13],
       });
+      if (kDebugMode) print('✅ add_exercise: Exercise updated successfully');
     } else {
+      if (kDebugMode) print('🔧 add_exercise: Creating new exercise...');
       // Create new exercise
-      await userService.createExercise(
+      await container.exerciseService.createExercise(
         name: exerciseName,
         type: exerciseType,
         defaultRepBase: minRep,
@@ -132,11 +127,13 @@ void add_exercise(String exerciseName, ExerciseDevice chosenDevice, int minRep,
         forearms: muscleIntensities[12],
         calves: muscleIntensities[13],
       );
+      if (kDebugMode)
+        print('✅ add_exercise: New exercise created successfully');
     }
-    // Notify that data has changed
-    UserService().notifyDataChanged();
   } catch (e) {
-    print('Error adding/updating exercise: $e');
+    if (kDebugMode) print('❌ add_exercise: Error: $e');
+    if (kDebugMode) print('❌ add_exercise: Stack trace: ${StackTrace.current}');
+    rethrow; // Fehler weiterwerfen damit er im Button-Handler gefangen wird
   }
 }
 
@@ -151,7 +148,7 @@ class _ExerciseSetupScreenState extends State<ExerciseSetupScreen> {
   List<double> muscleIntensities = [];
   final exerciseTitleController = TextEditingController();
   ApiExercise? currentExercise;
-  final userService = UserService();
+  final container = ServiceContainer();
 
   @override
   void initState() {
@@ -163,7 +160,7 @@ class _ExerciseSetupScreenState extends State<ExerciseSetupScreen> {
     if (widget.exerciseName.isEmpty) return;
 
     try {
-      final exercises = await userService.getExercises();
+      final exercises = await container.exerciseService.getExercises();
       final exerciseData = exercises.firstWhere(
         (item) => item['name'] == widget.exerciseName,
         orElse: () => null,
@@ -195,7 +192,7 @@ class _ExerciseSetupScreenState extends State<ExerciseSetupScreen> {
         });
       }
     } catch (e) {
-      print('Error loading exercise data: $e');
+      if (kDebugMode) print('Error loading exercise data: $e');
     }
   }
 
@@ -245,28 +242,33 @@ class _ExerciseSetupScreenState extends State<ExerciseSetupScreen> {
                   if (confirmed != true) return;
 
                   try {
-                    // CORRECT ORDER: Delete dependent records FIRST
-                    print('Deleting training sets for exercise $exerciseId');
-                    final trainingSets = await userService.getTrainingSets();
+                    if (kDebugMode)
+                      print('Deleting training sets for exercise $exerciseId');
+                    final trainingSets =
+                        await container.trainingSetService.getTrainingSets();
                     for (var set in trainingSets) {
                       if (set['exercise_id'] == exerciseId) {
-                        await userService.deleteTrainingSet(set['id']);
+                        await container.trainingSetService
+                            .deleteTrainingSet(set['id']);
                       }
                     }
 
                     // THEN delete the exercise (no more foreign key violations)
-                    print('Deleting exercise $exerciseId');
-                    await userService.deleteExercise(exerciseId);
+                    if (kDebugMode) print('Deleting exercise $exerciseId');
+                    await container.exerciseService.deleteExercise(exerciseId);
 
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
                           content: Text('Exercise deleted successfully')),
                     );
 
-                    int count = 0;
-                    Navigator.of(context).popUntil((_) => count++ >= 2);
+                    if (mounted) {
+                      container.dataService.notifyDataChanged();
+                      Navigator.of(context).pop(); // Dialog schließen
+                      Navigator.of(context).pop(); // Screen schließen
+                    }
                   } catch (e) {
-                    print('Error deleting exercise: $e');
+                    if (kDebugMode) print('Error deleting exercise: $e');
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(content: Text('Error deleting exercise: $e')),
                     );
@@ -627,140 +629,171 @@ class _ExerciseSetupScreenState extends State<ExerciseSetupScreen> {
       icon: const Icon(Icons.check),
       iconSize: 40,
       tooltip: 'Confirm',
-      onPressed: () => showDialog<String>(
-        context: context,
-        barrierDismissible: false,
-        builder: (BuildContext context) => Dialog(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: <Widget>[
-                Icon(
-                  globals.exerciseList.contains(exerciseTitleController.text)
-                      ? Icons.edit
-                      : Icons.add_circle,
-                  size: 48,
-                  color: globals.exerciseList
-                          .contains(exerciseTitleController.text)
-                      ? Colors.orange
-                      : Colors.green,
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  globals.exerciseList.contains(exerciseTitleController.text)
-                      ? 'Update Exercise'
-                      : 'Create New Exercise',
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
-                const SizedBox(height: 8),
-                if (globals.exerciseList.contains(exerciseTitleController.text))
-                  const Text(
-                    'This will update the existing exercise configuration.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.orange),
+      onPressed: () async {
+        final bool? success = await showDialog<bool>(
+          context: context,
+          barrierDismissible: false,
+          builder: (BuildContext dialogContext) => Dialog(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  Icon(
+                    globals.exerciseList.contains(exerciseTitleController.text)
+                        ? Icons.edit
+                        : Icons.add_circle,
+                    size: 48,
+                    color: globals.exerciseList
+                            .contains(exerciseTitleController.text)
+                        ? Colors.orange
+                        : Colors.green,
                   ),
-                const SizedBox(height: 16),
-                Card(
-                  elevation: 2.0,
-                  child: Padding(
-                    padding: const EdgeInsets.all(12.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            const Icon(Icons.fitness_center, size: 20),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                exerciseTitleController.text,
-                                style: Theme.of(context).textTheme.titleMedium,
-                                overflow: TextOverflow.ellipsis,
+                  const SizedBox(height: 16),
+                  Text(
+                    globals.exerciseList.contains(exerciseTitleController.text)
+                        ? 'Update Exercise'
+                        : 'Create New Exercise',
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                  const SizedBox(height: 8),
+                  if (globals.exerciseList
+                      .contains(exerciseTitleController.text))
+                    const Text(
+                      'This will update the existing exercise configuration.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: Colors.orange),
+                    ),
+                  const SizedBox(height: 16),
+                  Card(
+                    elevation: 2.0,
+                    child: Padding(
+                      padding: const EdgeInsets.all(12.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              const Icon(Icons.fitness_center, size: 20),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  exerciseTitleController.text,
+                                  style:
+                                      Theme.of(context).textTheme.titleMedium,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
                               ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        Row(
-                          children: [
-                            const Icon(Icons.category, size: 16),
-                            const SizedBox(width: 4),
-                            Text('Equipment: ${_getDeviceName(chosenDevice)}'),
-                          ],
-                        ),
-                        const SizedBox(height: 4),
-                        Row(
-                          children: [
-                            const Icon(Icons.repeat, size: 16),
-                            const SizedBox(width: 4),
-                            Text('Reps: ${minRep.toInt()} - ${maxRep.toInt()}'),
-                          ],
-                        ),
-                        const SizedBox(height: 4),
-                        Row(
-                          children: [
-                            const Icon(Icons.add, size: 16),
-                            const SizedBox(width: 4),
-                            Text('Weight increments: $weightInc kg'),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Active muscle groups: ${_getActiveMuscleGroups()}',
-                          style:
-                              const TextStyle(fontSize: 12, color: Colors.grey),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 20),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    TextButton(
-                      onPressed: () => Navigator.of(context).pop(),
-                      child: const Text('Cancel'),
-                    ),
-                    FilledButton(
-                      onPressed: () {
-                        add_exercise(
-                          exerciseTitleController.text,
-                          chosenDevice,
-                          minRep.toInt(),
-                          maxRep.toInt(),
-                          weightInc,
-                        );
-                        setState(() {});
-                        int count = 0;
-                        Navigator.of(context).popUntil((_) => count++ >= 2);
-                      },
-                      child: Text(
-                        globals.exerciseList
-                                .contains(exerciseTitleController.text)
-                            ? 'Update Exercise'
-                            : 'Create Exercise',
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              const Icon(Icons.category, size: 16),
+                              const SizedBox(width: 4),
+                              Text(
+                                  'Equipment: ${_getDeviceName(chosenDevice)}'),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          Row(
+                            children: [
+                              const Icon(Icons.repeat, size: 16),
+                              const SizedBox(width: 4),
+                              Text(
+                                  'Reps: ${minRep.toInt()} - ${maxRep.toInt()}'),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          Row(
+                            children: [
+                              const Icon(Icons.add, size: 16),
+                              const SizedBox(width: 4),
+                              Text('Weight increments: $weightInc kg'),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Active muscle groups: ${_getActiveMuscleGroups()}',
+                            style: const TextStyle(
+                                fontSize: 12, color: Colors.grey),
+                          ),
+                        ],
                       ),
                     ),
-                  ],
-                ),
-              ],
+                  ),
+                  const SizedBox(height: 20),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      TextButton(
+                        onPressed: () => Navigator.of(dialogContext).pop(false),
+                        child: const Text('Cancel'),
+                      ),
+                      FilledButton(
+                        onPressed: () async {
+                          if (kDebugMode)
+                            print('🔧 Starting exercise save process...');
+
+                          try {
+                            if (kDebugMode) print('🔧 Calling add_exercise...');
+                            await add_exercise(
+                              exerciseTitleController.text,
+                              chosenDevice,
+                              minRep.toInt(),
+                              maxRep.toInt(),
+                              weightInc,
+                            );
+                            if (kDebugMode)
+                              print('✅ add_exercise completed successfully');
+
+                            if (kDebugMode)
+                              print('🔧 Calling get_exercise_list...');
+                            await get_exercise_list();
+                            if (kDebugMode)
+                              print(
+                                  '✅ get_exercise_list completed successfully');
+
+                            if (kDebugMode)
+                              print('🔧 Notifying data service...');
+                            container.dataService.notifyDataChanged();
+                            if (kDebugMode) print('✅ Data service notified');
+
+                            if (kDebugMode)
+                              print('✅ All operations completed successfully');
+
+                            if (dialogContext.mounted) {
+                              Navigator.of(dialogContext).pop(true);
+                            }
+                          } catch (e) {
+                            if (kDebugMode)
+                              print('❌ Error in save process: $e');
+                            if (kDebugMode)
+                              print('❌ Stack trace: ${StackTrace.current}');
+                            if (dialogContext.mounted) {
+                              Navigator.of(dialogContext).pop(false);
+                            }
+                          }
+                        },
+                        child: Text(
+                          globals.exerciseList
+                                  .contains(exerciseTitleController.text)
+                              ? 'Update Exercise'
+                              : 'Create Exercise',
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
-        ),
-      )
+        );
 
-      // add_exercise(
-      //     exerciseTitleController.text,
-      //     chosenDevice,
-      //     minRep.toInt(),
-      //     maxRep.toInt(),
-      //     weightInc,
-      //     muscleGroups);
-      // setState(() {});
-      // Navigator.pop(context);
-      ,
+        if (success == true && mounted) {
+          Navigator.of(context).pop();
+        }
+      },
     );
   }
 }

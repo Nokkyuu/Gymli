@@ -7,10 +7,11 @@ library;
 import 'package:auth0_flutter/auth0_flutter.dart';
 import 'package:auth0_flutter/auth0_flutter_web.dart';
 import 'package:flutter/foundation.dart';
-import 'user_service.dart';
+//import 'user_service.dart';
 import 'app_initializer.dart';
+import 'package:Gymli/utils/services/service_container.dart';
 
-class AuthService extends ChangeNotifier {
+class Auth0Service extends ChangeNotifier {
   /// Class for managing authentication using Auth0.
   /// It initializes the Auth0 client, manages user credentials, and provides methods to update authentication
   /// getters:
@@ -22,9 +23,10 @@ class AuthService extends ChangeNotifier {
   /// - [dispose]: Cleans up resources when the service is no longer needed.
   Credentials? _credentials;
   late Auth0Web _auth0;
-  final UserService _userService;
+  final ServiceContainer _serviceContainer;
+  //final UserService _userService;
 
-  AuthService(this._userService);
+  Auth0Service(this._serviceContainer);
 
   Credentials? get credentials => _credentials;
   Auth0Web get auth0 => _auth0;
@@ -47,7 +49,8 @@ class AuthService extends ChangeNotifier {
 
   Future<void> _loadStoredAuthState() async {
     try {
-      final credentials = await _userService.loadStoredAuthState();
+      final credentials =
+          await _serviceContainer.authService.loadStoredAuthState();
       if (credentials != null) {
         _setCredentials(credentials);
         if (kDebugMode) {
@@ -63,7 +66,7 @@ class AuthService extends ChangeNotifier {
 
   void _setCredentials(Credentials? credentials) {
     _credentials = credentials;
-    _userService.setCredentials(credentials);
+    _serviceContainer.authService.setCredentials(credentials);
     notifyListeners();
   }
 

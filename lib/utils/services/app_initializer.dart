@@ -1,9 +1,12 @@
 //import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:developer';
+
 import 'package:auth0_flutter/auth0_flutter_web.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
+import 'package:Gymli/utils/services/service_container.dart';
 import '../../config/api_config.dart';
 import '../globals.dart' as globals;
-import 'user_service.dart';
+//import 'user_service.dart';
 
 class AppInitializer {
   static const String _auth0Domain = 'dev-aqz5a2g54oer01tk.us.auth0.com';
@@ -43,6 +46,9 @@ class AppInitializer {
       if (kDebugMode) print('✓ Auth0 initialized');
 
       // 4. Initialize UserService
+      await ServiceContainer().initialize();
+      if (kDebugMode) print('✓ UserService Container initialized');
+
       await _initializeUserService();
       if (kDebugMode) print('✓ UserService initialized');
 
@@ -92,9 +98,10 @@ class AppInitializer {
 
     try {
       // Try to load stored authentication state
-      final credentials = await UserService().loadStoredAuthState();
+      final credentials =
+          await ServiceContainer().authService.loadStoredAuthState();
       if (credentials != null) {
-        UserService().setCredentials(credentials);
+        ServiceContainer().authService.setCredentials(credentials);
       }
     } catch (e) {
       print('No stored authentication state found: $e');
@@ -116,7 +123,7 @@ class AppInitializer {
 
       //await Future.delayed(const Duration(milliseconds: 100)); TODO: probably not needed anymore, recheck later
 
-      final exercises = await UserService().getExercises();
+      final exercises = await ServiceContainer().exerciseService.getExercises();
 
       globals.exerciseList =
           exercises.map<String>((e) => e['name'] as String).toList();

@@ -23,12 +23,13 @@ library;
 // ignore_for_file: file_names
 
 import 'package:Gymli/utils/info_dialogues.dart';
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:time_machine/time_machine.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'dart:math';
-import '../utils/services/user_service.dart';
+import 'package:Gymli/utils/services/service_container.dart';
 import '../utils/api/api_models.dart';
 import '../utils/themes/responsive_helper.dart';
 //import 'screens/statistics/constants/muscle_constants.dart';
@@ -68,7 +69,7 @@ class _StatisticsScreen extends State<StatisticsScreen> {
   bool isLoading = true;
   // ignore: non_constant_identifier_names
   final TextEditingController MuscleController = TextEditingController();
-  final UserService userService = UserService();
+  final ServiceContainer container = ServiceContainer();
 
   // Service instances for data management and calculations
   late final StatisticsDataService _dataService;
@@ -122,10 +123,11 @@ class _StatisticsScreen extends State<StatisticsScreen> {
         _bodyweightCount = result['bodyweight'] ?? 0;
       });
 
-      print(
-          'Equipment usage calculated: Free: $_freeWeightsCount, Machine: $_machinesCount, Cable: $_cablesCount, Bodyweight: $_bodyweightCount');
+      if (kDebugMode)
+        print(
+            'Equipment usage calculated: Free: $_freeWeightsCount, Machine: $_machinesCount, Cable: $_cablesCount, Bodyweight: $_bodyweightCount');
     } catch (e) {
-      print('Error calculating equipment usage: $e');
+      if (kDebugMode) print('Error calculating equipment usage: $e');
       setState(() {
         _freeWeightsCount = 0;
         _machinesCount = 0;
@@ -219,7 +221,7 @@ class _StatisticsScreen extends State<StatisticsScreen> {
             uniqueDates.add(DateTime(date.year, date.month, date.day));
           }
         } catch (e) {
-          print('Error parsing date: $e');
+          if (kDebugMode) print('Error parsing date: $e');
         }
       }
 
@@ -350,7 +352,7 @@ class _StatisticsScreen extends State<StatisticsScreen> {
         isLoading = false;
       });
     } catch (e) {
-      print('Error loading statistics: $e');
+      if (kDebugMode) print('Error loading statistics: $e');
       setState(() {
         isLoading = false;
         numberOfTrainingDays = 0;
@@ -394,7 +396,8 @@ class _StatisticsScreen extends State<StatisticsScreen> {
         });
       }
     } catch (e) {
-      print('Error updating bar statistics from coordinator: $e');
+      if (kDebugMode)
+        print('Error updating bar statistics from coordinator: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error updating statistics: $e')),
@@ -423,7 +426,7 @@ class _StatisticsScreen extends State<StatisticsScreen> {
         _isLoadingActivityData = false;
       });
     } catch (e) {
-      print('Error loading activity data from coordinator: $e');
+      if (kDebugMode) print('Error loading activity data from coordinator: $e');
       setState(() {
         _activityStats = {};
         _caloriesTrendData = [];
@@ -458,7 +461,8 @@ class _StatisticsScreen extends State<StatisticsScreen> {
         _exerciseGraphMostRecentDate = result.mostRecentDate;
       });
     } catch (e) {
-      print('Error loading exercise graph data from coordinator: $e');
+      if (kDebugMode)
+        print('Error loading exercise graph data from coordinator: $e');
       setState(() {
         _exerciseGraphData = [];
         _exerciseGraphTooltip = {};
@@ -480,7 +484,7 @@ class _StatisticsScreen extends State<StatisticsScreen> {
     super.initState();
 
     // Initialize services
-    _dataService = StatisticsDataService(userService);
+    _dataService = StatisticsDataService(container);
     _filterService = StatisticsFilterService();
     _calculationService = StatisticsCalculationService();
     _coordinator = StatisticsCoordinator(
@@ -503,14 +507,14 @@ class _StatisticsScreen extends State<StatisticsScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         // Add a listener to refresh when data might have changed
-        userService.authStateNotifier.addListener(_onDataChanged);
+        container.authService.authStateNotifier.addListener(_onDataChanged);
       }
     });
   }
 
   @override
   void dispose() {
-    userService.authStateNotifier.removeListener(_onDataChanged);
+    container.authService.authStateNotifier.removeListener(_onDataChanged);
     super.dispose();
   }
 
@@ -1118,8 +1122,9 @@ class _StatisticsScreen extends State<StatisticsScreen> {
   // Helper method to get properly formatted calories value
   String _getCaloriesDisplayValue() {
     final calories = _activityStats['total_calories_burned'];
-    print(
-        'Debug - calories value: $calories (type: ${calories.runtimeType})'); // Debug log
+    if (kDebugMode)
+      print(
+          'Debug - calories value: $calories (type: ${calories.runtimeType})'); // Debug log
 
     if (calories == null) return "0";
 
@@ -1171,8 +1176,8 @@ class _StatisticsScreen extends State<StatisticsScreen> {
             // Use the available space from the parent container
             double availableHeight = constraints.maxHeight;
             double availableWidth = constraints.maxWidth;
-            print(availableHeight);
-            print(availableWidth);
+            if (kDebugMode) print(availableHeight);
+            if (kDebugMode) print(availableWidth);
             // Calculate appropriate dimensions while maintaining aspect ratio
             double imageWidth = availableWidth * 0.5;
             double imageHeight = availableHeight;
@@ -1464,7 +1469,7 @@ class _StatisticsScreen extends State<StatisticsScreen> {
         }
       });
     } catch (e) {
-      print('Error loading exercises: $e');
+      if (kDebugMode) print('Error loading exercises: $e');
     }
   }
 

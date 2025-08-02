@@ -1,7 +1,8 @@
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'dart:math';
-import '../../../utils/services/user_service.dart';
+import 'package:Gymli/utils/services/service_container.dart';
 
 class WorkoutAnalyzerScreen extends StatefulWidget {
   final String? startingDate;
@@ -20,7 +21,7 @@ class WorkoutAnalyzerScreen extends StatefulWidget {
 }
 
 class _WorkoutAnalyzerScreenState extends State<WorkoutAnalyzerScreen> {
-  final UserService userService = UserService();
+  final ServiceContainer container = ServiceContainer();
 
   List<Map<String, dynamic>> _workouts = [];
   List<Map<String, dynamic>> _exercises = [];
@@ -28,6 +29,7 @@ class _WorkoutAnalyzerScreenState extends State<WorkoutAnalyzerScreen> {
   bool _isLoading = true;
 
   final List<String> muscleKeys = [
+    //TODO: extract to somewhere?globals?
     'pectoralis_major',
     'trapezius',
     'biceps',
@@ -69,8 +71,8 @@ class _WorkoutAnalyzerScreenState extends State<WorkoutAnalyzerScreen> {
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
     try {
-      final workouts = await userService.getWorkouts();
-      final exercises = await userService.getExercises();
+      final workouts = await container.workoutService.getWorkouts();
+      final exercises = await container.exerciseService.getExercises();
       // Sortiere Workouts alphabetisch nach Name
       final sortedWorkouts = List<Map<String, dynamic>>.from(workouts)
         ..sort((a, b) => (a['name'] ?? '').toString().toLowerCase().compareTo(
@@ -82,7 +84,7 @@ class _WorkoutAnalyzerScreenState extends State<WorkoutAnalyzerScreen> {
         _isLoading = false;
       });
     } catch (e) {
-      print('Error loading workouts/exercises: $e');
+      if (kDebugMode) print('Error loading workouts/exercises: $e');
       setState(() => _isLoading = false);
     }
   }

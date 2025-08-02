@@ -17,11 +17,13 @@
 /// and provides insights into nutritional consumption patterns.
 library;
 
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
-import '../utils/services/user_service.dart';
+import 'package:Gymli/utils/services/service_container.dart';
+//import '../utils/services/user_service.dart';
 import '../utils/api/api_models.dart';
 import '../utils/themes/responsive_helper.dart';
 import '../utils/info_dialogues.dart';
@@ -39,7 +41,7 @@ class _FoodComponent {
 }
 
 class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
-  final UserService userService = UserService();
+  final ServiceContainer container = ServiceContainer();
   late TabController _tabController;
   List<_FoodComponent> _foodComponents = [_FoodComponent()];
   // Data lists
@@ -114,9 +116,9 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
 
     try {
       // Load all data
-      final foodsData = await userService.getFoods();
-      final logsData = await userService.getFoodLogs();
-      final statsData = await userService.getFoodLogStats();
+      final foodsData = await container.foodService.getFoods();
+      final logsData = await container.foodService.getFoodLogs();
+      final statsData = await container.foodService.getFoodLogStats();
 
       setState(() {
         foods = foodsData.map((data) => ApiFood.fromJson(data)).toList();
@@ -139,7 +141,7 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
         _updateChartData();
       });
     } catch (e) {
-      print('Error loading food data: $e');
+      if (kDebugMode) print('Error loading food data: $e');
       _showErrorSnackBar('Failed to load food data: ${e.toString()}');
     } finally {
       setState(() => _isLoading = false);
@@ -192,7 +194,7 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
     );
 
     try {
-      await userService.createFoodLog(
+      await container.foodService.createFoodLog(
         foodName: selectedFoodName!,
         date: selectedDate,
         grams: grams,
@@ -211,13 +213,13 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
 
       _showSuccessSnackBar('Food logged successfully!');
     } catch (e) {
-      print('Error logging food: $e');
+      if (kDebugMode) print('Error logging food: $e');
       _showErrorSnackBar('Failed to log food');
     }
   }
 
   Future<void> _createCustomFood() async {
-    print('Create custom food button pressed'); // Debug print
+    if (kDebugMode) print('Create custom food button pressed');
 
     // Check if required fields are empty
     if (customFoodNameController.text.isEmpty ||
@@ -225,7 +227,7 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
         customFoodProteinController.text.isEmpty ||
         customFoodCarbsController.text.isEmpty ||
         customFoodFatController.text.isEmpty) {
-      print('Fields are empty - showing error'); // Debug print
+      if (kDebugMode) print('Fields are empty - showing error');
       _showErrorSnackBar('Please fill in all nutritional information');
       return;
     }
@@ -248,8 +250,9 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
     }
 
     try {
-      print('Calling userService.createFood...'); // Debug print
-      final result = await userService.createFood(
+      if (kDebugMode)
+        print('Calling container.foodService.createFood...'); // Debug print
+      final result = await container.foodService.createFood(
         name: customFoodNameController.text,
         kcalPer100g: calories,
         proteinPer100g: protein,
@@ -260,7 +263,8 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
             : null,
       );
 
-      print('Food created successfully: $result'); // Debug print
+      if (kDebugMode)
+        print('Food created successfully: $result'); // Debug print
 
       // Clear form
       customFoodNameController.clear();
@@ -270,12 +274,12 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
       customFoodFatController.clear();
       customFoodNotesController.clear();
 
-      print('Reloading data...'); // Debug print
+      if (kDebugMode) print('Reloading data...'); // Debug print
       await _loadData();
       _showSuccessSnackBar('Custom food created successfully!');
-      print('Success message shown'); // Debug print
+      if (kDebugMode) print('Success message shown'); // Debug print
     } catch (e) {
-      print('Error creating custom food: $e'); // Debug print
+      if (kDebugMode) print('Error creating custom food: $e'); // Debug print
       _showErrorSnackBar('Failed to create custom food: ${e.toString()}');
     }
   }
@@ -284,11 +288,11 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
     if (log.id == null) return;
 
     try {
-      await userService.deleteFoodLog(log.id!);
+      await container.foodService.deleteFoodLog(log.id!);
       await _loadData();
       _showSuccessSnackBar('Food log deleted');
     } catch (e) {
-      print('Error deleting food log: $e');
+      if (kDebugMode) print('Error deleting food log: $e'); // Debug print
       _showErrorSnackBar('Failed to delete food log');
     }
   }
@@ -884,7 +888,7 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
               ),
               const SizedBox(width: 16),
               FutureBuilder<Map<String, double>>(
-                future: userService.getFoodLogStats(
+                future: container.foodService.getFoodLogStats(
                   startDate: DateTime.now()
                       .subtract(Duration(hours: DateTime.now().hour)),
                   endDate: DateTime.now(),
@@ -1239,7 +1243,8 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
                     width: double.infinity,
                     child: ElevatedButton.icon(
                       onPressed: () {
-                        print('Button onPressed called'); // Debug print
+                        if (kDebugMode)
+                          print('Button onPressed called'); // Debug print
                         _createCustomFood();
                       },
                       icon: const Icon(Icons.add),
@@ -1508,7 +1513,7 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
                             //final newNote = result['note'] as String;
 
                             // Food anlegen
-                            await userService.createFood(
+                            await container.foodService.createFood(
                               name: newName.trim(),
                               kcalPer100g: kcal100,
                               proteinPer100g: protein100,
@@ -1683,11 +1688,11 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
             onPressed: () async {
               Navigator.pop(context);
               try {
-                await userService.deleteFood(food.id!);
+                await container.foodService.deleteFood(food.id!);
                 await _loadData();
                 _showSuccessSnackBar('Food deleted successfully');
               } catch (e) {
-                print('Error deleting food: $e');
+                if (kDebugMode) print('Error deleting food: $e');
                 _showErrorSnackBar('Failed to delete food: ${e.toString()}');
               }
             },

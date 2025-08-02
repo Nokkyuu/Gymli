@@ -3,9 +3,9 @@ import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:auth0_flutter/auth0_flutter.dart';
 import 'package:auth0_flutter/auth0_flutter_web.dart';
-
+import 'package:Gymli/utils/services/service_container.dart';
 import '../../utils/themes/themes.dart';
-import '../utils/services/user_service.dart';
+//import '../utils/services/user_service.dart';
 import '../../utils/globals.dart' as globals;
 import '../../screens/exercise_setup_screen.dart';
 import '../../screens/workout_setup_screen.dart';
@@ -18,7 +18,7 @@ import '../../screens/settings_screen.dart';
 class AppDrawer extends StatefulWidget {
   final Credentials? credentials;
   final Auth0Web auth0;
-  final UserService userService;
+  final ServiceContainer container;
   final String? drawerImage;
   final List<String> drawerImages;
   final bool isDarkMode;
@@ -32,7 +32,7 @@ class AppDrawer extends StatefulWidget {
     super.key,
     required this.credentials,
     required this.auth0,
-    required this.userService,
+    required this.container,
     required this.drawerImage,
     required this.drawerImages,
     required this.isDarkMode,
@@ -223,7 +223,7 @@ class _AppDrawerState extends State<AppDrawer> {
 
   Widget _buildUserDataIndicator() {
     return ValueListenableBuilder<bool>(
-      valueListenable: widget.userService.authStateNotifier,
+      valueListenable: widget.container.authService.authStateNotifier,
       builder: (context, isLoggedIn, child) {
         return FutureBuilder<Map<String, int>>(
           future: _getUserDataCounts(),
@@ -236,12 +236,12 @@ class _AppDrawerState extends State<AppDrawer> {
               margin:
                   const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
               decoration: BoxDecoration(
-                color: widget.userService.isLoggedIn
+                color: widget.container.authService.isLoggedIn
                     ? ThemeColors.themeBlue
                     : Colors.grey.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8.0),
                 border: Border.all(
-                  color: widget.userService.isLoggedIn
+                  color: widget.container.authService.isLoggedIn
                       ? widget.isDarkMode
                           ? Colors.white
                           : Colors.white
@@ -255,10 +255,10 @@ class _AppDrawerState extends State<AppDrawer> {
                   Row(
                     children: [
                       Icon(
-                        widget.userService.isLoggedIn
+                        widget.container.authService.isLoggedIn
                             ? Icons.person
                             : Icons.person_outline,
-                        color: widget.userService.isLoggedIn
+                        color: widget.container.authService.isLoggedIn
                             ? widget.isDarkMode
                                 ? Colors.white
                                 : Colors.white
@@ -268,11 +268,11 @@ class _AppDrawerState extends State<AppDrawer> {
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
-                          widget.userService.isLoggedIn
-                              ? 'Logged in as: ${widget.userService.userName}'
+                          widget.container.authService.isLoggedIn
+                              ? 'Logged in as: ${widget.container.authService.userName}'
                               : 'Not logged in (viewing defaults)',
                           style: TextStyle(
-                            color: widget.userService.isLoggedIn
+                            color: widget.container.authService.isLoggedIn
                                 ? widget.isDarkMode
                                     ? Colors.white
                                     : Colors.white
@@ -305,8 +305,8 @@ class _AppDrawerState extends State<AppDrawer> {
 
   Future<Map<String, int>> _getUserDataCounts() async {
     try {
-      final exercises = await widget.userService.getExercises();
-      final workouts = await widget.userService.getWorkouts();
+      final exercises = await widget.container.exerciseService.getExercises();
+      final workouts = await widget.container.workoutService.getWorkouts();
       return {
         'exercises': exercises.length,
         'workouts': workouts.length,

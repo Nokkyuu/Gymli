@@ -1,30 +1,13 @@
-/**
- * Workout Setup Screen - Workout Planning and Configuration
- * 
- * This screen provides comprehensive workout planning and configuration
- * capabilities, allowing users to create, edit, and manage custom workout
- * routines with multiple exercises and training parameters.
- * 
- * Key features:
- * - Custom workout creation and management
- * - Exercise selection and ordering within workouts
- * - Set and rep configuration for each exercise
- * - Workout template saving and loading
- * - Exercise parameter customization (warmup, work sets, drop sets)
- * - Interactive workout builder interface
- * - Workout metadata management (name, description, tags)
- * 
- * The screen enables users to design structured workout routines that can
- * be saved as templates and executed during training sessions, providing
- * a foundation for consistent and progressive training programs.
- */
+///Workout Setup Screen, accessed via the navigation bar or directly from a Workout
+///create or edit Workouts by adding or removing Workout Units (Exercises with a set amound of warmup and work sets)
 
 // ignore_for_file: file_names, constant_identifier_names
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:numberpicker/numberpicker.dart';
 import 'package:Gymli/utils/api/api_models.dart';
-import 'package:Gymli/utils/services/user_service.dart';
+import 'package:Gymli/utils/services/service_container.dart';
 import '../utils/themes/responsive_helper.dart';
 import '../utils/info_dialogues.dart';
 
@@ -73,14 +56,14 @@ class _WorkoutSetupScreenState extends State<WorkoutSetupScreen> {
   Future<void> _loadData() async {
     try {
       // Load all exercises
-      final userService = UserService();
-      final exerciseData = await userService.getExercises();
+      final container = ServiceContainer();
+      final exerciseData = await container.exerciseService.getExercises();
       allExercises =
           exerciseData.map((item) => ApiExercise.fromJson(item)).toList();
 
       if (widget.workoutName.isNotEmpty) {
         workoutNameController.text = widget.workoutName;
-        final workoutData = await userService.getWorkouts();
+        final workoutData = await container.workoutService.getWorkouts();
         final workouts =
             workoutData.map((item) => ApiWorkout.fromJson(item)).toList();
 
@@ -99,7 +82,7 @@ class _WorkoutSetupScreenState extends State<WorkoutSetupScreen> {
         workoutNameController.text = "";
       }
     } catch (e) {
-      print('Error loading data: $e');
+      if (kDebugMode) print('Error loading data: $e');
     } finally {
       setState(() {
         isLoading = false;
@@ -109,15 +92,15 @@ class _WorkoutSetupScreenState extends State<WorkoutSetupScreen> {
 
   Future<void> addWorkout(String name, List<ApiWorkoutUnit> units) async {
     try {
-      final userService = UserService();
+      final container = ServiceContainer();
       if (currentWorkout != null &&
           currentWorkout!.id != null &&
           currentWorkout!.id! > 0) {
         // Delete existing workout (this should also delete associated workout units)
-        await userService.deleteWorkout(currentWorkout!.id!);
+        await container.workoutService.deleteWorkout(currentWorkout!.id!);
 
         // Create new workout with the updated data
-        await userService.createWorkout(
+        await container.workoutService.createWorkout(
           name: name,
           units: units.map((unit) => unit.toJson()).toList(),
         );
@@ -126,16 +109,16 @@ class _WorkoutSetupScreenState extends State<WorkoutSetupScreen> {
         currentWorkout = null;
       } else {
         // Create new workout
-        await userService.createWorkout(
+        await container.workoutService.createWorkout(
           name: name,
           units: units.map((unit) => unit.toJson()).toList(),
         );
       }
       // Notify that data has changed
-      UserService().notifyDataChanged();
+      container.notifyDataChanged();
       Navigator.pop(context);
     } catch (e) {
-      print('Error saving workout: $e');
+      if (kDebugMode) print('Error saving workout: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error saving workout: $e')),
       );
@@ -174,9 +157,9 @@ class _WorkoutSetupScreenState extends State<WorkoutSetupScreen> {
       );
     }
 
-    final mainContent = ControlUI(context);
+    final mainContent = ControlUI(context); //TODO: never used?
 
-    final exerciseList = exerciseListUI();
+    final exerciseList = exerciseListUI(); //TODO: never used?
 
     return Scaffold(
       resizeToAvoidBottomInset: false,
@@ -197,8 +180,9 @@ class _WorkoutSetupScreenState extends State<WorkoutSetupScreen> {
                 if (currentWorkout != null &&
                     currentWorkout!.id != null &&
                     currentWorkout!.id! > 0) {
-                  final userService = UserService();
-                  await userService.deleteWorkout(currentWorkout!.id!);
+                  final container = ServiceContainer();
+                  await container.workoutService
+                      .deleteWorkout(currentWorkout!.id!);
                   Navigator.pop(context);
                 }
               },

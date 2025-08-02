@@ -1,27 +1,16 @@
-/// Exercise List Screen - Training History Display
-///
-/// This screen displays the complete training history for a specific exercise,
-/// showing all past training sets with performance metrics and visual indicators.
-///
-/// Features:
-/// - Chronological list of all training sets for an exercise
-/// - Visual workout intensity indicators using FontAwesome icons
-/// - Performance metrics display (weight, reps, calculated 1RM)
-/// - Loading states and error handling
-/// - Interactive list with detailed training set information
-///
-/// The screen helps users track their progress over time for individual
-/// exercises and analyze their training patterns and improvements.
+///Screen to display the history of training sets.
+///Screen is accessed from the ExerciseScreen and shows all sets for a specific exercise.
 library;
-
-// ignore_for_file: file_names
 
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import '../utils/services/user_service.dart';
+import 'package:Gymli/utils/services/service_container.dart';
 import '../utils/api/api_models.dart';
 
+//FIXME: deletion newly added set in the history screen leads to out of range errors and desynchronizing exercise screen, analyze and fix
+
 final workIcons = [
+  //TODO: extract to the Themes file
   FontAwesomeIcons.fire,
   FontAwesomeIcons.handFist,
   FontAwesomeIcons.arrowDown
@@ -45,7 +34,7 @@ class ListEntry {
 
 class _ExerciseListScreenState extends State<ExerciseListScreen> {
   List<ListEntry> entries = [];
-  final UserService userService = UserService();
+  final ServiceContainer container = ServiceContainer();
   bool _isLoading = true;
   final GlobalKey<AnimatedListState> _listKey = GlobalKey<AnimatedListState>();
 
@@ -58,7 +47,7 @@ class _ExerciseListScreenState extends State<ExerciseListScreen> {
   Future<void> _loadTrainingSets() async {
     setState(() => _isLoading = true);
     try {
-      final data = await userService.getTrainingSets();
+      final data = await container.trainingSetService.getTrainingSets();
       final trainingSets =
           data.map((item) => ApiTrainingSet.fromJson(item)).toList();
       final filtered = trainingSets
@@ -115,7 +104,7 @@ class _ExerciseListScreenState extends State<ExerciseListScreen> {
         if (isLastSetForHeader) removeHeader = true;
       }
 
-      await userService.deleteTrainingSet(item.id!);
+      await container.trainingSetService.deleteTrainingSet(item.id!);
 
       setState(() {
         if (removeHeader) {

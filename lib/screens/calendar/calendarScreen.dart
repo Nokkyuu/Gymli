@@ -1,6 +1,7 @@
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
-import '../../utils/services/user_service.dart';
+import 'package:Gymli/utils/services/service_container.dart';
 import '../../utils/themes/themes.dart';
 
 final themeColors = ThemeColors();
@@ -44,7 +45,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
   //   'Cardio'
   // ];
   List<String> _workoutNames = [];
-  final userService = UserService();
+  final container = ServiceContainer();
   @override
   void initState() {
     super.initState();
@@ -55,14 +56,14 @@ class _CalendarScreenState extends State<CalendarScreen> {
   }
 
   Future<void> _loadWorkouts() async {
-    final workouts = await userService.getWorkouts();
+    final workouts = await container.workoutService.getWorkouts();
     setState(() {
       _workoutNames = workouts.map<String>((w) => w['name'] as String).toList();
     });
   }
 
   Future<void> _loadCalendarNotes() async {
-    final notes = await userService.getCalendarNotes();
+    final notes = await container.calendarService.getCalendarNotes();
     setState(() {
       _notes.clear();
       for (var n in notes) {
@@ -76,7 +77,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
   }
 
   Future<void> _loadCalendarWorkouts() async {
-    final workouts = await userService.getCalendarWorkouts();
+    final workouts = await container.calendarService.getCalendarWorkouts();
     setState(() {
       _calendarWorkouts.clear();
       for (var w in workouts) {
@@ -91,7 +92,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
   }
 
   Future<void> _loadPeriods() async {
-    final periods = await userService.getPeriods();
+    final periods = await container.calendarService.getPeriods();
     setState(() {
       _periods.clear();
       for (var p in periods) {
@@ -111,7 +112,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
     if (note == null || note.trim().isEmpty) {
       // Delete note
       if (existingNote != null) {
-        await userService.deleteCalendarNote(existingNote['id']);
+        await container.calendarService.deleteCalendarNote(existingNote['id']);
       }
       setState(() {
         _notes.remove(date);
@@ -119,15 +120,15 @@ class _CalendarScreenState extends State<CalendarScreen> {
     } else {
       if (existingNote != null) {
         // Update existing note
-        await userService.updateCalendarNote(existingNote['id'],
-            note: note, date: date);
+        await container.calendarService
+            .updateCalendarNote(existingNote['id'], note: note, date: date);
         setState(() {
           _notes[date] = {'note': note, 'id': existingNote['id']};
         });
       } else {
         // Create new note - now returns the created note with ID
-        final createdNote =
-            await userService.createCalendarNote(date: date, note: note);
+        final createdNote = await container.calendarService
+            .createCalendarNote(date: date, note: note);
         setState(() {
           _notes[date] = {'note': note, 'id': createdNote['id']};
         });
@@ -137,8 +138,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
 
   void _addWorkout(DateTime date, String workoutName) async {
     try {
-      final createdWorkout = await userService.createCalendarWorkout(
-          date: date, workout: workoutName);
+      final createdWorkout = await container.calendarService
+          .createCalendarWorkout(date: date, workout: workoutName);
       setState(() {
         _calendarWorkouts.add(_CalendarWorkout(
           _normalize(date),
@@ -147,7 +148,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
         ));
       });
     } catch (e) {
-      print('Error adding workout: $e');
+      if (kDebugMode) print('Error adding workout: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to add workout: $e')),
       );
@@ -156,9 +157,9 @@ class _CalendarScreenState extends State<CalendarScreen> {
 
   void _addPeriod(String type, DateTime start, DateTime end) async {
     try {
-      print('Adding period: $type from $start to $end');
-      final createdPeriod = await userService.createPeriod(
-          type: type, startDate: start, endDate: end);
+      if (kDebugMode) print('Adding period: $type from $start to $end');
+      final createdPeriod = await container.calendarService
+          .createPeriod(type: type, startDate: start, endDate: end);
 
       setState(() {
         _periods.add(_Period(
@@ -169,7 +170,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
         ));
       });
     } catch (e) {
-      print('Error adding period: $e');
+      if (kDebugMode) print('Error adding period: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to add period: $e')),
       );
@@ -178,7 +179,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
 
   void _deleteWorkout(_CalendarWorkout workout) async {
     if (workout.id != null) {
-      await userService.deleteCalendarWorkout(workout.id!);
+      await container.calendarService.deleteCalendarWorkout(workout.id!);
     }
     setState(() {
       _calendarWorkouts.remove(workout);
@@ -187,7 +188,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
 
   void _deletePeriod(_Period period) async {
     if (period.id != null) {
-      await userService.deletePeriod(period.id!);
+      await container.calendarService.deletePeriod(period.id!);
     }
     setState(() {
       _periods.remove(period);
@@ -592,7 +593,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
   void _clearNotesAndWorkoutsForDay(DateTime day) async {
     // Remove note
     if (_notes.containsKey(day)) {
-      await userService.deleteCalendarNote(_notes[day]!['id']);
+      await container.calendarService.deleteCalendarNote(_notes[day]!['id']);
       setState(() {
         _notes.remove(day);
       });
@@ -602,7 +603,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
         _calendarWorkouts.where((w) => _normalize(w.date) == day).toList();
     for (final w in workoutsToRemove) {
       if (w.id != null) {
-        await userService.deleteCalendarWorkout(w.id!);
+        await container.calendarService.deleteCalendarWorkout(w.id!);
       }
     }
     setState(() {

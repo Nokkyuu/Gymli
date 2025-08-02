@@ -1,11 +1,10 @@
-import '../../../utils/services/user_service.dart';
+import 'package:Gymli/utils/services/service_container.dart';
+import 'package:flutter/foundation.dart' show kDebugMode;
 import '../../../utils/api/api_models.dart';
 
 /// Repository class that handles all exercise-related data operations
 /// Provides a clean interface between the UI and data sources
 class ExerciseRepository {
-  final UserService _userService;
-
   // Cache for frequently accessed data
   List<ApiTrainingSet>? _cachedTrainingSets;
   List<dynamic>? _cachedExercises;
@@ -13,8 +12,7 @@ class ExerciseRepository {
 
   static const Duration _cacheValidityDuration = Duration(minutes: 5);
 
-  ExerciseRepository({UserService? userService})
-      : _userService = userService ?? UserService();
+  ServiceContainer get container => ServiceContainer();
 
   /// Get all training sets for a specific exercise
   Future<List<ApiTrainingSet>> getTrainingSetsForExercise(
@@ -58,7 +56,7 @@ class ExerciseRepository {
 
       return ApiExercise.fromJson(exerciseData);
     } catch (e) {
-      print('Error getting exercise by name: $e');
+      if (kDebugMode) print('Error getting exercise by name: $e');
       return null;
     }
   }
@@ -78,7 +76,8 @@ class ExerciseRepository {
     // String machineName = "",
   }) async {
     try {
-      final createdSetData = await _userService.createTrainingSet(
+      final createdSetData =
+          await container.trainingSetService.createTrainingSet(
         exerciseId: exerciseId,
         date: date,
         weight: weight,
@@ -120,7 +119,7 @@ class ExerciseRepository {
 
       return newSet;
     } catch (e) {
-      print('Error creating training set: $e');
+      if (kDebugMode) print('Error creating training set: $e');
       return null;
     }
   }
@@ -128,14 +127,14 @@ class ExerciseRepository {
   /// Delete a training set
   Future<bool> deleteTrainingSet(int trainingSetId) async {
     try {
-      await _userService.deleteTrainingSet(trainingSetId);
+      await container.trainingSetService.deleteTrainingSet(trainingSetId);
 
       // Update cache
       _cachedTrainingSets?.removeWhere((set) => set.id == trainingSetId);
 
       return true;
     } catch (e) {
-      print('Error deleting training set: $e');
+      if (kDebugMode) print('Error deleting training set: $e');
       return false;
     }
   }
@@ -164,8 +163,8 @@ class ExerciseRepository {
   Future<void> _updateCache() async {
     try {
       final results = await Future.wait([
-        _userService.getTrainingSets(),
-        _userService.getExercises(),
+        container.trainingSetService.getTrainingSets(),
+        container.exerciseService.getExercises(),
       ]);
 
       _cachedTrainingSets =
@@ -173,7 +172,7 @@ class ExerciseRepository {
       _cachedExercises = results[1];
       _lastCacheUpdate = DateTime.now();
     } catch (e) {
-      print('Error updating cache: $e');
+      if (kDebugMode) print('Error updating cache: $e');
     }
   }
 

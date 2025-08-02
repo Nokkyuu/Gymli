@@ -1,27 +1,14 @@
-/// Landing Screen - Main Application Dashboard
+///landing screen for the app
+///will be shown upon starting the app and lists all the exercises of the user
 ///
-/// This is the primary dashboard screen of the Gymli fitness application,
-/// providing quick access to workouts, exercise browsing, and muscle group
-/// specific training programs.
-///
-/// Key features:
-/// - Exercise browse functionality with muscle group filtering
-/// - Quick workout access and recent exercise display
-/// - Muscle group specific workout recommendations
-/// - Exercise search and filtering capabilities
-/// - Recent training history overview
-/// - Navigation hub to other application sections
-/// - Real-time exercise data loading and display
-/// - Integration with workout setup and exercise screens
-///
-/// The screen serves as the main entry point for users to access all
-/// fitness tracking and workout management features of the application.
 library;
 
 import 'package:Gymli/screens/calendar_screen.dart';
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:Gymli/screens/exercise_screen.dart';
-import '../utils/services/user_service.dart';
+//import '../utils/services/user_service.dart';
+import 'package:Gymli/utils/services/service_container.dart';
 import '../utils/api/api_models.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:Gymli/screens/workout_setup_screen.dart';
@@ -29,6 +16,7 @@ import '../utils/themes/responsive_helper.dart';
 import '../utils/themes/themes.dart';
 
 enum MuscleList {
+  //TODO extract to globals or not because its only for the fitler?
   Pectoralis_major("Pectoralis major"),
   Trapezius("Trapezius"),
   Biceps("Biceps"),
@@ -62,7 +50,7 @@ class _LandingScreenState extends State<LandingScreen> {
 
   ApiWorkout? selectedWorkout;
   MuscleList? selectedMuscle;
-  final UserService userService = UserService();
+  final ServiceContainer container = ServiceContainer();
   List<ApiExercise> allExercises = [];
   List<ApiWorkout> availableWorkouts = [];
   List<ApiExercise> filteredExercises = [];
@@ -83,7 +71,7 @@ class _LandingScreenState extends State<LandingScreen> {
         return; // Use cached data
       }
 
-      final exercises = await userService.getExercises();
+      final exercises = await container.exerciseService.getExercises();
       allExercises = exercises.map((e) => ApiExercise.fromJson(e)).toList();
       allExercises.sort((a, b) => a.name.compareTo(b.name));
       _lastDataLoad = now;
@@ -150,8 +138,8 @@ class _LandingScreenState extends State<LandingScreen> {
       final exerciseNames = filteredExercises.map((ex) => ex.name).toList();
 
       // Fetch last training days for all exercises in one batch call
-      final lastTrainingDays =
-          await userService.getLastTrainingDaysForExercises(exerciseNames);
+      final lastTrainingDays = await container.trainingSetService
+          .getLastTrainingDaysForExercises(exerciseNames);
 
       // Build metainfo for each exercise
       for (var ex in filteredExercises) {
@@ -167,7 +155,7 @@ class _LandingScreenState extends State<LandingScreen> {
             '${ex.defaultRepBase}-${ex.defaultRepMax} Reps$weightInfo$dayInfo');
       }
     } catch (e) {
-      print('Error in showAllExercises: $e');
+      if (kDebugMode) print('Error in showAllExercises: $e');
       // Fallback metainfo without training dates - ensure same length as filteredExercises
       metainfo.clear();
       for (var ex in filteredExercises) {
@@ -209,8 +197,8 @@ class _LandingScreenState extends State<LandingScreen> {
       final exerciseNames = filteredExercises.map((ex) => ex.name).toList();
 
       // Fetch last training days for all exercises in one batch call
-      final lastTrainingDays =
-          await userService.getLastTrainingDaysForExercises(exerciseNames);
+      final lastTrainingDays = await container.trainingSetService
+          .getLastTrainingDaysForExercises(exerciseNames);
 
       // Build metainfo for each exercise (same format as showAllExercises)
       for (var ex in filteredExercises) {
@@ -222,7 +210,7 @@ class _LandingScreenState extends State<LandingScreen> {
             '${ex.defaultRepBase}-${ex.defaultRepMax} Reps @ ${ex.defaultIncrement}kg - $dayInfo');
       }
     } catch (e) {
-      print('Error in muscleFilterList: $e');
+      if (kDebugMode) print('Error in muscleFilterList: $e');
       // Fallback metainfo without training dates - ensure same length as filteredExercises
       metainfo.clear();
       for (var ex in filteredExercises) {
@@ -281,7 +269,7 @@ class _LandingScreenState extends State<LandingScreen> {
 
   Future<void> _loadWorkouts() async {
     try {
-      final workouts = await userService.getWorkouts();
+      final workouts = await container.workoutService.getWorkouts();
       setState(() {
         availableWorkouts =
             workouts.map((w) => ApiWorkout.fromJson(w)).toList();
@@ -303,12 +291,12 @@ class _LandingScreenState extends State<LandingScreen> {
     _loadData();
 
     // Listen to authentication state changes
-    userService.authStateNotifier.addListener(_onAuthStateChanged);
+    container.authService.authStateNotifier.addListener(_onAuthStateChanged);
   }
 
   @override
   void dispose() {
-    userService.authStateNotifier.removeListener(_onAuthStateChanged);
+    container.authService.authStateNotifier.removeListener(_onAuthStateChanged);
     super.dispose();
   }
 
@@ -320,13 +308,15 @@ class _LandingScreenState extends State<LandingScreen> {
   }
 
   Future<void> _loadData({bool forceReload = false}) async {
+    if (!mounted) return;
     setState(() {
       _isLoading = true;
     });
 
     try {
       // Show current user info while loading
-      print('Loading data for user: ${userService.userName}');
+      if (kDebugMode)
+        print('Loading data for user: ${container.authService.userName}');
 
       // Load exercises and workouts in parallel for faster loading
       await Future.wait([
@@ -334,7 +324,7 @@ class _LandingScreenState extends State<LandingScreen> {
         _loadWorkouts(),
       ]);
 
-      // Clear current selections when loading new user data
+      if (!mounted) return;
       setState(() {
         MuscleController.clear();
         WorkoutController.clear();
@@ -343,22 +333,24 @@ class _LandingScreenState extends State<LandingScreen> {
         _isLoading = false;
       });
 
-      // Load exercise details after UI is responsive
       await showAllExercises();
 
       // Show success message after login (only once per session)
-      if (mounted && userService.isLoggedIn && !_hasShownWelcomeMessage) {
+      if (mounted &&
+          container.authService.isLoggedIn &&
+          !_hasShownWelcomeMessage) {
         _hasShownWelcomeMessage = true;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-                'Welcome ${userService.userName}! Your data has been loaded.'),
+                'Welcome ${container.authService.userName}! Your data has been loaded.'),
             backgroundColor: ThemeColors.themeBlue,
             duration: const Duration(seconds: 2),
           ),
         );
       }
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _isLoading = false;
       });
@@ -520,7 +512,7 @@ class _LandingScreenState extends State<LandingScreen> {
           ],
         ),
         // Demo mode watermark
-        if (!userService.isLoggedIn)
+        if (!container.authService.isLoggedIn)
           Positioned.fill(
             child: IgnorePointer(
               child: Container(

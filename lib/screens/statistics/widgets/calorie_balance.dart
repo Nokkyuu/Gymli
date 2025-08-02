@@ -1,8 +1,9 @@
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../../utils/services/user_service.dart';
+import 'package:Gymli/utils/services/service_container.dart';
 import '../../../utils/info_dialogues.dart';
 
 class CalorieBalanceScreen extends StatefulWidget {
@@ -22,7 +23,7 @@ class CalorieBalanceScreen extends StatefulWidget {
 }
 
 class _CalorieBalanceScreenState extends State<CalorieBalanceScreen> {
-  final UserService userService = UserService();
+  final ServiceContainer container = ServiceContainer();
 
   // User data for metabolic rate calculation
   String? _sex;
@@ -84,7 +85,7 @@ class _CalorieBalanceScreenState extends State<CalorieBalanceScreen> {
         });
       }
     } catch (e) {
-      print('Error loading user data: $e');
+      if (kDebugMode) print('Error loading user data: $e');
       setState(() {
         _isLoading = false;
         _showUserDataForm = true;
@@ -106,7 +107,7 @@ class _CalorieBalanceScreenState extends State<CalorieBalanceScreen> {
       await prefs.setDouble(
           'calorie_balance_activity_multiplier', _activityMultiplier);
     } catch (e) {
-      print('Error saving user data: $e');
+      if (kDebugMode) print('Error saving user data: $e');
     }
   }
 
@@ -203,13 +204,13 @@ class _CalorieBalanceScreenState extends State<CalorieBalanceScreen> {
       final baselineCalories = _calculateBaselineCalories();
 
       // Load food intake data
-      final dailyFoodData = await userService.getDailyFoodLogStats(
+      final dailyFoodData = await container.foodService.getDailyFoodLogStats(
         startDate: dateRange['start']!,
         endDate: dateRange['end']!,
       );
 
       // Load activity expenditure data
-      final activityLogs = await userService.getActivityLogs(
+      final activityLogs = await container.activityService.getActivityLogs(
         startDate: dateRange['start']!,
         endDate: dateRange['end']!,
       );
@@ -278,7 +279,7 @@ class _CalorieBalanceScreenState extends State<CalorieBalanceScreen> {
         _showUserDataForm = false;
       });
     } catch (e) {
-      print('Error loading calorie balance data: $e');
+      if (kDebugMode) print('Error loading calorie balance data: $e');
       setState(() => _isLoading = false);
     }
   }
