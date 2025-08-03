@@ -16,7 +16,6 @@ import '../utils/themes/responsive_helper.dart';
 import '../utils/themes/themes.dart';
 
 enum MuscleList {
-  //TODO extract to globals or not because its only for the fitler?
   Pectoralis_major("Pectoralis major"),
   Trapezius("Trapezius"),
   Biceps("Biceps"),

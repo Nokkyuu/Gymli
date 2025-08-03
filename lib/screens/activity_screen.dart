@@ -1,15 +1,4 @@
 /// Activity Screen - Cardio and Activity Tracking Interface
-///
-/// This screen provides comprehensive activity tracking and management for
-/// cardio exercises and other physical activities outside of weight training.
-///
-/// Key features:
-/// - Delete and Create custom activities
-/// - Log activities with duration and notes
-/// - View activity history
-///
-/// The screen serves as the main interface for tracking cardio activities
-/// and provides insights into overall fitness activity beyond weight training for the purpose of extra calorie burn.
 library;
 
 import 'package:flutter/foundation.dart';
@@ -58,10 +47,6 @@ class _ActivityScreenState extends State<ActivityScreen>
   // Date selection
   DateTime selectedDate = DateTime.now();
 
-  // Chart data
-  List<FlSpot> caloriesTrendData = [];
-  List<FlSpot> durationTrendData = [];
-
   @override
   void initState() {
     super.initState();
@@ -108,37 +93,12 @@ class _ActivityScreenState extends State<ActivityScreen>
             selectedActivityName = activities.first.name;
           }
         }
-
-        _updateChartData();
       });
     } catch (e) {
       print('Error loading activity data: $e');
       _showErrorSnackBar('Failed to load activity data: ${e.toString()}');
     } finally {
       setState(() => _isLoading = false);
-    }
-  }
-
-  void _updateChartData() {
-    // Sort logs by date for chart data
-    final sortedLogs = List<ApiActivityLog>.from(activityLogs);
-    sortedLogs.sort((a, b) => a.date.compareTo(b.date));
-
-    // Create chart data points
-    caloriesTrendData.clear();
-    durationTrendData.clear();
-
-    for (int i = 0; i < sortedLogs.length; i++) {
-      final log = sortedLogs[i];
-      final dayIndex = log.date
-          .difference(DateTime.now().subtract(const Duration(days: 30)))
-          .inDays
-          .toDouble();
-
-      if (dayIndex >= 0) {
-        caloriesTrendData.add(FlSpot(dayIndex, log.caloriesBurned));
-        durationTrendData.add(FlSpot(dayIndex, log.durationMinutes.toDouble()));
-      }
     }
   }
 
