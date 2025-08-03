@@ -5,20 +5,17 @@ library;
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:Gymli/utils/services/service_container.dart';
+import 'package:Gymli/utils/themes/themes.dart' show setIcons;
 import '../utils/api/api_models.dart';
 
 //FIXME: deletion newly added set in the history screen leads to out of range errors and desynchronizing exercise screen, analyze and fix
 
-final workIcons = [
-  //TODO: extract to the Themes file
-  FontAwesomeIcons.fire,
-  FontAwesomeIcons.handFist,
-  FontAwesomeIcons.arrowDown
-];
+final _setTypeIcons = setIcons;
 
 class ExerciseListScreen extends StatefulWidget {
   final String exercise;
-  const ExerciseListScreen(this.exercise, {super.key});
+  final VoidCallback? onSetDeleted;
+  const ExerciseListScreen(this.exercise, {super.key, this.onSetDeleted});
 
   @override
   State<ExerciseListScreen> createState() => _ExerciseListScreenState();
@@ -97,30 +94,56 @@ class _ExerciseListScreenState extends State<ExerciseListScreen> {
 
       // Check if header should also be removed
       bool removeHeader = false;
+      int headerIndex = -1;
       if (setIndex > 0 && entries[setIndex - 1].isHeader) {
         // If this is the only set under the header, remove header too
         bool isLastSetForHeader =
             (setIndex + 1 >= entries.length) || entries[setIndex + 1].isHeader;
-        if (isLastSetForHeader) removeHeader = true;
+        if (isLastSetForHeader) {
+          removeHeader = true;
+          headerIndex = setIndex - 1;
+        }
       }
 
+      // Delete from backend first
       await container.trainingSetService.deleteTrainingSet(item.id!);
 
+      // Force refresh the exercise repository cache to ensure consistency
+      // This prevents desynchronization with ExerciseScreen
+      try {
+        final exerciseRepo = container.get<ExerciseRepository>();
+        await exerciseRepo?.refreshCache();
+      } catch (e) {
+        print('Warning: Could not refresh exercise repository cache: $e');
+      }
+
       setState(() {
-        if (removeHeader) {
+        // Remove items in correct order (set first, then header if needed)
+        // This prevents negative index issues
+
+        // Remove the set entry
+        if (setIndex >= 0 && setIndex < entries.length) {
           _listKey.currentState?.removeItem(
-            setIndex - 1,
+            setIndex,
             (context, animation) =>
-                _buildListEntry(entries[setIndex - 1], animation),
+                _buildListEntry(entries[setIndex], animation),
           );
-          entries.removeAt(setIndex - 1);
-          setIndex -= 1;
+          entries.removeAt(setIndex);
         }
-        _listKey.currentState?.removeItem(
-          setIndex,
-          (context, animation) => _buildListEntry(entries[setIndex], animation),
-        );
-        entries.removeAt(setIndex);
+
+        // Remove header if needed (after set removal, headerIndex is now setIndex - 1)
+        if (removeHeader && headerIndex >= 0 && headerIndex < entries.length) {
+          _listKey.currentState?.removeItem(
+            headerIndex,
+            (context, animation) =>
+                _buildListEntry(entries[headerIndex], animation),
+          );
+          entries.removeAt(headerIndex);
+        }
+
+        if (widget.onSetDeleted != null) {
+          widget.onSetDeleted!();
+        }
       });
     } catch (e) {
       print('Error deleting training set: $e');
@@ -151,7 +174,7 @@ class _ExerciseListScreenState extends State<ExerciseListScreen> {
         sizeFactor: animation,
         child: ListTile(
           leading: CircleAvatar(
-              radius: 17.5, child: FaIcon(workIcons[item.setType])),
+              radius: 17.5, child: FaIcon(_setTypeIcons[item.setType])),
           title: Text("${item.weight}kg for ${item.repetitions} reps"),
           subtitle: Text("${item.date}"),
           trailing: IconButton(

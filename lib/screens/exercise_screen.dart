@@ -102,6 +102,7 @@ class _ExerciseScreenState extends State<ExerciseScreen>
         phaseController: _phaseController,
         animationController: _animationController,
         timerController: _timerController,
+        exerciseController: _exerciseController,
       ),
       body: Stack(children: [
         SafeArea(

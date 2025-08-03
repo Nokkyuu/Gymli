@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../controllers/exercise_controller.dart';
 import '../../../utils/api/api_models.dart';
+import 'package:Gymli/utils/themes/themes.dart' show setIcons;
 
 /// Widget for displaying the list of training sets
 class TrainingSetsListWidget extends StatefulWidget {
@@ -21,11 +22,7 @@ class TrainingSetsListWidget extends StatefulWidget {
 class _TrainingSetsListWidgetState extends State<TrainingSetsListWidget> {
   final ScrollController _scrollController = ScrollController();
 
-  static const List<IconData> workIcons = [
-    FontAwesomeIcons.fire,
-    FontAwesomeIcons.handFist,
-    FontAwesomeIcons.arrowDown,
-  ];
+  static const List<IconData> _SetTypeIcons = setIcons;
 
   @override
   void initState() {
@@ -101,8 +98,8 @@ class _TrainingSetsListWidgetState extends State<TrainingSetsListWidget> {
       leading: CircleAvatar(
         radius: 17.5,
         child: FaIcon(
-          trainingSet.setType < workIcons.length
-              ? workIcons[trainingSet.setType]
+          trainingSet.setType < _SetTypeIcons.length
+              ? _SetTypeIcons[trainingSet.setType]
               : FontAwesomeIcons.question,
         ),
       ),

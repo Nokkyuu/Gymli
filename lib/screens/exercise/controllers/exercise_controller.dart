@@ -164,7 +164,9 @@ class ExerciseController extends ChangeNotifier {
       final success = await _repository.deleteTrainingSet(trainingSet.id!);
 
       if (success) {
-        _todaysTrainingSets.removeWhere((set) => set.id == trainingSet.id);
+        await _repository.refreshCache(); // <--- Cache neu laden!
+        _todaysTrainingSets = await _repository
+            .getTodaysTrainingSetsForExercise(_currentExercise!.name);
 
         // Update graph
         if (_currentExercise != null) {
@@ -173,9 +175,7 @@ class ExerciseController extends ChangeNotifier {
           _graphController.updateGraphFromTrainingSets(allTrainingSets);
         }
 
-        // Update workout counts
         _updateWorkoutCounts();
-
         notifyListeners();
       }
 
@@ -183,6 +183,22 @@ class ExerciseController extends ChangeNotifier {
     } catch (e) {
       _setError('Failed to delete training set: $e');
       return false;
+    }
+  }
+
+  Future<void> refreshTodaysTrainingSets() async {
+    _setLoading(true);
+    try {
+      if (_currentExercise != null) {
+        _todaysTrainingSets = await _repository
+            .getTodaysTrainingSetsForExercise(_currentExercise!.name);
+        _updateWorkoutCounts();
+        notifyListeners();
+      }
+    } catch (e) {
+      _setError('Fehler beim Aktualisieren der TrainingSets: $e');
+    } finally {
+      _setLoading(false);
     }
   }
 

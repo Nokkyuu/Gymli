@@ -26,6 +26,8 @@ class _MainAppWidgetState extends State<MainAppWidget> {
   late Auth0Service _authService;
   late ThemeService _themeService;
   final container = ServiceContainer();
+  bool _isInitialized = false; // Add this flag
+
 //drawer images to circles through, without file extensions because they will be added dynamicly and switch for dark mode
   final List<String> drawerImages = [
     'images/drawerlogo/gymli-biceps',
@@ -53,6 +55,13 @@ class _MainAppWidgetState extends State<MainAppWidget> {
 
     // Listen to auth changes for reloading user data
     _authService.addListener(_onAuthChanged);
+
+    // Set initialization flag and trigger rebuild
+    if (mounted) {
+      setState(() {
+        _isInitialized = true;
+      });
+    }
   }
 
   void _onAuthChanged() {
@@ -74,6 +83,17 @@ class _MainAppWidgetState extends State<MainAppWidget> {
 
   @override
   Widget build(BuildContext context) {
+    // Show loading screen while services are initializing
+    if (!_isInitialized) {
+      return const MaterialApp(
+        home: Scaffold(
+          body: Center(
+            child: CircularProgressIndicator(),
+          ),
+        ),
+      );
+    }
+
     return MultiProvider(
       providers: [
         ChangeNotifierProvider.value(value: _authService),
@@ -88,6 +108,13 @@ class _MainAppWidgetState extends State<MainAppWidget> {
             theme: themeData,
             home: Consumer<Auth0Service>(
               builder: (context, authService, _) {
+                if (authService.auth0 == null) {
+                  return const Scaffold(
+                    body: Center(
+                      child: CircularProgressIndicator(),
+                    ),
+                  );
+                }
                 return Scaffold(
                   appBar: _buildAppBar(context, themeService.isDarkMode),
                   body: LandingScreen(

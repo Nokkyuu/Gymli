@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
-import '../../exercise_histroy_screen.dart';
+import '../../exercise_history_screen.dart';
 import '../../exercise_setup_screen.dart';
 import '../controllers/exercise_phase_controller.dart';
 import '../controllers/exercise_animation_controller.dart';
 import '../controllers/exercise_timer_controller.dart';
+import '../controllers/exercise_controller.dart';
 import '../../../utils/themes/themes.dart';
 
 class ExerciseAppBarWidget extends StatelessWidget
     implements PreferredSizeWidget {
   final String exerciseName;
+  final ExerciseController exerciseController;
   final ExercisePhaseController phaseController;
   final ExerciseAnimationController animationController;
   final ExerciseTimerController timerController;
@@ -19,6 +21,7 @@ class ExerciseAppBarWidget extends StatelessWidget
     required this.phaseController,
     required this.animationController,
     required this.timerController,
+    required this.exerciseController,
   });
 
   @override
@@ -123,7 +126,11 @@ class ExerciseAppBarWidget extends StatelessWidget
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => ExerciseListScreen(exerciseName),
+            builder: (context) => ExerciseListScreen(
+              exerciseName,
+              onSetDeleted: () =>
+                  exerciseController.refreshTodaysTrainingSets(),
+            ),
           ),
         );
       },
