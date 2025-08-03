@@ -130,6 +130,7 @@ class ExerciseAppBarWidget extends StatelessWidget
               exerciseName,
               onSetDeleted: () =>
                   exerciseController.refreshTodaysTrainingSets(),
+              exerciseRepository: exerciseController.repository,
             ),
           ),
         );

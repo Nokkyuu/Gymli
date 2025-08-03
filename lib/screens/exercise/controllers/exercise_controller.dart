@@ -53,6 +53,7 @@ class ExerciseController extends ChangeNotifier {
   DateTime get workoutStartTime => _workoutStartTime;
   Map<int, Color> get colorMap => _colorMap;
   ExerciseGraphController get graphController => _graphController;
+  ExerciseRepository get repository => _repository;
 
   /// Initialize the exercise screen with data
   Future<void> initialize(

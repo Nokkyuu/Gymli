@@ -7,15 +7,21 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:Gymli/utils/services/service_container.dart';
 import 'package:Gymli/utils/themes/themes.dart' show setIcons;
 import '../utils/api/api_models.dart';
-
-//FIXME: deletion newly added set in the history screen leads to out of range errors and desynchronizing exercise screen, analyze and fix
+import 'exercise/repositories/exercise_repository.dart';
 
 final _setTypeIcons = setIcons;
 
 class ExerciseListScreen extends StatefulWidget {
   final String exercise;
   final VoidCallback? onSetDeleted;
-  const ExerciseListScreen(this.exercise, {super.key, this.onSetDeleted});
+  final ExerciseRepository? exerciseRepository;
+
+  const ExerciseListScreen(
+    this.exercise, {
+    super.key,
+    this.onSetDeleted,
+    this.exerciseRepository,
+  });
 
   @override
   State<ExerciseListScreen> createState() => _ExerciseListScreenState();
@@ -109,10 +115,14 @@ class _ExerciseListScreenState extends State<ExerciseListScreen> {
       await container.trainingSetService.deleteTrainingSet(item.id!);
 
       // Force refresh the exercise repository cache to ensure consistency
-      // This prevents desynchronization with ExerciseScreen
+      // Use the passed repository instance if available
       try {
-        final exerciseRepo = container.get<ExerciseRepository>();
-        await exerciseRepo?.refreshCache();
+        if (widget.exerciseRepository != null) {
+          await widget.exerciseRepository!.refreshCache();
+        } else {
+          final exerciseRepo = ExerciseRepository();
+          await exerciseRepo.refreshCache();
+        }
       } catch (e) {
         print('Warning: Could not refresh exercise repository cache: $e');
       }
