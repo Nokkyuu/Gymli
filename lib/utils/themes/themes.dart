@@ -24,6 +24,11 @@ const setIcons = [
 ];
 
 class ThemeColors {
+  // Singleton implementation
+  static final ThemeColors _instance = ThemeColors._internal();
+  factory ThemeColors() => _instance;
+  ThemeColors._internal();
+
   final Map<String, Color> periodColors = {
     'cut': _colorCut,
     'bulk': _colorBulk,
@@ -31,6 +36,9 @@ class ThemeColors {
   };
 
   final Map<String, Color> phaseColor = {
+    'cut': _colorCut,
+    'bulk': _colorBulk,
+    'other': _colorOther,
     'normal': _colorOrange,
     'deload': _colorBlue,
     'power': _colorPower,
