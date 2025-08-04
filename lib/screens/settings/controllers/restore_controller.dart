@@ -107,7 +107,6 @@ class RestoreController extends ChangeNotifier {
 
   /// Import training sets
   Future<SettingsOperationResult> _importTrainingSets(
-      //TODO: implementing the new columns for trianings sets (phase and myoreps) for import and export
       List<List<String>> csvTable) async {
     _setImporting(true, 'Fetching exercises for ID resolution...', 0.4);
 
