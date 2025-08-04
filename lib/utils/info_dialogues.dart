@@ -1,5 +1,8 @@
+///Container for the info dialogues used in the app.
+///
+library;
+
 import 'package:flutter/material.dart';
-//import 'services/user_service.dart';
 import 'package:Gymli/utils/services/service_container.dart';
 
 final container = ServiceContainer();

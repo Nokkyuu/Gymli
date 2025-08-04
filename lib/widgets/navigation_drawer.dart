@@ -5,7 +5,6 @@ import 'package:auth0_flutter/auth0_flutter.dart';
 import 'package:auth0_flutter/auth0_flutter_web.dart';
 import 'package:Gymli/utils/services/service_container.dart';
 import '../../utils/themes/themes.dart';
-//import '../utils/services/user_service.dart';
 import '../../utils/globals.dart' as globals;
 import '../../screens/exercise_setup_screen.dart';
 import '../../screens/workout_setup_screen.dart';
