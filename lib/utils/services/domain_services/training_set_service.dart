@@ -87,6 +87,8 @@ class TrainingSetService {
                 'weight': ts['weight'],
                 'repetitions': ts['repetitions'],
                 'set_type': ts['setType'],
+                if (ts.containsKey('phase')) 'phase': ts['phase'],
+                if (ts.containsKey('myoreps')) 'myoreps': ts['myoreps'],
               })
           .toList();
 
@@ -106,6 +108,8 @@ class TrainingSetService {
           'weight': ts['weight'],
           'repetitions': ts['repetitions'],
           'set_type': ts['setType'],
+          if (ts.containsKey('phase')) 'phase': ts['phase'],
+          if (ts.containsKey('myoreps')) 'myoreps': ts['myoreps'],
         };
         _dataService.addToInMemoryData('trainingSets', trainingSet);
         createdSets.add(trainingSet);

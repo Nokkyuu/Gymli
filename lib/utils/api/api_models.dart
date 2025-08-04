@@ -279,6 +279,8 @@ class ApiTrainingSet {
       "$weight",
       "$repetitions",
       "$setType",
+      phase ?? "", // Add phase column (empty string if null)
+      myoreps?.toString() ?? "", // Add myoreps column (empty string if null)
       // "$baseReps",
       // "$maxReps",
       // "$increment",
