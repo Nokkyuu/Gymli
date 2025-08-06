@@ -9,9 +9,10 @@ import '../utils/themes/responsive_helper.dart';
 import '../utils/info_dialogues.dart';
 import 'workout_setup/workout_setup_exports.dart';
 
+//TODO: raarrange desktop layout, showing the radar chart for muslce activity distribution
 class WorkoutSetupScreen extends StatefulWidget {
   final String workoutName;
-  
+
   const WorkoutSetupScreen(this.workoutName, {super.key});
 
   @override
@@ -27,7 +28,7 @@ class _WorkoutSetupScreenState extends State<WorkoutSetupScreen> {
     super.initState();
     _workoutController = WorkoutSetupController();
     _exerciseController = ExerciseSelectionController();
-    
+
     // Initialize with the provided workout name
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _workoutController.initialize(widget.workoutName);
@@ -81,7 +82,7 @@ class _WorkoutSetupScreenState extends State<WorkoutSetupScreen> {
             if (controller.isLoading) {
               return const Center(child: CircularProgressIndicator());
             }
-            
+
             if (controller.errorMessage != null) {
               return Center(
                 child: Column(
@@ -112,8 +113,10 @@ class _WorkoutSetupScreenState extends State<WorkoutSetupScreen> {
             }
 
             return ResponsiveHelper.isWebMobile(context)
-                ? WorkoutMobileLayoutWidget(onSave: () => _handleSaveSuccess(context))
-                : WorkoutDesktopLayoutWidget(onSave: () => _handleSaveSuccess(context));
+                ? WorkoutMobileLayoutWidget(
+                    onSave: () => _handleSaveSuccess(context))
+                : WorkoutDesktopLayoutWidget(
+                    onSave: () => _handleSaveSuccess(context));
           },
         ),
       ),
@@ -126,7 +129,8 @@ class _WorkoutSetupScreenState extends State<WorkoutSetupScreen> {
     }
   }
 
-  Future<void> _showDeleteDialog(BuildContext context, WorkoutSetupController controller) async {
+  Future<void> _showDeleteDialog(
+      BuildContext context, WorkoutSetupController controller) async {
     if (controller.currentWorkout?.id == null) return;
 
     final confirmed = await showDialog<bool>(
@@ -152,7 +156,7 @@ class _WorkoutSetupScreenState extends State<WorkoutSetupScreen> {
 
     try {
       final success = await controller.deleteWorkout();
-      
+
       if (success && context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Workout deleted successfully')),
@@ -161,7 +165,8 @@ class _WorkoutSetupScreenState extends State<WorkoutSetupScreen> {
       } else if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(controller.errorMessage ?? 'Failed to delete workout'),
+            content:
+                Text(controller.errorMessage ?? 'Failed to delete workout'),
             backgroundColor: Colors.red,
           ),
         );

@@ -10,6 +10,7 @@ import 'settings/widgets/sections/export_section_widget.dart';
 import 'settings/widgets/sections/import_section_widget.dart';
 import 'settings/widgets/sections/wipe_section_widget.dart';
 
+//TODO: check if all colors come from the theme file
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
 
