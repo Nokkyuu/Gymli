@@ -85,11 +85,9 @@ class _MainAppWidgetState extends State<MainAppWidget> {
   Widget build(BuildContext context) {
     // Show loading screen while services are initializing
     if (!_isInitialized) {
-      return const MaterialApp(
-        home: Scaffold(
-          body: Center(
-            child: CircularProgressIndicator(),
-          ),
+      return const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(),
         ),
       );
     }
@@ -97,52 +95,44 @@ class _MainAppWidgetState extends State<MainAppWidget> {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider.value(value: _authService),
-        ChangeNotifierProvider.value(value: _themeService),
       ],
-      child: Consumer<ThemeService>(
-        builder: (context, themeService, _) {
-          final ThemeData themeData =
-              buildAppTheme(themeService.mode, themeService.primaryColor);
+      child: Consumer<Auth0Service>(
+        builder: (context, authService, _) {
+          // Get ThemeService from the parent context
+          final themeService = Provider.of<ThemeService>(context);
 
-          return MaterialApp(
-            theme: themeData,
-            home: Consumer<Auth0Service>(
-              builder: (context, authService, _) {
-                if (authService.auth0 == null) {
-                  return const Scaffold(
-                    body: Center(
-                      child: CircularProgressIndicator(),
-                    ),
-                  );
-                }
-                return Scaffold(
-                  appBar: _buildAppBar(context, themeService.isDarkMode),
-                  body: LandingScreen(
-                      onPhaseColorChanged: themeService.setPrimaryColor),
-                  drawer: AppDrawer(
-                    credentials: authService.credentials,
-                    auth0: authService.auth0,
-                    container: container,
-                    drawerImage: _drawerImage,
-                    drawerImages: drawerImages,
-                    isDarkMode: themeService.isDarkMode,
-                    mode: themeService.mode,
-                    onModeChanged: themeService.setMode,
-                    onCredentialsChanged: authService.updateCredentials,
-                    onReloadUserData: _reloadUserData,
-                    getExerciseList: _getExerciseList,
-                  ),
-                  onDrawerChanged: (isOpened) {
-                    if (isOpened) {
-                      setState(() {
-                        _drawerImage =
-                            drawerImages[Random().nextInt(drawerImages.length)];
-                      });
-                    }
-                  },
-                );
-              },
+          if (authService.auth0 == null) {
+            return const Scaffold(
+              body: Center(
+                child: CircularProgressIndicator(),
+              ),
+            );
+          }
+          return Scaffold(
+            appBar: _buildAppBar(context, themeService.isDarkMode),
+            body: LandingScreen(
+                onPhaseColorChanged: themeService.setPrimaryColor),
+            drawer: AppDrawer(
+              credentials: authService.credentials,
+              auth0: authService.auth0,
+              container: container,
+              drawerImage: _drawerImage,
+              drawerImages: drawerImages,
+              isDarkMode: themeService.isDarkMode,
+              mode: themeService.mode,
+              onModeChanged: themeService.setMode,
+              onCredentialsChanged: authService.updateCredentials,
+              onReloadUserData: _reloadUserData,
+              getExerciseList: _getExerciseList,
             ),
+            onDrawerChanged: (isOpened) {
+              if (isOpened) {
+                setState(() {
+                  _drawerImage =
+                      drawerImages[Random().nextInt(drawerImages.length)];
+                });
+              }
+            },
           );
         },
       ),
@@ -181,5 +171,4 @@ class _MainAppWidgetState extends State<MainAppWidget> {
       centerTitle: true,
     );
   }
-  // ... rest of the methods remain similar but simplified
 }

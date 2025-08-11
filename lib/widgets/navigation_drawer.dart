@@ -175,38 +175,38 @@ class _AppDrawerState extends State<AppDrawer> {
               prefs.setBool('isDarkMode', newMode == Brightness.dark);
             },
           ),
-          if (widget.credentials == null)
-            Column(
-              children: [
-                _coloredDivider(),
-                ListTile(
-                  title: const Text('Login'),
-                  onTap: () async {
-                    Navigator.pop(context);
-                    widget.auth0.loginWithRedirect(redirectUrl: redirectUrl);
-                    // After login, data will be reloaded in the onLoad callback
-                  },
-                ),
-              ],
-            )
-          else
-            Column(
-              children: [
-                _coloredDivider(),
-                ListTile(
-                  title: const Text('Logout'),
-                  onTap: () async {
-                    Navigator.pop(context);
-                    await widget.auth0.logout(returnToUrl: redirectUrl);
-                    // Clear user data after logout
-                    widget.onCredentialsChanged(null);
-                    // Reload data for default user
-                    widget.onReloadUserData();
-                  },
-                ),
-                _buildUserDataIndicator(),
-              ],
-            ),
+          // if (widget.credentials == null)
+          //   Column(
+          //     children: [
+          //       _coloredDivider(),
+          //       // ListTile(
+          //       //   title: const Text('Login'),
+          //       //   onTap: () async {
+          //       //     Navigator.pop(context);
+          //       //     widget.auth0.loginWithRedirect(redirectUrl: redirectUrl);
+          //       //     // After login, data will be reloaded in the onLoad callback
+          //       //   },
+          //       // ),
+          //     ],
+          //   )
+          // else
+          Column(
+            children: [
+              _coloredDivider(),
+              ListTile(
+                title: const Text('Logout'),
+                onTap: () async {
+                  Navigator.pop(context);
+                  await widget.auth0.logout(returnToUrl: redirectUrl);
+                  // Clear user data after logout
+                  widget.onCredentialsChanged(null);
+                  // Reload data for default user
+                  widget.onReloadUserData();
+                },
+              ),
+              _buildUserDataIndicator(),
+            ],
+          ),
         ],
       ),
     );

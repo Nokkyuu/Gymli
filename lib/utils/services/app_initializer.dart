@@ -136,11 +136,12 @@ class AppInitializer {
 
   /// Get the initialized Auth0 instance
   static Auth0Web getAuth0() {
-    if (!_isInitialized) {
+    try {
+      return auth0;
+    } catch (e) {
       throw StateError(
-          'App not initialized. Call AppInitializer.initialize() first.');
+          'Auth0 not initialized. Call AppInitializer.initialize() first.');
     }
-    return auth0;
   }
 
   /// Check if app is fully initialized

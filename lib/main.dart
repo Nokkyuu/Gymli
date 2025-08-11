@@ -4,11 +4,14 @@
 /// and sets up the main app widgets
 library;
 
+import 'package:Gymli/widgets/landing_choice_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:provider/provider.dart';
 import 'utils/services/app_initializer.dart';
-import 'widgets/main_app_widget.dart';
+import 'utils/services/theme_service.dart';
+import 'utils/themes/themes.dart';
 
 void main() async {
   WidgetsFlutterBinding
@@ -55,24 +58,65 @@ Widget _buildErrorApp(String error) {
   );
 }
 
-class MainApp extends StatelessWidget {
+class MainApp extends StatefulWidget {
   const MainApp({super.key});
 
   @override
+  State<MainApp> createState() => _MainAppState();
+}
+
+class _MainAppState extends State<MainApp> {
+  late ThemeService _themeService;
+  bool _isInitialized = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeTheme();
+  }
+
+  Future<void> _initializeTheme() async {
+    _themeService = ThemeService();
+    await _themeService.loadThemePreference();
+    setState(() {
+      _isInitialized = true;
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      localizationsDelegates: [
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-      ],
-      supportedLocales: [
-        Locale('en', 'US'),
-        Locale('en', 'GB'),
-        Locale('de', 'DE'),
-      ],
-      title: 'Gymli Gainson',
-      home: MainAppWidget(),
+    if (!_isInitialized) {
+      return const MaterialApp(
+        home: Scaffold(
+          body: Center(child: CircularProgressIndicator()),
+        ),
+      );
+    }
+
+    return ChangeNotifierProvider.value(
+      value: _themeService,
+      child: Consumer<ThemeService>(
+        builder: (context, themeService, _) {
+          final ThemeData themeData =
+              buildAppTheme(themeService.mode, themeService.primaryColor);
+
+          return MaterialApp(
+            theme: themeData,
+            localizationsDelegates: const [
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: const [
+              Locale('en', 'US'),
+              Locale('en', 'GB'),
+              Locale('de', 'DE'),
+            ],
+            title: 'Gymli Gainson',
+            home: const LandingChoiceScreen(),
+          );
+        },
+      ),
     );
   }
 }
