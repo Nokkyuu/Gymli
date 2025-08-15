@@ -129,13 +129,14 @@ class _ExerciseScreenState extends State<ExerciseScreen>
             100;
 
         final graphHeight = (availableHeight * 0.35);
-        final listHeight = (availableHeight * 0.35);
+        final listHeight = (availableHeight * 0.4);
 
         return Column(children: [
           ConstrainedBox(
             constraints: BoxConstraints(minHeight: availableHeight),
             child: Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.only(
+                  left: 16, right: 16, bottom: 5, top: 10),
               child: Column(
                 children: [
                   SizedBox(
@@ -154,7 +155,7 @@ class _ExerciseScreenState extends State<ExerciseScreen>
                     height: listHeight,
                     child: TrainingSetsListWidget(
                       controller: _exerciseController,
-                      showTitle: true,
+                      showTitle: false,
                     ),
                   ),
                 ],

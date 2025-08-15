@@ -1,3 +1,5 @@
+/// Widget for the Exercise Screen control panel where you put in the weight, reps and submit the set.
+///
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -150,15 +152,22 @@ class _ExerciseControlsWidgetState extends State<ExerciseControlsWidget> {
 
   Widget _buildMobileControls() {
     return Padding(
-      padding: const EdgeInsets.only(left: 20, right: 20, bottom: 10),
+      padding: const EdgeInsets.only(left: 20, right: 20, bottom: 10, top: 0),
       child: Column(
         children: [
-          const SizedBox(height: 10),
-          _buildTypeSelector(),
-          const SizedBox(height: 10),
           _buildWeightRepsPickers(),
-          const SizedBox(height: 20),
-          _buildSubmitButton(),
+          const SizedBox(height: 5),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              const SizedBox(width: 10),
+              _buildTypeSelector(),
+              const SizedBox(width: 10),
+              _buildSubmitButton(),
+              const SizedBox(width: 10),
+            ],
+          ),
         ],
       ),
     );
@@ -386,7 +395,7 @@ class _ExerciseControlsWidgetState extends State<ExerciseControlsWidget> {
   Widget _buildSubmitButton() {
     return ElevatedButton.icon(
       label: const Text('Submit'),
-      icon: const Icon(Icons.send),
+      icon: const Icon(Icons.arrow_downward),
       onPressed: widget.controller.isLoading ? null : _handleSubmit,
     );
   }

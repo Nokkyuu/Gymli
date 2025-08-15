@@ -57,9 +57,10 @@ class _TrainingSetsListWidgetState extends State<TrainingSetsListWidget> {
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
           ),
-          const Divider(),
         ],
+        const Divider(),
         Expanded(child: _buildList()),
+        const Divider(),
       ],
     );
   }
@@ -68,26 +69,51 @@ class _TrainingSetsListWidgetState extends State<TrainingSetsListWidget> {
     return AnimatedBuilder(
       animation: widget.controller,
       builder: (context, child) {
-        if (widget.controller.isLoading) {
-          return const Center(child: CircularProgressIndicator());
-        }
+        // Watermark layer + content layer stacked
+        return Stack(
+          children: [
+            // Watermark background (doesn't block interaction)
+            IgnorePointer(
+              child: Opacity(
+                opacity: 0.04,
+                child: SizedBox.expand(
+                  child: Center(
+                    child: Transform.rotate(
+                      angle: -0.35, // slight tilt
+                      child: Text(
+                        "today's sets",
+                        style: TextStyle(
+                            fontSize: 52,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
 
-        if (widget.controller.todaysTrainingSets.isEmpty) {
-          return ListView(
-            controller: _scrollController,
-            children: const [
-              ListTile(title: Text("No Training yet.")),
-            ],
-          );
-        }
-
-        return ListView.builder(
-          controller: _scrollController,
-          itemCount: widget.controller.todaysTrainingSets.length,
-          itemBuilder: (context, index) {
-            final trainingSet = widget.controller.todaysTrainingSets[index];
-            return _buildTrainingSetItem(trainingSet);
-          },
+            // Foreground content (loading / empty / list)
+            if (widget.controller.isLoading)
+              const Center(child: CircularProgressIndicator())
+            else if (widget.controller.todaysTrainingSets.isEmpty)
+              ListView(
+                controller: _scrollController,
+                children: const [
+                  ListTile(title: Text("No Training yet.")),
+                ],
+              )
+            else
+              ListView.builder(
+                controller: _scrollController,
+                itemCount: widget.controller.todaysTrainingSets.length,
+                itemBuilder: (context, index) {
+                  final trainingSet =
+                      widget.controller.todaysTrainingSets[index];
+                  return _buildTrainingSetItem(trainingSet);
+                },
+              ),
+          ],
         );
       },
     );
