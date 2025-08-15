@@ -12,11 +12,12 @@ import 'package:provider/provider.dart';
 import 'utils/services/app_initializer.dart';
 import 'utils/services/theme_service.dart';
 import 'utils/themes/themes.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 
 void main() async {
-  WidgetsFlutterBinding
+  WidgetsBinding widgetsBinding = WidgetsFlutterBinding
       .ensureInitialized(); //required for async initialization, ensures that the Flutter engine is ready
-
+  FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
   final initResult = await AppInitializer.initialize();
 
   if (!initResult.success) {
@@ -39,6 +40,8 @@ void main() async {
 /// Builds a widget that is shown when initialization fails
 /// argument [error] contains the error message
 Widget _buildErrorApp(String error) {
+  FlutterNativeSplash.remove();
+
   return MaterialApp(
     title: 'Gymli - Error',
     home: Scaffold(
@@ -73,6 +76,7 @@ class _MainAppState extends State<MainApp> {
   void initState() {
     super.initState();
     _initializeTheme();
+    FlutterNativeSplash.remove();
   }
 
   Future<void> _initializeTheme() async {
