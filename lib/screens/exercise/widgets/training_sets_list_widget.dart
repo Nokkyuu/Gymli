@@ -80,7 +80,7 @@ class _TrainingSetsListWidgetState extends State<TrainingSetsListWidget> {
                   child: Center(
                     child: Transform.rotate(
                       angle: -0.35, // slight tilt
-                      child: Text(
+                      child: const Text(
                         "today's sets",
                         style: TextStyle(
                             fontSize: 52,

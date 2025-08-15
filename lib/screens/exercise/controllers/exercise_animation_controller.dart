@@ -36,12 +36,12 @@ class ExerciseAnimationController extends ChangeNotifier {
     _isMyorepActive = !_isMyorepActive;
 
     if (_isMyorepActive) {
-      _animatedText = "Myo-Reps \n activated \n GO! GO! GO!";
+      _animatedText = "Myo-Reps \n GO! GO! GO!";
     } else {
       _animatedText = "Myo-Reps \n deactivated";
     }
 
-    _animationSpeed = 1600;
+    _animationSpeed = 1000;
     _offsetStart = const Offset(0, -1);
     _offsetEnd = const Offset(0, 1);
     _animatedTextKey = UniqueKey();

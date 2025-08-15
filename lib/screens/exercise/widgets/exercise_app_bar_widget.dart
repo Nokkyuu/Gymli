@@ -67,16 +67,21 @@ class ExerciseAppBarWidget extends StatelessWidget
                 : null,
           ),
           IconButton(
-            icon: Icon(
-              Icons.speed,
-              color: animationController.isMyorepActive
-                  ? ThemeColors.themeOrange
-                  : Colors.grey,
-            ),
-            tooltip:
-                'Myo-reps ${animationController.isMyorepActive ? "aktiv" : "inaktiv"}',
-            onPressed: () => animationController.switchMyorep(),
-          ),
+              icon: Icon(
+                Icons.speed,
+                color: animationController.isMyorepActive
+                    ? phaseController.phaseColor
+                    : Colors.grey,
+              ),
+              tooltip:
+                  'Myo-reps ${animationController.isMyorepActive ? "aktiv" : "inaktiv"}',
+              onPressed: () {
+                animationController.switchMyorep();
+
+                Future.delayed(const Duration(milliseconds: 1200), () {
+                  animationController.clearAnimatedText();
+                });
+              }),
         ]);
       },
     );
