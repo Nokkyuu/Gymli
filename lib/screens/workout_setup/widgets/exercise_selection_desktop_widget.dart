@@ -30,6 +30,7 @@ class ExerciseSelectionDesktopWidget extends StatelessWidget {
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
               ),
+              Divider(),
               Expanded(
                 child: ListView.builder(
                   itemCount: workoutController.allExercises.length,
@@ -40,10 +41,15 @@ class ExerciseSelectionDesktopWidget extends StatelessWidget {
 
                     return ListTile(
                       selected: isSelected,
-                      leading: FaIcon(
-                        selectionController.getExerciseIcon(exercise.type),
-                        color:
-                            isSelected ? Theme.of(context).primaryColor : null,
+                      leading: SizedBox(
+                        width: 20,
+                        child: FaIcon(
+                          selectionController.getExerciseIcon(exercise.type),
+                          size: 16,
+                          color: isSelected
+                              ? Theme.of(context).primaryColor
+                              : null,
+                        ),
                       ),
                       title: Text(
                         exercise.name,
@@ -62,6 +68,7 @@ class ExerciseSelectionDesktopWidget extends StatelessWidget {
                   },
                 ),
               ),
+              Divider(),
             ],
           ),
         );

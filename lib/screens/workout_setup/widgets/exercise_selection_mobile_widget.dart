@@ -37,8 +37,13 @@ class ExerciseSelectionMobileWidget extends StatelessWidget {
                 return DropdownMenuEntry<ApiExercise>(
                     value: exercise,
                     label: exercise.name,
-                    leadingIcon: FaIcon(
-                        selectionController.getExerciseIcon(exercise.type)));
+                    leadingIcon: SizedBox(
+                      width: 20,
+                      child: FaIcon(
+                        selectionController.getExerciseIcon(exercise.type),
+                        size: 16,
+                      ),
+                    ));
               }).toList(),
             ),
           ],
