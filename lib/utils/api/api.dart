@@ -7,12 +7,14 @@
 library;
 
 import 'dart:convert';
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:http/http.dart' as http;
 import '../../config/api_config.dart';
 
-// Main API base URL - Azure hosted backend service
-const String baseUrl =
-    'https://gymliapi-gyg0ardqh5dadaba.germanywestcentral-01.azurewebsites.net';
+// Main API base URL - Azure hosted backend service - using different API Branch in debug mode, for developement
+const String baseUrl = kDebugMode
+    ? 'https://gymliapi-dev-f6c3gzfafgazanbf.germanywestcentral-01.azurewebsites.net'
+    : 'https://gymliapi-gyg0ardqh5dadaba.germanywestcentral-01.azurewebsites.net';
 
 //----------------- Animals Service -----------------//
 
