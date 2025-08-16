@@ -13,6 +13,7 @@ import '../../screens/food_screen.dart';
 import '../../screens/statistics_screen.dart';
 import '../../screens/calendar_screen.dart';
 import '../../screens/settings_screen.dart';
+import '../../screens/playground.dart';
 
 class AppDrawer extends StatefulWidget {
   final Credentials? credentials;
@@ -162,6 +163,19 @@ class _AppDrawerState extends State<AppDrawer> {
               );
             },
           ),
+          if (kDebugMode)
+            ListTile(
+              title: const Text('Spielwiese'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const PlaygroundScreen(),
+                  ),
+                );
+              },
+            ),
           IconButton(
             icon: const Icon(Icons.light),
             tooltip: 'Light/Dark Mode',
