@@ -2,6 +2,7 @@ import 'package:auth0_flutter/auth0_flutter.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
+import '../../config/api_config.dart'; // Add this import
 
 class AuthService {
   /// Singleton instance for AuthService
@@ -31,6 +32,13 @@ class AuthService {
     final wasLoggedIn = isLoggedIn;
     _credentials = credentials;
     final isNowLoggedIn = isLoggedIn;
+
+    if (credentials?.accessToken != null && kDebugMode) {
+      print("Access Token TYPE: ${credentials?.tokenType}");
+      print("Access Token: ${credentials?.accessToken}");
+    }
+    // Update API config with access token
+    ApiConfig.setAccessToken(credentials?.accessToken);
 
     if (!isLoggedIn) {
       // Clear stored auth state when logging out
@@ -198,6 +206,8 @@ class AuthService {
     final storedCredentials = await loadStoredAuthState();
     if (storedCredentials != null) {
       _credentials = storedCredentials;
+      // Set the access token in ApiConfig
+      ApiConfig.setAccessToken(storedCredentials.accessToken);
       authStateNotifier.value = true;
     }
   }
