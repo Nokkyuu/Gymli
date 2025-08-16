@@ -26,16 +26,16 @@ class WorkoutDesktopLayoutWidget extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 WorkoutFormWidget(onSave: onSave),
-                Row(
+                const Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const SizedBox(width: 60),
-                    const ExerciseSelectionDesktopWidget(),
-                    const SizedBox(width: 20),
-                    const SetNumberPickerWidget(isMobile: false),
-                    const SizedBox(width: 20),
-                    const AddExerciseButtonWidget(isMobile: false),
-                    const SizedBox(width: 20),
+                    SizedBox(width: 60),
+                    ExerciseSelectionDesktopWidget(),
+                    SizedBox(width: 20),
+                    SetNumberPickerWidget(isMobile: false),
+                    SizedBox(width: 20),
+                    AddExerciseButtonWidget(isMobile: false),
+                    SizedBox(width: 20),
                   ],
                 ),
                 const SizedBox(height: 20),

@@ -31,7 +31,9 @@ var muscle_val = {
 List<String> exerciseList = [];
 
 double calculateScoreWithExercise(
-    ApiTrainingSet trainingSet, ApiExercise exercise) {
+    //TODO: extract so somewhere
+    ApiTrainingSet trainingSet,
+    ApiExercise exercise) {
   return trainingSet.weight +
       (((trainingSet.repetitions - exercise.defaultRepBase) /
               (exercise.defaultRepMax - exercise.defaultRepBase)) *

@@ -4,7 +4,6 @@
 library;
 
 import 'auth_service.dart';
-import 'auth0_service.dart';
 import 'data_service.dart';
 import 'domain_services/exercise_service.dart';
 import 'domain_services/workout_service.dart';
