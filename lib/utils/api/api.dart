@@ -62,6 +62,7 @@ Future createData<T>(String url, T data) async {
   if (response.statusCode != 200 && response.statusCode != 201) {
     throw Exception('Failed to create');
   }
+  return response.body;
 }
 
 //----------------- Exercise Service -----------------//
