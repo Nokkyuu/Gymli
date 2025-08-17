@@ -13,8 +13,8 @@ import '../../config/api_config.dart';
 
 // Main API base URL - Azure hosted backend service - using different API Branch in debug mode, for developement
 const String baseUrl = kDebugMode
-    ? 'http://127.0.0.1:8000'
-    //? 'https://gymliapi-dev-f6c3gzfafgazanbf.germanywestcentral-01.azurewebsites.net'
+    //? 'http://127.0.0.1:8000'
+    ? 'https://gymliapi-dev-f6c3gzfafgazanbf.germanywestcentral-01.azurewebsites.net'
     : 'https://gymliapi-gyg0ardqh5dadaba.germanywestcentral-01.azurewebsites.net';
 
 //----------------- Animals Service -----------------//
