@@ -30,13 +30,13 @@ class ActivityController extends ChangeNotifier {
       // Load all data - getActivities will handle initialization if needed
       final activitiesData = await container.activityService.getActivities();
       final logsData = await container.activityService.getActivityLogs();
-      final statsData = await container.activityService.getActivityStats();
+      //final statsData = await container.activityService.getActivityStats();
 
       activities =
           activitiesData.map((data) => ApiActivity.fromJson(data)).toList();
       activityLogs =
           logsData.map((data) => ApiActivityLog.fromJson(data)).toList();
-      activityStats = statsData;
+      // activityStats = statsData;
 
       _isInitialized = true;
     } catch (e) {
