@@ -8,8 +8,10 @@ import 'package:flutter/foundation.dart';
 
 class ApiConfig {
   static String? _apiKey;
+  static String? _accessToken;
 
   static String? get apiKey => _apiKey;
+  static String? get accessToken => _accessToken;
 
   static void initialize() {
     try {
@@ -44,6 +46,40 @@ class ApiConfig {
         rethrow;
       }
     }
+  }
+
+  static void setAccessToken(String? token) {
+    _accessToken = token;
+  }
+
+  static Map<String, String> getHeaders() {
+    final headers = <String, String>{
+      'Content-Type': 'application/json',
+    };
+
+    if (_apiKey != null) {
+      headers['X-API-Key'] = _apiKey!;
+      if (kDebugMode) {
+        print('API Key being sent: ${_apiKey!.substring(0, 8)}...');
+      }
+    } else {
+      if (kDebugMode) {
+        print('WARNING: No API key available!');
+      }
+    }
+
+    if (_accessToken != null) {
+      headers['Authorization'] = 'Bearer $_accessToken';
+      if (kDebugMode) {
+        print('JWT token being sent: ${_accessToken!.substring(0, 20)}...');
+      }
+    }
+
+    if (kDebugMode) {
+      print('Headers being sent: ${headers.keys.toList()}');
+    }
+
+    return headers;
   }
 
   static bool get isConfigured =>
