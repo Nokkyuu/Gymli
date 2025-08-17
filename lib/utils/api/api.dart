@@ -7,105 +7,52 @@
 library;
 
 import 'dart:convert';
-import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:http/http.dart' as http;
 import '../../config/api_config.dart';
 
-// Main API base URL - Azure hosted backend service - using different API Branch in debug mode, for developement
-const String baseUrl = kDebugMode
-    ? 'https://gymliapi-dev-f6c3gzfafgazanbf.germanywestcentral-01.azurewebsites.net'
-    : 'https://gymliapi-gyg0ardqh5dadaba.germanywestcentral-01.azurewebsites.net';
+// Main API base URL - Azure hosted backend service
+const String baseUrl = 'https://gymliapi-gyg0ardqh5dadaba.germanywestcentral-01.azurewebsites.net';
 
-//----------------- Animals Service -----------------//
 
-/// AnimalService - Demo/test service for API testing
-///
-/// This service provides basic CRUD operations for animal entities.
-/// It's primarily used for testing API connectivity and functionality.
-class AnimalService {
-  /// Retrieves all animals from the API
-  /// Returns a list of animal objects
-  Future<List<dynamic>> getAnimals() async {
-    final response = await http.get(
-      Uri.parse('$baseUrl/animals'),
-      headers: {
-        'Content-Type': 'application/json',
-        'X-API-Key': ApiConfig.apiKey!,
-      },
-    );
+Map<String, String> defaultHeaders = {'Content-Type': 'application/json', 'X-API-Key': ApiConfig.apiKey! };
+
+Future<T> getData<T>(String url) async {
+  try {
+    final response = await http.get(Uri.parse('$baseUrl/$url'), headers: defaultHeaders);
     if (response.statusCode == 200) {
-      return json.decode(response.body);
-    } else {
-      throw Exception('Failed to load animals');
-    }
+      final decoded = json.decode(response.body);
+      return decoded;
+    } else { throw Exception("Failed to fetch"); }
+  } catch (e) {
+    // TODO: MAYBE LOGGING!
+    rethrow;
   }
+}
 
-  /// Retrieves a specific animal by its ID
-  /// [id] - The unique identifier of the animal
-  /// Returns a map containing animal details
-  Future<Map<String, dynamic>> getAnimalById(int id) async {
-    final response = await http.get(
-      Uri.parse('$baseUrl/animals/$id'),
-      headers: {
-        'Content-Type': 'application/json',
-        'X-API-Key': ApiConfig.apiKey!,
-      },
-    );
-    if (response.statusCode == 200) {
-      return json.decode(response.body);
-    } else {
-      throw Exception('Failed to fetch animal');
-    }
+Future deleteData(String url) async {
+  final response = await http.delete(
+    Uri.parse('$baseUrl/$url'), headers: defaultHeaders,
+  );
+  if (response.statusCode != 200 && response.statusCode != 204) {
+    throw Exception('Failed to delete');
   }
+  return response;
+}
 
-  /// Creates a new animal record
-  /// [name] - The name of the animal
-  /// [sound] - The sound the animal makes
-  Future<void> createAnimal(String name, String sound) async {
-    final response = await http.post(
-      Uri.parse('$baseUrl/animals'),
-      headers: {
-        'Content-Type': 'application/json',
-        'X-API-Key': ApiConfig.apiKey!,
-      },
-      body: json.encode({'name': name, 'sound': sound}),
-    );
+Future updateData<T>(String url, T data) async {
+  final response = await http.put(Uri.parse('$baseUrl/$url'), headers: defaultHeaders, body: json.encode(data) );
+  if (response.statusCode != 200) {
+    throw Exception('Failed to update');
+  }
+  return response;
+}
+
+Future createData<T>(String url, T data) async {
+  final response = await http.post(
+      Uri.parse('$baseUrl/$url'), headers: defaultHeaders, body: json.encode(data) );
     if (response.statusCode != 200 && response.statusCode != 201) {
-      throw Exception('Failed to create animal');
+      throw Exception('Failed to create');
     }
-  }
-
-  /// Updates an existing animal record
-  /// [id] - The unique identifier of the animal to update
-  /// [data] - Map containing the fields to update
-  Future<void> updateAnimal(int id, Map<String, dynamic> data) async {
-    final response = await http.put(
-      Uri.parse('$baseUrl/animals/$id'),
-      headers: {
-        'Content-Type': 'application/json',
-        'X-API-Key': ApiConfig.apiKey!,
-      },
-      body: json.encode(data),
-    );
-    if (response.statusCode != 200) {
-      throw Exception('Failed to update animal');
-    }
-  }
-
-  /// Deletes an animal record
-  /// [id] - The unique identifier of the animal to delete
-  Future<void> deleteAnimal(int id) async {
-    final response = await http.delete(
-      Uri.parse('$baseUrl/animals/$id'),
-      headers: {
-        'Content-Type': 'application/json',
-        'X-API-Key': ApiConfig.apiKey!,
-      },
-    );
-    if (response.statusCode != 200 && response.statusCode != 204) {
-      throw Exception('Failed to delete animal');
-    }
-  }
 }
 
 //----------------- Exercise Service -----------------//
@@ -119,32 +66,14 @@ class ExerciseService {
   /// [userName] - The username to fetch exercises for
   /// Returns a list of exercise objects
   Future<List<dynamic>> getExercises({required String userName}) async {
-    final response = await http
-        .get(Uri.parse('$baseUrl/exercises?user_name=$userName'), headers: {
-      'Content-Type': 'application/json',
-      'X-API-Key': ApiConfig.apiKey!,
-    });
-    if (response.statusCode == 200) {
-      return json.decode(response.body);
-    } else {
-      throw Exception('Failed to load exercises');
-    }
+    return getData<List<dynamic>>('exercises?user_name=$userName');
   }
 
   /// Retrieves a specific exercise by its ID
   /// [id] - The unique identifier of the exercise
   /// Returns a map containing exercise details
   Future<Map<String, dynamic>> getExerciseById(int id) async {
-    final response =
-        await http.get(Uri.parse('$baseUrl/exercises/$id'), headers: {
-      'Content-Type': 'application/json',
-      'X-API-Key': ApiConfig.apiKey!,
-    });
-    if (response.statusCode == 200) {
-      return json.decode(response.body);
-    } else {
-      throw Exception('Failed to fetch exercise');
-    }
+    return getData<Map<String, dynamic>>('exercises/$id');
   }
 
   /// Creates a new exercise record
@@ -170,7 +99,11 @@ class ExerciseService {
     required double forearms,
     required double calves,
   }) async {
-    final requestBody = {
+    // Add debug logging to see exactly what's being sent
+    // print('DEBUG API: Creating exercise "${name}" with forearms value: $forearms');
+    // print('DEBUG API: Full request body: ${json.encode(requestBody)}');
+
+    createData('exercises', {
       'user_name': userName,
       'name': name,
       'type': type,
@@ -190,61 +123,23 @@ class ExerciseService {
       'hamstrings': hamstrings,
       'quadriceps': quadriceps,
       'forearms': forearms,
-      'calves': calves,
-    };
-
-    // Add debug logging to see exactly what's being sent
-    print(
-        'DEBUG API: Creating exercise "${name}" with forearms value: $forearms');
-    print('DEBUG API: Full request body: ${json.encode(requestBody)}');
-
-    final response = await http.post(
-      Uri.parse('$baseUrl/exercises'),
-      headers: {
-        'Content-Type': 'application/json',
-        'X-API-Key': ApiConfig.apiKey!,
-      },
-      body: json.encode(requestBody),
-    );
-
-    print('DEBUG API: Response status: ${response.statusCode}');
-    print('DEBUG API: Response body: ${response.body}');
-
-    if (response.statusCode != 200 && response.statusCode != 201) {
-      throw Exception('Failed to create exercise');
-    }
+      'calves': calves
+    });
+    // print('DEBUG API: Response status: ${response.statusCode}');
+    // print('DEBUG API: Response body: ${response.body}');
   }
 
   /// Updates an existing exercise record
   /// [id] - The unique identifier of the exercise to update
   /// [data] - Map containing the fields to update
   Future<void> updateExercise(int id, Map<String, dynamic> data) async {
-    final response = await http.put(
-      Uri.parse('$baseUrl/exercises/$id'),
-      headers: {
-        'Content-Type': 'application/json',
-        'X-API-Key': ApiConfig.apiKey!,
-      },
-      body: json.encode(data),
-    );
-    if (response.statusCode != 200) {
-      throw Exception('Failed to update exercise');
-    }
+    updateData('exercises/$id', data);
   }
 
   /// Deletes an exercise record
   /// [id] - The unique identifier of the exercise to delete
   Future<void> deleteExercise(int id) async {
-    final response = await http.delete(
-      Uri.parse('$baseUrl/exercises/$id'),
-      headers: {
-        'Content-Type': 'application/json',
-        'X-API-Key': ApiConfig.apiKey!,
-      },
-    );
-    if (response.statusCode != 200 && response.statusCode != 204) {
-      throw Exception('Failed to delete exercise');
-    }
+    return deleteData('exercises/$id');
   }
 }
 
@@ -259,36 +154,14 @@ class WorkoutService {
   /// [userName] - The username to fetch workouts for
   /// Returns a list of workout objects
   Future<List<dynamic>> getWorkouts({required String userName}) async {
-    final response = await http.get(
-      Uri.parse('$baseUrl/workouts?user_name=$userName'),
-      headers: {
-        'Content-Type': 'application/json',
-        'X-API-Key': ApiConfig.apiKey!,
-      },
-    );
-    if (response.statusCode == 200) {
-      return json.decode(response.body);
-    } else {
-      throw Exception('Failed to load workouts');
-    }
+    return getData<List<dynamic>>('workouts?user_name=$userName');
   }
 
   /// Retrieves a specific workout by its ID
   /// [id] - The unique identifier of the workout
   /// Returns a map containing workout details
   Future<Map<String, dynamic>> getWorkoutById(int id) async {
-    final response = await http.get(
-      Uri.parse('$baseUrl/workouts/$id'),
-      headers: {
-        'Content-Type': 'application/json',
-        'X-API-Key': ApiConfig.apiKey!,
-      },
-    );
-    if (response.statusCode == 200) {
-      return json.decode(response.body);
-    } else {
-      throw Exception('Failed to fetch workout');
-    }
+    return getData<Map<String, dynamic>>('workouts/$id');
   }
 
   /// Creates a new workout record
@@ -300,54 +173,20 @@ class WorkoutService {
     required String name,
     // Add other required fields as needed
   }) async {
-    final response = await http.post(
-      Uri.parse('$baseUrl/workouts'),
-      headers: {
-        'Content-Type': 'application/json',
-        'X-API-Key': ApiConfig.apiKey!,
-      },
-      body: json.encode({
-        'user_name': userName,
-        'name': name,
-        // Add additional fields here
-      }),
-    );
-    if (response.statusCode != 200 && response.statusCode != 201) {
-      throw Exception('Failed to create workout');
-    }
-    return json.decode(response.body);
+    return json.decode(await createData('workouts', {'user_name': userName, 'name': name}));
   }
 
   /// Updates an existing workout record
   /// [id] - The unique identifier of the workout to update
   /// [data] - Map containing the fields to update
   Future<void> updateWorkout(int id, Map<String, dynamic> data) async {
-    final response = await http.put(
-      Uri.parse('$baseUrl/workouts/$id'),
-      headers: {
-        'Content-Type': 'application/json',
-        'X-API-Key': ApiConfig.apiKey!,
-      },
-      body: json.encode(data),
-    );
-    if (response.statusCode != 200) {
-      throw Exception('Failed to update workout');
-    }
+    updateData('workouts/$id', data);
   }
 
   /// Deletes a workout record
   /// [id] - The unique identifier of the workout to delete
   Future<void> deleteWorkout(int id) async {
-    final response = await http.delete(
-      Uri.parse('$baseUrl/workouts/$id'),
-      headers: {
-        'Content-Type': 'application/json',
-        'X-API-Key': ApiConfig.apiKey!,
-      },
-    );
-    if (response.statusCode != 200 && response.statusCode != 204) {
-      throw Exception('Failed to delete workout');
-    }
+    return deleteData('workouts/$id');
   }
 }
 
@@ -362,36 +201,14 @@ class TrainingSetService {
   /// [userName] - The username to fetch training sets for
   /// Returns a list of training set objects
   Future<List<dynamic>> getTrainingSets({required String userName}) async {
-    final response = await http.get(
-      Uri.parse('$baseUrl/training_sets?user_name=$userName'),
-      headers: {
-        'Content-Type': 'application/json',
-        'X-API-Key': ApiConfig.apiKey!,
-      },
-    );
-    if (response.statusCode == 200) {
-      return json.decode(response.body);
-    } else {
-      throw Exception('Failed to load training sets');
-    }
+    return getData<List<dynamic>>('training_sets?user_name=$userName');
   }
 
   /// Retrieves a specific training set by its ID
   /// [id] - The unique identifier of the training set
   /// Returns a map containing training set details
   Future<Map<String, dynamic>> getTrainingSetById(int id) async {
-    final response = await http.get(
-      Uri.parse('$baseUrl/training_sets/$id'),
-      headers: {
-        'Content-Type': 'application/json',
-        'X-API-Key': ApiConfig.apiKey!,
-      },
-    );
-    if (response.statusCode == 200) {
-      return json.decode(response.body);
-    } else {
-      throw Exception('Failed to fetch training set');
-    }
+    return getData<Map<String, dynamic>>('training_sets/$id');
   }
 
   /// Creates a new training set record
@@ -409,13 +226,8 @@ class TrainingSetService {
     // required double increment,
     // String? machineName,
   }) async {
-    final response = await http.post(
-      Uri.parse('$baseUrl/training_sets'),
-      headers: {
-        'Content-Type': 'application/json',
-        'X-API-Key': ApiConfig.apiKey!,
-      },
-      body: json.encode({
+    return json.decode(await createData('training_sets', 
+    {
         'user_name': userName,
         'exercise_id': exerciseId,
         'date': date,
@@ -428,12 +240,7 @@ class TrainingSetService {
         // 'max_reps': maxReps,
         // 'increment': increment,
         // 'machine_name': machineName,
-      }),
-    );
-    if (response.statusCode != 200 && response.statusCode != 201) {
-      throw Exception('Failed to create training set');
-    }
-    return json.decode(response.body);
+      }));
   }
 
   /// Creates multiple training sets in a single batch operation
@@ -441,56 +248,19 @@ class TrainingSetService {
     required String userName,
     required List<Map<String, dynamic>> trainingSets,
   }) async {
-    if (trainingSets.isEmpty) {
-      throw Exception('Training sets list cannot be empty');
-    }
-
-    if (trainingSets.length > 1000) {
-      throw Exception(
-          'Cannot create more than 1000 training sets in a single request');
-    }
-
+    if (trainingSets.isEmpty) { throw Exception('Training sets list cannot be empty');}
+    if (trainingSets.length > 1000) { throw Exception('Cannot create more than 1000 training sets in a single request'); }
     // Ensure all training sets have the required user_name field
-    final trainingSetsWithUser = trainingSets
-        .map((ts) => {
-              'user_name': userName,
-              ...ts,
-            })
-        .toList();
-
-    final response = await http.post(
-      Uri.parse('$baseUrl/training_sets/bulk'),
-      headers: {
-        'Content-Type': 'application/json',
-        'X-API-Key': ApiConfig.apiKey!,
-      },
-      body: json.encode(trainingSetsWithUser),
-    );
-
-    if (response.statusCode == 200 || response.statusCode == 201) {
-      final List<dynamic> responseData = json.decode(response.body);
-      return responseData.cast<Map<String, dynamic>>();
-    } else {
-      throw Exception(
-          'Failed to create training sets in bulk: ${response.body}');
-    }
+    final trainingSetsWithUser = trainingSets.map((ts) => {'user_name': userName, ...ts,}).toList();
+    final response = await createData('training_sets/bulk', trainingSetsWithUser);
+    return json.decode(response.body).cast<Map<String, dynamic>>();
   }
 
   /// Updates an existing training set record
   /// [id] - The unique identifier of the training set to update
   /// [data] - Map containing the fields to update
   Future<void> updateTrainingSet(int id, Map<String, dynamic> data) async {
-    final response = await http.put(
-      Uri.parse('$baseUrl/training_sets/$id'),
-      headers: {
-        'Content-Type': 'application/json',
-        'X-API-Key': ApiConfig.apiKey!,
-      },
-      body: json.encode(data),
-    );
-    if (response.statusCode != 200) {
-      throw Exception('Failed to update training set');
-    }
+    updateData('training_sets/$id', data);
   }
 
   /// Retrieves last training dates per exercise for a user (optimized for performance)
@@ -498,35 +268,14 @@ class TrainingSetService {
   /// Returns a map of exercise names to their last training dates
   Future<Map<String, String>> getLastTrainingDatesPerExercise(
       {required String userName}) async {
-    final response = await http.get(
-      Uri.parse('$baseUrl/training_sets/last_dates?user_name=$userName'),
-      headers: {
-        'Content-Type': 'application/json',
-        'X-API-Key': ApiConfig.apiKey!,
-      },
-    );
-    if (response.statusCode == 200) {
-      final Map<String, dynamic> responseData = json.decode(response.body);
-      // Convert the response to Map<String, String> format
-      return responseData.map((key, value) => MapEntry(key, value.toString()));
-    } else {
-      throw Exception('Failed to load last training dates');
-    }
+    final response = await getData<Map<String, dynamic>>('training_sets/last_dates?user_name=$userName');
+    return response.map((key, value) => MapEntry(key, value.toString()));
   }
 
   /// Deletes a training set record
   /// [id] - The unique identifier of the training set to delete
   Future<void> deleteTrainingSet(int id) async {
-    final response = await http.delete(
-      Uri.parse('$baseUrl/training_sets/$id'),
-      headers: {
-        'Content-Type': 'application/json',
-        'X-API-Key': ApiConfig.apiKey!,
-      },
-    );
-    if (response.statusCode != 200 && response.statusCode != 204) {
-      throw Exception('Failed to delete training set');
-    }
+    deleteData('training_sets/$id');
   }
 
   /// Clears all training sets for a specific user using bulk delete endpoint
@@ -534,14 +283,7 @@ class TrainingSetService {
   Future<Map<String, dynamic>> clearTrainingSets({
     required String userName,
   }) async {
-    final response = await http.delete(
-      Uri.parse('$baseUrl/training_sets/bulk_clear?user_name=$userName'),
-      headers: {
-        'Content-Type': 'application/json',
-        'X-API-Key': ApiConfig.apiKey!,
-      },
-    );
-
+    final response = await deleteData('training_sets/bulk_clear?user_name=$userName');
     if (response.statusCode == 200 || response.statusCode == 204) {
       final result = response.body.isNotEmpty
           ? json.decode(response.body)
@@ -565,36 +307,14 @@ class WorkoutUnitService {
   /// [userName] - The username to fetch workout units for
   /// Returns a list of workout unit objects
   Future<List<dynamic>> getWorkoutUnits({required String userName}) async {
-    final response = await http.get(
-      Uri.parse('$baseUrl/workout_units?user_name=$userName'),
-      headers: {
-        'Content-Type': 'application/json',
-        'X-API-Key': ApiConfig.apiKey!,
-      },
-    );
-    if (response.statusCode == 200) {
-      return json.decode(response.body);
-    } else {
-      throw Exception('Failed to load workout units');
-    }
+    return getData<List<dynamic>>('workout_units?user_name=$userName');
   }
 
   /// Retrieves a specific workout unit by its ID
   /// [id] - The unique identifier of the workout unit
   /// Returns a map containing workout unit details
   Future<Map<String, dynamic>> getWorkoutUnitById(int id) async {
-    final response = await http.get(
-      Uri.parse('$baseUrl/workout_units/$id'),
-      headers: {
-        'Content-Type': 'application/json',
-        'X-API-Key': ApiConfig.apiKey!,
-      },
-    );
-    if (response.statusCode == 200) {
-      return json.decode(response.body);
-    } else {
-      throw Exception('Failed to fetch workout unit');
-    }
+    return getData<Map<String, dynamic>>('workout_units/$id');
   }
 
   /// Creates a new workout unit record
@@ -607,57 +327,28 @@ class WorkoutUnitService {
     required int dropsets,
     required int type,
   }) async {
-    final response = await http.post(
-      Uri.parse('$baseUrl/workout_units'),
-      headers: {
-        'Content-Type': 'application/json',
-        'X-API-Key': ApiConfig.apiKey!,
-      },
-      body: json.encode({
-        'user_name': userName,
-        'workout_id': workoutId,
-        'exercise_id': exerciseId,
-        'warmups': warmups,
-        'worksets': worksets,
-        'dropsets': dropsets,
-        'type': type,
-      }),
-    );
-    if (response.statusCode != 200 && response.statusCode != 201) {
-      throw Exception('Failed to create workout unit');
-    }
+    createData('workout_units', {
+      'user_name': userName,
+      'workout_id': workoutId,
+      'exercise_id': exerciseId,
+      'warmups': warmups,
+      'worksets': worksets,
+      'dropsets': dropsets,
+      'type': type,
+    });
   }
 
   /// Updates an existing workout unit record
   /// [id] - The unique identifier of the workout unit to update
   /// [data] - Map containing the fields to update
   Future<void> updateWorkoutUnit(int id, Map<String, dynamic> data) async {
-    final response = await http.put(
-      Uri.parse('$baseUrl/workout_units/$id'),
-      headers: {
-        'Content-Type': 'application/json',
-        'X-API-Key': ApiConfig.apiKey!,
-      },
-      body: json.encode(data),
-    );
-    if (response.statusCode != 200) {
-      throw Exception('Failed to update workout unit');
-    }
+    updateData('workout_units/$id', data);
   }
 
   /// Deletes a workout unit record
   /// [id] - The unique identifier of the workout unit to delete
   Future<void> deleteWorkoutUnit(int id) async {
-    final response = await http.delete(
-      Uri.parse('$baseUrl/workout_units/$id'),
-      headers: {
-        'Content-Type': 'application/json',
-        'X-API-Key': ApiConfig.apiKey!,
-      },
-    );
-    if (response.statusCode != 200 && response.statusCode != 204) {
-      throw Exception('Failed to delete workout unit');
-    }
+    return deleteData('workout_units/$id');
   }
 }
 
@@ -674,36 +365,14 @@ class ActivityService {
   Future<Map<String, dynamic>> initializeUserActivities({
     required String userName,
   }) async {
-    final response = await http.post(
-      Uri.parse('$baseUrl/users/$userName/initialize_activities'),
-      headers: {
-        'Content-Type': 'application/json',
-        'X-API-Key': ApiConfig.apiKey!,
-      },
-    );
-    if (response.statusCode == 200) {
-      return json.decode(response.body);
-    } else {
-      throw Exception('Failed to initialize activities: ${response.body}');
-    }
+    return json.decode(await createData('users/$userName/initialize_activities', {}));
   }
 
   /// Retrieves all activities for a user
   /// [userName] - The username to fetch activities for
   /// Returns a list of activity objects
   Future<List<dynamic>> getActivities({required String userName}) async {
-    final response = await http.get(
-      Uri.parse('$baseUrl/activities?user_name=$userName'),
-      headers: {
-        'Content-Type': 'application/json',
-        'X-API-Key': ApiConfig.apiKey!,
-      },
-    );
-    if (response.statusCode == 200) {
-      return json.decode(response.body);
-    } else {
-      throw Exception('Failed to load activities: ${response.body}');
-    }
+    return getData<List<dynamic>>('activities?user_name=$userName');
   }
 
   /// Creates a new custom activity for a user
@@ -712,23 +381,11 @@ class ActivityService {
     required String name,
     required double kcalPerHour,
   }) async {
-    final response = await http.post(
-      Uri.parse('$baseUrl/activities'),
-      headers: {
-        'Content-Type': 'application/json',
-        'X-API-Key': ApiConfig.apiKey!,
-      },
-      body: json.encode({
-        'user_name': userName,
-        'name': name,
-        'kcal_per_hour': kcalPerHour,
-      }),
-    );
-    if (response.statusCode == 200 || response.statusCode == 201) {
-      return json.decode(response.body);
-    } else {
-      throw Exception('Failed to create activity: ${response.body}');
-    }
+    return json.decode(await createData('activities', {
+      'user_name': userName,
+      'name': name,
+      'kcal_per_hour': kcalPerHour,
+    }));
   }
 
   /// Updates an existing activity
@@ -738,16 +395,8 @@ class ActivityService {
     required String name,
     required double kcalPerHour,
   }) async {
-    final response = await http.put(
-      Uri.parse('$baseUrl/activities/$activityId?user_name=$userName'),
-      headers: {
-        'Content-Type': 'application/json',
-        'X-API-Key': ApiConfig.apiKey!,
-      },
-      body: json.encode({
-        'name': name,
-        'kcal_per_hour': kcalPerHour,
-      }),
+    final response = await updateData('activities/$activityId?user_name=$userName',
+      {'name': name, 'kcal_per_hour': kcalPerHour}
     );
     if (response.statusCode == 200) {
       return json.decode(response.body);
@@ -761,13 +410,7 @@ class ActivityService {
     required int activityId,
     required String userName,
   }) async {
-    final response = await http.delete(
-      Uri.parse('$baseUrl/activities/$activityId?user_name=$userName'),
-      headers: {
-        'Content-Type': 'application/json',
-        'X-API-Key': ApiConfig.apiKey!,
-      },
-    );
+    final response = await deleteData('activities/$activityId?user_name=$userName');
     if (response.statusCode != 200 && response.statusCode != 204) {
       throw Exception('Failed to delete activity: ${response.body}');
     }
@@ -781,29 +424,10 @@ class ActivityService {
     DateTime? endDate,
   }) async {
     String url = '$baseUrl/activity_logs?user_name=$userName';
-
-    if (activityName != null) {
-      url += '&activity_name=${Uri.encodeComponent(activityName)}';
-    }
-    if (startDate != null) {
-      url += '&start_date=${startDate.toIso8601String()}';
-    }
-    if (endDate != null) {
-      url += '&end_date=${endDate.toIso8601String()}';
-    }
-
-    final response = await http.get(
-      Uri.parse(url),
-      headers: {
-        'Content-Type': 'application/json',
-        'X-API-Key': ApiConfig.apiKey!,
-      },
-    );
-    if (response.statusCode == 200) {
-      return json.decode(response.body);
-    } else {
-      throw Exception('Failed to load activity logs: ${response.body}');
-    }
+    if (activityName != null) { url += '&activity_name=${Uri.encodeComponent(activityName)}'; }
+    if (startDate != null) { url += '&start_date=${startDate.toIso8601String()}'; }
+    if (endDate != null) { url += '&end_date=${endDate.toIso8601String()}'; }
+    return getData<List<dynamic>>(url);
   }
 
   /// Creates a new activity log entry
@@ -814,25 +438,13 @@ class ActivityService {
     required int durationMinutes,
     String? notes,
   }) async {
-    final response = await http.post(
-      Uri.parse('$baseUrl/activity_logs'),
-      headers: {
-        'Content-Type': 'application/json',
-        'X-API-Key': ApiConfig.apiKey!,
-      },
-      body: json.encode({
-        'user_name': userName,
-        'activity_name': activityName,
-        'date': date.toIso8601String(),
-        'duration_minutes': durationMinutes,
-        'notes': notes,
-      }),
-    );
-    if (response.statusCode == 200 || response.statusCode == 201) {
-      return json.decode(response.body);
-    } else {
-      throw Exception('Failed to create activity log: ${response.body}');
-    }
+    return json.decode(await createData('activity_logs', {
+      'user_name': userName,
+      'activity_name': activityName,
+      'date': date.toIso8601String(),
+      'duration_minutes': durationMinutes,
+      'notes': notes,
+    }));
   }
 
   /// Retrieves activity statistics for a user
@@ -842,26 +454,9 @@ class ActivityService {
     DateTime? endDate,
   }) async {
     String url = '$baseUrl/activity_logs/stats?user_name=$userName';
-
-    if (startDate != null) {
-      url += '&start_date=${startDate.toIso8601String()}';
-    }
-    if (endDate != null) {
-      url += '&end_date=${endDate.toIso8601String()}';
-    }
-
-    final response = await http.get(
-      Uri.parse(url),
-      headers: {
-        'Content-Type': 'application/json',
-        'X-API-Key': ApiConfig.apiKey!,
-      },
-    );
-    if (response.statusCode == 200) {
-      return json.decode(response.body);
-    } else {
-      throw Exception('Failed to load activity stats: ${response.body}');
-    }
+    if (startDate != null) { url += '&start_date=${startDate.toIso8601String()}'; }
+    if (endDate != null) { url += '&end_date=${endDate.toIso8601String()}'; }
+    return getData<Map<String, dynamic>>(url);
   }
 
   /// Deletes an activity log entry
@@ -869,13 +464,7 @@ class ActivityService {
     required int logId,
     required String userName,
   }) async {
-    final response = await http.delete(
-      Uri.parse('$baseUrl/activity_logs/$logId?user_name=$userName'),
-      headers: {
-        'Content-Type': 'application/json',
-        'X-API-Key': ApiConfig.apiKey!,
-      },
-    );
+    final response = await deleteData('activity_logs/$logId?user_name=$userName');
     if (response.statusCode != 200 && response.statusCode != 204) {
       throw Exception('Failed to delete activity log: ${response.body}');
     }
@@ -893,18 +482,7 @@ class FoodService {
   /// [userName] - The username to fetch food items for
   /// Returns a list of food item objects
   Future<List<dynamic>> getFoods({required String userName}) async {
-    final response = await http.get(
-      Uri.parse('$baseUrl/foods?user_name=$userName'),
-      headers: {
-        'Content-Type': 'application/json',
-        'X-API-Key': ApiConfig.apiKey!,
-      },
-    );
-    if (response.statusCode == 200) {
-      return json.decode(response.body);
-    } else {
-      throw Exception('Failed to load foods: ${response.body}');
-    }
+    return getData<List<dynamic>>('foods?user_name=$userName');
   }
 
   /// Creates a new food item
@@ -917,27 +495,15 @@ class FoodService {
     required double fatPer100g,
     String? notes,
   }) async {
-    final response = await http.post(
-      Uri.parse('$baseUrl/foods'),
-      headers: {
-        'Content-Type': 'application/json',
-        'X-API-Key': ApiConfig.apiKey!,
-      },
-      body: json.encode({
-        'user_name': userName,
-        'name': name,
-        'kcal_per_100g': kcalPer100g,
-        'protein_per_100g': proteinPer100g,
-        'carbs_per_100g': carbsPer100g,
-        'fat_per_100g': fatPer100g,
-        'notes': notes,
-      }),
-    );
-    if (response.statusCode == 200 || response.statusCode == 201) {
-      return json.decode(response.body);
-    } else {
-      throw Exception('Failed to create food: ${response.body}');
-    }
+    return json.decode(await createData('foods', {
+      'user_name': userName,
+      'name': name,
+      'kcal_per_100g': kcalPer100g,
+      'protein_per_100g': proteinPer100g,
+      'carbs_per_100g': carbsPer100g,
+      'fat_per_100g': fatPer100g,
+      'notes': notes,
+    }));
   }
 
   /// Creates multiple food items in a single batch operation
@@ -961,35 +527,13 @@ class FoodService {
               ...food,
             })
         .toList();
-
-    final response = await http.post(
-      Uri.parse('$baseUrl/foods/bulk'),
-      headers: {
-        'Content-Type': 'application/json',
-        'X-API-Key': ApiConfig.apiKey!,
-      },
-      body: json.encode(foodsWithUser),
-    );
-
-    if (response.statusCode == 200 || response.statusCode == 201) {
-      final List<dynamic> responseData = json.decode(response.body);
-      return responseData.cast<Map<String, dynamic>>();
-    } else {
-      throw Exception('Failed to create foods in bulk: ${response.body}');
-    }
+    return json.decode(await createData('foods/bulk', foodsWithUser));
   }
 
   Future<Map<String, dynamic>> clearFoods({
     required String userName,
   }) async {
-    final response = await http.delete(
-      Uri.parse('$baseUrl/foods/bulk_clear?user_name=$userName'),
-      headers: {
-        'Content-Type': 'application/json',
-        'X-API-Key': ApiConfig.apiKey!,
-      },
-    );
-
+    final response = await deleteData('foods/bulk_clear?user_name=$userName');
     if (response.statusCode == 200 || response.statusCode == 204) {
       final result = response.body.isNotEmpty
           ? json.decode(response.body)
@@ -1006,13 +550,7 @@ class FoodService {
     required int foodId,
     required String userName,
   }) async {
-    final response = await http.delete(
-      Uri.parse('$baseUrl/foods/$foodId?user_name=$userName'),
-      headers: {
-        'Content-Type': 'application/json',
-        'X-API-Key': ApiConfig.apiKey!,
-      },
-    );
+    final response = await deleteData('foods/$foodId?user_name=$userName');
     if (response.statusCode != 200 && response.statusCode != 204) {
       throw Exception('Failed to delete food: ${response.body}');
     }
@@ -1037,18 +575,7 @@ class FoodService {
       url += '&end_date=${endDate.toIso8601String()}';
     }
 
-    final response = await http.get(
-      Uri.parse(url),
-      headers: {
-        'Content-Type': 'application/json',
-        'X-API-Key': ApiConfig.apiKey!,
-      },
-    );
-    if (response.statusCode == 200) {
-      return json.decode(response.body);
-    } else {
-      throw Exception('Failed to load food logs: ${response.body}');
-    }
+    return getData<List<dynamic>>(url);
   }
 
   /// Creates a new food log entry
@@ -1062,28 +589,16 @@ class FoodService {
     required double carbsPer100g,
     required double fatPer100g,
   }) async {
-    final response = await http.post(
-      Uri.parse('$baseUrl/food_logs'),
-      headers: {
-        'Content-Type': 'application/json',
-        'X-API-Key': ApiConfig.apiKey!,
-      },
-      body: json.encode({
-        'user_name': userName,
-        'food_name': foodName,
-        'date': date.toIso8601String(),
-        'grams': grams,
-        'kcal_per_100g': kcalPer100g,
-        'protein_per_100g': proteinPer100g,
-        'carbs_per_100g': carbsPer100g,
-        'fat_per_100g': fatPer100g,
-      }),
-    );
-    if (response.statusCode == 200 || response.statusCode == 201) {
-      return json.decode(response.body);
-    } else {
-      throw Exception('Failed to create food log: ${response.body}');
-    }
+    return json.decode(await createData('food_logs', {
+      'user_name': userName,
+      'food_name': foodName,
+      'date': date.toIso8601String(),
+      'grams': grams,
+      'kcal_per_100g': kcalPer100g,
+      'protein_per_100g': proteinPer100g,
+      'carbs_per_100g': carbsPer100g,
+      'fat_per_100g': fatPer100g,
+    }));
   }
 
   /// Deletes a food log entry
@@ -1091,13 +606,7 @@ class FoodService {
     required int logId,
     required String userName,
   }) async {
-    final response = await http.delete(
-      Uri.parse('$baseUrl/food_logs/$logId?user_name=$userName'),
-      headers: {
-        'Content-Type': 'application/json',
-        'X-API-Key': ApiConfig.apiKey!,
-      },
-    );
+    final response = await deleteData('food_logs/$logId?user_name=$userName');
     if (response.statusCode != 200 && response.statusCode != 204) {
       throw Exception('Failed to delete food log: ${response.body}');
     }
@@ -1106,18 +615,7 @@ class FoodService {
 
 class CalendarNoteService {
   Future<List<dynamic>> getCalendarNotes({required String userName}) async {
-    final response = await http.get(
-      Uri.parse('$baseUrl/calendar_notes?user_name=$userName'),
-      headers: {
-        'Content-Type': 'application/json',
-        'X-API-Key': ApiConfig.apiKey!,
-      },
-    );
-    if (response.statusCode == 200) {
-      return json.decode(response.body);
-    } else {
-      throw Exception('Failed to load calendar notes');
-    }
+    return getData<List<dynamic>>('calendar_notes?user_name=$userName');
   }
 
   Future<Map<String, dynamic>> createCalendarNote({
@@ -1125,33 +623,15 @@ class CalendarNoteService {
     required DateTime date,
     required String note,
   }) async {
-    final response = await http.post(
-      Uri.parse('$baseUrl/calendar_notes'),
-      headers: {
-        'Content-Type': 'application/json',
-        'X-API-Key': ApiConfig.apiKey!,
-      },
-      body: json.encode({
-        'user_name': userName,
-        'date': date.toIso8601String(),
-        'note': note,
-      }),
-    );
-    if (response.statusCode == 200 || response.statusCode == 201) {
-      return json.decode(response.body);
-    } else {
-      throw Exception('Failed to create calendar note');
-    }
+    return json.decode(await createData('calendar_notes', {
+      'user_name': userName,
+      'date': date.toIso8601String(),
+      'note': note,
+    }));
   }
 
   Future<void> deleteCalendarNote(int id) async {
-    final response = await http.delete(
-      Uri.parse('$baseUrl/calendar_notes/$id'),
-      headers: {
-        'Content-Type': 'application/json',
-        'X-API-Key': ApiConfig.apiKey!,
-      },
-    );
+    final response = await deleteData('calendar_notes/$id');
     if (response.statusCode != 200 && response.statusCode != 204) {
       throw Exception('Failed to delete calendar note');
     }
@@ -1163,17 +643,8 @@ class CalendarNoteService {
     required DateTime date,
     required String note,
   }) async {
-    final response = await http.put(
-      Uri.parse('$baseUrl/calendar_notes/$id'),
-      headers: {
-        'Content-Type': 'application/json',
-        'X-API-Key': ApiConfig.apiKey!,
-      },
-      body: json.encode({
-        'user_name': userName,
-        'date': date.toIso8601String(),
-        'note': note,
-      }),
+    final response = await updateData('calendar_notes/$id',
+    {'user_name': userName, 'date': date.toIso8601String(), 'note': note}
     );
     if (response.statusCode == 200) {
       return json.decode(response.body);
@@ -1185,18 +656,7 @@ class CalendarNoteService {
 
 class CalendarWorkoutService {
   Future<List<dynamic>> getCalendarWorkouts({required String userName}) async {
-    final response = await http.get(
-      Uri.parse('$baseUrl/calendar_workouts?user_name=$userName'),
-      headers: {
-        'Content-Type': 'application/json',
-        'X-API-Key': ApiConfig.apiKey!,
-      },
-    );
-    if (response.statusCode == 200) {
-      return json.decode(response.body);
-    } else {
-      throw Exception('Failed to load calendar workouts');
-    }
+    return getData<List<dynamic>>('calendar_workouts?user_name=$userName');
   }
 
   Future<Map<String, dynamic>> createCalendarWorkout({
@@ -1204,33 +664,15 @@ class CalendarWorkoutService {
     required DateTime date,
     required String workout,
   }) async {
-    final response = await http.post(
-      Uri.parse('$baseUrl/calendar_workouts'),
-      headers: {
-        'Content-Type': 'application/json',
-        'X-API-Key': ApiConfig.apiKey!,
-      },
-      body: json.encode({
-        'user_name': userName,
-        'date': date.toIso8601String(),
-        'workout': workout,
-      }),
-    );
-    if (response.statusCode == 200 || response.statusCode == 201) {
-      return json.decode(response.body);
-    } else {
-      throw Exception('Failed to create calendar workout');
-    }
+    return json.decode(await createData('calendar_workouts', {
+      'user_name': userName,
+      'date': date.toIso8601String(),
+      'workout': workout,
+    }));
   }
 
   Future<void> deleteCalendarWorkout(int id) async {
-    final response = await http.delete(
-      Uri.parse('$baseUrl/calendar_workouts/$id'),
-      headers: {
-        'Content-Type': 'application/json',
-        'X-API-Key': ApiConfig.apiKey!,
-      },
-    );
+    final response = await deleteData('calendar_workouts/$id');
     if (response.statusCode != 200 && response.statusCode != 204) {
       throw Exception('Failed to delete calendar workout');
     }
@@ -1239,18 +681,7 @@ class CalendarWorkoutService {
 
 class CalendarPeriodService {
   Future<List<dynamic>> getCalendarPeriods({required String userName}) async {
-    final response = await http.get(
-      Uri.parse('$baseUrl/periods?user_name=$userName'),
-      headers: {
-        'Content-Type': 'application/json',
-        'X-API-Key': ApiConfig.apiKey!,
-      },
-    );
-    if (response.statusCode == 200) {
-      return json.decode(response.body);
-    } else {
-      throw Exception('Failed to load calendar periods');
-    }
+    return getData<List<dynamic>>('periods?user_name=$userName');
   }
 
   Future<Map<String, dynamic>> createCalendarPeriod({
@@ -1259,34 +690,16 @@ class CalendarPeriodService {
     required DateTime start_date,
     required DateTime end_date,
   }) async {
-    final response = await http.post(
-      Uri.parse('$baseUrl/periods'),
-      headers: {
-        'Content-Type': 'application/json',
-        'X-API-Key': ApiConfig.apiKey!,
-      },
-      body: json.encode({
-        'user_name': userName,
-        'type': type,
-        'start_date': start_date.toIso8601String(),
-        'end_date': end_date.toIso8601String(),
-      }),
-    );
-    if (response.statusCode == 200 || response.statusCode == 201) {
-      return json.decode(response.body);
-    } else {
-      throw Exception('Failed to create calendar period');
-    }
+    return json.decode(await createData('periods', {
+      'user_name': userName,
+      'type': type,
+      'start_date': start_date.toIso8601String(),
+      'end_date': end_date.toIso8601String(),
+    }));
   }
 
   Future<void> deleteCalendarPeriod(int id) async {
-    final response = await http.delete(
-      Uri.parse('$baseUrl/periods/$id'),
-      headers: {
-        'Content-Type': 'application/json',
-        'X-API-Key': ApiConfig.apiKey!,
-      },
-    );
+    final response = await deleteData('periods/$id');
     if (response.statusCode != 200 && response.statusCode != 204) {
       throw Exception('Failed to delete calendar period');
     }
