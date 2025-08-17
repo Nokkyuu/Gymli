@@ -13,8 +13,8 @@ import '../../config/api_config.dart';
 
 // Main API base URL - Azure hosted backend service
 const String baseUrl = kDebugMode
-    // ? 'http://127.0.0.1:8000'
-    ? 'https://gymliapi-dev-f6c3gzfafgazanbf.germanywestcentral-01.azurewebsites.net'
+    ? 'http://127.0.0.1:8000'
+    // ? 'https://gymliapi-dev-f6c3gzfafgazanbf.germanywestcentral-01.azurewebsites.net'
     : 'https://gymliapi-gyg0ardqh5dadaba.germanywestcentral-01.azurewebsites.net';
 
 // Map<String, String> defaultHeaders = {'Content-Type': 'application/json', 'X-API-Key': ApiConfig.apiKey! };
@@ -22,11 +22,14 @@ Map<String, String> defaultHeaders = ApiConfig.getHeaders();
 
 Future<T> getData<T>(String url) async {
   try {
-    final response = await http.get(Uri.parse('$baseUrl/$url'), headers: defaultHeaders);
+    final response =
+        await http.get(Uri.parse('$baseUrl/$url'), headers: defaultHeaders);
     if (response.statusCode == 200) {
       final decoded = json.decode(response.body);
       return decoded;
-    } else { throw Exception("Failed to fetch"); }
+    } else {
+      throw Exception("Failed to fetch");
+    }
   } catch (e) {
     // TODO: MAYBE LOGGING!
     rethrow;
@@ -35,7 +38,8 @@ Future<T> getData<T>(String url) async {
 
 Future deleteData(String url) async {
   final response = await http.delete(
-    Uri.parse('$baseUrl/$url'), headers: defaultHeaders,
+    Uri.parse('$baseUrl/$url'),
+    headers: defaultHeaders,
   );
   if (response.statusCode != 200 && response.statusCode != 204) {
     throw Exception('Failed to delete');
@@ -44,7 +48,8 @@ Future deleteData(String url) async {
 }
 
 Future updateData<T>(String url, T data) async {
-  final response = await http.put(Uri.parse('$baseUrl/$url'), headers: defaultHeaders, body: json.encode(data) );
+  final response = await http.put(Uri.parse('$baseUrl/$url'),
+      headers: defaultHeaders, body: json.encode(data));
   if (response.statusCode != 200) {
     throw Exception('Failed to update');
   }
@@ -52,11 +57,11 @@ Future updateData<T>(String url, T data) async {
 }
 
 Future createData<T>(String url, T data) async {
-  final response = await http.post(
-      Uri.parse('$baseUrl/$url'), headers: defaultHeaders, body: json.encode(data) );
-    if (response.statusCode != 200 && response.statusCode != 201) {
-      throw Exception('Failed to create');
-    }
+  final response = await http.post(Uri.parse('$baseUrl/$url'),
+      headers: defaultHeaders, body: json.encode(data));
+  if (response.statusCode != 200 && response.statusCode != 201) {
+    throw Exception('Failed to create');
+  }
 }
 
 //----------------- Exercise Service -----------------//
@@ -177,7 +182,8 @@ class WorkoutService {
     required String name,
     // Add other required fields as needed
   }) async {
-    return json.decode(await createData('workouts', {'user_name': userName, 'name': name}));
+    return json.decode(
+        await createData('workouts', {'user_name': userName, 'name': name}));
   }
 
   /// Updates an existing workout record
@@ -230,21 +236,20 @@ class TrainingSetService {
     // required double increment,
     // String? machineName,
   }) async {
-    return json.decode(await createData('training_sets', 
-    {
-        'user_name': userName,
-        'exercise_id': exerciseId,
-        'date': date,
-        'weight': weight,
-        'repetitions': repetitions,
-        'set_type': setType,
-        'phase': phase,
-        'myoreps': myoreps,
-        // 'base_reps': baseReps,
-        // 'max_reps': maxReps,
-        // 'increment': increment,
-        // 'machine_name': machineName,
-      }));
+    return json.decode(await createData('training_sets', {
+      'user_name': userName,
+      'exercise_id': exerciseId,
+      'date': date,
+      'weight': weight,
+      'repetitions': repetitions,
+      'set_type': setType,
+      'phase': phase,
+      'myoreps': myoreps,
+      // 'base_reps': baseReps,
+      // 'max_reps': maxReps,
+      // 'increment': increment,
+      // 'machine_name': machineName,
+    }));
   }
 
   /// Creates multiple training sets in a single batch operation
@@ -252,11 +257,22 @@ class TrainingSetService {
     required String userName,
     required List<Map<String, dynamic>> trainingSets,
   }) async {
-    if (trainingSets.isEmpty) { throw Exception('Training sets list cannot be empty');}
-    if (trainingSets.length > 1000) { throw Exception('Cannot create more than 1000 training sets in a single request'); }
+    if (trainingSets.isEmpty) {
+      throw Exception('Training sets list cannot be empty');
+    }
+    if (trainingSets.length > 1000) {
+      throw Exception(
+          'Cannot create more than 1000 training sets in a single request');
+    }
     // Ensure all training sets have the required user_name field
-    final trainingSetsWithUser = trainingSets.map((ts) => {'user_name': userName, ...ts,}).toList();
-    final response = await createData('training_sets/bulk', trainingSetsWithUser);
+    final trainingSetsWithUser = trainingSets
+        .map((ts) => {
+              'user_name': userName,
+              ...ts,
+            })
+        .toList();
+    final response =
+        await createData('training_sets/bulk', trainingSetsWithUser);
     return json.decode(response.body).cast<Map<String, dynamic>>();
   }
 
@@ -272,7 +288,8 @@ class TrainingSetService {
   /// Returns a map of exercise names to their last training dates
   Future<Map<String, String>> getLastTrainingDatesPerExercise(
       {required String userName}) async {
-    final response = await getData<Map<String, dynamic>>('training_sets/last_dates?user_name=$userName');
+    final response = await getData<Map<String, dynamic>>(
+        'training_sets/last_dates?user_name=$userName');
     return response.map((key, value) => MapEntry(key, value.toString()));
   }
 
@@ -287,7 +304,8 @@ class TrainingSetService {
   Future<Map<String, dynamic>> clearTrainingSets({
     required String userName,
   }) async {
-    final response = await deleteData('training_sets/bulk_clear?user_name=$userName');
+    final response =
+        await deleteData('training_sets/bulk_clear?user_name=$userName');
     if (response.statusCode == 200 || response.statusCode == 204) {
       final result = response.body.isNotEmpty
           ? json.decode(response.body)
@@ -369,7 +387,8 @@ class ActivityService {
   Future<Map<String, dynamic>> initializeUserActivities({
     required String userName,
   }) async {
-    return json.decode(await createData('users/$userName/initialize_activities', {}));
+    return json
+        .decode(await createData('users/$userName/initialize_activities', {}));
   }
 
   /// Retrieves all activities for a user
@@ -399,9 +418,9 @@ class ActivityService {
     required String name,
     required double kcalPerHour,
   }) async {
-    final response = await updateData('activities/$activityId?user_name=$userName',
-      {'name': name, 'kcal_per_hour': kcalPerHour}
-    );
+    final response = await updateData(
+        'activities/$activityId?user_name=$userName',
+        {'name': name, 'kcal_per_hour': kcalPerHour});
     if (response.statusCode == 200) {
       return json.decode(response.body);
     } else {
@@ -414,7 +433,8 @@ class ActivityService {
     required int activityId,
     required String userName,
   }) async {
-    final response = await deleteData('activities/$activityId?user_name=$userName');
+    final response =
+        await deleteData('activities/$activityId?user_name=$userName');
     if (response.statusCode != 200 && response.statusCode != 204) {
       throw Exception('Failed to delete activity: ${response.body}');
     }
@@ -428,9 +448,15 @@ class ActivityService {
     DateTime? endDate,
   }) async {
     String url = '$baseUrl/activity_logs?user_name=$userName';
-    if (activityName != null) { url += '&activity_name=${Uri.encodeComponent(activityName)}'; }
-    if (startDate != null) { url += '&start_date=${startDate.toIso8601String()}'; }
-    if (endDate != null) { url += '&end_date=${endDate.toIso8601String()}'; }
+    if (activityName != null) {
+      url += '&activity_name=${Uri.encodeComponent(activityName)}';
+    }
+    if (startDate != null) {
+      url += '&start_date=${startDate.toIso8601String()}';
+    }
+    if (endDate != null) {
+      url += '&end_date=${endDate.toIso8601String()}';
+    }
     return getData<List<dynamic>>(url);
   }
 
@@ -458,8 +484,12 @@ class ActivityService {
     DateTime? endDate,
   }) async {
     String url = '$baseUrl/activity_logs/stats?user_name=$userName';
-    if (startDate != null) { url += '&start_date=${startDate.toIso8601String()}'; }
-    if (endDate != null) { url += '&end_date=${endDate.toIso8601String()}'; }
+    if (startDate != null) {
+      url += '&start_date=${startDate.toIso8601String()}';
+    }
+    if (endDate != null) {
+      url += '&end_date=${endDate.toIso8601String()}';
+    }
     return getData<Map<String, dynamic>>(url);
   }
 
@@ -468,7 +498,8 @@ class ActivityService {
     required int logId,
     required String userName,
   }) async {
-    final response = await deleteData('activity_logs/$logId?user_name=$userName');
+    final response =
+        await deleteData('activity_logs/$logId?user_name=$userName');
     if (response.statusCode != 200 && response.statusCode != 204) {
       throw Exception('Failed to delete activity log: ${response.body}');
     }
@@ -648,8 +679,7 @@ class CalendarNoteService {
     required String note,
   }) async {
     final response = await updateData('calendar_notes/$id',
-    {'user_name': userName, 'date': date.toIso8601String(), 'note': note}
-    );
+        {'user_name': userName, 'date': date.toIso8601String(), 'note': note});
     if (response.statusCode == 200) {
       return json.decode(response.body);
     } else {
