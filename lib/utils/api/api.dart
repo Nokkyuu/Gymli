@@ -448,7 +448,7 @@ class ActivityService {
     DateTime? startDate,
     DateTime? endDate,
   }) async {
-    String url = '$baseUrl/activity_logs?user_name=$userName';
+    String url = '/activity_logs?user_name=$userName';
     if (activityName != null) {
       url += '&activity_name=${Uri.encodeComponent(activityName)}';
     }
@@ -484,7 +484,7 @@ class ActivityService {
     DateTime? startDate,
     DateTime? endDate,
   }) async {
-    String url = '$baseUrl/activity_logs/stats?user_name=$userName';
+    String url = '/activity_logs/stats?user_name=$userName';
     if (startDate != null) {
       url += '&start_date=${startDate.toIso8601String()}';
     }
@@ -599,7 +599,7 @@ class FoodService {
     DateTime? startDate,
     DateTime? endDate,
   }) async {
-    String url = '$baseUrl/food_logs?user_name=$userName';
+    String url = '/food_logs?user_name=$userName';
 
     if (foodName != null) {
       url += '&food_name=${Uri.encodeComponent(foodName)}';
