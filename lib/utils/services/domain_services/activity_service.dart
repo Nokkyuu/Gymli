@@ -55,13 +55,13 @@ class ActivityService {
         final activities =
             await api.ActivityService().getActivities(userName: userName);
 
-        // If no activities exist, initialize them first
-        if (activities.isEmpty) {
-          await api.ActivityService()
-              .initializeUserActivities(userName: userName);
-          // Get the activities again after initialization
-          return await api.ActivityService().getActivities(userName: userName);
-        }
+        // // If no activities exist, initialize them first
+        // if (activities.isEmpty) {
+        //   await api.ActivityService()
+        //       .initializeUserActivities(userName: userName);
+        //   // Get the activities again after initialization
+        //   return await api.ActivityService().getActivities(userName: userName);
+        // }
 
         return activities;
       } catch (e) {
