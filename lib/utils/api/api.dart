@@ -28,7 +28,7 @@ Future<T> getData<T>(String url) async {
       final decoded = json.decode(response.body);
       return decoded;
     } else {
-      throw Exception("Failed to fetch" + url + ":" + response.statusCode);
+      throw Exception("Failed to fetch" + url + ":" + "${response.statusCode}");
     }
   } catch (e) {
     // TODO: MAYBE LOGGING!
