@@ -24,7 +24,7 @@ Future<T> getData<T>(String url) async {
   try {
     final response =
         await http.get(Uri.parse('$baseUrl/$url'), headers: defaultHeaders);
-    if (response.statusCode == 200) {
+    if (response.statusCode == 200 || response.statusCode == 204) {
       final decoded = json.decode(response.body);
       return decoded;
     } else {
