@@ -18,7 +18,7 @@ const String baseUrl = kDebugMode
     : 'https://gymliapi-gyg0ardqh5dadaba.germanywestcentral-01.azurewebsites.net';
 
 // Map<String, String> defaultHeaders = {'Content-Type': 'application/json', 'X-API-Key': ApiConfig.apiKey! };
-Map<String, String> defaultHeaders = ApiConfig.getHeaders();
+Map<String, String> get defaultHeaders => ApiConfig.getHeaders();
 
 Future<T> getData<T>(String url) async {
   try {

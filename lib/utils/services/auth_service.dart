@@ -33,12 +33,18 @@ class AuthService {
     _credentials = credentials;
     final isNowLoggedIn = isLoggedIn;
 
-    if (credentials?.accessToken != null && kDebugMode) {
-      print("Access Token TYPE: ${credentials?.tokenType}");
-      print("Access Token: ${credentials?.accessToken}");
-    }
-    // Update API config with access token
+    // Single place where API token is set
     ApiConfig.setAccessToken(credentials?.accessToken);
+
+    if (kDebugMode) {
+      if (credentials?.accessToken != null) {
+        print("AuthService: Access Token TYPE: ${credentials?.tokenType}");
+        print(
+            "AuthService: Access Token set: ${credentials!.accessToken.substring(0, 20)}...");
+      } else {
+        print("AuthService: Access Token cleared");
+      }
+    }
 
     if (!isLoggedIn) {
       // Clear stored auth state when logging out

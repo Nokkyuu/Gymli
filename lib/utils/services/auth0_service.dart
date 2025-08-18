@@ -67,11 +67,18 @@ class Auth0Service extends ChangeNotifier {
 
   void _setCredentials(Credentials? credentials) {
     _credentials = credentials;
+
+    // Single source of truth: let AuthService handle all credential setting
+    // This will also handle ApiConfig.setAccessToken internally
     _serviceContainer.authService.setCredentials(credentials);
 
-    // Ensure the API config is updated immediately
-    if (credentials != null) {
-      ApiConfig.setAccessToken(credentials.accessToken);
+    if (kDebugMode) {
+      print(
+          'Auth0Service: Credentials ${credentials != null ? "set" : "cleared"}');
+      if (credentials != null) {
+        print(
+            'Auth0Service: Token preview: ${credentials.accessToken.substring(0, 20)}...');
+      }
     }
 
     notifyListeners();

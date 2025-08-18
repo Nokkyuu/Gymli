@@ -1,3 +1,4 @@
+import 'package:Gymli/config/api_config.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
 import '../widgets/main_app_widget.dart';
@@ -40,9 +41,15 @@ class _LandingChoiceScreenState extends State<LandingChoiceScreen> {
     _checkForStoredCredentials();
   }
 
-  void _onAuthChanged() {
+  Future<void> _onAuthChanged() async {
     if (_authService.credentials != null) {
-      _proceedToMainApp();
+      // No need to call initializeAuth again - credentials are already set
+      // Just verify the token is properly set and proceed
+      if (_isTokenProperlySet()) {
+        _proceedToMainApp();
+      } else {
+        print('Warning: Credentials exist but token not set in ApiConfig');
+      }
     }
   }
 
@@ -50,12 +57,28 @@ class _LandingChoiceScreenState extends State<LandingChoiceScreen> {
     if (!_isInitialized) return;
 
     setState(() => _loading = true);
-    await _container.authService.initializeAuth();
-    if (_container.authService.isLoggedIn) {
+
+    // The Auth0Service.initialize() already called loadStoredAuthState
+    // So we just need to check if we're logged in with a valid token
+    if (_container.authService.isLoggedIn && _isTokenProperlySet()) {
       _proceedToMainApp();
       return;
     }
     setState(() => _loading = false);
+  }
+
+  bool _isTokenProperlySet() {
+    final hasToken = ApiConfig.accessToken != null &&
+        ApiConfig.accessToken!.isNotEmpty &&
+        ApiConfig.accessToken != 'DEBUG_MODE_NO_API_KEY' &&
+        ApiConfig.accessToken != 'DEBUG_MODE_ERROR';
+
+    if (kDebugMode) {
+      print(
+          'LandingScreen: Token check: ${hasToken ? "✓ Token set" : "✗ No token"}');
+    }
+
+    return hasToken;
   }
 
   void _proceedToMainApp() {
