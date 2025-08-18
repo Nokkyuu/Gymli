@@ -28,7 +28,7 @@ Future<T> getData<T>(String url) async {
       final decoded = json.decode(response.body);
       return decoded;
     } else {
-      throw Exception("Failed to fetch" + url);
+      throw Exception("Failed to fetch" + url + ":" + response.statusCode);
     }
   } catch (e) {
     // TODO: MAYBE LOGGING!
@@ -76,7 +76,7 @@ class ExerciseService {
   /// [userName] - The username to fetch exercises for
   /// Returns a list of exercise objects
   Future<List<dynamic>> getExercises({required String userName}) async {
-    return getData<List<dynamic>>('exercises');
+    return getData<List<dynamic>>('exercises?user_name=$userName');
   }
 
   /// Retrieves a specific exercise by its ID
@@ -164,7 +164,7 @@ class WorkoutService {
   /// [userName] - The username to fetch workouts for
   /// Returns a list of workout objects
   Future<List<dynamic>> getWorkouts({required String userName}) async {
-    return getData<List<dynamic>>('workouts');
+    return getData<List<dynamic>>('workouts?user_name=$userName');
   }
 
   /// Retrieves a specific workout by its ID
@@ -184,7 +184,7 @@ class WorkoutService {
     // Add other required fields as needed
   }) async {
     return json.decode(
-        await createData('workouts', {'name': name}));
+        await createData('workouts', {'user_name': userName, 'name': name}));
   }
 
   /// Updates an existing workout record
@@ -212,7 +212,7 @@ class TrainingSetService {
   /// [userName] - The username to fetch training sets for
   /// Returns a list of training set objects
   Future<List<dynamic>> getTrainingSets({required String userName}) async {
-    return getData<List<dynamic>>('training_sets');
+    return getData<List<dynamic>>('training_sets?user_name=$userName');
   }
 
   /// Retrieves a specific training set by its ID
@@ -290,7 +290,7 @@ class TrainingSetService {
   Future<Map<String, String>> getLastTrainingDatesPerExercise(
       {required String userName}) async {
     final response = await getData<Map<String, dynamic>>(
-        'training_sets/last_dates');
+        'training_sets/last_dates?user_name=$userName');
     return response.map((key, value) => MapEntry(key, value.toString()));
   }
 
@@ -306,7 +306,7 @@ class TrainingSetService {
     required String userName,
   }) async {
     final response =
-        await deleteData('training_sets/bulk_clear');
+        await deleteData('training_sets/bulk_clear?user_name=$userName');
     if (response.statusCode == 200 || response.statusCode == 204) {
       final result = response.body.isNotEmpty
           ? json.decode(response.body)
@@ -330,7 +330,7 @@ class WorkoutUnitService {
   /// [userName] - The username to fetch workout units for
   /// Returns a list of workout unit objects
   Future<List<dynamic>> getWorkoutUnits({required String userName}) async {
-    return getData<List<dynamic>>('workout_units');
+    return getData<List<dynamic>>('workout_units?user_name=$userName');
   }
 
   /// Retrieves a specific workout unit by its ID
@@ -396,7 +396,7 @@ class ActivityService {
   /// [userName] - The username to fetch activities for
   /// Returns a list of activity objects
   Future<List<dynamic>> getActivities({required String userName}) async {
-    return getData<List<dynamic>>('activities');
+    return getData<List<dynamic>>('activities?user_name=$userName');
   }
 
   /// Creates a new custom activity for a user
@@ -420,7 +420,7 @@ class ActivityService {
     required double kcalPerHour,
   }) async {
     final response = await updateData(
-        'activities/$activityId',
+        'activities/$activityId?user_name=$userName',
         {'name': name, 'kcal_per_hour': kcalPerHour});
     if (response.statusCode == 200) {
       return json.decode(response.body);
@@ -435,7 +435,7 @@ class ActivityService {
     required String userName,
   }) async {
     final response =
-        await deleteData('activities/$activityId');
+        await deleteData('activities/$activityId?user_name=$userName');
     if (response.statusCode != 200 && response.statusCode != 204) {
       throw Exception('Failed to delete activity: ${response.body}');
     }
@@ -448,7 +448,7 @@ class ActivityService {
     DateTime? startDate,
     DateTime? endDate,
   }) async {
-    String url = '$baseUrl/activity_logs';
+    String url = '$baseUrl/activity_logs?user_name=$userName';
     if (activityName != null) {
       url += '&activity_name=${Uri.encodeComponent(activityName)}';
     }
@@ -484,7 +484,7 @@ class ActivityService {
     DateTime? startDate,
     DateTime? endDate,
   }) async {
-    String url = '$baseUrl/activity_logs/stats';
+    String url = '$baseUrl/activity_logs/stats?user_name=$userName';
     if (startDate != null) {
       url += '&start_date=${startDate.toIso8601String()}';
     }
@@ -500,7 +500,7 @@ class ActivityService {
     required String userName,
   }) async {
     final response =
-        await deleteData('activity_logs/$logId');
+        await deleteData('activity_logs/$logId?user_name=$userName');
     if (response.statusCode != 200 && response.statusCode != 204) {
       throw Exception('Failed to delete activity log: ${response.body}');
     }
@@ -518,7 +518,7 @@ class FoodService {
   /// [userName] - The username to fetch food items for
   /// Returns a list of food item objects
   Future<List<dynamic>> getFoods({required String userName}) async {
-    return getData<List<dynamic>>('foods');
+    return getData<List<dynamic>>('foods?user_name=$userName');
   }
 
   /// Creates a new food item
@@ -569,7 +569,7 @@ class FoodService {
   Future<Map<String, dynamic>> clearFoods({
     required String userName,
   }) async {
-    final response = await deleteData('foods/bulk_clear');
+    final response = await deleteData('foods/bulk_clear?user_name=$userName');
     if (response.statusCode == 200 || response.statusCode == 204) {
       final result = response.body.isNotEmpty
           ? json.decode(response.body)
@@ -586,7 +586,7 @@ class FoodService {
     required int foodId,
     required String userName,
   }) async {
-    final response = await deleteData('foods/$foodId');
+    final response = await deleteData('foods/$foodId?user_name=$userName');
     if (response.statusCode != 200 && response.statusCode != 204) {
       throw Exception('Failed to delete food: ${response.body}');
     }
@@ -599,7 +599,7 @@ class FoodService {
     DateTime? startDate,
     DateTime? endDate,
   }) async {
-    String url = '$baseUrl/food_logs';
+    String url = '$baseUrl/food_logs?user_name=$userName';
 
     if (foodName != null) {
       url += '&food_name=${Uri.encodeComponent(foodName)}';
@@ -642,7 +642,7 @@ class FoodService {
     required int logId,
     required String userName,
   }) async {
-    final response = await deleteData('food_logs/$logId');
+    final response = await deleteData('food_logs/$logId?user_name=$userName');
     if (response.statusCode != 200 && response.statusCode != 204) {
       throw Exception('Failed to delete food log: ${response.body}');
     }
@@ -651,7 +651,7 @@ class FoodService {
 
 class CalendarNoteService {
   Future<List<dynamic>> getCalendarNotes({required String userName}) async {
-    return getData<List<dynamic>>('calendar_notes');
+    return getData<List<dynamic>>('calendar_notes?user_name=$userName');
   }
 
   Future<Map<String, dynamic>> createCalendarNote({
@@ -691,7 +691,7 @@ class CalendarNoteService {
 
 class CalendarWorkoutService {
   Future<List<dynamic>> getCalendarWorkouts({required String userName}) async {
-    return getData<List<dynamic>>('calendar_workouts');
+    return getData<List<dynamic>>('calendar_workouts?user_name=$userName');
   }
 
   Future<Map<String, dynamic>> createCalendarWorkout({
@@ -716,7 +716,7 @@ class CalendarWorkoutService {
 
 class CalendarPeriodService {
   Future<List<dynamic>> getCalendarPeriods({required String userName}) async {
-    return getData<List<dynamic>>('periods');
+    return getData<List<dynamic>>('periods?user_name=$userName');
   }
 
   Future<Map<String, dynamic>> createCalendarPeriod({
