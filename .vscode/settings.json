@@ -76,7 +76,7 @@
             "name": "gymlidata",
             "database": "gymlidata",
             "username": "gymcoach",
-            "password": "!PushUp100!"
+            
         }
     ],
     "dart.flutterSdkPath": "~/.vscode/flutter"

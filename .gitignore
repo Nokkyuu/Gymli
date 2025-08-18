@@ -172,3 +172,5 @@ cython_debug/
 .flutter-plugins
 .flutter-plugins-dependencies
 .flutter-plugins-dependencies
+gymlidata.session.sql
+.vscode/settings.json
