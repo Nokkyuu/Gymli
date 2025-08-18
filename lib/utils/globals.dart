@@ -3,6 +3,7 @@
 library;
 
 import 'package:Gymli/utils/api/api_models.dart';
+import 'package:flutter/foundation.dart';
 
 // User preference settings
 int idleTimerWakeup = 90; // Idle timer wakeup time in seconds
@@ -41,3 +42,10 @@ double calculateScoreWithExercise(
 }
 
 List<List> muscleHistoryScore = [];
+
+final ValueNotifier<bool> exerciseDataChangedNotifier =
+    ValueNotifier<bool>(false);
+
+void notifyExerciseDataChanged() {
+  exerciseDataChangedNotifier.value = !exerciseDataChangedNotifier.value;
+}

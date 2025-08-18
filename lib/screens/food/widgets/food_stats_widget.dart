@@ -46,11 +46,17 @@ class FoodStatsWidget extends StatelessWidget {
                   const Text('Today:'),
                   const SizedBox(width: 16),
                   FutureBuilder<Map<String, double>>(
-                    future: controller.container.foodService.getFoodLogStats(
-                      startDate: DateTime.now()
-                          .subtract(Duration(hours: DateTime.now().hour)),
-                      endDate: DateTime.now(),
-                    ),
+                    future: (() {
+                      final now = DateTime.now();
+                      final startOfDay = DateTime(now.year, now.month, now.day);
+                      final endOfDay = startOfDay
+                          .add(const Duration(days: 1))
+                          .subtract(const Duration(milliseconds: 1));
+                      return controller.container.foodService.getFoodLogStats(
+                        startDate: startOfDay,
+                        endDate: endOfDay,
+                      );
+                    })(),
                     builder: (context, snapshot) {
                       if (snapshot.hasData) {
                         final stats = snapshot.data!;

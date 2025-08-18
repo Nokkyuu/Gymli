@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:Gymli/utils/services/service_container.dart';
 import '../../config/api_config.dart';
 import '../globals.dart' as globals;
+import '../api/api.dart';
 //import 'user_service.dart';
 
 class AppInitializer {
@@ -36,6 +37,8 @@ class AppInitializer {
       // // 1. Load preferences
       // await _loadPreferences(); TODO: delete or implement ?
       // if (kDebugMode) print('✓ Preferences loaded');
+      clearApiCache();
+      if (kDebugMode) print('✓ API cache cleared');
 
       // 2. Initialize API configuration
       ApiConfig.initialize();

@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import '../../config/api_config.dart'; // Add this import
+import '../api/api.dart';
 
 class AuthService {
   /// Singleton instance for AuthService
@@ -35,6 +36,7 @@ class AuthService {
 
     // Single place where API token is set
     ApiConfig.setAccessToken(credentials?.accessToken);
+    clearApiCache();
 
     if (kDebugMode) {
       if (credentials?.accessToken != null) {

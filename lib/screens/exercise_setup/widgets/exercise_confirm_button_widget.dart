@@ -146,6 +146,7 @@ class ExerciseConfirmButtonWidget extends StatelessWidget {
                           if (dialogContext.mounted) {
                             Navigator.of(dialogContext).pop(true);
                           }
+                          // Remove the onSuccess callback call here since _handleSaveSuccess will handle navigation
                         } else {
                           if (kDebugMode) print('❌ Save operation failed');
                           if (dialogContext.mounted) {
@@ -175,15 +176,11 @@ class ExerciseConfirmButtonWidget extends StatelessWidget {
     );
 
     if (success == true) {
-      // First try the callback
+      // Only call the callback, don't do direct navigation
       if (onSuccess != null) {
         onSuccess!.call();
-      } else {
-        // Fallback: navigate directly using context
-        if (context.mounted) {
-          Navigator.of(context).pop();
-        }
       }
+      // Remove the fallback navigation since it's redundant
     }
   }
 }

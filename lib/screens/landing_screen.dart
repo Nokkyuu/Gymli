@@ -8,7 +8,6 @@ import 'package:provider/provider.dart';
 import 'package:Gymli/screens/exercise_screen.dart';
 import 'package:Gymli/screens/workout_setup_screen.dart';
 import 'landing/controllers/landing_controller.dart';
-import 'landing/controllers/landing_cache_controller.dart';
 import 'landing/controllers/landing_filter_controller.dart';
 import 'landing/repositories/landing_repository.dart';
 import 'landing/widgets/landing_loading_widget.dart';
@@ -26,7 +25,6 @@ class LandingScreen extends StatefulWidget {
 
 class _LandingScreenState extends State<LandingScreen> {
   late LandingController _landingController;
-  late LandingCacheController _cacheController;
   late LandingFilterController _filterController;
   late LandingRepository _repository;
 
@@ -38,11 +36,9 @@ class _LandingScreenState extends State<LandingScreen> {
 
   void _initializeComponents() {
     _repository = LandingRepository();
-    _cacheController = LandingCacheController();
     _filterController = LandingFilterController();
     _landingController = LandingController(
       repository: _repository,
-      cacheController: _cacheController,
       filterController: _filterController,
     );
 
@@ -63,7 +59,6 @@ class _LandingScreenState extends State<LandingScreen> {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider.value(value: _landingController),
-        ChangeNotifierProvider.value(value: _cacheController),
         ChangeNotifierProvider.value(value: _filterController),
       ],
       child: Consumer<LandingController>(
@@ -95,7 +90,8 @@ class _LandingScreenState extends State<LandingScreen> {
           mainAxisSize: MainAxisSize.max,
           children: [
             LandingFilterSection(
-              availableWorkouts: controller.cacheController.cachedWorkouts,
+              availableWorkouts:
+                  controller.workouts, // Direct access instead of cache
               filterController: controller.filterController,
               onWorkoutSelected: _onWorkoutSelected,
               onMuscleSelected: _onMuscleSelected,

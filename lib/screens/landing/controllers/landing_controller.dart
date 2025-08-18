@@ -1,117 +1,102 @@
-/// Landing Controller - Main business logic controller for landing screen
+/// Landing Controller - Simplified without caching layer
 library;
 
 import 'package:flutter/foundation.dart';
 import '../repositories/landing_repository.dart';
 import '../models/landing_filter_state.dart';
-import 'landing_cache_controller.dart';
 import 'landing_filter_controller.dart';
 import '../../../utils/api/api_models.dart';
+import '../../../utils/globals.dart' as globals;
 
 class LandingController extends ChangeNotifier {
   final LandingRepository _repository;
-  final LandingCacheController _cacheController;
   final LandingFilterController _filterController;
 
-  // State
+  // Direct data storage (no separate cache)
+  List<ApiExercise> _exercises = [];
+  List<ApiWorkout> _workouts = [];
   List<ApiExercise> _filteredExercises = [];
   List<String> _metainfo = [];
+
   bool _isLoading = true;
   String? _errorMessage;
   bool _hasShownWelcomeMessage = false;
   bool _isInitialized = false;
 
-  // Notifier for filter changes
   final ValueNotifier<bool> filterApplied = ValueNotifier<bool>(true);
 
   LandingController({
     LandingRepository? repository,
-    LandingCacheController? cacheController,
     LandingFilterController? filterController,
   })  : _repository = repository ?? LandingRepository(),
-        _cacheController = cacheController ?? LandingCacheController(),
-        _filterController = filterController ?? LandingFilterController();
+        _filterController = filterController ?? LandingFilterController() {
+    // Listen to global exercise data changes
+    globals.exerciseDataChangedNotifier.addListener(_onExerciseDataChanged);
+  }
 
   // Getters
+  List<ApiExercise> get exercises => List.from(_exercises);
+  List<ApiWorkout> get workouts => List.from(_workouts);
   List<ApiExercise> get filteredExercises => List.from(_filteredExercises);
   List<String> get metainfo => List.from(_metainfo);
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
   bool get hasShownWelcomeMessage => _hasShownWelcomeMessage;
   LandingRepository get repository => _repository;
-  LandingCacheController get cacheController => _cacheController;
   LandingFilterController get filterController => _filterController;
-
-  @override
-  void dispose() {
-    filterApplied.dispose();
-    _filterController.dispose();
-    _cacheController.dispose();
-    super.dispose();
-  }
 
   /// Initialize the landing screen
   Future<void> initialize() async {
-    if (_isInitialized) return; // Prevent multiple initializations
+    if (_isInitialized) return;
 
     _setLoading(true);
     _clearError();
     _isInitialized = true;
 
     try {
-      // Load initial data
-      await Future.wait([
-        _loadExercises(forceReload: false),
-        _loadWorkouts(forceReload: false),
-      ]);
-
-      // Show all exercises initially
+      await _loadData();
       await showAllExercises();
-
-      // Listen to auth state changes
       _repository.authStateNotifier.addListener(_onAuthStateChanged);
     } catch (e) {
-      _isInitialized = false; // Reset on error
+      _isInitialized = false;
       _setError('Failed to initialize: $e');
     } finally {
       _setLoading(false);
     }
   }
 
-  /// Load exercises with caching
-  Future<void> _loadExercises({bool forceReload = false}) async {
-    if (!forceReload && _cacheController.isExerciseCacheValid) {
-      return; // Use cached data
-    }
+  /// Load all data from repository
+  Future<void> _loadData() async {
+    final results = await Future.wait([
+      _repository.getExercises(),
+      _repository.getWorkouts(),
+    ]);
 
-    try {
-      final exercises = await _repository.getExercises();
-      _cacheController.updateExerciseCache(exercises);
-    } catch (e) {
-      if (kDebugMode) print('Error loading exercises: $e');
-      rethrow;
-    }
+    _exercises = results[0] as List<ApiExercise>;
+    _workouts = results[1] as List<ApiWorkout>;
+
+    // Sort data
+    _exercises.sort((a, b) => a.name.compareTo(b.name));
+    _workouts.sort((a, b) => a.name.compareTo(b.name));
   }
 
-  /// Load workouts with caching
-  Future<void> _loadWorkouts({bool forceReload = false}) async {
-    if (!forceReload && _cacheController.isWorkoutCacheValid) {
-      return; // Use cached data
-    }
-
+  /// Reload data (always fetches fresh data)
+  Future<void> reload() async {
     try {
-      final workouts = await _repository.getWorkouts();
-      _cacheController.updateWorkoutCache(workouts);
+      _setLoading(true);
+      await _loadData();
+      await _restoreFilterState();
     } catch (e) {
-      if (kDebugMode) print('Error loading workouts: $e');
-      rethrow;
+      _setError('Error reloading data: $e');
+    } finally {
+      _setLoading(false);
     }
   }
 
   /// Show all exercises with training metadata
   Future<void> showAllExercises() async {
     try {
-      _filteredExercises = _cacheController.cachedExercises;
+      _filteredExercises = _exercises;
       _metainfo = [];
 
       if (_filteredExercises.isEmpty) {
@@ -132,9 +117,9 @@ class LandingController extends ChangeNotifier {
     try {
       _filterController.setWorkoutFilter(workout);
 
-      final allExercises = _cacheController.cachedExercises;
-      final exerciseNames = _filterController.getFilteredExerciseNames(
-          allExercises, _cacheController.cachedWorkouts);
+      final allExercises = _exercises;
+      final exerciseNames =
+          _filterController.getFilteredExerciseNames(allExercises, _workouts);
 
       _filteredExercises =
           allExercises.where((ex) => exerciseNames.contains(ex.name)).toList();
@@ -151,9 +136,9 @@ class LandingController extends ChangeNotifier {
     try {
       _filterController.setMuscleFilter(muscle);
 
-      final allExercises = _cacheController.cachedExercises;
-      final exerciseNames = _filterController.getFilteredExerciseNames(
-          allExercises, _cacheController.cachedWorkouts);
+      final allExercises = _exercises;
+      final exerciseNames =
+          _filterController.getFilteredExerciseNames(allExercises, _workouts);
 
       _filteredExercises =
           allExercises.where((ex) => exerciseNames.contains(ex.name)).toList();
@@ -162,26 +147,6 @@ class LandingController extends ChangeNotifier {
       _notifyFilterChange();
     } catch (e) {
       _setError('Error applying muscle filter: $e');
-    }
-  }
-
-  /// Reload data (used when returning from other screens)
-  Future<void> reload({bool forceReload = true}) async {
-    try {
-      _setLoading(true);
-
-      // Force reload data
-      await Future.wait([
-        _loadExercises(forceReload: forceReload),
-        _loadWorkouts(forceReload: forceReload),
-      ]);
-
-      // Restore previous filter state
-      await _restoreFilterState();
-    } catch (e) {
-      _setError('Error reloading data: $e');
-    } finally {
-      _setLoading(false);
     }
   }
 
@@ -226,9 +191,23 @@ class LandingController extends ChangeNotifier {
     filterApplied.value = !filterApplied.value;
   }
 
+  void _onExerciseDataChanged() {
+    if (kDebugMode)
+      print('🔄 Exercise data changed - reloading landing screen');
+    reload();
+  }
+
   void _onAuthStateChanged() {
     resetWelcomeMessage();
-    reload(forceReload: true);
+    reload();
+  }
+
+  @override
+  void dispose() {
+    globals.exerciseDataChangedNotifier.removeListener(_onExerciseDataChanged);
+    _repository.authStateNotifier.removeListener(_onAuthStateChanged);
+    filterApplied.dispose();
+    super.dispose();
   }
 
   /// Build metainfo for all exercises

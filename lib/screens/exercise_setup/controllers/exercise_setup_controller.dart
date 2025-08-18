@@ -121,9 +121,10 @@ class ExerciseSetupController extends ChangeNotifier {
 
     _setLoading(true);
     try {
+      bool added_finished = false;
       if (kDebugMode) print('🔧 Starting exercise save process...');
 
-      await _addExercise(
+      added_finished = await _addExercise(
         exerciseTitleController.text,
         _chosenDevice,
         _minRep.toInt(),
@@ -136,6 +137,13 @@ class ExerciseSetupController extends ChangeNotifier {
 
       if (kDebugMode) print('🔧 Notifying data service...');
       _container.dataService.notifyDataChanged();
+
+      // // Wait for cache invalidation to complete by forcing a fresh fetch
+      // if (kDebugMode) print('🔧 Ensuring cache is refreshed...');
+      // await _container.exerciseService.getExercises();
+
+      await Future.delayed(const Duration(milliseconds: 1500));
+      //TODO: workaround to wait for cache invalidation, there must be a better solution
 
       if (kDebugMode) print('✅ All operations completed successfully');
       _clearError();
@@ -182,7 +190,7 @@ class ExerciseSetupController extends ChangeNotifier {
   }
 
   // Helper methods
-  Future<void> _addExercise(String exerciseName, ExerciseDevice chosenDevice,
+  Future _addExercise(String exerciseName, ExerciseDevice chosenDevice,
       int minRep, int maxRep, double weightInc) async {
     if (kDebugMode) print('🔧 add_exercise: Starting with name: $exerciseName');
 
@@ -266,6 +274,7 @@ class ExerciseSetupController extends ChangeNotifier {
       if (kDebugMode)
         print('✅ add_exercise: New exercise created successfully');
     }
+    return true;
   }
 
   Future<void> _getExerciseList() async {

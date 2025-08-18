@@ -10,7 +10,9 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart' show compute, kDebugMode;
 import 'package:http/http.dart' as http;
 import '../../config/api_config.dart';
+import 'api_cache.dart';
 
+const bool useCache = true; // Set to false to disable caching
 // Main API base URL - Azure hosted backend service
 const String baseUrl = kDebugMode
     //? 'http://127.0.0.1:8000'
@@ -19,9 +21,21 @@ const String baseUrl = kDebugMode
 
 // Map<String, String> defaultHeaders = {'Content-Type': 'application/json', 'X-API-Key': ApiConfig.apiKey! };
 final http.Client _httpClient = http.Client();
+final ApiCache _cache = ApiCache();
 Map<String, String> get defaultHeaders => ApiConfig.getHeaders();
 
 Future<T> getData<T>(String url) async {
+  // Check cache first
+  if (useCache) {
+    final cached = _cache.get<T>(url);
+    if (cached != null) {
+      if (kDebugMode) {
+        print('DEBUG API: Cache hit for $url');
+      }
+      return cached;
+    }
+  }
+
   try {
     final response = await _httpClient
         .get(Uri.parse('$baseUrl/$url'), headers: defaultHeaders)
@@ -30,6 +44,12 @@ Future<T> getData<T>(String url) async {
     if (response.statusCode == 200 || response.statusCode == 204) {
       // Parse JSON in isolate for large responses
       final decoded = await _parseJsonInIsolate(response.body);
+
+      // Cache the result
+      if (useCache) {
+        _cache.put(url, decoded);
+      }
+
       return decoded;
     } else {
       throw Exception("Failed to fetch $url: ${response.statusCode}");
@@ -57,6 +77,10 @@ Future deleteData(String url) async {
   if (response.statusCode != 200 && response.statusCode != 204) {
     throw Exception('Failed to delete');
   }
+
+  // Invalidate related cache entries
+  _invalidateCacheForMutation(url);
+
   return response;
 }
 
@@ -66,16 +90,58 @@ Future updateData<T>(String url, T data) async {
   if (response.statusCode != 200) {
     throw Exception('Failed to update');
   }
+
+  // Invalidate related cache entries
+  _invalidateCacheForMutation(url);
+
   return response;
 }
 
 Future createData<T>(String url, T data) async {
+  // Invalidate related cache entries
+  // _invalidateCacheForMutation(url);
   final response = await http.post(Uri.parse('$baseUrl/$url'),
       headers: defaultHeaders, body: json.encode(data));
   if (response.statusCode != 200 && response.statusCode != 201) {
     throw Exception('Failed to create');
   }
+
+  // Invalidate related cache entries
+  _invalidateCacheForMutation(url);
+
   return response.body;
+}
+
+void _invalidateCacheForMutation(String url) {
+  if (kDebugMode) {
+    print('DEBUG API: Invalidating cache for $url');
+  }
+  // Smart cache invalidation based on the endpoint
+  if (url.contains('exercises')) {
+    _cache.invalidateByPattern('exercises');
+  } else if (url.contains('workouts')) {
+    _cache.invalidateByPattern('workouts');
+    _cache.invalidateByPattern('workout_units');
+  } else if (url.contains('training_sets')) {
+    _cache.invalidateByPattern('training_sets');
+  } else if (url.contains('activities')) {
+    _cache.invalidateByPattern('activities');
+    _cache.invalidateByPattern('activity_logs');
+  } else if (url.contains('food')) {
+    _cache.invalidateByPattern('foods');
+    _cache.invalidateByPattern('food_logs');
+  } else if (url.contains('calendar')) {
+    _cache.invalidateByPattern('calendar');
+    _cache.invalidateByPattern('periods');
+  } else {
+    // Fallback: clear everything for unknown endpoints
+    _cache.clear();
+  }
+}
+
+// Add this function to be called when user logs in
+void clearApiCache() {
+  _cache.clear();
 }
 
 //----------------- Exercise Service -----------------//

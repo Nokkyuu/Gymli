@@ -83,8 +83,12 @@ class _AppDrawerState extends State<AppDrawer> {
                 MaterialPageRoute(
                   builder: (context) => ExerciseSetupScreen(""),
                 ),
-              );
-              widget.getExerciseList();
+              ).then((_) {
+                widget.getExerciseList(); // Keep this for global list
+                globals
+                    .notifyExerciseDataChanged(); // Add this to notify landing screen
+              });
+
               for (var i in globals.muscle_val.keys) {
                 globals.muscle_val[i] = 0;
               }
