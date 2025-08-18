@@ -73,11 +73,6 @@ class _LandingChoiceScreenState extends State<LandingChoiceScreen> {
         ApiConfig.accessToken != 'DEBUG_MODE_NO_API_KEY' &&
         ApiConfig.accessToken != 'DEBUG_MODE_ERROR';
 
-    if (kDebugMode) {
-      print(
-          'LandingScreen: Token check: ${hasToken ? "✓ Token set" : "✗ No token"}');
-    }
-
     return hasToken;
   }
 

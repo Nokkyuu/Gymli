@@ -7,7 +7,7 @@
 library;
 
 import 'dart:convert';
-import 'package:flutter/foundation.dart' show kDebugMode;
+import 'package:flutter/foundation.dart' show compute, kDebugMode;
 import 'package:http/http.dart' as http;
 import '../../config/api_config.dart';
 
@@ -18,21 +18,34 @@ const String baseUrl = kDebugMode
     : 'https://gymliapi-gyg0ardqh5dadaba.germanywestcentral-01.azurewebsites.net';
 
 // Map<String, String> defaultHeaders = {'Content-Type': 'application/json', 'X-API-Key': ApiConfig.apiKey! };
+final http.Client _httpClient = http.Client();
 Map<String, String> get defaultHeaders => ApiConfig.getHeaders();
 
 Future<T> getData<T>(String url) async {
   try {
-    final response =
-        await http.get(Uri.parse('$baseUrl/$url'), headers: defaultHeaders);
+    final response = await _httpClient
+        .get(Uri.parse('$baseUrl/$url'), headers: defaultHeaders)
+        .timeout(const Duration(seconds: 30)); // Add timeout
+
     if (response.statusCode == 200 || response.statusCode == 204) {
-      final decoded = json.decode(response.body);
+      // Parse JSON in isolate for large responses
+      final decoded = await _parseJsonInIsolate(response.body);
       return decoded;
     } else {
-      throw Exception("Failed to fetch" + url + ":" + "${response.statusCode}");
+      throw Exception("Failed to fetch $url: ${response.statusCode}");
     }
   } catch (e) {
-    // TODO: MAYBE LOGGING!
     rethrow;
+  }
+}
+
+// Add JSON parsing in isolate
+Future<dynamic> _parseJsonInIsolate(String jsonString) async {
+  if (jsonString.length > 1000) {
+    // Parse large JSON in isolate to avoid blocking main thread
+    return await compute(json.decode, jsonString);
+  } else {
+    return json.decode(jsonString);
   }
 }
 

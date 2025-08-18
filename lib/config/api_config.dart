@@ -59,24 +59,13 @@ class ApiConfig {
 
     if (_apiKey != null) {
       headers['X-API-Key'] = _apiKey!;
-      if (kDebugMode) {
-        print('API Key being sent: ${_apiKey!.substring(0, 8)}...');
-      }
     } else {
       if (kDebugMode) {
         print('WARNING: No API key available!');
       }
     }
-
     if (_accessToken != null) {
       headers['Authorization'] = 'Bearer $_accessToken';
-      if (kDebugMode) {
-        print('JWT token being sent: ${_accessToken!.substring(0, 20)}...');
-      }
-    }
-
-    if (kDebugMode) {
-      print('Headers being sent: ${headers.keys.toList()}');
     }
 
     return headers;
