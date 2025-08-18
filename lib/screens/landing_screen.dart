@@ -47,7 +47,9 @@ class _LandingScreenState extends State<LandingScreen> {
     );
 
     // Initialize the landing screen
-    _landingController.initialize();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _landingController.initialize();
+    });
   }
 
   @override

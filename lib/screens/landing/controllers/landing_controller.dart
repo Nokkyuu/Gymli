@@ -19,6 +19,7 @@ class LandingController extends ChangeNotifier {
   bool _isLoading = true;
   String? _errorMessage;
   bool _hasShownWelcomeMessage = false;
+  bool _isInitialized = false;
 
   // Notifier for filter changes
   final ValueNotifier<bool> filterApplied = ValueNotifier<bool>(true);
@@ -51,8 +52,11 @@ class LandingController extends ChangeNotifier {
 
   /// Initialize the landing screen
   Future<void> initialize() async {
+    if (_isInitialized) return; // Prevent multiple initializations
+
     _setLoading(true);
     _clearError();
+    _isInitialized = true;
 
     try {
       // Load initial data
@@ -67,6 +71,7 @@ class LandingController extends ChangeNotifier {
       // Listen to auth state changes
       _repository.authStateNotifier.addListener(_onAuthStateChanged);
     } catch (e) {
+      _isInitialized = false; // Reset on error
       _setError('Failed to initialize: $e');
     } finally {
       _setLoading(false);
