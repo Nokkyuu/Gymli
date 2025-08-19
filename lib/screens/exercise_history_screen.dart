@@ -14,11 +14,13 @@ import 'exercise_history/controller/history_list_controller.dart';
 final _setTypeIcons = setIcons;
 
 class ExerciseListScreen extends StatefulWidget {
+  final int exerciseId;
   final String exercise;
   final VoidCallback? onSetDeleted;
   final ExerciseRepository? exerciseRepository;
 
   const ExerciseListScreen(
+    this.exerciseId,
     this.exercise, {
     super.key,
     this.onSetDeleted,
@@ -46,6 +48,7 @@ class _ExerciseListScreenState extends State<ExerciseListScreen> {
   void initState() {
     super.initState();
     controller = HistoryListController(
+      exerciseId: widget.exerciseId,
       exercise: widget.exercise,
       exerciseRepository: widget.exerciseRepository,
     );

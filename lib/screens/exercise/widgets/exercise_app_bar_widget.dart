@@ -9,6 +9,7 @@ import '../../../utils/themes/themes.dart';
 
 class ExerciseAppBarWidget extends StatelessWidget
     implements PreferredSizeWidget {
+  final int exerciseId;
   final String exerciseName;
   final ExerciseController exerciseController;
   final ExercisePhaseController phaseController;
@@ -17,6 +18,7 @@ class ExerciseAppBarWidget extends StatelessWidget
 
   const ExerciseAppBarWidget({
     super.key,
+    required this.exerciseId,
     required this.exerciseName,
     required this.phaseController,
     required this.animationController,
@@ -132,6 +134,7 @@ class ExerciseAppBarWidget extends StatelessWidget
           context,
           MaterialPageRoute(
             builder: (context) => ExerciseListScreen(
+              exerciseId,
               exerciseName,
               onSetDeleted: () =>
                   exerciseController.refreshTodaysTrainingSets(),

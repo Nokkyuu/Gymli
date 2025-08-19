@@ -102,6 +102,11 @@ class ServiceContainer {
     return await trainingSetService.getLastTrainingDatesPerExercise();
   }
 
+  Future getTrainingSetsForExercise() async {
+    return true;
+    //TODO:implement
+  }
+
   Future<Map<String, Map<String, dynamic>>> getLastTrainingDaysForExercises(
     List<String> exerciseNames,
   ) async {

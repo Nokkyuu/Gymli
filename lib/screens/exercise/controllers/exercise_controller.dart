@@ -84,8 +84,7 @@ class ExerciseController extends ChangeNotifier {
       _updateWorkoutCounts();
 
       // Update graph
-      final allTrainingSets =
-          await _repository.getTrainingSetsForExercise(exerciseName);
+      final allTrainingSets = await _repository.getTrainingSetsForExercise();
       _graphController.updateGraphFromTrainingSets(allTrainingSets);
 
       // Update color mapping
@@ -143,8 +142,7 @@ class ExerciseController extends ChangeNotifier {
       final graphUpdated = _graphController.updateGraphWithNewSet(newSet);
       if (!graphUpdated) {
         // Fallback to full graph update
-        final allTrainingSets =
-            await _repository.getTrainingSetsForExercise(exerciseName);
+        final allTrainingSets = await _repository.getTrainingSetsForExercise();
         _graphController.updateGraphFromTrainingSets(allTrainingSets);
       }
 
@@ -171,8 +169,8 @@ class ExerciseController extends ChangeNotifier {
 
         // Update graph
         if (_currentExercise != null) {
-          final allTrainingSets = await _repository
-              .getTrainingSetsForExercise(_currentExercise!.name);
+          final allTrainingSets =
+              await _repository.getTrainingSetsForExercise();
           _graphController.updateGraphFromTrainingSets(allTrainingSets);
         }
 
@@ -234,8 +232,7 @@ class ExerciseController extends ChangeNotifier {
   /// Refresh graph data with latest training sets
   Future<void> refreshGraphData(String exerciseName) async {
     try {
-      final allTrainingSets =
-          await _repository.getTrainingSetsForExercise(exerciseName);
+      final allTrainingSets = await _repository.getTrainingSetsForExercise();
       _graphController.updateGraphFromTrainingSets(allTrainingSets);
     } catch (e) {
       print('Error refreshing graph data: $e');
@@ -392,8 +389,7 @@ class ExerciseController extends ChangeNotifier {
 
     try {
       // Get all training sets for this exercise
-      final allTrainingSets =
-          await _repository.getTrainingSetsForExercise(_currentExercise!.name);
+      final allTrainingSets = await _repository.getTrainingSetsForExercise();
 
       if (allTrainingSets.isEmpty) return null;
 

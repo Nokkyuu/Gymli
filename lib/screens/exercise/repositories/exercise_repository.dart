@@ -2,6 +2,8 @@ import 'package:Gymli/utils/services/service_container.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
 import '../../../utils/api/api_models.dart';
 
+//TODO: Lokale cache logik für den exercise screen überarbeiten
+
 /// Repository class that handles all exercise-related data operations
 /// Provides a clean interface between the UI and data sources
 class ExerciseRepository {
@@ -9,27 +11,27 @@ class ExerciseRepository {
   List<ApiTrainingSet>? _cachedTrainingSets;
   List<dynamic>? _cachedExercises;
   DateTime? _lastCacheUpdate;
+  int? _currentExerciseId;
 
   static const Duration _cacheValidityDuration = Duration(minutes: 5);
 
   ServiceContainer get container => ServiceContainer();
 
   /// Get all training sets for a specific exercise
-  Future<List<ApiTrainingSet>> getTrainingSetsForExercise(
-      String exerciseName) async {
+  Future<List<ApiTrainingSet>> getTrainingSetsForExercise() async {
     await _ensureCacheIsValid();
 
     if (_cachedTrainingSets == null) return [];
 
     return _cachedTrainingSets!
-        .where((set) => set.exerciseName == exerciseName)
+        .where((set) => set.exerciseId == _currentExerciseId)
         .toList();
   }
 
   /// Get today's training sets for a specific exercise
   Future<List<ApiTrainingSet>> getTodaysTrainingSetsForExercise(
       String exerciseName) async {
-    final allSets = await getTrainingSetsForExercise(exerciseName);
+    final allSets = await getTrainingSetsForExercise();
     final today = DateTime.now();
 
     return allSets
@@ -147,6 +149,10 @@ class ExerciseRepository {
     await _ensureCacheIsValid();
   }
 
+  void setCurrentExerciseId(int exerciseId) {
+    _currentExerciseId = exerciseId;
+  }
+
   /// Private helper to ensure cache is valid and up-to-date
   Future<void> _ensureCacheIsValid() async {
     final now = DateTime.now();
@@ -161,9 +167,14 @@ class ExerciseRepository {
 
   /// Private helper to update the cache
   Future<void> _updateCache() async {
+    if (_currentExerciseId == null) {
+      if (kDebugMode) print('No exercise ID set for cache update');
+      return;
+    }
+
     try {
       final results = await Future.wait([
-        container.trainingSetService.getTrainingSets(),
+        container.trainingSetService.getTrainingSetsByID(_currentExerciseId!),
         container.exerciseService.getExercises(),
       ]);
 

@@ -409,4 +409,16 @@ class TrainingSetService {
           .getTrainingSets(userName: 'DefaultUser'),
     );
   }
+
+  Future<List<dynamic>> getTrainingSetsByID(int exerciseId) async {
+    return await _dataService.getData(
+      'trainingSets',
+      // API call for authenticated users
+      () async => await api.TrainingSetService().getTrainingSetsForExercise(
+          exerciseId: exerciseId, userName: userName),
+      // Fallback API call for non-authenticated users
+      () async => await api.TrainingSetService().getTrainingSetsForExercise(
+          exerciseId: exerciseId, userName: 'DefaultUser'),
+    );
+  }
 }

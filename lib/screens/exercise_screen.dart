@@ -15,11 +15,13 @@ import 'exercise/widgets/exercise_app_bar_widget.dart';
 import 'exercise/widgets/animated_text_widget.dart';
 
 class ExerciseScreen extends StatefulWidget {
+  final int exerciseId;
   final String exerciseName;
   final String workoutDescription;
   final void Function(Color)? onPhaseColorChanged;
 
-  const ExerciseScreen(this.exerciseName, this.workoutDescription,
+  const ExerciseScreen(
+      this.exerciseId, this.exerciseName, this.workoutDescription,
       {super.key, this.onPhaseColorChanged});
 
   @override
@@ -46,6 +48,7 @@ class _ExerciseScreenState extends State<ExerciseScreen>
   void _initializeComponents() async {
     // Initialize controllers
     _repository = ExerciseRepository();
+    _repository.setCurrentExerciseId(widget.exerciseId);
     _exerciseController = ExerciseController(repository: _repository);
     _timerController = ExerciseTimerController();
     _phaseController = ExercisePhaseController(
@@ -98,6 +101,7 @@ class _ExerciseScreenState extends State<ExerciseScreen>
     return Scaffold(
       resizeToAvoidBottomInset: false,
       appBar: ExerciseAppBarWidget(
+        exerciseId: widget.exerciseId,
         exerciseName: widget.exerciseName,
         phaseController: _phaseController,
         animationController: _animationController,

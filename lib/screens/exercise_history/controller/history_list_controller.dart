@@ -6,6 +6,7 @@ import '../../exercise_history_screen.dart';
 
 class HistoryListController {
   final String exercise;
+  final int exerciseId;
   final ExerciseRepository? exerciseRepository;
   final ServiceContainer container = ServiceContainer();
 
@@ -14,17 +15,19 @@ class HistoryListController {
 
   HistoryListController({
     required this.exercise,
+    required this.exerciseId,
     this.exerciseRepository,
   });
 
   Future<void> loadTrainingSets() async {
     isLoading.value = true;
     try {
-      final data = await container.trainingSetService.getTrainingSets();
+      final data =
+          await container.trainingSetService.getTrainingSetsByID(exerciseId);
       final trainingSets =
           data.map((item) => ApiTrainingSet.fromJson(item)).toList();
       final filtered =
-          trainingSets.where((item) => item.exerciseName == exercise).toList();
+          trainingSets.where((item) => item.exerciseId == exerciseId).toList();
       filtered.sort((a, b) => b.date.compareTo(a.date));
 
       List<ListEntry> newEntries = [];

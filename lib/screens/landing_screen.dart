@@ -150,6 +150,7 @@ class _LandingScreenState extends State<LandingScreen> {
       context,
       MaterialPageRoute(
         builder: (context) => ExerciseScreen(
+          exercise.id,
           exercise.name,
           description,
           onPhaseColorChanged: widget.onPhaseColorChanged,

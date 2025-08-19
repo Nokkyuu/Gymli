@@ -294,6 +294,12 @@ class TrainingSetService {
     return getData<List<dynamic>>('training_sets?user_name=$userName');
   }
 
+  Future<List<dynamic>> getTrainingSetsForExercise(
+      {required String userName, required int exerciseId}) async {
+    return getData<List<dynamic>>(
+        'training_sets/exercise/$exerciseId?user_name=$userName');
+  }
+
   /// Retrieves a specific training set by its ID
   /// [id] - The unique identifier of the training set
   /// Returns a map containing training set details
