@@ -4,7 +4,7 @@
 /// and sets up the main app widgets
 library;
 
-import 'package:Gymli/widgets/landing_choice_screen.dart';
+import 'package:Gymli/config/app_router.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -104,7 +104,7 @@ class _MainAppState extends State<MainApp> {
           final ThemeData themeData =
               buildAppTheme(themeService.mode, themeService.primaryColor);
 
-          return MaterialApp(
+          return MaterialApp.router(
             theme: themeData,
             localizationsDelegates: const [
               GlobalMaterialLocalizations.delegate,
@@ -117,7 +117,7 @@ class _MainAppState extends State<MainApp> {
               Locale('de', 'DE'),
             ],
             title: 'Gymli Gainson',
-            home: const LandingChoiceScreen(),
+            routerConfig: AppRouter.createRouter(),
           );
         },
       ),

@@ -10,7 +10,6 @@ import 'activity/widgets/activity_log_tab.dart';
 import 'activity/widgets/activity_history_tab.dart';
 import 'activity/widgets/activity_manage_tab.dart';
 import '../utils/themes/responsive_helper.dart';
-import '../utils/info_dialogues.dart';
 
 class ActivityScreen extends StatefulWidget {
   const ActivityScreen({super.key});
@@ -107,22 +106,19 @@ class _ActivityScreenState extends State<ActivityScreen>
           }
 
           return Scaffold(
-            appBar: AppBar(
-              title: const Text('Activity Tracker'),
-              actions: [
-                IconButton(
-                  icon: const Icon(Icons.info_outline),
-                  onPressed: () => showInfoDialogActivitySetup(context),
+            body: Column(
+              children: [
+                TabBar(
+                  controller: _tabController!,
+                  tabs: _buildTabs(),
+                ),
+                Expanded(
+                  child: TabBarView(
+                    controller: _tabController!,
+                    children: _buildTabViews(),
+                  ),
                 ),
               ],
-              bottom: TabBar(
-                controller: _tabController!,
-                tabs: _buildTabs(),
-              ),
-            ),
-            body: TabBarView(
-              controller: _tabController!,
-              children: _buildTabViews(),
             ),
           );
         },

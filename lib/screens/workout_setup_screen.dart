@@ -2,11 +2,10 @@
 ///create or edit Workouts by adding or removing Workout Units (Exercises with a set amount of warmup and work sets)
 library;
 
-import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
 import '../utils/themes/responsive_helper.dart';
-import '../utils/info_dialogues.dart';
 import 'workout_setup/workout_setup_exports.dart';
 
 //TODO: raarrange desktop layout, showing the radar chart for muslce activity distribution
@@ -44,8 +43,6 @@ class _WorkoutSetupScreenState extends State<WorkoutSetupScreen> {
 
   @override
   Widget build(BuildContext context) {
-    const title = 'Workout Editor';
-
     return MultiProvider(
       providers: [
         ChangeNotifierProvider.value(value: _workoutController),
@@ -53,30 +50,6 @@ class _WorkoutSetupScreenState extends State<WorkoutSetupScreen> {
       ],
       child: Scaffold(
         resizeToAvoidBottomInset: false,
-        appBar: AppBar(
-          leading: InkWell(
-            onTap: () {
-              Navigator.pop(context);
-            },
-            child: const Icon(Icons.arrow_back_ios),
-          ),
-          title: const Text(title),
-          centerTitle: true,
-          actions: [
-            buildInfoButton('Workout Setup Info', context,
-                () => showInfoDialogWorkoutSetup(context)),
-            Consumer<WorkoutSetupController>(
-              builder: (context, controller, child) {
-                return IconButton(
-                  onPressed: controller.currentWorkout?.id != null
-                      ? () => _showDeleteDialog(context, controller)
-                      : null,
-                  icon: const Icon(Icons.delete),
-                );
-              },
-            ),
-          ],
-        ),
         body: Consumer<WorkoutSetupController>(
           builder: (context, controller, child) {
             if (controller.isLoading) {

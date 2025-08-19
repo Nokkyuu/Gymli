@@ -1,7 +1,8 @@
 import 'package:Gymli/config/api_config.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
-import '../widgets/main_app_widget.dart';
+import 'package:go_router/go_router.dart';
+import '../config/app_router.dart';
 import '../utils/services/service_container.dart';
 import '../utils/services/auth0_service.dart';
 
@@ -77,15 +78,11 @@ class _LandingChoiceScreenState extends State<LandingChoiceScreen> {
   }
 
   void _proceedToMainApp() {
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(
-        builder: (_) => const MainAppWidget(),
-      ),
-    );
+    context.go(AppRouter.main);
   }
 
   Future<void> _login() async {
-    if (!_isInitialized || _authService.auth0 == null) {
+    if (!_isInitialized) {
       print('Auth0 not initialized');
       return;
     }
