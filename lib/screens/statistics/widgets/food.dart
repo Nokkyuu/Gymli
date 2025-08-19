@@ -72,13 +72,13 @@ class _StatsScreenState extends State<FoodStatsScreen> {
   void _loadNutritionStats() async {
     try {
       final dateRange = _getDateRange();
-      final stats = await container.foodService.getFoodLogStats(
+      final stats = await container.getFoodLogStats(
         startDate: dateRange['start']!,
         endDate: dateRange['end']!,
       );
 
       // Load daily data for the chart
-      final dailyData = await container.foodService.getDailyFoodLogStats(
+      final dailyData = await container.getDailyFoodLogStats(
         startDate: dateRange['start']!,
         endDate: dateRange['end']!,
       );

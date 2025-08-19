@@ -22,7 +22,7 @@ class LandingRepository {
   /// Get all workouts from the service
   Future<List<ApiWorkout>> getWorkouts() async {
     try {
-      final workouts = await container.workoutService.getWorkouts();
+      final workouts = await container.getWorkouts();
       return workouts.map((w) => ApiWorkout.fromJson(w)).toList();
     } catch (e) {
       if (kDebugMode) print('Error getting workouts: $e');
@@ -34,8 +34,7 @@ class LandingRepository {
   Future<Map<String, Map<String, dynamic>>> getLastTrainingDaysForExercises(
       List<String> exerciseNames) async {
     try {
-      return await container.trainingSetService
-          .getLastTrainingDaysForExercises(exerciseNames);
+      return await container.getLastTrainingDatesPerExercise(exerciseNames);
     } catch (e) {
       if (kDebugMode) print('Error getting last training days: $e');
       rethrow;

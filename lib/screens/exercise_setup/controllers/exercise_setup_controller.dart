@@ -135,8 +135,8 @@ class ExerciseSetupController extends ChangeNotifier {
       if (kDebugMode) print('🔧 Calling get_exercise_list...');
       await _getExerciseList();
 
-      if (kDebugMode) print('🔧 Notifying data service...');
-      _container.dataService.notifyDataChanged();
+      //if (kDebugMode) print('🔧 Notifying data service...');
+      _container.notifyDataChanged();
 
       // // Wait for cache invalidation to complete by forcing a fresh fetch
       // if (kDebugMode) print('🔧 Ensuring cache is refreshed...');
@@ -177,7 +177,7 @@ class ExerciseSetupController extends ChangeNotifier {
       if (kDebugMode) print('Deleting exercise $exerciseId');
       await _container.exerciseService.deleteExercise(exerciseId);
 
-      _container.dataService.notifyDataChanged();
+      _container.notifyDataChanged();
       _clearError();
       return true;
     } catch (e) {

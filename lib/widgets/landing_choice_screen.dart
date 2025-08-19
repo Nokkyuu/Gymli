@@ -105,14 +105,14 @@ class _LandingChoiceScreenState extends State<LandingChoiceScreen> {
     }
   }
 
-  void _openDemoMode() {
-    _container.authService.setCredentials(null); // Ensure logged out
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(
-        builder: (_) => const MainAppWidget(),
-      ),
-    );
-  }
+  // void _openDemoMode() {
+  //   _container.authService.setCredentials(null); // Ensure logged out
+  //   Navigator.of(context).pushReplacement(
+  //     MaterialPageRoute(
+  //       builder: (_) => const MainAppWidget(),
+  //     ),
+  //   );
+  // }
 
   @override
   void dispose() {
@@ -204,17 +204,17 @@ class _LandingChoiceScreenState extends State<LandingChoiceScreen> {
                         ),
                       ),
                       const SizedBox(height: 16),
-                      SizedBox(
-                        width: double.infinity,
-                        child: OutlinedButton.icon(
-                          icon: const Icon(Icons.visibility_off),
-                          label: const Text('Demo Mode'),
-                          style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                          ),
-                          onPressed: _openDemoMode,
-                        ),
-                      ),
+                      // SizedBox(
+                      //   width: double.infinity,
+                      //   child: OutlinedButton.icon(
+                      //     icon: const Icon(Icons.visibility_off),
+                      //     label: const Text('Demo Mode'),
+                      //     style: OutlinedButton.styleFrom(
+                      //       padding: const EdgeInsets.symmetric(vertical: 16),
+                      //     ),
+                      //     onPressed: _openDemoMode,
+                      //   ),
+                      // ),
                       const SizedBox(height: 24),
                       Text(
                         'Ready to join the fellowship of the Gym?',

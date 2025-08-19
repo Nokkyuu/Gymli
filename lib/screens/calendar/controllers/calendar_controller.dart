@@ -135,7 +135,7 @@ class CalendarController extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final periods = await _container.calendarService.getPeriods();
+      final periods = await _container.calendarService.getCalendarPeriods();
       _periods.clear();
       for (var p in periods) {
         _periods.add(CalendarPeriod.fromMap(p));
@@ -163,8 +163,8 @@ class CalendarController extends ChangeNotifier {
       } else {
         if (existingNote != null) {
           // Update existing note
-          await _container.calendarService.updateCalendarNote(existingNote.id!,
-              note: note, date: normalizedDate);
+          await _container.calendarService.updateCalendarNote(
+              id: existingNote.id!, note: note, date: normalizedDate);
           _notes[normalizedDate] = existingNote.copyWith(note: note);
         } else {
           // Create new note
@@ -235,7 +235,7 @@ class CalendarController extends ChangeNotifier {
       }
 
       final createdPeriod = await _container.calendarService
-          .createPeriod(type: type, startDate: start, endDate: end);
+          .createCalendarPeriod(type: type, start_date: start, end_date: end);
 
       _periods.add(CalendarPeriod(
         type: PeriodType.fromString(type),
@@ -255,7 +255,7 @@ class CalendarController extends ChangeNotifier {
   Future<String?> deletePeriod(CalendarPeriod period) async {
     try {
       if (period.id != null) {
-        await _container.calendarService.deletePeriod(period.id!);
+        await _container.calendarService.deleteCalendarPeriod(period.id!);
       }
       _periods.remove(period);
       notifyListeners();

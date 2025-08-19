@@ -48,7 +48,7 @@ class FoodDataController extends ChangeNotifier {
       // Load all data
       final foodsData = await container.foodService.getFoods();
       final logsData = await container.foodService.getFoodLogs();
-      final statsData = await container.foodService.getFoodLogStats();
+      final statsData = await container.getFoodLogStats();
 
       foods = foodsData.map((data) => ApiFood.fromJson(data)).toList();
       foodLogs = logsData.map((data) => ApiFoodLog.fromJson(data)).toList();
@@ -138,7 +138,7 @@ class FoodDataController extends ChangeNotifier {
     if (log.id == null) return;
 
     try {
-      await container.foodService.deleteFoodLog(log.id!);
+      await container.foodService.deleteFoodLog(logId: log.id!);
       await loadData(); // Reload data after deletion
     } catch (e) {
       if (kDebugMode) print('Error deleting food log: $e');
@@ -151,7 +151,7 @@ class FoodDataController extends ChangeNotifier {
     if (food.id == null) return;
 
     try {
-      await container.foodService.deleteFood(food.id!);
+      await container.foodService.deleteFood(foodId: food.id!);
       await loadData(); // Reload data after deletion
     } catch (e) {
       if (kDebugMode) print('Error deleting food: $e');

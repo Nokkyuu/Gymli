@@ -116,7 +116,7 @@ class ExerciseGraphController extends ChangeNotifier {
   Future<void> _loadPeriodData() async {
     try {
       final container = ServiceContainer();
-      final periods = await container.calendarService.getPeriods();
+      final periods = await container.calendarService.getCalendarPeriods();
       _periodTypes.clear(); // Clear period types
 
       if (_mostRecentTrainingDate == null) return;
