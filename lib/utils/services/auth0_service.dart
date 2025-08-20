@@ -10,6 +10,8 @@ import 'package:flutter/foundation.dart';
 //import 'user_service.dart';
 import 'app_initializer.dart';
 import 'package:Gymli/utils/services/temp_service.dart';
+import 'package:get_it/get_it.dart';
+import 'auth_service.dart';
 
 class Auth0Service extends ChangeNotifier {
   /// Class for managing authentication using Auth0.
@@ -23,10 +25,9 @@ class Auth0Service extends ChangeNotifier {
   /// - [dispose]: Cleans up resources when the service is no longer needed.
   Credentials? _credentials;
   late Auth0Web _auth0;
-  final TempService _TempService;
   //final UserService _userService;
 
-  Auth0Service(this._TempService);
+  Auth0Service();
 
   Credentials? get credentials => _credentials;
   Auth0Web get auth0 => _auth0;
@@ -50,7 +51,7 @@ class Auth0Service extends ChangeNotifier {
   Future<void> _loadStoredAuthState() async {
     try {
       final credentials =
-          await _TempService.authService.loadStoredAuthState();
+          await GetIt.I<AuthService>().loadStoredAuthState();
       if (credentials != null) {
         _setCredentials(credentials);
         if (kDebugMode) {
@@ -69,7 +70,7 @@ class Auth0Service extends ChangeNotifier {
 
     // Single source of truth: let AuthService handle all credential setting
     // This will also handle ApiConfig.setAccessToken internally
-    _TempService.authService.setCredentials(credentials);
+    GetIt.I<AuthService>().setCredentials(credentials);
 
     if (kDebugMode) {
       print(

@@ -5,6 +5,11 @@ import 'dart:convert';
 import '../../config/api_config.dart'; // Add this import
 import '../api/api.dart';
 
+class AuthManager {
+    bool loggedIn = true;
+    String userName = "Test";
+}
+
 class AuthService {
   /// Singleton instance for AuthService
   /// getter:

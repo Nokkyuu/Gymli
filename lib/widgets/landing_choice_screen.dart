@@ -28,7 +28,7 @@ class _LandingChoiceScreenState extends State<LandingChoiceScreen> {
   }
 
   Future<void> _initializeServices() async {
-    _authService = Auth0Service(_container);
+    _authService = Auth0Service();
     await _authService.initialize();
 
     // Listen to auth changes

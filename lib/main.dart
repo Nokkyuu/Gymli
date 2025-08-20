@@ -5,6 +5,7 @@
 library;
 
 import 'package:Gymli/config/app_router.dart';
+import 'package:Gymli/utils/services/auth_service.dart';
 import 'package:Gymli/utils/services/temp_service.dart';
 import 'package:Gymli/utils/workout_session_state.dart';
 import 'package:get_it/get_it.dart';
@@ -22,8 +23,10 @@ import 'package:flutter_native_splash/flutter_native_splash.dart';
 
 void main() async {
   GetIt.I.registerSingleton<TempService>(TempService());
-  GetIt.I.registerSingleton<WorkoutSessionManager>(WorkoutSessionManager());
   GetIt.I.registerSingleton<ExerciseService>(ExerciseService());
+  GetIt.I.registerSingleton<AuthManager>(AuthManager());
+  GetIt.I.registerSingleton<AuthService>(AuthService());
+  GetIt.I.registerSingleton<WorkoutSessionManager>(WorkoutSessionManager());
   
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding
       .ensureInitialized(); //required for async initialization, ensures that the Flutter engine is ready

@@ -167,8 +167,6 @@ class AppRouter {
 
         // Get auth service from the context if available
         try {
-          final container = GetIt.I<TempService>();
-          final exerciseContainer = GetIt.I<ExerciseService>();
           final isLoggedIn = container.authService.isLoggedIn;
 
           // If logged in but on landing page, redirect to main
@@ -240,8 +238,6 @@ class MainAppWrapper extends StatefulWidget {
 class _MainAppWrapperState extends State<MainAppWrapper> {
   String? _drawerImage;
   late Auth0Service _authService;
-  final container = GetIt.I<TempService>();
-  final exerciseService = GetIt.I<ExerciseService>();
   bool _isInitialized = false;
 
   //drawer images to circle through, without file extensions because they will be added dynamically and switch for dark mode
@@ -263,7 +259,7 @@ class _MainAppWrapperState extends State<MainAppWrapper> {
   }
 
   Future<void> _initializeServices() async {
-    _authService = Auth0Service(container);
+    _authService = Auth0Service();
 
     await _authService.initialize();
 
@@ -311,8 +307,6 @@ class _MainAppWrapperState extends State<MainAppWrapper> {
           drawer: AppDrawer(
             credentials: _authService.credentials,
             auth0: _authService.auth0,
-            container: container,
-            exerciseService: exerciseService,
             drawerImage: _drawerImage,
             drawerImages: drawerImages,
             isDarkMode: themeService.isDarkMode,

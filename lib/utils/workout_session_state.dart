@@ -5,6 +5,8 @@
 class WorkoutSessionState {
   late DateTime startTime;
   late DateTime lastExerciseTime;
+  int numExercises = 4;
+  int numWorkouts = 4;  // TODO: this needs endpoints!
   List<String> completedExercises = [];
   final Duration ttl; // Time to Live (z. B. 2 Stunden)
 

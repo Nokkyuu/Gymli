@@ -50,7 +50,7 @@ class _MainAppWidgetState extends State<MainAppWidget> {
   }
 
   Future<void> _initializeServices() async {
-    _authService = Auth0Service(container);
+    _authService = Auth0Service();
     _themeService = ThemeService();
 
     await _themeService.loadThemePreference();
@@ -118,8 +118,6 @@ class _MainAppWidgetState extends State<MainAppWidget> {
             drawer: AppDrawer(
               credentials: authService.credentials,
               auth0: authService.auth0,
-              container: container,
-              exerciseService: exerciseService,
               drawerImage: _drawerImage,
               drawerImages: drawerImages,
               isDarkMode: themeService.isDarkMode,
