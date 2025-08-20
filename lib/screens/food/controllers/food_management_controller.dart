@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../../../utils/services/temp_service.dart';
 import '../../../utils/api/api_models.dart';
+import 'package:get_it/get_it.dart';
 
 /// Component for ingredients when creating custom food
 class FoodComponent {
@@ -11,7 +12,7 @@ class FoodComponent {
 
 /// Controller for custom food creation and management
 class FoodManagementController extends ChangeNotifier {
-  final TempService container = TempService();
+  final TempService container = GetIt.I<TempService>();
 
   // Form controllers for custom food creation
   final TextEditingController customFoodNameController =

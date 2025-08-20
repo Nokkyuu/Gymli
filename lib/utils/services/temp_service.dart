@@ -10,7 +10,10 @@ import 'package:Gymli/utils/api/api_models.dart';
 String userName = 'DefaultUser';
 
 class TempService {
-  /// Singleton instance for TempService
+  TempService() {
+    _setupServices();
+  }
+
   // Core services
   late final AuthService authService;
 

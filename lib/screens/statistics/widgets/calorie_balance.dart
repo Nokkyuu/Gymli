@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:Gymli/utils/services/temp_service.dart';
 import '../../../utils/info_dialogues.dart';
+import 'package:get_it/get_it.dart';
 
 class CalorieBalanceScreen extends StatefulWidget {
   final String? startingDate;
@@ -23,7 +24,7 @@ class CalorieBalanceScreen extends StatefulWidget {
 }
 
 class _CalorieBalanceScreenState extends State<CalorieBalanceScreen> {
-  final TempService container = TempService();
+  final TempService container = GetIt.I<TempService>();
 
   // User data for metabolic rate calculation
   String? _sex;

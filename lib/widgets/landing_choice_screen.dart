@@ -5,6 +5,8 @@ import 'package:go_router/go_router.dart';
 import '../config/app_router.dart';
 import '../utils/services/temp_service.dart';
 import '../utils/services/auth0_service.dart';
+import 'package:get_it/get_it.dart';
+
 
 class LandingChoiceScreen extends StatefulWidget {
   const LandingChoiceScreen({super.key});
@@ -14,7 +16,7 @@ class LandingChoiceScreen extends StatefulWidget {
 }
 
 class _LandingChoiceScreenState extends State<LandingChoiceScreen> {
-  final _container = TempService();
+  final _container = GetIt.I<TempService>();
   late Auth0Service _authService;
   bool _loading = true;
   bool _isInitialized = false;

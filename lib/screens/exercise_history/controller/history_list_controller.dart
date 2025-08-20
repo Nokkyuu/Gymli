@@ -3,12 +3,13 @@ import 'package:Gymli/utils/services/temp_service.dart';
 import '../../../utils/api/api_models.dart';
 import '../../exercise/repositories/exercise_repository.dart';
 import '../../exercise_history_screen.dart';
+import 'package:get_it/get_it.dart';
 
 class HistoryListController {
   final String exercise;
   final int exerciseId;
   final ExerciseRepository? exerciseRepository;
-  final TempService container = TempService();
+  final TempService container = GetIt.I<TempService>();
 
   final ValueNotifier<List<ListEntry>> entries = ValueNotifier([]);
   final ValueNotifier<bool> isLoading = ValueNotifier(false);

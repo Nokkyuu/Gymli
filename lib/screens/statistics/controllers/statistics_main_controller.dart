@@ -13,6 +13,7 @@ import '../services/statistics_data_service.dart';
 import '../services/statistics_filter_service.dart';
 import '../services/statistics_calculation_service.dart';
 import '../services/statistics_coordinator.dart';
+import 'package:get_it/get_it.dart';
 
 //TODO: Refactor into smaller and more specialized controllers
 class StatisticsMainController extends ChangeNotifier {
@@ -91,7 +92,7 @@ class StatisticsMainController extends ChangeNotifier {
   ];
 
   StatisticsMainController({TempService? container})
-      : _container = container ?? TempService() {
+      : _container = container ?? GetIt.I<TempService>() {
     _initializeServices();
     _initializeDatePicker();
   }

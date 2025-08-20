@@ -1,6 +1,7 @@
 /// Exercise Screen - Main Workout Interface
 library;
 
+import 'package:Gymli/utils/workout_session_state.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../utils/themes/responsive_helper.dart';
@@ -14,6 +15,8 @@ import 'exercise/widgets/exercise_controls_widget.dart';
 import 'exercise/widgets/training_sets_list_widget.dart';
 import 'exercise/widgets/exercise_app_bar_widget.dart';
 import 'exercise/widgets/animated_text_widget.dart';
+import 'package:get_it/get_it.dart';
+
 
 class ExerciseScreen extends StatefulWidget {
   final int exerciseId;
@@ -240,6 +243,8 @@ class _ExerciseScreenState extends State<ExerciseScreen>
   }
 
   Future<void> _onSetAdded() async {
+    final workoutState = GetIt.I<WorkoutSessionManager>().getSession();
+    workoutState.addExercise(widget.exerciseName);
     await _exerciseController.refreshGraphData(widget.exerciseName);
     _timerController.updateLastActivity();
   }

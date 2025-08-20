@@ -3,10 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../../../utils/services/temp_service.dart';
 import '../../../utils/api/api_models.dart';
+import 'package:get_it/get_it.dart';
 
 /// Controller for managing food data, loading, and search functionality
 class FoodDataController extends ChangeNotifier {
-  final TempService container = TempService();
+  final TempService container = GetIt.I<TempService>();
 
   // Data lists
   List<ApiFood> foods = [];

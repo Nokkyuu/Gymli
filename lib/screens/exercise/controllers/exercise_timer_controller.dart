@@ -1,14 +1,19 @@
 import 'dart:async';
 import 'dart:js_interop';
+import 'package:Gymli/utils/workout_session_state.dart';
 import 'package:flutter/material.dart';
 import '../../../utils/globals.dart' as globals;
 import 'package:web/web.dart' as html;
+import 'package:get_it/get_it.dart';
+
 
 /// Controller for managing timer functionality and idle notifications
 class ExerciseTimerController extends ChangeNotifier {
   Timer? _timer;
-  DateTime _lastActivity = DateTime
-      .now(); // TODO: change to a function getting the true last activity for the day?
+  // DateTime _lastActivity = GetIt.I<WorkoutSessionManager>().getSession().lastExerciseTime;
+  DateTime _lastActivity = DateTime.now(); // Default to now if no session exists
+
+
   DateTime _workoutStartTime = DateTime.now();
   String _timerText = "";
 
@@ -20,7 +25,8 @@ class ExerciseTimerController extends ChangeNotifier {
   /// Initialize the timer
   void initialize({DateTime? workoutStart, DateTime? lastActivity}) {
     _workoutStartTime = workoutStart ?? DateTime.now();
-    _lastActivity = lastActivity ?? DateTime.now();
+    final workoutSession = GetIt.I<WorkoutSessionManager>().getSession();
+    _lastActivity = workoutSession.lastExerciseTime;
 
     _startTimer();
     _updateTimerText();

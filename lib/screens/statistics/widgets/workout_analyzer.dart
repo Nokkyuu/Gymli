@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'dart:math';
 import 'package:Gymli/utils/services/temp_service.dart';
+import 'package:get_it/get_it.dart';
 
 class WorkoutAnalyzerScreen extends StatefulWidget {
   final String? startingDate;
@@ -21,7 +22,7 @@ class WorkoutAnalyzerScreen extends StatefulWidget {
 }
 
 class _WorkoutAnalyzerScreenState extends State<WorkoutAnalyzerScreen> {
-  final TempService container = TempService();
+  final TempService container = GetIt.I<TempService>();
 
   List<Map<String, dynamic>> _workouts = [];
   List<Map<String, dynamic>> _exercises = [];

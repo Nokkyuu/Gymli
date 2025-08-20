@@ -1,6 +1,7 @@
 import 'package:Gymli/utils/services/temp_service.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
 import '../../../utils/api/api_models.dart';
+import 'package:get_it/get_it.dart';
 
 //TODO: Lokale cache logik für den exercise screen überarbeiten
 
@@ -15,7 +16,7 @@ class ExerciseRepository {
 
   static const Duration _cacheValidityDuration = Duration(minutes: 5);
 
-  TempService get container => TempService();
+  TempService get container => GetIt.I<TempService>();
 
   /// Get all training sets for a specific exercise
   Future<List<ApiTrainingSet>> getTrainingSetsForExercise() async {

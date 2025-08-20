@@ -5,9 +5,10 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:Gymli/utils/services/temp_service.dart';
 import '../../../utils/api/api_models.dart';
+import 'package:get_it/get_it.dart';
 
 class ActivityController extends ChangeNotifier {
-  final TempService container = TempService();
+  final TempService container = GetIt.I<TempService>();
 
   // Data lists
   List<ApiActivity> activities = [];

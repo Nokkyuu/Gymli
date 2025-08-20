@@ -8,6 +8,7 @@ import '../../config/api_config.dart';
 import '../globals.dart' as globals;
 import '../api/api.dart';
 //import 'user_service.dart';
+import 'package:get_it/get_it.dart';
 
 class AppInitializer {
   static const String _auth0Domain = 'dev-aqz5a2g54oer01tk.us.auth0.com';
@@ -49,7 +50,7 @@ class AppInitializer {
       if (kDebugMode) print('✓ Auth0 initialized');
 
       // 4. Initialize UserService
-      await TempService().initialize();
+      await GetIt.I<TempService>().initialize();
       if (kDebugMode) print('✓ UserService Container initialized');
 
       await _initializeUserService();
@@ -102,9 +103,9 @@ class AppInitializer {
     try {
       // Try to load stored authentication state
       final credentials =
-          await TempService().authService.loadStoredAuthState();
+          await GetIt.I<TempService>().authService.loadStoredAuthState();
       if (credentials != null) {
-        TempService().authService.setCredentials(credentials);
+        GetIt.I<TempService>().authService.setCredentials(credentials);
       }
     } catch (e) {
       print('No stored authentication state found: $e');
@@ -126,7 +127,7 @@ class AppInitializer {
 
       //await Future.delayed(const Duration(milliseconds: 100)); TODO: probably not needed anymore, recheck later
 
-      final exercises = await TempService().exerciseService.getExercises();
+      final exercises = await GetIt.I<TempService>().exerciseService.getExercises();
 
       globals.exerciseList =
           exercises.map<String>((e) => e['name'] as String).toList();
