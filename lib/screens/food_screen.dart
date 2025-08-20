@@ -7,7 +7,6 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 import '../utils/themes/responsive_helper.dart';
-import '../utils/info_dialogues.dart';
 import 'food/food_setup_exports.dart';
 
 class FoodScreen extends StatefulWidget {
@@ -110,22 +109,19 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
           }
 
           return Scaffold(
-            appBar: AppBar(
-              title: const Text('Food Tracker'),
-              actions: [
-                IconButton(
-                  icon: const Icon(Icons.info_outline),
-                  onPressed: () => showInfoDialogFoodSetup(context),
+            body: Column(
+              children: [
+                TabBar(
+                  controller: _tabController!,
+                  tabs: _buildTabs(),
+                ),
+                Expanded(
+                  child: TabBarView(
+                    controller: _tabController!,
+                    children: _buildTabViews(),
+                  ),
                 ),
               ],
-              bottom: TabBar(
-                controller: _tabController!,
-                tabs: _buildTabs(),
-              ),
-            ),
-            body: TabBarView(
-              controller: _tabController!,
-              children: _buildTabViews(),
             ),
           );
         },

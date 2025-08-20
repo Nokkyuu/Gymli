@@ -2,12 +2,14 @@
 ///Screen is used to create or update exercises.
 library;
 
-import 'package:flutter/foundation.dart' show kDebugMode;
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../utils/themes/responsive_helper.dart';
-import '../utils/info_dialogues.dart';
 import 'exercise_setup/exercise_setup_exports.dart';
+import 'package:go_router/go_router.dart';
+import 'package:Gymli/config/app_router.dart';
+import '../utils/info_dialogues.dart';
 
 class ExerciseSetupScreen extends StatefulWidget {
   final String exerciseName;
@@ -38,6 +40,74 @@ class _ExerciseSetupScreenState extends State<ExerciseSetupScreen> {
     super.dispose();
   }
 
+  AppBar _buildAppBar(BuildContext context) {
+    final isEditMode = widget.exerciseName.isNotEmpty;
+
+    return AppBar(
+      title: const Text('Exercise Setup'),
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back),
+        onPressed: () => context.go(AppRouter.main),
+      ),
+      actions: [
+        buildInfoButton('Exercise Setup Info', context,
+            () => showInfoDialogExerciseSetup(context)),
+        if (isEditMode)
+          Consumer<ExerciseSetupController>(
+            builder: (context, controller, child) {
+              final hasExercise = controller.currentExercise?.id != null;
+              return IconButton(
+                icon: const Icon(Icons.delete),
+                tooltip:
+                    hasExercise ? 'Delete Exercise' : 'No Exercise to Delete',
+                onPressed: hasExercise
+                    ? () => _showDeleteDialog(context, controller)
+                    : null,
+              );
+            },
+          ),
+      ],
+    );
+  }
+
+  void _showDeleteDialog(
+      BuildContext context, ExerciseSetupController controller) {
+    showDialog(
+      context: context,
+      builder: (BuildContext dialogueContext) {
+        return AlertDialog(
+          title: const Text('Delete Exercise'),
+          content: Text(
+              'Are you sure you want to delete "${controller.currentExercise?.name}"?\n\nThis will also delete all training sets associated with this exercise. This action cannot be undone.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogueContext).pop(),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () async {
+                Navigator.of(dialogueContext).pop();
+                final success = await controller.deleteExercise();
+                if (success) {
+                  if (kDebugMode) print('✅ Exercise deleted successfully');
+                }
+
+                if (success && context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                        content: Text('Exercise deleted successfully')),
+                  );
+                  context.go(AppRouter.main);
+                }
+              },
+              child: const Text('Delete'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final isMobileWeb = ResponsiveHelper.isWebMobile(context);
@@ -45,30 +115,8 @@ class _ExerciseSetupScreenState extends State<ExerciseSetupScreen> {
     return ChangeNotifierProvider.value(
       value: _exerciseController,
       child: Scaffold(
+        appBar: _buildAppBar(context),
         resizeToAvoidBottomInset: false,
-        appBar: AppBar(
-          leading: InkWell(
-            onTap: () {
-              Navigator.pop(context);
-            },
-            child: const Icon(Icons.arrow_back_ios),
-          ),
-          title: const Text("Exercise Setup"),
-          actions: [
-            buildInfoButton('Exercise Setup Info', context,
-                () => showInfoDialogExerciseSetup(context)),
-            Consumer<ExerciseSetupController>(
-              builder: (context, controller, child) {
-                return IconButton(
-                  onPressed: controller.currentExercise?.id != null
-                      ? () => _showDeleteDialog(context, controller)
-                      : null,
-                  icon: const Icon(Icons.delete),
-                );
-              },
-            ),
-          ],
-        ),
         body: Consumer<ExerciseSetupController>(
           builder: (context, controller, child) {
             if (controller.isLoading) {
@@ -106,73 +154,61 @@ class _ExerciseSetupScreenState extends State<ExerciseSetupScreen> {
 
             return isMobileWeb
                 ? ExerciseMobileLayoutWidget(
-                    onSuccess: () => _handleSaveSuccess(context))
+                    onSuccess: _handleSaveSuccess) // ✅ Add callback
                 : ExerciseDesktopLayoutWidget(
-                    onSuccess: () => _handleSaveSuccess(context));
+                    onSuccess: _handleSaveSuccess); // ✅ Add callback
           },
         ),
       ),
     );
   }
 
-  void _handleSaveSuccess(BuildContext context) {
-    if (context.mounted) {
-      Navigator.of(context).pop();
+  // ✅ Handle navigation at screen level
+  void _handleSaveSuccess() {
+    if (kDebugMode) print('🎯 Screen received save success callback');
+
+    if (!mounted) {
+      if (kDebugMode) print('❌ Screen widget is not mounted');
+      return;
     }
-  }
 
-  Future<void> _showDeleteDialog(
-      BuildContext context, ExerciseSetupController controller) async {
-    if (controller.currentExercise?.id == null) return;
-
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Delete "${controller.currentExercise!.name}"?'),
-        content: const Text(
-            'This will permanently delete the exercise and ALL training history. This cannot be undone.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Delete', style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed != true || !context.mounted) return;
-
-    try {
-      final success = await controller.deleteExercise();
-
-      if (success && context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Exercise deleted successfully')),
-        );
-        Navigator.of(context).pop(); // Close the screen
-      } else if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content:
-                Text(controller.errorMessage ?? 'Failed to delete exercise'),
-            backgroundColor: Colors.red,
-          ),
-        );
+    // ✅ Use post-frame callback for safe navigation
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        if (kDebugMode) print('❌ Screen widget unmounted during callback');
+        return;
       }
-    } catch (e) {
-      if (kDebugMode) print('Error deleting exercise: $e');
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error deleting exercise: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
+
+      final context = this.context;
+      if (!context.mounted) {
+        if (kDebugMode) print('❌ Screen context is not mounted');
+        return;
       }
-    }
+
+      if (kDebugMode)
+        print('✅ Screen context is mounted, attempting navigation');
+
+      try {
+        if (context.canPop()) {
+          if (kDebugMode) print('🔙 Can pop - using context.pop()');
+          context.pop();
+        } else {
+          if (kDebugMode) print('🏠 Cannot pop - going to main screen');
+          context.go(AppRouter.main);
+        }
+        if (kDebugMode) print('✅ Navigation completed successfully');
+      } catch (e) {
+        if (kDebugMode) print('❌ Navigation error: $e');
+        // ✅ Final fallback
+        try {
+          if (context.mounted) {
+            if (kDebugMode) print('🔄 Trying fallback navigation...');
+            context.go(AppRouter.main);
+          }
+        } catch (fallbackError) {
+          if (kDebugMode) print('❌ Fallback navigation failed: $fallbackError');
+        }
+      }
+    });
   }
 }

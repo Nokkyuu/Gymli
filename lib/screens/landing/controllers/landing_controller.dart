@@ -47,18 +47,26 @@ class LandingController extends ChangeNotifier {
 
   /// Initialize the landing screen
   Future<void> initialize() async {
-    if (_isInitialized) return;
+    if (_isInitialized) {
+      if (kDebugMode)
+        print('🔄 LandingController already initialized, skipping');
+      return;
+    }
 
     _setLoading(true);
     _clearError();
-    _isInitialized = true;
 
     try {
       await _loadData();
       await showAllExercises();
+
+      // Only add listener after successful initialization
       _repository.authStateNotifier.addListener(_onAuthStateChanged);
+      _isInitialized = true;
+
+      if (kDebugMode) print('✅ LandingController initialized successfully');
     } catch (e) {
-      _isInitialized = false;
+      if (kDebugMode) print('❌ LandingController initialization failed: $e');
       _setError('Failed to initialize: $e');
     } finally {
       _setLoading(false);
@@ -82,14 +90,21 @@ class LandingController extends ChangeNotifier {
 
   /// Reload data (always fetches fresh data)
   Future<void> reload() async {
+    // Safety check: don't operate on disposed controller
+    if (!_isInitialized) return;
+
     try {
       _setLoading(true);
       await _loadData();
       await _restoreFilterState();
     } catch (e) {
-      _setError('Error reloading data: $e');
+      if (_isInitialized) {
+        _setError('Error reloading data: $e');
+      }
     } finally {
-      _setLoading(false);
+      if (_isInitialized) {
+        _setLoading(false);
+      }
     }
   }
 
@@ -160,6 +175,8 @@ class LandingController extends ChangeNotifier {
 
   /// Show welcome message (once per session)
   void showWelcomeMessage() {
+    if (!_isInitialized) return;
+
     if (_repository.isLoggedIn && !_hasShownWelcomeMessage) {
       _hasShownWelcomeMessage = true;
       notifyListeners();
@@ -174,11 +191,17 @@ class LandingController extends ChangeNotifier {
   // Private methods
 
   void _setLoading(bool loading) {
+    // Safety check: don't notify listeners if disposed
+    if (!_isInitialized) return;
+
     _isLoading = loading;
     notifyListeners();
   }
 
   void _setError(String error) {
+    // Safety check: don't notify listeners if disposed
+    if (!_isInitialized) return;
+
     _errorMessage = error;
     notifyListeners();
   }
@@ -188,25 +211,53 @@ class LandingController extends ChangeNotifier {
   }
 
   void _notifyFilterChange() {
+    // Safety check: don't notify if disposed
+    if (!_isInitialized) return;
+
     filterApplied.value = !filterApplied.value;
   }
 
   void _onExerciseDataChanged() {
-    if (kDebugMode)
+    // Safety check: don't operate on disposed controller
+    if (!_isInitialized) return;
+
+    if (kDebugMode) {
       print('🔄 Exercise data changed - reloading landing screen');
+    }
     reload();
   }
 
   void _onAuthStateChanged() {
+    // Safety check: don't operate on disposed controller
+    if (!_isInitialized) return;
+
     resetWelcomeMessage();
     reload();
   }
 
   @override
   void dispose() {
-    globals.exerciseDataChangedNotifier.removeListener(_onExerciseDataChanged);
-    _repository.authStateNotifier.removeListener(_onAuthStateChanged);
-    filterApplied.dispose();
+    // Add safety check to prevent calling dispose multiple times
+    if (!_isInitialized) return;
+
+    try {
+      // Remove global listener safely
+      globals.exerciseDataChangedNotifier
+          .removeListener(_onExerciseDataChanged);
+
+      // Remove repository listener safely
+      _repository.authStateNotifier.removeListener(_onAuthStateChanged);
+
+      // Dispose filter applied notifier
+      filterApplied.dispose();
+
+      // Mark as disposed to prevent future operations
+      _isInitialized = false;
+    } catch (e) {
+      if (kDebugMode)
+        print('Warning: Error during LandingController disposal: $e');
+    }
+
     super.dispose();
   }
 

@@ -95,7 +95,7 @@ class ActivityController extends ChangeNotifier {
   /// Delete an activity log
   Future<void> deleteActivityLog(int logId) async {
     try {
-      await container.activityService.deleteActivityLog(logId);
+      await container.activityService.deleteActivityLog(logId: logId);
       await loadData();
     } catch (e) {
       if (kDebugMode) print('Error deleting activity log: $e');
@@ -106,7 +106,7 @@ class ActivityController extends ChangeNotifier {
   /// Delete an activity
   Future<void> deleteActivity(int activityId) async {
     try {
-      await container.activityService.deleteActivity(activityId);
+      await container.activityService.deleteActivity(activityId: activityId);
       await loadData();
     } catch (e) {
       if (kDebugMode) print('Error deleting activity: $e');

@@ -174,7 +174,7 @@ class ExerciseRepository {
 
     try {
       final results = await Future.wait([
-        container.trainingSetService.getTrainingSetsByID(_currentExerciseId!),
+        container.getTrainingSetsByExerciseID(_currentExerciseId!),
         container.exerciseService.getExercises(),
       ]);
 

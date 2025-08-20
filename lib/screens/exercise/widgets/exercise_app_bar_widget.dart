@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
-import '../../exercise_history_screen.dart';
-import '../../exercise_setup_screen.dart';
+import 'package:go_router/go_router.dart';
+import 'package:Gymli/config/app_router.dart';
 import '../controllers/exercise_phase_controller.dart';
 import '../controllers/exercise_animation_controller.dart';
 import '../controllers/exercise_timer_controller.dart';
 import '../controllers/exercise_controller.dart';
-import '../../../utils/themes/themes.dart';
 
 class ExerciseAppBarWidget extends StatelessWidget
     implements PreferredSizeWidget {
@@ -116,12 +115,8 @@ class ExerciseAppBarWidget extends StatelessWidget
   Widget _buildEditButton(BuildContext context) {
     return IconButton(
       onPressed: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => ExerciseSetupScreen(exerciseName),
-          ),
-        );
+        context.go(
+            '${AppRouter.exerciseSetup}?type=${Uri.encodeComponent(exerciseName)}');
       },
       icon: const Icon(Icons.edit),
     );
@@ -130,18 +125,14 @@ class ExerciseAppBarWidget extends StatelessWidget
   Widget _buildHistoryButton(BuildContext context) {
     return IconButton(
       onPressed: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => ExerciseListScreen(
-              exerciseId,
-              exerciseName,
-              onSetDeleted: () =>
-                  exerciseController.refreshTodaysTrainingSets(),
-              exerciseRepository: exerciseController.repository,
-            ),
-          ),
-        );
+        final queryParams = {
+          'id': exerciseId.toString(),
+          'name': Uri.encodeComponent(exerciseName),
+        };
+        final queryString =
+            queryParams.entries.map((e) => '${e.key}=${e.value}').join('&');
+
+        context.push('${AppRouter.exerciseHistory}?$queryString');
       },
       icon: const Icon(Icons.list),
     );

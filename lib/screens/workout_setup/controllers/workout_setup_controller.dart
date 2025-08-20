@@ -50,7 +50,7 @@ class WorkoutSetupController extends ChangeNotifier {
         ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
 
       if (_workoutName.isNotEmpty) {
-        final workoutData = await _container.workoutService.getWorkouts();
+        final workoutData = await _container.getWorkouts();
         final workouts =
             workoutData.map((item) => ApiWorkout.fromJson(item)).toList();
 
@@ -123,7 +123,7 @@ class WorkoutSetupController extends ChangeNotifier {
         await _container.workoutService.deleteWorkout(_currentWorkout!.id!);
 
         // Create new workout with the updated data
-        await _container.workoutService.createWorkout(
+        await _container.createWorkout(
           name: workoutNameController.text,
           units: _addedExercises.map((unit) => unit.toJson()).toList(),
         );
@@ -132,7 +132,7 @@ class WorkoutSetupController extends ChangeNotifier {
         _currentWorkout = null;
       } else {
         // Create new workout
-        await _container.workoutService.createWorkout(
+        await _container.createWorkout(
           name: workoutNameController.text,
           units: _addedExercises.map((unit) => unit.toJson()).toList(),
         );

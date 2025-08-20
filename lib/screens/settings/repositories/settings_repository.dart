@@ -51,7 +51,7 @@ class SettingsRepository {
   Future<void> clearTrainingSets() async {
     try {
       await container.trainingSetService.clearTrainingSets();
-      container.dataService.notifyDataChanged();
+      container.notifyDataChanged();
     } catch (e) {
       if (kDebugMode) print('Error clearing training sets: $e');
       rethrow;
@@ -61,10 +61,10 @@ class SettingsRepository {
   /// Clear exercises (also clears dependent data)
   Future<void> clearExercises() async {
     try {
-      await container.workoutService.clearWorkouts();
+      await container.clearWorkouts();
       await container.trainingSetService.clearTrainingSets();
-      await container.exerciseService.clearExercises();
-      container.dataService.notifyDataChanged();
+      await container.clearExercises();
+      container.notifyDataChanged();
     } catch (e) {
       if (kDebugMode) print('Error clearing exercises: $e');
       rethrow;
@@ -74,8 +74,8 @@ class SettingsRepository {
   /// Clear workouts
   Future<void> clearWorkouts() async {
     try {
-      await container.workoutService.clearWorkouts();
-      container.dataService.notifyDataChanged();
+      await container.clearWorkouts();
+      container.notifyDataChanged();
     } catch (e) {
       if (kDebugMode) print('Error clearing workouts: $e');
       rethrow;
@@ -85,8 +85,8 @@ class SettingsRepository {
   /// Clear foods
   Future<void> clearFoods() async {
     try {
-      await container.foodService.clearFoodData();
-      container.dataService.notifyDataChanged();
+      await container.foodService.clearFoods();
+      container.notifyDataChanged();
     } catch (e) {
       if (kDebugMode) print('Error clearing foods: $e');
       rethrow;
@@ -97,7 +97,8 @@ class SettingsRepository {
   Future<void> createTrainingSetsBulk(
       List<Map<String, dynamic>> trainingSets) async {
     try {
-      await container.trainingSetService.createTrainingSetsBulk(trainingSets);
+      await container.trainingSetService
+          .createTrainingSetsBulk(trainingSets: trainingSets);
     } catch (e) {
       if (kDebugMode) print('Error creating training sets bulk: $e');
       rethrow;
@@ -140,7 +141,7 @@ class SettingsRepository {
     required List<Map<String, dynamic>> units,
   }) async {
     try {
-      return await container.workoutService.createWorkout(
+      return await container.createWorkout(
         name: name,
         units: units,
       );
@@ -153,7 +154,7 @@ class SettingsRepository {
   /// Create foods in bulk
   Future<void> createFoodsBulk(List<Map<String, dynamic>> foods) async {
     try {
-      await container.foodService.createFoodsBulk(foods);
+      await container.foodService.createFoodsBulk(foods: foods);
     } catch (e) {
       if (kDebugMode) print('Error creating foods bulk: $e');
       rethrow;
@@ -163,7 +164,7 @@ class SettingsRepository {
   /// Get exercise ID by name
   Future<int?> getExerciseIdByName(String name) async {
     try {
-      return await container.exerciseService.getExerciseIdByName(name);
+      return await container.getExerciseIdByName(name);
     } catch (e) {
       if (kDebugMode) print('Error getting exercise ID by name: $e');
       rethrow;
@@ -172,7 +173,7 @@ class SettingsRepository {
 
   /// Notify data changed
   void notifyDataChanged() {
-    container.dataService.notifyDataChanged();
+    container.notifyDataChanged();
   }
 
   /// Get current user name

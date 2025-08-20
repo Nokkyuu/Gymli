@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../controllers/exercise_setup_controller.dart';
 import '../../../utils/globals.dart' as globals;
+import 'package:go_router/go_router.dart';
+import 'package:Gymli/config/app_router.dart';
 
 class ExerciseConfirmButtonWidget extends StatelessWidget {
   final VoidCallback? onSuccess;
@@ -139,14 +141,15 @@ class ExerciseConfirmButtonWidget extends StatelessWidget {
                         print('🔧 Starting exercise save process...');
 
                       try {
-                        final success = await controller.saveExercise();
-                        if (success) {
+                        final saveSuccess = await controller.saveExercise();
+                        if (saveSuccess) {
                           if (kDebugMode)
                             print('✅ All operations completed successfully');
+
+                          // ✅ Close dialog with success=true
                           if (dialogContext.mounted) {
                             Navigator.of(dialogContext).pop(true);
                           }
-                          // Remove the onSuccess callback call here since _handleSaveSuccess will handle navigation
                         } else {
                           if (kDebugMode) print('❌ Save operation failed');
                           if (dialogContext.mounted) {
@@ -175,12 +178,17 @@ class ExerciseConfirmButtonWidget extends StatelessWidget {
       ),
     );
 
+    // ✅ Just call the callback if successful - let parent handle navigation
     if (success == true) {
-      // Only call the callback, don't do direct navigation
+      if (kDebugMode)
+        print('🚀 Exercise saved successfully, calling onSuccess callback...');
+
+      // ✅ Call the callback to notify parent screen
       if (onSuccess != null) {
-        onSuccess!.call();
+        onSuccess!();
       }
-      // Remove the fallback navigation since it's redundant
+    } else {
+      if (kDebugMode) print('❌ Dialog returned success=$success');
     }
   }
 }

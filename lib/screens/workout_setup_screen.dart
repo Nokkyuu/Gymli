@@ -2,12 +2,14 @@
 ///create or edit Workouts by adding or removing Workout Units (Exercises with a set amount of warmup and work sets)
 library;
 
-import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
 import '../utils/themes/responsive_helper.dart';
-import '../utils/info_dialogues.dart';
 import 'workout_setup/workout_setup_exports.dart';
+import 'package:go_router/go_router.dart';
+import 'package:Gymli/config/app_router.dart';
+import '../utils/info_dialogues.dart';
 
 //TODO: raarrange desktop layout, showing the radar chart for muslce activity distribution
 class WorkoutSetupScreen extends StatefulWidget {
@@ -42,41 +44,45 @@ class _WorkoutSetupScreenState extends State<WorkoutSetupScreen> {
     super.dispose();
   }
 
+  AppBar _buildAppBar(BuildContext context) {
+    final isEditMode = widget.workoutName.isNotEmpty;
+
+    return AppBar(
+      title: const Text('Workout Setup'),
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back),
+        onPressed: () => context.go(AppRouter.main),
+      ),
+      actions: [
+        buildInfoButton('Workout Setup Info', context,
+            () => showInfoDialogWorkoutSetup(context)),
+        if (isEditMode)
+          Consumer<WorkoutSetupController>(
+            builder: (context, controller, child) {
+              final hasWorkout = controller.currentWorkout?.id != null;
+              return IconButton(
+                icon: const Icon(Icons.delete),
+                tooltip: hasWorkout ? 'Delete Workout' : 'No Workout to Delete',
+                onPressed: hasWorkout
+                    ? () => _showDeleteDialog(context, controller)
+                    : null,
+              );
+            },
+          ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    const title = 'Workout Editor';
-
     return MultiProvider(
       providers: [
         ChangeNotifierProvider.value(value: _workoutController),
         ChangeNotifierProvider.value(value: _exerciseController),
       ],
       child: Scaffold(
+        appBar: _buildAppBar(context),
         resizeToAvoidBottomInset: false,
-        appBar: AppBar(
-          leading: InkWell(
-            onTap: () {
-              Navigator.pop(context);
-            },
-            child: const Icon(Icons.arrow_back_ios),
-          ),
-          title: const Text(title),
-          centerTitle: true,
-          actions: [
-            buildInfoButton('Workout Setup Info', context,
-                () => showInfoDialogWorkoutSetup(context)),
-            Consumer<WorkoutSetupController>(
-              builder: (context, controller, child) {
-                return IconButton(
-                  onPressed: controller.currentWorkout?.id != null
-                      ? () => _showDeleteDialog(context, controller)
-                      : null,
-                  icon: const Icon(Icons.delete),
-                );
-              },
-            ),
-          ],
-        ),
         body: Consumer<WorkoutSetupController>(
           builder: (context, controller, child) {
             if (controller.isLoading) {
@@ -125,7 +131,7 @@ class _WorkoutSetupScreenState extends State<WorkoutSetupScreen> {
 
   void _handleSaveSuccess(BuildContext context) {
     if (context.mounted) {
-      Navigator.of(context).pop();
+      context.go(AppRouter.main);
     }
   }
 

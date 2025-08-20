@@ -1,7 +1,8 @@
 import 'package:Gymli/config/api_config.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
-import '../widgets/main_app_widget.dart';
+import 'package:go_router/go_router.dart';
+import '../config/app_router.dart';
 import '../utils/services/service_container.dart';
 import '../utils/services/auth0_service.dart';
 
@@ -77,15 +78,11 @@ class _LandingChoiceScreenState extends State<LandingChoiceScreen> {
   }
 
   void _proceedToMainApp() {
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(
-        builder: (_) => const MainAppWidget(),
-      ),
-    );
+    context.go(AppRouter.main);
   }
 
   Future<void> _login() async {
-    if (!_isInitialized || _authService.auth0 == null) {
+    if (!_isInitialized) {
       print('Auth0 not initialized');
       return;
     }
@@ -105,14 +102,14 @@ class _LandingChoiceScreenState extends State<LandingChoiceScreen> {
     }
   }
 
-  void _openDemoMode() {
-    _container.authService.setCredentials(null); // Ensure logged out
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(
-        builder: (_) => const MainAppWidget(),
-      ),
-    );
-  }
+  // void _openDemoMode() {
+  //   _container.authService.setCredentials(null); // Ensure logged out
+  //   Navigator.of(context).pushReplacement(
+  //     MaterialPageRoute(
+  //       builder: (_) => const MainAppWidget(),
+  //     ),
+  //   );
+  // }
 
   @override
   void dispose() {
@@ -204,17 +201,17 @@ class _LandingChoiceScreenState extends State<LandingChoiceScreen> {
                         ),
                       ),
                       const SizedBox(height: 16),
-                      SizedBox(
-                        width: double.infinity,
-                        child: OutlinedButton.icon(
-                          icon: const Icon(Icons.visibility_off),
-                          label: const Text('Demo Mode'),
-                          style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                          ),
-                          onPressed: _openDemoMode,
-                        ),
-                      ),
+                      // SizedBox(
+                      //   width: double.infinity,
+                      //   child: OutlinedButton.icon(
+                      //     icon: const Icon(Icons.visibility_off),
+                      //     label: const Text('Demo Mode'),
+                      //     style: OutlinedButton.styleFrom(
+                      //       padding: const EdgeInsets.symmetric(vertical: 16),
+                      //     ),
+                      //     onPressed: _openDemoMode,
+                      //   ),
+                      // ),
                       const SizedBox(height: 24),
                       Text(
                         'Ready to join the fellowship of the Gym?',

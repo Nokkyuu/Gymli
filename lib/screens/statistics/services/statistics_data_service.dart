@@ -12,7 +12,6 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:Gymli/utils/services/service_container.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
 import '../../../utils/api/api_models.dart';
-import '../../../utils/api/api_models.dart';
 import 'statistics_filter_service.dart';
 
 /// Service responsible for data fetching and caching for statistics

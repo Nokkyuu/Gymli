@@ -23,7 +23,6 @@ library;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../utils/themes/responsive_helper.dart';
-import '../utils/info_dialogues.dart';
 import 'statistics/statistics_exports.dart';
 
 class StatisticsScreen extends StatefulWidget {
@@ -71,22 +70,6 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
       child: Consumer<StatisticsMainController>(
         builder: (context, controller, child) {
           return Scaffold(
-            appBar: AppBar(
-              leading: InkWell(
-                onTap: () {
-                  Navigator.pop(context);
-                },
-                child: const Icon(Icons.arrow_back_ios),
-              ),
-              title: const Text("Statistics"),
-              actions: [
-                buildInfoButton(
-                  'Statistics Info',
-                  context,
-                  () => showInfoDialogStatistics(context),
-                ),
-              ],
-            ),
             body: _buildBody(controller),
           );
         },
