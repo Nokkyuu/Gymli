@@ -12,7 +12,7 @@ import '../../../utils/api/api.dart';
 class ExerciseRepository {
   // Cache for frequently accessed data
   List<ApiTrainingSet>? _cachedTrainingSets;
-  List<dynamic>? _cachedExercises;
+  List<ApiExercise>? _cachedExercises;
   DateTime? _lastCacheUpdate;
   int? _currentExerciseId;
 
@@ -53,8 +53,8 @@ class ExerciseRepository {
 
     try {
       final exerciseData = _cachedExercises!.firstWhere(
-        (item) => item['name'] == exerciseName,
-        orElse: () => <String, dynamic>{},
+        (item) => item.name == exerciseName,
+        orElse: () => [],
       );
 
       if (exerciseData.isEmpty) return null;
@@ -176,14 +176,11 @@ class ExerciseRepository {
     }
 
     try {
-      final results = await Future.wait([
-        container.getTrainingSetsByExerciseID(_currentExerciseId!),
-        GetIt.I<ExerciseService>().getExercises(),
-      ]);
-
+      
+      final __c = await container.getTrainingSetsByExerciseID(_currentExerciseId!);
       _cachedTrainingSets =
-          results[0].map((item) => ApiTrainingSet.fromJson(item)).toList();
-      _cachedExercises = results[1];
+          __c.map((item) => ApiTrainingSet.fromJson(item)).toList();
+      _cachedExercises = await GetIt.I<ExerciseService>().getExercises();
       _lastCacheUpdate = DateTime.now();
     } catch (e) {
       if (kDebugMode) print('Error updating cache: $e');
@@ -196,10 +193,8 @@ class ExerciseRepository {
 
     try {
       final exercise = _cachedExercises!.firstWhere(
-        (item) => item['id'] == exerciseId,
-        orElse: () => <String, dynamic>{},
-      );
-      return exercise['name'] ?? '';
+        (item) => item.id == exerciseId);
+      return exercise.name;
     } catch (e) {
       return '';
     }
