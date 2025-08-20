@@ -63,26 +63,6 @@ class AppRouter {
               builder: (context, state) => const MainAppContent(),
             ),
 
-            // Exercise Setup Route
-            GoRoute(
-              path: exerciseSetup,
-              name: 'exercise-setup',
-              builder: (context, state) {
-                final exerciseType = state.uri.queryParameters['type'] ?? '';
-                return ExerciseSetupScreen(exerciseType);
-              },
-            ),
-
-            // Workout Setup Route
-            GoRoute(
-              path: workoutSetup,
-              name: 'workout-setup',
-              builder: (context, state) {
-                final workoutType = state.uri.queryParameters['type'] ?? '';
-                return WorkoutSetupScreen(workoutType);
-              },
-            ),
-
             // Activity Tracker Route
             GoRoute(
               path: activity,
@@ -118,6 +98,26 @@ class AppRouter {
               builder: (context, state) => const SettingsScreen(),
             ),
           ],
+        ),
+
+        // Exercise Setup Route (standalone - outside shell to have its own AppBar)
+        GoRoute(
+          path: exerciseSetup,
+          name: 'exercise-setup',
+          builder: (context, state) {
+            final exerciseType = state.uri.queryParameters['type'] ?? '';
+            return ExerciseSetupScreen(exerciseType);
+          },
+        ),
+
+        // Workout Setup Route (standalone - outside shell to have its own AppBar)
+        GoRoute(
+          path: workoutSetup,
+          name: 'workout-setup',
+          builder: (context, state) {
+            final workoutType = state.uri.queryParameters['type'] ?? '';
+            return WorkoutSetupScreen(workoutType);
+          },
         ),
 
         // Exercise Route (standalone - outside shell to avoid double AppBar)
@@ -357,12 +357,39 @@ class _MainAppWrapperState extends State<MainAppWrapper> {
           Text(title, textAlign: TextAlign.center),
         ],
       ),
-      actions: [
-        buildInfoButton(
-            'About Gymli', context, () => showInfoDialogMain(context)),
-      ],
+      actions: _buildAppBarActions(context, currentRoute),
       centerTitle: true,
     );
+  }
+
+  List<Widget> _buildAppBarActions(BuildContext context, String currentRoute) {
+    switch (currentRoute) {
+      case '/activity':
+        return [
+          buildInfoButton('Activity Tracker Info', context,
+              () => showInfoDialogActivitySetup(context)),
+        ];
+      case '/food':
+        return [
+          buildInfoButton('Food Tracker Info', context,
+              () => showInfoDialogFoodSetup(context)),
+        ];
+      case '/statistics':
+        return [
+          buildInfoButton('Statistics Info', context,
+              () => showInfoDialogStatistics(context)),
+        ];
+      case '/settings':
+        return [
+          buildInfoButton('Settings Info', context,
+              () => showInfoDialogSettingsSetup(context)),
+        ];
+      default:
+        return [
+          buildInfoButton(
+              'About Gymli', context, () => showInfoDialogMain(context)),
+        ];
+    }
   }
 
   String _getTitleForRoute(String route) {

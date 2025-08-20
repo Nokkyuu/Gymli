@@ -51,7 +51,8 @@ class ExercisePhaseController extends ChangeNotifier {
   void changePhase() {
     _currentPhase = ExercisePhase
         .values[(_currentPhase.index + 1) % ExercisePhase.values.length];
-    _onPhaseColorChanged?.call(phaseColor);
+    //_onPhaseColorChanged?.call(phaseColor);
+    //TODO: remove, implement or change
     notifyListeners();
   }
 }

@@ -9,6 +9,7 @@ import '../utils/themes/responsive_helper.dart';
 import 'exercise_setup/exercise_setup_exports.dart';
 import 'package:go_router/go_router.dart';
 import 'package:Gymli/config/app_router.dart';
+import '../utils/info_dialogues.dart';
 
 class ExerciseSetupScreen extends StatefulWidget {
   final String exerciseName;
@@ -39,6 +40,70 @@ class _ExerciseSetupScreenState extends State<ExerciseSetupScreen> {
     super.dispose();
   }
 
+  AppBar _buildAppBar(BuildContext context) {
+    final isEditMode = widget.exerciseName.isNotEmpty;
+
+    return AppBar(
+      title: const Text('Exercise Setup'),
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back),
+        onPressed: () => context.go(AppRouter.main),
+      ),
+      actions: [
+        buildInfoButton('Exercise Setup Info', context,
+            () => showInfoDialogExerciseSetup(context)),
+        if (isEditMode)
+          Consumer<ExerciseSetupController>(
+            builder: (context, controller, child) {
+              final hasExercise = controller.currentExercise?.id != null;
+              return IconButton(
+                icon: const Icon(Icons.delete),
+                tooltip:
+                    hasExercise ? 'Delete Exercise' : 'No Exercise to Delete',
+                onPressed: hasExercise
+                    ? () => _showDeleteDialog(context, controller)
+                    : null,
+              );
+            },
+          ),
+      ],
+    );
+  }
+
+  void _showDeleteDialog(
+      BuildContext context, ExerciseSetupController controller) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Delete Exercise'),
+          content: Text(
+              'Are you sure you want to delete "${controller.currentExercise?.name}"?\n\nThis will also delete all training sets associated with this exercise. This action cannot be undone.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () async {
+                Navigator.of(context).pop();
+                final success = await controller.deleteExercise();
+                if (success && context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                        content: Text('Exercise deleted successfully')),
+                  );
+                  context.go(AppRouter.main);
+                }
+              },
+              child: const Text('Delete'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final isMobileWeb = ResponsiveHelper.isWebMobile(context);
@@ -46,6 +111,7 @@ class _ExerciseSetupScreenState extends State<ExerciseSetupScreen> {
     return ChangeNotifierProvider.value(
       value: _exerciseController,
       child: Scaffold(
+        appBar: _buildAppBar(context),
         resizeToAvoidBottomInset: false,
         body: Consumer<ExerciseSetupController>(
           builder: (context, controller, child) {
