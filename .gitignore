@@ -174,3 +174,6 @@ cython_debug/
 .flutter-plugins-dependencies
 gymlidata.session.sql
 .vscode/settings.json
+
+
+.pubspec.lock
