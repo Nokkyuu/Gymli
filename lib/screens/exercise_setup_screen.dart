@@ -2,10 +2,13 @@
 ///Screen is used to create or update exercises.
 library;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../utils/themes/responsive_helper.dart';
 import 'exercise_setup/exercise_setup_exports.dart';
+import 'package:go_router/go_router.dart';
+import 'package:Gymli/config/app_router.dart';
 
 class ExerciseSetupScreen extends StatefulWidget {
   final String exerciseName;
@@ -81,18 +84,61 @@ class _ExerciseSetupScreenState extends State<ExerciseSetupScreen> {
 
             return isMobileWeb
                 ? ExerciseMobileLayoutWidget(
-                    onSuccess: () => _handleSaveSuccess(context))
+                    onSuccess: _handleSaveSuccess) // ✅ Add callback
                 : ExerciseDesktopLayoutWidget(
-                    onSuccess: () => _handleSaveSuccess(context));
+                    onSuccess: _handleSaveSuccess); // ✅ Add callback
           },
         ),
       ),
     );
   }
 
-  void _handleSaveSuccess(BuildContext context) {
-    if (context.mounted) {
-      Navigator.of(context).pop();
+  // ✅ Handle navigation at screen level
+  void _handleSaveSuccess() {
+    if (kDebugMode) print('🎯 Screen received save success callback');
+
+    if (!mounted) {
+      if (kDebugMode) print('❌ Screen widget is not mounted');
+      return;
     }
+
+    // ✅ Use post-frame callback for safe navigation
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        if (kDebugMode) print('❌ Screen widget unmounted during callback');
+        return;
+      }
+
+      final context = this.context;
+      if (!context.mounted) {
+        if (kDebugMode) print('❌ Screen context is not mounted');
+        return;
+      }
+
+      if (kDebugMode)
+        print('✅ Screen context is mounted, attempting navigation');
+
+      try {
+        if (context.canPop()) {
+          if (kDebugMode) print('🔙 Can pop - using context.pop()');
+          context.pop();
+        } else {
+          if (kDebugMode) print('🏠 Cannot pop - going to main screen');
+          context.go(AppRouter.main);
+        }
+        if (kDebugMode) print('✅ Navigation completed successfully');
+      } catch (e) {
+        if (kDebugMode) print('❌ Navigation error: $e');
+        // ✅ Final fallback
+        try {
+          if (context.mounted) {
+            if (kDebugMode) print('🔄 Trying fallback navigation...');
+            context.go(AppRouter.main);
+          }
+        } catch (fallbackError) {
+          if (kDebugMode) print('❌ Fallback navigation failed: $fallbackError');
+        }
+      }
+    });
   }
 }
