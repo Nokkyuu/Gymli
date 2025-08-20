@@ -124,13 +124,6 @@ class TempService {
     }
   }
 
-  Future<String?> getExerciseNameById(int exerciseId) async {
-    final exerciseService = GetIt.I<ExerciseService>();
-    return await exerciseService.getExerciseById(exerciseId).then((exercise) {
-      return exercise['name'];
-    });
-  }
-
   // Calendar convenience methods
   Future<Map<String, dynamic>> getCalendarDataForDate(DateTime date) async {
     //TODO: create specialized endpoints or use cache?

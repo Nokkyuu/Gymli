@@ -32,7 +32,7 @@ class ExerciseRepository {
   }
 
   /// Get today's training sets for a specific exercise
-  Future<List<ApiTrainingSet>> getTodaysTrainingSetsForExercise(
+  Future<List<ApiTrainingSet>> getTodaysTrainingSetsForExercise( // TODO: Endpoint
       String exerciseName) async {
     final allSets = await getTrainingSetsForExercise();
     final today = DateTime.now();
@@ -52,14 +52,16 @@ class ExerciseRepository {
     if (_cachedExercises == null) return null;
 
     try {
-      final exerciseData = _cachedExercises!.firstWhere(
-        (item) => item.name == exerciseName,
-        orElse: () => [],
-      );
+      ApiExercise? exerciseData;
+      try { 
+        exerciseData = _cachedExercises!.firstWhere((item) => item.name == exerciseName);
+      } catch (e) {
+        exerciseData = null;
+      }
 
-      if (exerciseData.isEmpty) return null;
+      if (exerciseData == null) return null;
 
-      return ApiExercise.fromJson(exerciseData);
+      return exerciseData;
     } catch (e) {
       if (kDebugMode) print('Error getting exercise by name: $e');
       return null;
@@ -99,8 +101,7 @@ class ExerciseRepository {
       if (createdSetData == null) return null;
 
       // Get exercise data to construct the training set
-      final exercise =
-          await getExerciseByName(_getExerciseNameById(exerciseId));
+      final exercise = await GetIt.I<ExerciseService>().getExerciseById(exerciseId);
       if (exercise == null) return null;
 
       final newSet = ApiTrainingSet(
@@ -184,19 +185,6 @@ class ExerciseRepository {
       _lastCacheUpdate = DateTime.now();
     } catch (e) {
       if (kDebugMode) print('Error updating cache: $e');
-    }
-  }
-
-  /// Helper to get exercise name by ID (temporary solution)
-  String _getExerciseNameById(int exerciseId) {
-    if (_cachedExercises == null) return '';
-
-    try {
-      final exercise = _cachedExercises!.firstWhere(
-        (item) => item.id == exerciseId);
-      return exercise.name;
-    } catch (e) {
-      return '';
     }
   }
 }

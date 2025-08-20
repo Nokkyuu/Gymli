@@ -156,57 +156,15 @@ class ExerciseService {
     return raw.map((e) => ApiExercise.fromJson(e)).toList();
   }
 
-    
 
-  Future<Map<String, dynamic>> getExerciseById(int id) async {
-    return getData<Map<String, dynamic>>('exercises/$id');
+  Future<ApiExercise> getExerciseById(int id) async {
+    final raw = await getData<Map<String, dynamic>>('exercises/$id');
+    return ApiExercise.fromJson(raw);
   }
 
   /// Creates a new exercise record
-  Future<void> createExercise({
-    //required String userName,
-    required String name,
-    required int type,
-    required int defaultRepBase,
-    required int defaultRepMax,
-    required double defaultIncrement,
-    required double pectoralisMajor,
-    required double trapezius,
-    required double biceps,
-    required double abdominals,
-    required double frontDelts,
-    required double deltoids,
-    required double backDelts,
-    required double latissimusDorsi,
-    required double triceps,
-    required double gluteusMaximus,
-    required double hamstrings,
-    required double quadriceps,
-    required double forearms,
-    required double calves,
-  }) async {
-    createData('exercises', {
-      //'user_name': userName,
-      'name': name,
-      'type': type,
-      'default_rep_base': defaultRepBase,
-      'default_rep_max': defaultRepMax,
-      'default_increment': defaultIncrement,
-      'pectoralis_major': pectoralisMajor,
-      'trapezius': trapezius,
-      'biceps': biceps,
-      'abdominals': abdominals,
-      'front_delts': frontDelts,
-      'deltoids': deltoids,
-      'back_delts': backDelts,
-      'latissimus_dorsi': latissimusDorsi,
-      'triceps': triceps,
-      'gluteus_maximus': gluteusMaximus,
-      'hamstrings': hamstrings,
-      'quadriceps': quadriceps,
-      'forearms': forearms,
-      'calves': calves
-    });
+  Future<void> createExercise(Map<String, dynamic> data) async {
+    createData('exercises', data);
   }
 
   Future<void> updateExercise(int id, Map<String, dynamic> data) async {

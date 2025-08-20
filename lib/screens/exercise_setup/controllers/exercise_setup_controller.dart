@@ -262,27 +262,27 @@ class ExerciseSetupController extends ChangeNotifier {
     } else {
       if (kDebugMode) print('🔧 add_exercise: Creating new exercise...');
       // Create new exercise
-      await exerciseService.createExercise(
-        name: exerciseName,
-        type: exerciseType,
-        defaultRepBase: minRep,
-        defaultRepMax: maxRep,
-        defaultIncrement: weightInc,
-        pectoralisMajor: muscleIntensities[0],
-        trapezius: muscleIntensities[1],
-        biceps: muscleIntensities[2],
-        abdominals: muscleIntensities[3],
-        frontDelts: muscleIntensities[4],
-        deltoids: muscleIntensities[5],
-        backDelts: muscleIntensities[6],
-        latissimusDorsi: muscleIntensities[7],
-        triceps: muscleIntensities[8],
-        gluteusMaximus: muscleIntensities[9],
-        hamstrings: muscleIntensities[10],
-        quadriceps: muscleIntensities[11],
-        forearms: muscleIntensities[12],
-        calves: muscleIntensities[13],
-      );
+      await exerciseService.createExercise({
+        'name': exerciseName,
+        'type': exerciseType,
+        'defaultRepBase': minRep,
+        'defaultRepMax': maxRep,
+        'defaultIncrement': weightInc,
+        'pectoralisMajor': muscleIntensities[0],
+        'trapezius': muscleIntensities[1],
+        'biceps': muscleIntensities[2],
+        'abdominals': muscleIntensities[3],
+        'frontDelts': muscleIntensities[4],
+        'deltoids': muscleIntensities[5],
+        'backDelts': muscleIntensities[6],
+        'latissimusDorsi': muscleIntensities[7],
+        'triceps': muscleIntensities[8],
+        'gluteusMaximus': muscleIntensities[9],
+        'hamstrings': muscleIntensities[10],
+        'quadriceps': muscleIntensities[11],
+        'forearms': muscleIntensities[12],
+        'calves': muscleIntensities[13],
+      });
       if (kDebugMode)
         print('✅ add_exercise: New exercise created successfully');
     }
