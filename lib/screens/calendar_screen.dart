@@ -39,7 +39,6 @@ class _CalendarScreenState extends State<CalendarScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text(CalendarConstants.appBarTitle)),
       body: ListenableBuilder(
         listenable: _controller,
         builder: (context, child) {

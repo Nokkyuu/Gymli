@@ -135,8 +135,8 @@ class ExerciseSetupController extends ChangeNotifier {
       if (kDebugMode) print('🔧 Calling get_exercise_list...');
       await _getExerciseList();
 
-      if (kDebugMode) print('🔧 Notifying data service...');
-      _container.dataService.notifyDataChanged();
+      //if (kDebugMode) print('🔧 Notifying data service...');
+      _container.notifyDataChanged();
 
       // // Wait for cache invalidation to complete by forcing a fresh fetch
       // if (kDebugMode) print('🔧 Ensuring cache is refreshed...');
@@ -164,20 +164,24 @@ class ExerciseSetupController extends ChangeNotifier {
     _setLoading(true);
     try {
       final exerciseId = _currentExercise!.id!;
-
+      //TODO: create specific endpoint to delete a bunch of sets by id
       if (kDebugMode) print('Deleting training sets for exercise $exerciseId');
-      final trainingSets =
-          await _container.trainingSetService.getTrainingSets();
+      final trainingSets = await _container.trainingSetService
+          .getTrainingSetsByExerciseID(exerciseId: exerciseId);
       for (var set in trainingSets) {
-        if (set['exercise_id'] == exerciseId) {
-          await _container.trainingSetService.deleteTrainingSet(set['id']);
+        await _container.trainingSetService.deleteTrainingSet(set['id']);
+      }
+      final workoutUnits =
+          await _container.workoutUnitService.getWorkoutUnits();
+      for (var unit in workoutUnits) {
+        if (unit['exercise_id'] == exerciseId) {
+          await _container.workoutUnitService.deleteWorkoutUnit(unit['id']);
         }
       }
-
       if (kDebugMode) print('Deleting exercise $exerciseId');
       await _container.exerciseService.deleteExercise(exerciseId);
 
-      _container.dataService.notifyDataChanged();
+      _container.notifyDataChanged();
       _clearError();
       return true;
     } catch (e) {

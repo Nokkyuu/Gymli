@@ -52,7 +52,7 @@ class FoodStatsWidget extends StatelessWidget {
                       final endOfDay = startOfDay
                           .add(const Duration(days: 1))
                           .subtract(const Duration(milliseconds: 1));
-                      return controller.container.foodService.getFoodLogStats(
+                      return controller.container.getFoodLogStats(
                         startDate: startOfDay,
                         endDate: endOfDay,
                       );

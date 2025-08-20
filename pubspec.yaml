@@ -13,6 +13,7 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   provider: ^6.1.1
+  go_router: ^14.2.7
   numberpicker: ^2.1.2
   #hive: ^2.2.3
   #hive_flutter: ^1.1.0

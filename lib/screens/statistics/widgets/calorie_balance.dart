@@ -204,7 +204,7 @@ class _CalorieBalanceScreenState extends State<CalorieBalanceScreen> {
       final baselineCalories = _calculateBaselineCalories();
 
       // Load food intake data
-      final dailyFoodData = await container.foodService.getDailyFoodLogStats(
+      final dailyFoodData = await container.getDailyFoodLogStats(
         startDate: dateRange['start']!,
         endDate: dateRange['end']!,
       );

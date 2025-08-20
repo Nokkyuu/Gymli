@@ -22,8 +22,8 @@ class HistoryListController {
   Future<void> loadTrainingSets() async {
     isLoading.value = true;
     try {
-      final data =
-          await container.trainingSetService.getTrainingSetsByID(exerciseId);
+      final data = await container.trainingSetService
+          .getTrainingSetsByExerciseID(exerciseId: exerciseId);
       final trainingSets =
           data.map((item) => ApiTrainingSet.fromJson(item)).toList();
       final filtered =

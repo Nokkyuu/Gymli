@@ -2,6 +2,7 @@
 library;
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../utils/themes/responsive_helper.dart';
 import 'exercise/repositories/exercise_repository.dart';
 import 'exercise/controllers/exercise_controller.dart';
@@ -76,9 +77,11 @@ class _ExerciseScreenState extends State<ExerciseScreen>
       _exerciseController.updatePhase(_phaseController.currentPhase.name);
     });
 
-    setState(() {
-      _isInitialized = true;
-    });
+    if (mounted) {
+      setState(() {
+        _isInitialized = true;
+      });
+    }
   }
 
   @override
@@ -98,121 +101,141 @@ class _ExerciseScreenState extends State<ExerciseScreen>
       );
     }
 
-    return Scaffold(
-      resizeToAvoidBottomInset: false,
-      appBar: ExerciseAppBarWidget(
-        exerciseId: widget.exerciseId,
-        exerciseName: widget.exerciseName,
-        phaseController: _phaseController,
-        animationController: _animationController,
-        timerController: _timerController,
-        exerciseController: _exerciseController,
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider.value(value: _exerciseController),
+        ChangeNotifierProvider.value(value: _timerController),
+        ChangeNotifierProvider.value(value: _phaseController),
+        ChangeNotifierProvider.value(value: _animationController),
+      ],
+      child: Consumer<ExerciseController>(
+        builder: (context, exerciseController, child) {
+          return Scaffold(
+            resizeToAvoidBottomInset: false,
+            appBar: ExerciseAppBarWidget(
+              exerciseId: widget.exerciseId,
+              exerciseName: widget.exerciseName,
+              phaseController: _phaseController,
+              animationController: _animationController,
+              timerController: _timerController,
+              exerciseController: _exerciseController,
+            ),
+            body: Stack(children: [
+              SafeArea(
+                child: ResponsiveHelper.isWebMobile(context)
+                    ? _buildMobileLayout()
+                    : _buildDesktopLayout(),
+              ),
+              AnimatedTextWidget(
+                animationController: _animationController,
+                phaseController: _phaseController,
+              ),
+            ]),
+          );
+        },
       ),
-      body: Stack(children: [
-        SafeArea(
-          child: ResponsiveHelper.isWebMobile(context)
-              ? _buildMobileLayout()
-              : _buildDesktopLayout(),
-        ),
-        AnimatedTextWidget(
-          animationController: _animationController,
-          phaseController: _phaseController,
-        ),
-      ]),
     );
   }
 
   Widget _buildMobileLayout() {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final screenHeight = MediaQuery.of(context).size.height;
-        final availableHeight = screenHeight -
-            MediaQuery.of(context).padding.top -
-            MediaQuery.of(context).padding.bottom -
-            kToolbarHeight -
-            100;
+    return Consumer<ExerciseController>(
+      builder: (context, exerciseController, child) {
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            final screenHeight = MediaQuery.of(context).size.height;
+            final availableHeight = screenHeight -
+                MediaQuery.of(context).padding.top -
+                MediaQuery.of(context).padding.bottom -
+                kToolbarHeight -
+                100;
 
-        final graphHeight = (availableHeight * 0.35);
-        final listHeight = (availableHeight * 0.4);
+            final graphHeight = (availableHeight * 0.35);
+            final listHeight = (availableHeight * 0.4);
 
-        return Column(children: [
-          ConstrainedBox(
-            constraints: BoxConstraints(minHeight: availableHeight),
-            child: Padding(
-              padding: const EdgeInsets.only(
-                  left: 16, right: 16, bottom: 5, top: 10),
-              child: Column(
-                children: [
-                  SizedBox(
-                    height: graphHeight,
-                    child: ExerciseGraphWidget(
-                      graphController: _exerciseController.graphController,
-                      groupExercises: const [],
-                    ),
+            return Column(children: [
+              ConstrainedBox(
+                constraints: BoxConstraints(minHeight: availableHeight),
+                child: Padding(
+                  padding: const EdgeInsets.only(
+                      left: 16, right: 16, bottom: 5, top: 10),
+                  child: Column(
+                    children: [
+                      SizedBox(
+                        height: graphHeight,
+                        child: ExerciseGraphWidget(
+                          graphController: exerciseController.graphController,
+                          groupExercises: const [],
+                        ),
+                      ),
+                      ExerciseControlsWidget(
+                        controller: exerciseController,
+                        isDesktop: false,
+                        onSubmit: _onSetAdded,
+                      ),
+                      SizedBox(
+                        height: listHeight,
+                        child: TrainingSetsListWidget(
+                          controller: exerciseController,
+                          showTitle: false,
+                        ),
+                      ),
+                    ],
                   ),
-                  ExerciseControlsWidget(
-                    controller: _exerciseController,
-                    isDesktop: false,
-                    onSubmit: _onSetAdded,
-                  ),
-                  SizedBox(
-                    height: listHeight,
-                    child: TrainingSetsListWidget(
-                      controller: _exerciseController,
-                      showTitle: false,
-                    ),
-                  ),
-                ],
+                ),
               ),
-            ),
-          ),
-        ]);
+            ]);
+          },
+        );
       },
     );
   }
 
   Widget _buildDesktopLayout() {
-    return Row(
-      children: [
-        Expanded(
-          flex: 2,
-          child: Column(
-            children: [
-              Expanded(
-                flex: 2,
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: ExerciseGraphWidget(
-                    graphController: _exerciseController.graphController,
-                    groupExercises: const [],
+    return Consumer<ExerciseController>(
+      builder: (context, exerciseController, child) {
+        return Row(
+          children: [
+            Expanded(
+              flex: 2,
+              child: Column(
+                children: [
+                  Expanded(
+                    flex: 2,
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: ExerciseGraphWidget(
+                        graphController: exerciseController.graphController,
+                        groupExercises: const [],
+                      ),
+                    ),
                   ),
-                ),
-              ),
-              const Divider(),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: ExerciseControlsWidget(
-                    controller: _exerciseController,
-                    isDesktop: true,
-                    onSubmit: _onSetAdded,
+                  const Divider(),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: ExerciseControlsWidget(
+                        controller: exerciseController,
+                        isDesktop: true,
+                        onSubmit: _onSetAdded,
+                      ),
+                    ),
                   ),
-                ),
+                ],
               ),
-            ],
-          ),
-        ),
-        const VerticalDivider(),
-        Expanded(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: TrainingSetsListWidget(
-              controller: _exerciseController,
-              showTitle: true,
             ),
-          ),
-        ),
-      ],
+            const VerticalDivider(),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: TrainingSetsListWidget(
+                  controller: exerciseController,
+                  showTitle: true,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 

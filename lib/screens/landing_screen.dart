@@ -4,9 +4,10 @@
 library;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
-import 'package:Gymli/screens/exercise_screen.dart';
-import 'package:Gymli/screens/workout_setup_screen.dart';
+import 'package:go_router/go_router.dart';
+import 'package:Gymli/config/app_router.dart';
 import 'landing/controllers/landing_controller.dart';
 import 'landing/controllers/landing_filter_controller.dart';
 import 'landing/repositories/landing_repository.dart';
@@ -50,7 +51,12 @@ class _LandingScreenState extends State<LandingScreen> {
 
   @override
   void dispose() {
-    _landingController.dispose();
+    // Safely dispose the controller with error handling
+    try {
+      _landingController.dispose();
+    } catch (e) {
+      if (kDebugMode) print('Warning: Error disposing LandingController: $e');
+    }
     super.dispose();
   }
 
@@ -137,25 +143,23 @@ class _LandingScreenState extends State<LandingScreen> {
   }
 
   void _onWorkoutEdit(String workoutName) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => WorkoutSetupScreen(workoutName),
-      ),
-    ).then((_) => _landingController.reload());
+    context
+        .push(
+            '${AppRouter.workoutSetup}?type=${Uri.encodeComponent(workoutName)}')
+        .then((_) => _landingController.reload());
   }
 
   void _onExerciseTap(exercise, description) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => ExerciseScreen(
-          exercise.id,
-          exercise.name,
-          description,
-          onPhaseColorChanged: widget.onPhaseColorChanged,
-        ),
-      ),
-    ).then((_) => _landingController.reload());
+    final queryParams = {
+      'id': exercise.id.toString(),
+      'name': Uri.encodeComponent(exercise.name),
+      'description': Uri.encodeComponent(description),
+    };
+    final queryString =
+        queryParams.entries.map((e) => '${e.key}=${e.value}').join('&');
+
+    context
+        .push('${AppRouter.exercise}?$queryString')
+        .then((_) => _landingController.reload());
   }
 }

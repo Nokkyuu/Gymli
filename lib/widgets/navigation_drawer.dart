@@ -3,16 +3,11 @@ import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:auth0_flutter/auth0_flutter.dart';
 import 'package:auth0_flutter/auth0_flutter_web.dart';
+import 'package:go_router/go_router.dart';
 import 'package:Gymli/utils/services/service_container.dart';
+import 'package:Gymli/config/app_router.dart';
 import '../../utils/themes/themes.dart';
 import '../../utils/globals.dart' as globals;
-import '../../screens/exercise_setup_screen.dart';
-import '../../screens/workout_setup_screen.dart';
-import '../../screens/activity_screen.dart';
-import '../../screens/food_screen.dart';
-import '../../screens/statistics_screen.dart';
-import '../../screens/calendar_screen.dart';
-import '../../screens/settings_screen.dart';
 
 class AppDrawer extends StatefulWidget {
   final Credentials? credentials;
@@ -75,19 +70,19 @@ class _AppDrawerState extends State<AppDrawer> {
             style: Theme.of(context).textTheme.titleLarge,
           ),
           ListTile(
+            leading: const Icon(Icons.home),
+            title: const Text('Start'),
+            onTap: () {
+              Navigator.pop(context);
+              context.go(AppRouter.main);
+            },
+          ),
+          const Divider(),
+          ListTile(
             title: const Text('Exercise Setup'),
             onTap: () {
               Navigator.pop(context);
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => ExerciseSetupScreen(""),
-                ),
-              ).then((_) {
-                widget.getExerciseList(); // Keep this for global list
-                globals
-                    .notifyExerciseDataChanged(); // Add this to notify landing screen
-              });
+              context.go(AppRouter.exerciseSetup);
 
               for (var i in globals.muscle_val.keys) {
                 globals.muscle_val[i] = 0;
@@ -98,72 +93,42 @@ class _AppDrawerState extends State<AppDrawer> {
             title: const Text('Workout Setup'),
             onTap: () {
               Navigator.pop(context);
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const WorkoutSetupScreen(""),
-                ),
-              );
+              context.go(AppRouter.workoutSetup);
             },
           ),
           ListTile(
             title: const Text('Activity Tracker'),
             onTap: () {
               Navigator.pop(context);
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const ActivityScreen(),
-                ),
-              );
+              context.go(AppRouter.activity);
             },
           ),
           ListTile(
             title: const Text('Food Tracker'),
             onTap: () {
               Navigator.pop(context);
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const FoodScreen(),
-                ),
-              );
+              context.go(AppRouter.food);
             },
           ),
           ListTile(
             title: const Text('Statistics'),
             onTap: () {
               Navigator.pop(context);
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const StatisticsScreen(),
-                ),
-              );
+              context.go(AppRouter.statistics);
             },
           ),
           ListTile(
             title: const Text('Calendar'),
             onTap: () {
               Navigator.pop(context);
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const CalendarScreen(),
-                ),
-              );
+              context.go(AppRouter.calendar);
             },
           ),
           ListTile(
             title: const Text('Settings'),
             onTap: () {
               Navigator.pop(context);
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const SettingsScreen(),
-                ),
-              );
+              context.go(AppRouter.settings);
             },
           ),
           IconButton(
