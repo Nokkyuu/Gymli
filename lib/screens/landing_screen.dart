@@ -4,6 +4,7 @@
 library;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:Gymli/config/app_router.dart';
@@ -50,7 +51,12 @@ class _LandingScreenState extends State<LandingScreen> {
 
   @override
   void dispose() {
-    _landingController.dispose();
+    // Safely dispose the controller with error handling
+    try {
+      _landingController.dispose();
+    } catch (e) {
+      if (kDebugMode) print('Warning: Error disposing LandingController: $e');
+    }
     super.dispose();
   }
 
