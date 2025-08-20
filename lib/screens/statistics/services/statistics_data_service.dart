@@ -9,14 +9,14 @@
 library;
 
 import 'package:fl_chart/fl_chart.dart';
-import 'package:Gymli/utils/services/service_container.dart';
+import 'package:Gymli/utils/services/temp_service.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
 import '../../../utils/api/api_models.dart';
 import 'statistics_filter_service.dart';
 
 /// Service responsible for data fetching and caching for statistics
 class StatisticsDataService {
-  final ServiceContainer container;
+  final TempService container;
 
   // Caching variables to prevent redundant API calls
   List<Map<String, dynamic>>? _cachedTrainingSets;

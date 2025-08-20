@@ -4,7 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:auth0_flutter/auth0_flutter.dart';
 import 'package:auth0_flutter/auth0_flutter_web.dart';
 import 'package:go_router/go_router.dart';
-import 'package:Gymli/utils/services/service_container.dart';
+import 'package:Gymli/utils/services/temp_service.dart';
 import 'package:Gymli/config/app_router.dart';
 import '../../utils/themes/themes.dart';
 import '../../utils/globals.dart' as globals;
@@ -12,7 +12,7 @@ import '../../utils/globals.dart' as globals;
 class AppDrawer extends StatefulWidget {
   final Credentials? credentials;
   final Auth0Web auth0;
-  final ServiceContainer container;
+  final TempService container;
   final String? drawerImage;
   final List<String> drawerImages;
   final bool isDarkMode;

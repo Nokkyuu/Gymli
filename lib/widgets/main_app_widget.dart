@@ -8,7 +8,7 @@ import 'dart:math';
 
 import '../screens/landing_screen.dart';
 import '../utils/themes/themes.dart';
-import 'package:Gymli/utils/services/service_container.dart';
+import 'package:Gymli/utils/services/temp_service.dart';
 import '../utils/info_dialogues.dart';
 import '../utils/services/auth0_service.dart';
 import '../utils/services/theme_service.dart';
@@ -25,7 +25,7 @@ class _MainAppWidgetState extends State<MainAppWidget> {
   String? _drawerImage;
   late Auth0Service _authService;
   late ThemeService _themeService;
-  final container = ServiceContainer();
+  final container = TempService();
   bool _isInitialized = false; // Add this flag
 
 //drawer images to circles through, without file extensions because they will be added dynamicly and switch for dark mode

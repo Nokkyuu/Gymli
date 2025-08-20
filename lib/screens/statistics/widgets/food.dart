@@ -2,7 +2,7 @@ import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
-import 'package:Gymli/utils/services/service_container.dart';
+import 'package:Gymli/utils/services/temp_service.dart';
 
 class FoodStatsScreen extends StatefulWidget {
   final String? startingDate;
@@ -21,7 +21,7 @@ class FoodStatsScreen extends StatefulWidget {
 }
 
 class _StatsScreenState extends State<FoodStatsScreen> {
-  final ServiceContainer container = ServiceContainer();
+  final TempService container = TempService();
   Map<String, double> nutritionStats = {};
   List<Map<String, dynamic>> dailyNutritionData = [];
 

@@ -1,11 +1,11 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:Gymli/utils/services/service_container.dart';
+import 'package:Gymli/utils/services/temp_service.dart';
 import '../models/models.dart';
 import '../constants/calendar_constants.dart';
 
 class CalendarController extends ChangeNotifier {
-  final ServiceContainer _container = ServiceContainer();
+  final TempService _container = TempService();
 
   // Calendar state
   DateTime _focusedDay = DateTime.now();

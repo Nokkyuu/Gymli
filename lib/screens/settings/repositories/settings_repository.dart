@@ -2,10 +2,10 @@
 library;
 
 import 'package:flutter/foundation.dart';
-import 'package:Gymli/utils/services/service_container.dart';
+import 'package:Gymli/utils/services/temp_service.dart';
 
 class SettingsRepository {
-  final ServiceContainer container = ServiceContainer();
+  final TempService container = TempService();
 
   /// Get training sets data
   Future<List<dynamic>> getTrainingSets() async {

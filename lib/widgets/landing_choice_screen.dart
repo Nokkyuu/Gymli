@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:go_router/go_router.dart';
 import '../config/app_router.dart';
-import '../utils/services/service_container.dart';
+import '../utils/services/temp_service.dart';
 import '../utils/services/auth0_service.dart';
 
 class LandingChoiceScreen extends StatefulWidget {
@@ -14,7 +14,7 @@ class LandingChoiceScreen extends StatefulWidget {
 }
 
 class _LandingChoiceScreenState extends State<LandingChoiceScreen> {
-  final _container = ServiceContainer();
+  final _container = TempService();
   late Auth0Service _authService;
   bool _loading = true;
   bool _isInitialized = false;

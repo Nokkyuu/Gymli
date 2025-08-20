@@ -2,11 +2,11 @@
 library;
 
 import 'package:flutter/foundation.dart';
-import 'package:Gymli/utils/services/service_container.dart';
+import 'package:Gymli/utils/services/temp_service.dart';
 import '../../../utils/api/api_models.dart';
 
 class LandingRepository {
-  final ServiceContainer container = ServiceContainer();
+  final TempService container = TempService();
 
   /// Get all exercises from the service
   Future<List<ApiExercise>> getExercises() async {

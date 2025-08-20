@@ -3,9 +3,9 @@
 library;
 
 import 'package:flutter/material.dart';
-import 'package:Gymli/utils/services/service_container.dart';
+import 'package:Gymli/utils/services/temp_service.dart';
 
-final container = ServiceContainer();
+final container = TempService();
 
 Widget buildInfoButton(
     String tooltip, BuildContext context, VoidCallback onPressed) {

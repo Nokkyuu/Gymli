@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:Gymli/utils/services/service_container.dart';
+import 'package:Gymli/utils/services/temp_service.dart';
 import '../../../utils/info_dialogues.dart';
 
 class CalorieBalanceScreen extends StatefulWidget {
@@ -23,7 +23,7 @@ class CalorieBalanceScreen extends StatefulWidget {
 }
 
 class _CalorieBalanceScreenState extends State<CalorieBalanceScreen> {
-  final ServiceContainer container = ServiceContainer();
+  final TempService container = TempService();
 
   // User data for metabolic rate calculation
   String? _sex;

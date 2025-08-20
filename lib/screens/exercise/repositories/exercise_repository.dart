@@ -1,4 +1,4 @@
-import 'package:Gymli/utils/services/service_container.dart';
+import 'package:Gymli/utils/services/temp_service.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
 import '../../../utils/api/api_models.dart';
 
@@ -15,7 +15,7 @@ class ExerciseRepository {
 
   static const Duration _cacheValidityDuration = Duration(minutes: 5);
 
-  ServiceContainer get container => ServiceContainer();
+  TempService get container => TempService();
 
   /// Get all training sets for a specific exercise
   Future<List<ApiTrainingSet>> getTrainingSetsForExercise() async {

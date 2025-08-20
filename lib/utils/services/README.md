@@ -6,7 +6,7 @@
     - handles the app initialization
 - auth0_service.dart
     - handles auth0 login and credential state initialization, needs the service container
-- service_container.dart
+- temp_service.dart
     - container file for the primary services and domain services.
 - auth_service.dart
     - handles auth state mangement

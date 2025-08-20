@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:Gymli/utils/services/service_container.dart';
+import 'package:Gymli/utils/services/temp_service.dart';
 import '../../../utils/api/api_models.dart';
 import '../../exercise/repositories/exercise_repository.dart';
 import '../../exercise_history_screen.dart';
@@ -8,7 +8,7 @@ class HistoryListController {
   final String exercise;
   final int exerciseId;
   final ExerciseRepository? exerciseRepository;
-  final ServiceContainer container = ServiceContainer();
+  final TempService container = TempService();
 
   final ValueNotifier<List<ListEntry>> entries = ValueNotifier([]);
   final ValueNotifier<bool> isLoading = ValueNotifier(false);

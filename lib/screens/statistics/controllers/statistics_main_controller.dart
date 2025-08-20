@@ -8,7 +8,7 @@ import 'package:intl/intl.dart';
 import 'package:time_machine/time_machine.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../../../utils/api/api_models.dart';
-import '../../../utils/services/service_container.dart';
+import '../../../utils/services/temp_service.dart';
 import '../services/statistics_data_service.dart';
 import '../services/statistics_filter_service.dart';
 import '../services/statistics_calculation_service.dart';
@@ -16,7 +16,7 @@ import '../services/statistics_coordinator.dart';
 
 //TODO: Refactor into smaller and more specialized controllers
 class StatisticsMainController extends ChangeNotifier {
-  final ServiceContainer _container;
+  final TempService _container;
 
   // Service instances
   late final StatisticsDataService _dataService;
@@ -90,8 +90,8 @@ class StatisticsMainController extends ChangeNotifier {
     [0.31, 1 - 0.20], //calv
   ];
 
-  StatisticsMainController({ServiceContainer? container})
-      : _container = container ?? ServiceContainer() {
+  StatisticsMainController({TempService? container})
+      : _container = container ?? TempService() {
     _initializeServices();
     _initializeDatePicker();
   }

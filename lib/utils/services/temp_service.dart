@@ -1,4 +1,4 @@
-/// ServiceContainer is a singleton that manages all services in the application.
+/// TempService is a singleton that manages all services in the application.
 /// Replacement for the deprecated UserService.
 /// please see the seperate service files for more details on each service.
 library;
@@ -9,16 +9,16 @@ import 'package:Gymli/utils/api/api_models.dart';
 
 String userName = 'DefaultUser';
 
-class ServiceContainer {
-  /// Singleton instance for ServiceContainer
-  static ServiceContainer? _instance;
+class TempService {
+  /// Singleton instance for TempService
+  static TempService? _instance;
 
-  factory ServiceContainer() {
-    _instance ??= ServiceContainer._internal();
+  factory TempService() {
+    _instance ??= TempService._internal();
     return _instance!;
   }
 
-  ServiceContainer._internal() {
+  TempService._internal() {
     _setupServices();
   }
 

@@ -22,7 +22,7 @@ import '../screens/landing_screen.dart';
 import '../widgets/navigation_drawer.dart';
 
 // Import services
-import '../utils/services/service_container.dart';
+import '../utils/services/temp_service.dart';
 import '../utils/services/auth0_service.dart';
 import '../utils/services/theme_service.dart';
 import '../utils/info_dialogues.dart';
@@ -164,7 +164,7 @@ class AppRouter {
 
         // Get auth service from the context if available
         try {
-          final container = ServiceContainer();
+          final container = TempService();
           final isLoggedIn = container.authService.isLoggedIn;
 
           // If logged in but on landing page, redirect to main
@@ -236,7 +236,7 @@ class MainAppWrapper extends StatefulWidget {
 class _MainAppWrapperState extends State<MainAppWrapper> {
   String? _drawerImage;
   late Auth0Service _authService;
-  final container = ServiceContainer();
+  final container = TempService();
   bool _isInitialized = false;
 
   //drawer images to circle through, without file extensions because they will be added dynamically and switch for dark mode

@@ -1,13 +1,13 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../../../utils/globals.dart' as globals;
-import '../../../utils/services/service_container.dart';
+import '../../../utils/services/temp_service.dart';
 import '../../../utils/api/api_models.dart';
 
 enum ExerciseDevice { free, machine, cable, body }
 
 class ExerciseSetupController extends ChangeNotifier {
-  final ServiceContainer _container = ServiceContainer();
+  final TempService _container = TempService();
 
   // Exercise data
   String _exerciseName = '';

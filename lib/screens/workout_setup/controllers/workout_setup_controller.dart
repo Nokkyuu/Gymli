@@ -1,10 +1,10 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import '../../../utils/services/service_container.dart';
+import '../../../utils/services/temp_service.dart';
 import '../../../utils/api/api_models.dart';
 
 class WorkoutSetupController extends ChangeNotifier {
-  final ServiceContainer _container = ServiceContainer();
+  final TempService _container = TempService();
 
   // Workout data
   String _workoutName = '';

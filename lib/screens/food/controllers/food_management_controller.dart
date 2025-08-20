@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import '../../../utils/services/service_container.dart';
+import '../../../utils/services/temp_service.dart';
 import '../../../utils/api/api_models.dart';
 
 /// Component for ingredients when creating custom food
@@ -11,7 +11,7 @@ class FoodComponent {
 
 /// Controller for custom food creation and management
 class FoodManagementController extends ChangeNotifier {
-  final ServiceContainer container = ServiceContainer();
+  final TempService container = TempService();
 
   // Form controllers for custom food creation
   final TextEditingController customFoodNameController =
