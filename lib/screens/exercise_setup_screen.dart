@@ -74,20 +74,24 @@ class _ExerciseSetupScreenState extends State<ExerciseSetupScreen> {
       BuildContext context, ExerciseSetupController controller) {
     showDialog(
       context: context,
-      builder: (BuildContext context) {
+      builder: (BuildContext dialogueContext) {
         return AlertDialog(
           title: const Text('Delete Exercise'),
           content: Text(
               'Are you sure you want to delete "${controller.currentExercise?.name}"?\n\nThis will also delete all training sets associated with this exercise. This action cannot be undone.'),
           actions: [
             TextButton(
-              onPressed: () => Navigator.of(context).pop(),
+              onPressed: () => Navigator.of(dialogueContext).pop(),
               child: const Text('Cancel'),
             ),
             TextButton(
               onPressed: () async {
-                Navigator.of(context).pop();
+                Navigator.of(dialogueContext).pop();
                 final success = await controller.deleteExercise();
+                if (success) {
+                  if (kDebugMode) print('✅ Exercise deleted successfully');
+                }
+
                 if (success && context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(

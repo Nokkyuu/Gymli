@@ -131,7 +131,7 @@ class _WorkoutSetupScreenState extends State<WorkoutSetupScreen> {
 
   void _handleSaveSuccess(BuildContext context) {
     if (context.mounted) {
-      Navigator.of(context).pop();
+      context.go(AppRouter.main);
     }
   }
 

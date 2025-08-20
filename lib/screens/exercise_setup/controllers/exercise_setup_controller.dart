@@ -164,16 +164,20 @@ class ExerciseSetupController extends ChangeNotifier {
     _setLoading(true);
     try {
       final exerciseId = _currentExercise!.id!;
-
+      //TODO: create specific endpoint to delete a bunch of sets by id
       if (kDebugMode) print('Deleting training sets for exercise $exerciseId');
-      final trainingSets =
-          await _container.trainingSetService.getTrainingSets();
+      final trainingSets = await _container.trainingSetService
+          .getTrainingSetsByExerciseID(exerciseId: exerciseId);
       for (var set in trainingSets) {
-        if (set['exercise_id'] == exerciseId) {
-          await _container.trainingSetService.deleteTrainingSet(set['id']);
+        await _container.trainingSetService.deleteTrainingSet(set['id']);
+      }
+      final workoutUnits =
+          await _container.workoutUnitService.getWorkoutUnits();
+      for (var unit in workoutUnits) {
+        if (unit['exercise_id'] == exerciseId) {
+          await _container.workoutUnitService.deleteWorkoutUnit(unit['id']);
         }
       }
-
       if (kDebugMode) print('Deleting exercise $exerciseId');
       await _container.exerciseService.deleteExercise(exerciseId);
 
