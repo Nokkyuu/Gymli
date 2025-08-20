@@ -496,6 +496,8 @@ class TempService {
     return await _enrichWorkoutUnitsWithExerciseNames(workoutUnits);
   }
 
+
+
   Future<List<dynamic>> _enrichWorkoutUnitsWithExerciseNames(
       List<dynamic> workoutUnits) async {
     try {

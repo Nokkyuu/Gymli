@@ -1,15 +1,17 @@
 /// Landing Controller - Simplified without caching layer
 library;
 
+import 'package:Gymli/utils/services/auth_service.dart';
+import 'package:Gymli/utils/services/temp_service.dart';
 import 'package:flutter/foundation.dart';
-import '../repositories/landing_repository.dart';
 import '../models/landing_filter_state.dart';
 import 'landing_filter_controller.dart';
 import '../../../utils/api/api_models.dart';
 import '../../../utils/globals.dart' as globals;
+import 'package:get_it/get_it.dart';
+import 'package:Gymli/utils/api/api.dart';
 
 class LandingController extends ChangeNotifier {
-  final LandingRepository _repository;
   final LandingFilterController _filterController;
 
   // Direct data storage (no separate cache)
@@ -26,10 +28,8 @@ class LandingController extends ChangeNotifier {
   final ValueNotifier<bool> filterApplied = ValueNotifier<bool>(true);
 
   LandingController({
-    LandingRepository? repository,
     LandingFilterController? filterController,
-  })  : _repository = repository ?? LandingRepository(),
-        _filterController = filterController ?? LandingFilterController() {
+  }) : _filterController = filterController ?? LandingFilterController() {
     // Listen to global exercise data changes
     globals.exerciseDataChangedNotifier.addListener(_onExerciseDataChanged);
   }
@@ -42,7 +42,6 @@ class LandingController extends ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
   bool get hasShownWelcomeMessage => _hasShownWelcomeMessage;
-  LandingRepository get repository => _repository;
   LandingFilterController get filterController => _filterController;
 
   /// Initialize the landing screen
@@ -60,8 +59,8 @@ class LandingController extends ChangeNotifier {
       await _loadData();
       await showAllExercises();
 
-      // Only add listener after successful initialization
-      _repository.authStateNotifier.addListener(_onAuthStateChanged);
+      // // Only add listener after successful initialization
+      // _repository.authStateNotifier.addListener(_onAuthStateChanged);  // TODO: MAYBE
       _isInitialized = true;
 
       if (kDebugMode) print('✅ LandingController initialized successfully');
@@ -75,13 +74,15 @@ class LandingController extends ChangeNotifier {
 
   /// Load all data from repository
   Future<void> _loadData() async {
-    final results = await Future.wait([
-      _repository.getExercises(),
-      _repository.getWorkouts(),
-    ]);
+      // return exercises.map((e) => ApiExercise.fromJson(e)).toList();
 
-    _exercises = results[0] as List<ApiExercise>;
-    _workouts = results[1] as List<ApiWorkout>;
+    List<dynamic> currentExercises = await GetIt.I<ExerciseService>().getExercises();
+    currentExercises = currentExercises.map((e) => ApiExercise.fromJson(e)).toList();
+    _exercises = currentExercises as List<ApiExercise>;
+
+    List<dynamic> currentWorkouts = await GetIt.I<TempService>().workoutService.getWorkouts();
+    currentWorkouts = currentWorkouts.map((e) => ApiWorkout.fromJson(e)).toList();
+    _workouts = currentWorkouts as List<ApiWorkout>; 
 
     // Sort data
     _exercises.sort((a, b) => a.name.compareTo(b.name));
@@ -177,7 +178,7 @@ class LandingController extends ChangeNotifier {
   void showWelcomeMessage() {
     if (!_isInitialized) return;
 
-    if (_repository.isLoggedIn && !_hasShownWelcomeMessage) {
+    if (GetIt.I<AuthService>().isLoggedIn && !_hasShownWelcomeMessage) {
       _hasShownWelcomeMessage = true;
       notifyListeners();
     }
@@ -246,7 +247,7 @@ class LandingController extends ChangeNotifier {
           .removeListener(_onExerciseDataChanged);
 
       // Remove repository listener safely
-      _repository.authStateNotifier.removeListener(_onAuthStateChanged);
+      // _repository.authStateNotifier.removeListener(_onAuthStateChanged);
 
       // Dispose filter applied notifier
       filterApplied.dispose();
@@ -267,8 +268,8 @@ class LandingController extends ChangeNotifier {
 
     try {
       final exerciseNames = _filteredExercises.map((ex) => ex.name).toList();
-      final lastTrainingDays =
-          await _repository.getLastTrainingDaysForExercises(exerciseNames);
+      // final lastTrainingDays = await _repository.getLastTrainingDaysForExercises(exerciseNames);
+      final lastTrainingDays = await GetIt.I<TempService>().getLastTrainingDatesPerExercise(exerciseNames);
 
       for (var ex in _filteredExercises) {
         final lastTraining =
@@ -319,7 +320,7 @@ class LandingController extends ChangeNotifier {
     try {
       final exerciseNames = _filteredExercises.map((ex) => ex.name).toList();
       final lastTrainingDays =
-          await _repository.getLastTrainingDaysForExercises(exerciseNames);
+          await GetIt.I<TempService>().getLastTrainingDatesPerExercise(exerciseNames);
 
       for (var ex in _filteredExercises) {
         final lastTraining =

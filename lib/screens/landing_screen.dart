@@ -5,16 +5,17 @@ library;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
+import 'package:get_it/get_it.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:Gymli/config/app_router.dart';
 import 'landing/controllers/landing_controller.dart';
 import 'landing/controllers/landing_filter_controller.dart';
-import 'landing/repositories/landing_repository.dart';
 import 'landing/widgets/landing_loading_widget.dart';
 import 'landing/widgets/landing_demo_watermark.dart';
 import 'landing/widgets/landing_exercise_list.dart';
 import 'landing/widgets/landing_filter_section.dart';
+import 'package:Gymli/utils/services/auth_service.dart';
 
 class LandingScreen extends StatefulWidget {
   final void Function(Color)? onPhaseColorChanged;
@@ -27,7 +28,6 @@ class LandingScreen extends StatefulWidget {
 class _LandingScreenState extends State<LandingScreen> {
   late LandingController _landingController;
   late LandingFilterController _filterController;
-  late LandingRepository _repository;
 
   @override
   void initState() {
@@ -36,10 +36,8 @@ class _LandingScreenState extends State<LandingScreen> {
   }
 
   void _initializeComponents() {
-    _repository = LandingRepository();
     _filterController = LandingFilterController();
     _landingController = LandingController(
-      repository: _repository,
       filterController: _filterController,
     );
 
@@ -124,7 +122,7 @@ class _LandingScreenState extends State<LandingScreen> {
           ],
         ),
         LandingDemoWatermark(
-          isLoggedIn: _repository.isLoggedIn,
+          isLoggedIn: GetIt.I<AuthService>().isLoggedIn,
         ),
       ],
     );
