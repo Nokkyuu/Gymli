@@ -24,8 +24,15 @@ import 'package:flutter_native_splash/flutter_native_splash.dart';
 void main() async {
   GetIt.I.registerSingleton<TempService>(TempService());
   GetIt.I.registerSingleton<ExerciseService>(ExerciseService());
-  GetIt.I.registerSingleton<AuthManager>(AuthManager());
+  GetIt.I.registerSingleton<WorkoutService>(WorkoutService());
+  GetIt.I.registerSingleton<TrainingSetService>(TrainingSetService());
+  GetIt.I.registerSingleton<FoodService>(FoodService());
+  GetIt.I.registerSingleton<ActivityService>(ActivityService());
+  GetIt.I.registerSingleton<CalendarService>(CalendarService());
   GetIt.I.registerSingleton<AuthService>(AuthService());
+
+  // managers are either ttl-singletons with state, or riverpods
+  // GetIt.I.registerSingleton<AuthManager>(AuthManager());
   GetIt.I.registerSingleton<WorkoutSessionManager>(WorkoutSessionManager());
   
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding

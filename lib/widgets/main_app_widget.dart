@@ -16,6 +16,8 @@ import '../utils/services/auth0_service.dart';
 import '../utils/services/theme_service.dart';
 import 'navigation_drawer.dart';
 
+
+
 class MainAppWidget extends StatefulWidget {
   const MainAppWidget({super.key});
 

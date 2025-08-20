@@ -4,10 +4,10 @@ import 'package:Gymli/utils/services/temp_service.dart';
 import '../models/models.dart';
 import '../constants/calendar_constants.dart';
 import 'package:get_it/get_it.dart';
+import 'package:Gymli/utils/api/api.dart';
 
 class CalendarController extends ChangeNotifier {
-  final TempService _container = GetIt.I<TempService>();
-
+  final CalendarService calendarService = GetIt.I<CalendarService>();
   // Calendar state
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
@@ -84,7 +84,7 @@ class CalendarController extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final workouts = await _container.workoutService.getWorkouts();
+      final workouts = await GetIt.I<WorkoutService>().getWorkouts();
       _workoutNames = workouts.map<String>((w) => w['name'] as String).toList();
     } catch (e) {
       if (kDebugMode) print('Error loading workouts: $e');
@@ -99,7 +99,7 @@ class CalendarController extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final notes = await _container.calendarService.getCalendarNotes();
+      final notes = await calendarService.getCalendarNotes();
       _notes.clear();
       for (var n in notes) {
         final note = CalendarNote.fromMap(n);
@@ -115,7 +115,7 @@ class CalendarController extends ChangeNotifier {
 
   Future<void> loadCalendarWorkouts() async {
     try {
-      final workouts = await _container.calendarService.getCalendarWorkouts();
+      final workouts = await calendarService.getCalendarWorkouts();
       _calendarWorkouts.clear();
       for (var w in workouts) {
         final workout = CalendarWorkout.fromMap(w);
@@ -136,7 +136,7 @@ class CalendarController extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final periods = await _container.calendarService.getCalendarPeriods();
+      final periods = await calendarService.getCalendarPeriods();
       _periods.clear();
       for (var p in periods) {
         _periods.add(CalendarPeriod.fromMap(p));
@@ -158,18 +158,18 @@ class CalendarController extends ChangeNotifier {
       if (note == null || note.trim().isEmpty) {
         // Delete note
         if (existingNote != null) {
-          await _container.calendarService.deleteCalendarNote(existingNote.id!);
+          await calendarService.deleteCalendarNote(existingNote.id!);
           _notes.remove(normalizedDate);
         }
       } else {
         if (existingNote != null) {
           // Update existing note
-          await _container.calendarService.updateCalendarNote(
+          await calendarService.updateCalendarNote(
               id: existingNote.id!, note: note, date: normalizedDate);
           _notes[normalizedDate] = existingNote.copyWith(note: note);
         } else {
           // Create new note
-          final createdNote = await _container.calendarService
+          final createdNote = await calendarService
               .createCalendarNote(date: normalizedDate, note: note);
           _notes[normalizedDate] = CalendarNote(
             id: createdNote['id'],
@@ -189,7 +189,7 @@ class CalendarController extends ChangeNotifier {
   // Workout operations
   Future<String?> addWorkout(DateTime date, String workoutName) async {
     try {
-      final createdWorkout = await _container.calendarService
+      final createdWorkout = await calendarService
           .createCalendarWorkout(date: date, workout: workoutName);
 
       _calendarWorkouts.add(CalendarWorkout(
@@ -209,7 +209,7 @@ class CalendarController extends ChangeNotifier {
   Future<String?> deleteWorkout(CalendarWorkout workout) async {
     try {
       if (workout.id != null) {
-        await _container.calendarService.deleteCalendarWorkout(workout.id!);
+        await calendarService.deleteCalendarWorkout(workout.id!);
       }
       _calendarWorkouts.remove(workout);
       notifyListeners();
@@ -235,7 +235,7 @@ class CalendarController extends ChangeNotifier {
         return CalendarConstants.periodOverlapError;
       }
 
-      final createdPeriod = await _container.calendarService
+      final createdPeriod = await calendarService
           .createCalendarPeriod(type: type, start_date: start, end_date: end);
 
       _periods.add(CalendarPeriod(
@@ -256,7 +256,7 @@ class CalendarController extends ChangeNotifier {
   Future<String?> deletePeriod(CalendarPeriod period) async {
     try {
       if (period.id != null) {
-        await _container.calendarService.deleteCalendarPeriod(period.id!);
+        await calendarService.deleteCalendarPeriod(period.id!);
       }
       _periods.remove(period);
       notifyListeners();
@@ -303,7 +303,7 @@ class CalendarController extends ChangeNotifier {
     try {
       // Remove note
       if (_notes.containsKey(normalizedDay)) {
-        await _container.calendarService
+        await calendarService
             .deleteCalendarNote(_notes[normalizedDay]!.id!);
         _notes.remove(normalizedDay);
       }
@@ -315,7 +315,7 @@ class CalendarController extends ChangeNotifier {
 
       for (final w in workoutsToRemove) {
         if (w.id != null) {
-          await _container.calendarService.deleteCalendarWorkout(w.id!);
+          await calendarService.deleteCalendarWorkout(w.id!);
         }
       }
 
@@ -397,7 +397,7 @@ class CalendarController extends ChangeNotifier {
   // Delete individual items
   Future<String?> deleteNote(CalendarNote note) async {
     try {
-      await _container.calendarService.deleteCalendarNote(note.id!);
+      await calendarService.deleteCalendarNote(note.id!);
       _notes.remove(normalize(note.date));
       notifyListeners();
       return null;
