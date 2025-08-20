@@ -130,7 +130,7 @@ class AppInitializer {
       final exercises = await GetIt.I<TempService>().exerciseService.getExercises();
 
       globals.exerciseList =
-          exercises.map<String>((e) => e['name'] as String).toList();
+          exercises.map<String>((e) => e.name).toList();
       print('Exercise list loaded: ${globals.exerciseList.length} exercises');
     } catch (e) {
       print('Error loading initial data: $e');

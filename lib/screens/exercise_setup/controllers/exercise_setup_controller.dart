@@ -55,21 +55,23 @@ class ExerciseSetupController extends ChangeNotifier {
 
     _setLoading(true);
     try {
-      final exercises = await exerciseService.getExercises();
-      final exerciseData = exercises.firstWhere(
-        (item) => item['name'] == _exerciseName,
-        orElse: () => null,
-      );
+      final List<ApiExercise> exercises = await exerciseService.getExercises();
+      ApiExercise? exerciseData;
+      try {
+        exerciseData = exercises.firstWhere(
+        (item) => item.name == _exerciseName);
+      } catch (e) {
+        exerciseData = null;
+      }
 
       if (exerciseData != null) {
-        final exercise = ApiExercise.fromJson(exerciseData);
-        _currentExercise = exercise;
-        exerciseTitleController.text = exercise.name;
-        _chosenDevice = ExerciseDevice.values[exercise.type];
-        _minRep = exercise.defaultRepBase.toDouble();
-        _maxRep = exercise.defaultRepMax.toDouble();
+        _currentExercise = exerciseData;
+        exerciseTitleController.text = exerciseData.name;
+        _chosenDevice = ExerciseDevice.values[exerciseData.type];
+        _minRep = exerciseData.defaultRepBase.toDouble();
+        _maxRep = exerciseData.defaultRepMax.toDouble();
         _repRange = RangeValues(_minRep, _maxRep);
-        _weightInc = exercise.defaultIncrement;
+        _weightInc = exerciseData.defaultIncrement;
 
         // Reset all muscle values
         for (var m in muscleGroupNames) {
@@ -77,7 +79,7 @@ class ExerciseSetupController extends ChangeNotifier {
         }
 
         // Set muscle intensities
-        final intensities = exercise.muscleIntensities;
+        final intensities = exerciseData.muscleIntensities;
         for (int i = 0;
             i < muscleGroupNames.length && i < intensities.length;
             i++) {
@@ -222,17 +224,19 @@ class ExerciseSetupController extends ChangeNotifier {
     if (kDebugMode) print('🔧 add_exercise: Getting existing exercises...');
     // Check if exercise exists
     final exercises = await exerciseService.getExercises();
-    final existing = exercises.firstWhere(
-      (e) => e['name'] == exerciseName,
-      orElse: () => null,
-    );
+    ApiExercise? existing;
+    try {
+      existing = exercises.firstWhere((e) => e.name == exerciseName);
+    } catch (e) {
+      existing = null;
+    }
 
-    if (existing != null && existing['id'] != null) {
+    if (existing != null && existing.id != null) {
       if (kDebugMode)
         print(
-            '🔧 add_exercise: Updating existing exercise with ID: ${existing['id']}');
+            '🔧 add_exercise: Updating existing exercise with ID: ${existing.id}');
       // Update existing exercise
-      await exerciseService.updateExercise(existing['id'], {
+      await exerciseService.updateExercise(existing.id!, {
         'user_name': _container.authService.userName,
         'name': exerciseName,
         'type': exerciseType,
@@ -290,7 +294,7 @@ class ExerciseSetupController extends ChangeNotifier {
       final exercises = await exerciseService.getExercises();
       List<String> exerciseList = [];
       for (var e in exercises) {
-        exerciseList.add(e['name']);
+        exerciseList.add(e.name);
       }
       globals.exerciseList = exerciseList;
     } catch (e) {

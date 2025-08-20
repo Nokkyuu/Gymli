@@ -46,10 +46,7 @@ class WorkoutSetupController extends ChangeNotifier {
     try {
       // Load all exercises
       final exerciseData = await exerciseService.getExercises();
-      _allExercises = exerciseData
-          .map((item) => ApiExercise.fromJson(item))
-          .toList()
-        ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+      _allExercises = exerciseData..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
 
       if (_workoutName.isNotEmpty) {
         final workoutData = await _container.getWorkouts();

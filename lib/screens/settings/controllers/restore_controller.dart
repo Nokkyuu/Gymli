@@ -114,7 +114,7 @@ class RestoreController extends ChangeNotifier {
     final exercises = await _repository.getExercises();
     final Map<String, int> exerciseNameToIdMap = {};
     for (var exercise in exercises) {
-      exerciseNameToIdMap[exercise['name']] = exercise['id'];
+      exerciseNameToIdMap[exercise.name] = exercise.id;
     }
 
     if (kDebugMode)

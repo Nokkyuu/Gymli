@@ -67,9 +67,7 @@ class StatisticsDataService {
   Future<List<ApiExercise>> getExercises() async {
     if (_cachedExercises == null || !_dataCacheValid || _isCacheExpired) {
       if (kDebugMode) print('Loading exercises from API...');
-      final exercisesData = await exerciseService.getExercises();
-      _cachedExercises =
-          exercisesData.map((e) => ApiExercise.fromJson(e)).toList();
+      _cachedExercises = await exerciseService.getExercises();
       _dataCacheValid = true;
       _lastCacheTime = DateTime.now();
     } else {

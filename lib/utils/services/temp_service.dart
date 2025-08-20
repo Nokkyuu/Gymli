@@ -116,11 +116,8 @@ class TempService {
     try {
       final exerciseService = GetIt.I<ExerciseService>();
       final exercises = await exerciseService.getExercises();
-      final exerciseData = exercises.firstWhere(
-        (item) => item['name'] == exerciseName,
-        orElse: () => null,
-      );
-      return exerciseData?['id'];
+      final exerciseData = exercises.firstWhere((item) => item.name == exerciseName);
+      return exerciseData?.id;
     } catch (e) {
       print('Error resolving exercise name to ID: $e');
       return null;
@@ -361,13 +358,13 @@ class TempService {
     int errorCount = 0;
 
     for (var exercise in exercises) {
-      if (exercise['id'] != null) {
+      if (exercise.id != null) {
         try {
-          await exerciseService.deleteExercise(exercise['id']);
+          await exerciseService.deleteExercise(exercise.id!);
           deletedCount++;
         } catch (e) {
           errorCount++;
-          print('Warning: Failed to delete exercise ${exercise['id']}: $e');
+          print('Warning: Failed to delete exercise ${exercise!.id}: $e');
           // Continue with other exercises instead of stopping
         }
       }
@@ -506,21 +503,9 @@ class TempService {
       final exercises = await exerciseService.getExercises();
       final Map<int, String> exerciseIdToName = {};
 
-      for (var exerciseData in exercises) {
+      for (var exercise in exercises) {
         try {
-          // Handle both Map and LinkedMap types
-          final Map<String, dynamic> exerciseMap;
-          if (exerciseData is Map<String, dynamic>) {
-            exerciseMap = exerciseData;
-          } else {
-            exerciseMap = Map<String, dynamic>.from(exerciseData as Map);
-          }
-
-          final exerciseId = exerciseMap['id'] as int?;
-          final exerciseName = exerciseMap['name'] as String?;
-          if (exerciseId != null && exerciseName != null) {
-            exerciseIdToName[exerciseId] = exerciseName;
-          }
+          exerciseIdToName[exercise.id!] = exercise.name;
         } catch (e) {
           print('Error parsing exercise data in workout units: $e');
         }

@@ -5,26 +5,7 @@ import 'dart:convert';
 import '../../config/api_config.dart'; // Add this import
 import '../api/api.dart';
 
-class AuthManager {
-    bool loggedIn = true;
-    String userName = "Test";
-}
-
 class AuthService {
-  /// Singleton instance for AuthService
-  /// getter:
-  /// isLoggedIn: returns true if the user is logged in, false otherwise
-  /// userName: returns the name of the logged-in user, or 'DefaultUser'
-  /// userEmail: returns the email of the logged-in user, or an empty string
-  /// authStateNotifier: a ValueNotifier that notifies listeners about authentication state changes
-  static AuthService? _instance;
-
-  factory AuthService() {
-    _instance ??= AuthService._internal();
-    return _instance!;
-  }
-
-  AuthService._internal();
 
   Credentials? _credentials;
   bool get isLoggedIn => _credentials != null;

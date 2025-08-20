@@ -11,6 +11,7 @@ import 'package:flutter/foundation.dart' show compute, kDebugMode;
 import 'package:http/http.dart' as http;
 import '../../config/api_config.dart';
 import 'api_cache.dart';
+import 'api_models.dart';
 
 const bool useCache = true; // Set to false to disable caching
 // Main API base URL - Azure hosted backend service
@@ -150,9 +151,12 @@ void clearApiCache() {
 /// This service handles all CRUD operations for exercises, which are used
 /// in workout planning and tracking.
 class ExerciseService {
-  Future<List<dynamic>> getExercises() async {
-    return getData<List<dynamic>>('exercises');
+  Future<List<ApiExercise>> getExercises() async {
+    final raw = await getData<List<dynamic>>('exercises');
+    return raw.map((e) => ApiExercise.fromJson(e)).toList();
   }
+
+    
 
   Future<Map<String, dynamic>> getExerciseById(int id) async {
     return getData<Map<String, dynamic>>('exercises/$id');
