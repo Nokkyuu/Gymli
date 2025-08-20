@@ -7,6 +7,9 @@ import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
 import '../utils/themes/responsive_helper.dart';
 import 'workout_setup/workout_setup_exports.dart';
+import 'package:go_router/go_router.dart';
+import 'package:Gymli/config/app_router.dart';
+import '../utils/info_dialogues.dart';
 
 //TODO: raarrange desktop layout, showing the radar chart for muslce activity distribution
 class WorkoutSetupScreen extends StatefulWidget {
@@ -41,6 +44,35 @@ class _WorkoutSetupScreenState extends State<WorkoutSetupScreen> {
     super.dispose();
   }
 
+  AppBar _buildAppBar(BuildContext context) {
+    final isEditMode = widget.workoutName.isNotEmpty;
+
+    return AppBar(
+      title: const Text('Workout Setup'),
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back),
+        onPressed: () => context.go(AppRouter.main),
+      ),
+      actions: [
+        buildInfoButton('Workout Setup Info', context,
+            () => showInfoDialogWorkoutSetup(context)),
+        if (isEditMode)
+          Consumer<WorkoutSetupController>(
+            builder: (context, controller, child) {
+              final hasWorkout = controller.currentWorkout?.id != null;
+              return IconButton(
+                icon: const Icon(Icons.delete),
+                tooltip: hasWorkout ? 'Delete Workout' : 'No Workout to Delete',
+                onPressed: hasWorkout
+                    ? () => _showDeleteDialog(context, controller)
+                    : null,
+              );
+            },
+          ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
@@ -49,6 +81,7 @@ class _WorkoutSetupScreenState extends State<WorkoutSetupScreen> {
         ChangeNotifierProvider.value(value: _exerciseController),
       ],
       child: Scaffold(
+        appBar: _buildAppBar(context),
         resizeToAvoidBottomInset: false,
         body: Consumer<WorkoutSetupController>(
           builder: (context, controller, child) {
@@ -98,7 +131,7 @@ class _WorkoutSetupScreenState extends State<WorkoutSetupScreen> {
 
   void _handleSaveSuccess(BuildContext context) {
     if (context.mounted) {
-      Navigator.of(context).pop();
+      context.go(AppRouter.main);
     }
   }
 
