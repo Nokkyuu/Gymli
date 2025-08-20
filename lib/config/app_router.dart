@@ -6,6 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'dart:math';
+import 'package:get_it/get_it.dart';
+
 
 // Import screens
 import '../widgets/landing_choice_screen.dart';
@@ -164,7 +166,7 @@ class AppRouter {
 
         // Get auth service from the context if available
         try {
-          final container = TempService();
+          final container = GetIt.I<TempService>();
           final isLoggedIn = container.authService.isLoggedIn;
 
           // If logged in but on landing page, redirect to main
@@ -236,7 +238,7 @@ class MainAppWrapper extends StatefulWidget {
 class _MainAppWrapperState extends State<MainAppWrapper> {
   String? _drawerImage;
   late Auth0Service _authService;
-  final container = TempService();
+  final container = GetIt.I<TempService>();
   bool _isInitialized = false;
 
   //drawer images to circle through, without file extensions because they will be added dynamically and switch for dark mode

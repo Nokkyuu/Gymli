@@ -11,17 +11,6 @@ String userName = 'DefaultUser';
 
 class TempService {
   /// Singleton instance for TempService
-  static TempService? _instance;
-
-  factory TempService() {
-    _instance ??= TempService._internal();
-    return _instance!;
-  }
-
-  TempService._internal() {
-    _setupServices();
-  }
-
   // Core services
   late final AuthService authService;
 

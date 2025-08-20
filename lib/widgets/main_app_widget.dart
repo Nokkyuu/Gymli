@@ -5,6 +5,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'dart:math';
+import 'package:get_it/get_it.dart';
 
 import '../screens/landing_screen.dart';
 import '../utils/themes/themes.dart';
@@ -25,7 +26,7 @@ class _MainAppWidgetState extends State<MainAppWidget> {
   String? _drawerImage;
   late Auth0Service _authService;
   late ThemeService _themeService;
-  final container = TempService();
+  final container = GetIt.I<TempService>();
   bool _isInitialized = false; // Add this flag
 
 //drawer images to circles through, without file extensions because they will be added dynamicly and switch for dark mode
