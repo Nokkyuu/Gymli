@@ -3,10 +3,11 @@ import 'package:flutter/material.dart';
 import '../../../utils/services/temp_service.dart';
 import '../../../utils/api/api_models.dart';
 import 'package:get_it/get_it.dart';
+import '../../../utils/api/api.dart';
 
 class WorkoutSetupController extends ChangeNotifier {
   final TempService _container = GetIt.I<TempService>();
-
+  final ExerciseService exerciseService = GetIt.I<ExerciseService>();
   // Workout data
   String _workoutName = '';
   ApiWorkout? _currentWorkout;
@@ -44,7 +45,7 @@ class WorkoutSetupController extends ChangeNotifier {
     _setLoading(true);
     try {
       // Load all exercises
-      final exerciseData = await _container.exerciseService.getExercises();
+      final exerciseData = await exerciseService.getExercises();
       _allExercises = exerciseData
           .map((item) => ApiExercise.fromJson(item))
           .toList()

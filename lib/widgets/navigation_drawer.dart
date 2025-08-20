@@ -8,11 +8,15 @@ import 'package:Gymli/utils/services/temp_service.dart';
 import 'package:Gymli/config/app_router.dart';
 import '../../utils/themes/themes.dart';
 import '../../utils/globals.dart' as globals;
+import 'package:get_it/get_it.dart';
+import '../../utils/api/api.dart';
+
 
 class AppDrawer extends StatefulWidget {
   final Credentials? credentials;
   final Auth0Web auth0;
   final TempService container;
+  final ExerciseService exerciseService;
   final String? drawerImage;
   final List<String> drawerImages;
   final bool isDarkMode;
@@ -27,6 +31,7 @@ class AppDrawer extends StatefulWidget {
     required this.credentials,
     required this.auth0,
     required this.container,
+    required this.exerciseService,
     required this.drawerImage,
     required this.drawerImages,
     required this.isDarkMode,
@@ -273,7 +278,7 @@ class _AppDrawerState extends State<AppDrawer> {
 
   Future<Map<String, int>> _getUserDataCounts() async {
     try {
-      final exercises = await widget.container.exerciseService.getExercises();
+      final exercises = await widget.exerciseService.getExercises();
       final workouts = await widget.container.workoutService.getWorkouts();
       return {
         'exercises': exercises.length,

@@ -146,22 +146,14 @@ void clearApiCache() {
 }
 
 //----------------- Exercise Service -----------------//
-
 /// ExerciseService - Manages exercise definitions and data
-///
 /// This service handles all CRUD operations for exercises, which are used
 /// in workout planning and tracking.
 class ExerciseService {
-  /// Retrieves all exercises for a user
-  /// [userName] - The username to fetch exercises for
-  /// Returns a list of exercise objects
   Future<List<dynamic>> getExercises() async {
     return getData<List<dynamic>>('exercises');
   }
 
-  /// Retrieves a specific exercise by its ID
-  /// [id] - The unique identifier of the exercise
-  /// Returns a map containing exercise details
   Future<Map<String, dynamic>> getExerciseById(int id) async {
     return getData<Map<String, dynamic>>('exercises/$id');
   }
@@ -189,10 +181,6 @@ class ExerciseService {
     required double forearms,
     required double calves,
   }) async {
-    // Add debug logging to see exactly what's being sent
-    // print('DEBUG API: Creating exercise "${name}" with forearms value: $forearms');
-    // print('DEBUG API: Full request body: ${json.encode(requestBody)}');
-
     createData('exercises', {
       //'user_name': userName,
       'name': name,
@@ -215,19 +203,12 @@ class ExerciseService {
       'forearms': forearms,
       'calves': calves
     });
-    // print('DEBUG API: Response status: ${response.statusCode}');
-    // print('DEBUG API: Response body: ${response.body}');
   }
 
-  /// Updates an existing exercise record
-  /// [id] - The unique identifier of the exercise to update
-  /// [data] - Map containing the fields to update
   Future<void> updateExercise(int id, Map<String, dynamic> data) async {
     updateData('exercises/$id', data);
   }
 
-  /// Deletes an exercise record
-  /// [id] - The unique identifier of the exercise to delete
   Future<void> deleteExercise(int id) async {
     return deleteData('exercises/$id');
   }

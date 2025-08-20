@@ -2,6 +2,7 @@
 ///main app bar with the app logo and title is also included
 ///handles user authentication and theme management
 
+import 'package:Gymli/utils/api/api.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'dart:math';
@@ -27,6 +28,7 @@ class _MainAppWidgetState extends State<MainAppWidget> {
   late Auth0Service _authService;
   late ThemeService _themeService;
   final container = GetIt.I<TempService>();
+  final exerciseService = GetIt.I<ExerciseService>();
   bool _isInitialized = false; // Add this flag
 
 //drawer images to circles through, without file extensions because they will be added dynamicly and switch for dark mode
@@ -117,6 +119,7 @@ class _MainAppWidgetState extends State<MainAppWidget> {
               credentials: authService.credentials,
               auth0: authService.auth0,
               container: container,
+              exerciseService: exerciseService,
               drawerImage: _drawerImage,
               drawerImages: drawerImages,
               isDarkMode: themeService.isDarkMode,

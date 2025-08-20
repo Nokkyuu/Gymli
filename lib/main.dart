@@ -9,6 +9,8 @@ import 'package:Gymli/utils/services/temp_service.dart';
 import 'package:Gymli/utils/workout_session_state.dart';
 import 'package:get_it/get_it.dart';
 
+import 'utils/api/api.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -21,6 +23,7 @@ import 'package:flutter_native_splash/flutter_native_splash.dart';
 void main() async {
   GetIt.I.registerSingleton<TempService>(TempService());
   GetIt.I.registerSingleton<WorkoutSessionManager>(WorkoutSessionManager());
+  GetIt.I.registerSingleton<ExerciseService>(ExerciseService());
   
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding
       .ensureInitialized(); //required for async initialization, ensures that the Flutter engine is ready

@@ -6,6 +6,7 @@ library;
 import 'auth_service.dart';
 import 'package:Gymli/utils/api/api.dart';
 import 'package:Gymli/utils/api/api_models.dart';
+import 'package:get_it/get_it.dart';
 
 String userName = 'DefaultUser';
 
@@ -31,7 +32,7 @@ class TempService {
     authService = AuthService();
 
     // Initialize domain services (they depend on core services)
-    exerciseService = ExerciseService();
+    // exerciseService = ExerciseService();
     workoutService = WorkoutService();
     trainingSetService = TrainingSetService();
     activityService = ActivityService();
@@ -113,6 +114,7 @@ class TempService {
 
   Future<int?> getExerciseIdByName(String exerciseName) async {
     try {
+      final exerciseService = GetIt.I<ExerciseService>();
       final exercises = await exerciseService.getExercises();
       final exerciseData = exercises.firstWhere(
         (item) => item['name'] == exerciseName,
@@ -126,6 +128,7 @@ class TempService {
   }
 
   Future<String?> getExerciseNameById(int exerciseId) async {
+    final exerciseService = GetIt.I<ExerciseService>();
     return await exerciseService.getExerciseById(exerciseId).then((exercise) {
       return exercise['name'];
     });
@@ -352,6 +355,7 @@ class TempService {
 
   Future<void> clearExercises() async {
     // Get all exercises for this user and delete them
+    final exerciseService = GetIt.I<ExerciseService>();
     final exercises = await exerciseService.getExercises();
     int deletedCount = 0;
     int errorCount = 0;
@@ -496,6 +500,7 @@ class TempService {
       List<dynamic> workoutUnits) async {
     try {
       // Get all exercises to create a mapping from ID to name
+      final exerciseService = GetIt.I<ExerciseService>();
       final exercises = await exerciseService.getExercises();
       final Map<int, String> exerciseIdToName = {};
 

@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:Gymli/utils/services/temp_service.dart';
 import '../../../utils/api/api_models.dart';
 import 'package:get_it/get_it.dart';
+import '../../../utils/api/api.dart';
 
 class LandingRepository {
   final TempService container = GetIt.I<TempService>();
@@ -12,7 +13,7 @@ class LandingRepository {
   /// Get all exercises from the service
   Future<List<ApiExercise>> getExercises() async {
     try {
-      final exercises = await container.exerciseService.getExercises();
+      final exercises = await GetIt.I<ExerciseService>().getExercises();
       return exercises.map((e) => ApiExercise.fromJson(e)).toList();
     } catch (e) {
       if (kDebugMode) print('Error getting exercises: $e');

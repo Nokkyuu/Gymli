@@ -4,11 +4,14 @@ import '../../../utils/globals.dart' as globals;
 import '../../../utils/services/temp_service.dart';
 import '../../../utils/api/api_models.dart';
 import 'package:get_it/get_it.dart';
+import '../../../utils/api/api.dart';
 
 enum ExerciseDevice { free, machine, cable, body }
 
 class ExerciseSetupController extends ChangeNotifier {
   final TempService _container = GetIt.I<TempService>();
+
+  final ExerciseService exerciseService = GetIt.I<ExerciseService>();
 
   // Exercise data
   String _exerciseName = '';
@@ -52,7 +55,7 @@ class ExerciseSetupController extends ChangeNotifier {
 
     _setLoading(true);
     try {
-      final exercises = await _container.exerciseService.getExercises();
+      final exercises = await exerciseService.getExercises();
       final exerciseData = exercises.firstWhere(
         (item) => item['name'] == _exerciseName,
         orElse: () => null,
@@ -141,7 +144,7 @@ class ExerciseSetupController extends ChangeNotifier {
 
       // // Wait for cache invalidation to complete by forcing a fresh fetch
       // if (kDebugMode) print('🔧 Ensuring cache is refreshed...');
-      // await _container.exerciseService.getExercises();
+      // await exerciseService.getExercises();
 
       await Future.delayed(const Duration(milliseconds: 1500));
       //TODO: workaround to wait for cache invalidation, there must be a better solution
@@ -180,7 +183,7 @@ class ExerciseSetupController extends ChangeNotifier {
         }
       }
       if (kDebugMode) print('Deleting exercise $exerciseId');
-      await _container.exerciseService.deleteExercise(exerciseId);
+      await exerciseService.deleteExercise(exerciseId);
 
       _container.notifyDataChanged();
       _clearError();
@@ -218,7 +221,7 @@ class ExerciseSetupController extends ChangeNotifier {
 
     if (kDebugMode) print('🔧 add_exercise: Getting existing exercises...');
     // Check if exercise exists
-    final exercises = await _container.exerciseService.getExercises();
+    final exercises = await exerciseService.getExercises();
     final existing = exercises.firstWhere(
       (e) => e['name'] == exerciseName,
       orElse: () => null,
@@ -229,7 +232,7 @@ class ExerciseSetupController extends ChangeNotifier {
         print(
             '🔧 add_exercise: Updating existing exercise with ID: ${existing['id']}');
       // Update existing exercise
-      await _container.exerciseService.updateExercise(existing['id'], {
+      await exerciseService.updateExercise(existing['id'], {
         'user_name': _container.authService.userName,
         'name': exerciseName,
         'type': exerciseType,
@@ -255,7 +258,7 @@ class ExerciseSetupController extends ChangeNotifier {
     } else {
       if (kDebugMode) print('🔧 add_exercise: Creating new exercise...');
       // Create new exercise
-      await _container.exerciseService.createExercise(
+      await exerciseService.createExercise(
         name: exerciseName,
         type: exerciseType,
         defaultRepBase: minRep,
@@ -284,7 +287,7 @@ class ExerciseSetupController extends ChangeNotifier {
 
   Future<void> _getExerciseList() async {
     try {
-      final exercises = await _container.exerciseService.getExercises();
+      final exercises = await exerciseService.getExercises();
       List<String> exerciseList = [];
       for (var e in exercises) {
         exerciseList.add(e['name']);

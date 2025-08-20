@@ -2,6 +2,8 @@ import 'package:Gymli/utils/services/temp_service.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
 import '../../../utils/api/api_models.dart';
 import 'package:get_it/get_it.dart';
+import '../../../utils/api/api.dart';
+
 
 //TODO: Lokale cache logik für den exercise screen überarbeiten
 
@@ -176,7 +178,7 @@ class ExerciseRepository {
     try {
       final results = await Future.wait([
         container.getTrainingSetsByExerciseID(_currentExerciseId!),
-        container.exerciseService.getExercises(),
+        GetIt.I<ExerciseService>().getExercises(),
       ]);
 
       _cachedTrainingSets =

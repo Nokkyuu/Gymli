@@ -4,9 +4,11 @@ import 'package:get_it/get_it.dart';
 
 import 'package:flutter/foundation.dart';
 import 'package:Gymli/utils/services/temp_service.dart';
+import '../../../utils/api/api.dart';
 
 class SettingsRepository {
   final TempService container = GetIt.I<TempService>();
+  final ExerciseService exerciseService = GetIt.I<ExerciseService>();
 
   /// Get training sets data
   Future<List<dynamic>> getTrainingSets() async {
@@ -21,7 +23,7 @@ class SettingsRepository {
   /// Get exercises data
   Future<List<dynamic>> getExercises() async {
     try {
-      return await container.exerciseService.getExercises();
+      return await exerciseService.getExercises();
     } catch (e) {
       if (kDebugMode) print('Error getting exercises: $e');
       rethrow;
@@ -109,7 +111,7 @@ class SettingsRepository {
   /// Create exercise
   Future<void> createExercise(Map<String, dynamic> exerciseData) async {
     try {
-      await container.exerciseService.createExercise(
+      await exerciseService.createExercise(
         name: exerciseData['name'],
         type: exerciseData['type'],
         defaultRepBase: exerciseData['defaultRepBase'],

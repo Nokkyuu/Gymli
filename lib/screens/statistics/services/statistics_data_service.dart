@@ -13,10 +13,13 @@ import 'package:Gymli/utils/services/temp_service.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
 import '../../../utils/api/api_models.dart';
 import 'statistics_filter_service.dart';
+import '../../../utils/api/api.dart';
+import 'package:get_it/get_it.dart';
 
 /// Service responsible for data fetching and caching for statistics
 class StatisticsDataService {
   final TempService container;
+  final ExerciseService exerciseService = GetIt.I<ExerciseService>();
 
   // Caching variables to prevent redundant API calls
   List<Map<String, dynamic>>? _cachedTrainingSets;
@@ -64,7 +67,7 @@ class StatisticsDataService {
   Future<List<ApiExercise>> getExercises() async {
     if (_cachedExercises == null || !_dataCacheValid || _isCacheExpired) {
       if (kDebugMode) print('Loading exercises from API...');
-      final exercisesData = await container.exerciseService.getExercises();
+      final exercisesData = await exerciseService.getExercises();
       _cachedExercises =
           exercisesData.map((e) => ApiExercise.fromJson(e)).toList();
       _dataCacheValid = true;

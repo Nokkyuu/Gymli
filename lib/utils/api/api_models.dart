@@ -11,6 +11,8 @@
 /// - Comprehensive exercise metadata structure
 library;
 
+// TODO: Should be moved to models.dart in /utils 
+
 // ignore_for_file: file_names
 
 // Data models for API-based storage

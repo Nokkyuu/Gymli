@@ -28,6 +28,7 @@ import '../utils/services/temp_service.dart';
 import '../utils/services/auth0_service.dart';
 import '../utils/services/theme_service.dart';
 import '../utils/info_dialogues.dart';
+import '../utils/api/api.dart';
 
 class AppRouter {
   static const String landing = '/';
@@ -167,6 +168,7 @@ class AppRouter {
         // Get auth service from the context if available
         try {
           final container = GetIt.I<TempService>();
+          final exerciseContainer = GetIt.I<ExerciseService>();
           final isLoggedIn = container.authService.isLoggedIn;
 
           // If logged in but on landing page, redirect to main
@@ -239,6 +241,7 @@ class _MainAppWrapperState extends State<MainAppWrapper> {
   String? _drawerImage;
   late Auth0Service _authService;
   final container = GetIt.I<TempService>();
+  final exerciseService = GetIt.I<ExerciseService>();
   bool _isInitialized = false;
 
   //drawer images to circle through, without file extensions because they will be added dynamically and switch for dark mode
@@ -309,6 +312,7 @@ class _MainAppWrapperState extends State<MainAppWrapper> {
             credentials: _authService.credentials,
             auth0: _authService.auth0,
             container: container,
+            exerciseService: exerciseService,
             drawerImage: _drawerImage,
             drawerImages: drawerImages,
             isDarkMode: themeService.isDarkMode,
