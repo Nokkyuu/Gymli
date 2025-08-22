@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:Gymli/utils/services/temp_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:get_it/get_it.dart';
 
@@ -34,12 +35,13 @@ class WorkoutDataCache extends ChangeNotifier {
     if (!GetIt.I<AuthenticationService>().isLoggedIn) return;
 
     _exercises = await GetIt.I<ExerciseService>().getExercises();
-    final raw = await GetIt.I<WorkoutService>().getWorkouts();
+    final raw = await GetIt.I<TempService>().getWorkouts();
     _workouts = raw.map((e) => ApiWorkout.fromJson(e)).toList();
 
     _initialized = true;
     if (kDebugMode) {
-      print('WorkoutDataCache initialized with ${_exercises.length} exercises and ${_workouts.length} workouts');
+      print(
+          'WorkoutDataCache initialized with ${_exercises.length} exercises and ${_workouts.length} workouts');
     }
     notifyListeners();
   }
@@ -52,7 +54,8 @@ class WorkoutDataCache extends ChangeNotifier {
   }
 
   Future<void> removeExerciseById(String id) async {
-    _exercises = List.of(_exercises)..removeWhere((e) => e.id.toString() == id.toString());
+    _exercises = List.of(_exercises)
+      ..removeWhere((e) => e.id.toString() == id.toString());
     notifyListeners();
     _outbox.enqueue(buildDeleteExerciseOp(id));
   }
@@ -64,7 +67,8 @@ class WorkoutDataCache extends ChangeNotifier {
   }
 
   Future<void> removeWorkoutById(String id) async {
-    _workouts = List.of(_workouts)..removeWhere((w) => w.id.toString() == id.toString());
+    _workouts = List.of(_workouts)
+      ..removeWhere((w) => w.id.toString() == id.toString());
     notifyListeners();
     _outbox.enqueue(buildDeleteWorkoutOp(id));
   }
