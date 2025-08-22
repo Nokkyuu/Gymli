@@ -4,8 +4,8 @@ library;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:Gymli/utils/services/temp_service.dart';
-import '../../../utils/api/api_models.dart';
-import 'package:Gymli/utils/api/api.dart';
+import '../../../utils/models/data_models.dart';
+import 'package:Gymli/utils/api/api_export.dart';
 import 'package:get_it/get_it.dart';
 //import 'package:Gymli/utils/services/auth_service.dart';
 

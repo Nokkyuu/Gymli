@@ -2,7 +2,7 @@
 ///
 library;
 
-import 'package:Gymli/utils/api/api_models.dart';
+import 'package:Gymli/utils/models/data_models.dart';
 import 'package:flutter/foundation.dart';
 
 // User preference settings

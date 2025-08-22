@@ -3,9 +3,9 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../../../utils/globals.dart' as globals;
 import '../../../utils/services/temp_service.dart';
-import '../../../utils/api/api_models.dart';
+import '../../../utils/models/data_models.dart';
 import 'package:get_it/get_it.dart';
-import '../../../utils/api/api.dart';
+import '../../../utils/api/api_export.dart';
 import 'package:Gymli/utils/workout_data_cache.dart';
 
 enum ExerciseDevice { free, machine, cable, body }
@@ -184,8 +184,8 @@ class ExerciseSetupController extends ChangeNotifier {
       final workoutUnits =
           await GetIt.I<WorkoutUnitService>().getWorkoutUnits();
       for (var unit in workoutUnits) {
-        if (unit['exercise_id'] == exerciseId) {
-          await GetIt.I<WorkoutUnitService>().deleteWorkoutUnit(unit['id']);
+        if (unit.exerciseId == exerciseId) {
+          await GetIt.I<WorkoutUnitService>().deleteWorkoutUnit(unit.id!);
         }
       }
       if (kDebugMode) print('Deleting exercise $exerciseId');
@@ -264,7 +264,9 @@ class ExerciseSetupController extends ChangeNotifier {
       });
       if (kDebugMode) print('✅ add_exercise: Exercise updated successfully');
     } else {
-      if (kDebugMode) print('🔧 add_exercise: Creating new exercise (optimistic via cache)...');
+      if (kDebugMode)
+        print(
+            '🔧 add_exercise: Creating new exercise (optimistic via cache)...');
       // Build a minimal ApiExercise locally and let the cache/outbox sync to the server.
       // Using fromJson to avoid depending on a specific constructor signature.
       final newExercise = ApiExercise.fromJson({
@@ -278,7 +280,8 @@ class ExerciseSetupController extends ChangeNotifier {
         'muscle_intensities': muscleIntensities,
       });
       await _cache.addExercise(newExercise);
-      if (kDebugMode) print('✅ add_exercise: New exercise added to cache (sync enqueued)');
+      if (kDebugMode)
+        print('✅ add_exercise: New exercise added to cache (sync enqueued)');
     }
     return true;
   }

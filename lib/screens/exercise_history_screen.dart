@@ -7,7 +7,7 @@ library;
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:Gymli/utils/themes/themes.dart' show setIcons;
-import '../utils/api/api_models.dart';
+import '../utils/models/data_models.dart';
 import 'exercise/repositories/exercise_repository.dart';
 import 'exercise_history/controller/history_list_controller.dart';
 

@@ -12,7 +12,7 @@ import 'package:Gymli/utils/workout_session_state.dart';
 import 'package:get_it/get_it.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'utils/api/api.dart';
+import 'utils/api/api_export.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:flutter/material.dart';

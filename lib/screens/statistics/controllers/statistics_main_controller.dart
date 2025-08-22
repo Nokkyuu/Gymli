@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:time_machine/time_machine.dart';
 import 'package:fl_chart/fl_chart.dart';
-import '../../../utils/api/api_models.dart';
+import '../../../utils/models/data_models.dart';
 import '../../../utils/services/temp_service.dart';
 import '../services/statistics_data_service.dart';
 import '../services/statistics_filter_service.dart';

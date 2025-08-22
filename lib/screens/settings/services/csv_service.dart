@@ -3,7 +3,7 @@ library;
 
 import 'package:csv/csv.dart';
 import 'package:flutter/foundation.dart';
-import '../../../utils/api/api_models.dart';
+import '../../../utils/models/data_models.dart';
 
 class CsvService {
   static const ListToCsvConverter _csvConverter = ListToCsvConverter(

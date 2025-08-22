@@ -4,7 +4,7 @@ library;
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:intl/intl.dart';
-import '../../../utils/api/api_models.dart';
+import '../../../utils/models/data_models.dart';
 
 class ActivityHistoryListWidget extends StatelessWidget {
   final List<ApiActivityLog> activityLogs;

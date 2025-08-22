@@ -2,7 +2,7 @@
 library;
 
 import 'package:flutter/material.dart';
-import '../../../utils/api/api_models.dart';
+import '../../../utils/models/data_models.dart';
 import '../models/landing_filter_state.dart';
 import '../controllers/landing_filter_controller.dart';
 

@@ -6,7 +6,7 @@ import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:Gymli/utils/services/temp_service.dart';
 import '../../config/api_config.dart';
 import '../globals.dart' as globals;
-import '../api/api.dart';
+import '../api/api_export.dart';
 //import 'user_service.dart';
 import 'package:get_it/get_it.dart';
 //import 'package:Gymli/utils/services/auth_service.dart';

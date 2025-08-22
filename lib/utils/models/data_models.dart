@@ -11,7 +11,7 @@
 /// - Comprehensive exercise metadata structure
 library;
 
-// TODO: Should be moved to models.dart in /utils 
+// TODO: Should be moved to models.dart in /utils
 
 // ignore_for_file: file_names
 
@@ -357,7 +357,7 @@ class ApiWorkout {
   final int? id;
   final String userName;
   final String name;
-  final List<ApiWorkoutUnit> units;
+  late final List<ApiWorkoutUnit> units;
 
   ApiWorkout({
     this.id,

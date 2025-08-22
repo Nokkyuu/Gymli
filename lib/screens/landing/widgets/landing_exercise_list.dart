@@ -2,7 +2,7 @@
 library;
 
 import 'package:flutter/material.dart';
-import '../../../utils/api/api_models.dart';
+import '../../../utils/models/data_models.dart';
 import '../../../utils/themes/responsive_helper.dart';
 import 'landing_exercise_item.dart';
 

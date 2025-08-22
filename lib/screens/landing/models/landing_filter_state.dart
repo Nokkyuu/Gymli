@@ -1,7 +1,7 @@
 /// Landing Filter State - Model for filter state management
 library;
 
-import '../../../utils/api/api_models.dart';
+import '../../../utils/models/data_models.dart';
 
 enum MuscleList {
   Pectoralis_major("Pectoralis major"),

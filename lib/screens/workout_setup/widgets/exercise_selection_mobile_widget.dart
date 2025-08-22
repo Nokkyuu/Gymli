@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../controllers/exercise_selection_controller.dart';
 import '../controllers/workout_setup_controller.dart';
-import '../../../utils/api/api_models.dart';
+import '../../../utils/models/data_models.dart';
 
 class ExerciseSelectionMobileWidget extends StatelessWidget {
   const ExerciseSelectionMobileWidget({super.key});

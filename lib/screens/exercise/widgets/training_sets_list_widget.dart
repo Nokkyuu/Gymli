@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../controllers/exercise_controller.dart';
-import '../../../utils/api/api_models.dart';
+import '../../../utils/models/data_models.dart';
 import 'package:Gymli/utils/themes/themes.dart' show setIcons;
 
 /// Widget for displaying the list of training sets

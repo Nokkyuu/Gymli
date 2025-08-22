@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../controllers/food_data_controller.dart';
-import '../../../utils/api/api_models.dart';
+import '../../../utils/models/data_models.dart';
 
 /// Widget for food autocomplete selection
 class FoodAutocompleteWidget extends StatelessWidget {

@@ -1,10 +1,9 @@
 library;
 
 import 'package:get_it/get_it.dart';
-import 'package:Gymli/utils/api/api.dart';
-import 'package:Gymli/utils/api/api_models.dart';
+import 'package:Gymli/utils/api/api_export.dart';
+import 'package:Gymli/utils/models/data_models.dart';
 import 'package:Gymli/utils/sync/sync_outbox.dart';
-
 
 import 'dart:async';
 import 'dart:collection';
@@ -69,14 +68,16 @@ class SyncOutbox {
         op.attempts += 1;
         if (op.attempts > _maxRetries) {
           if (kDebugMode) {
-            print('OUTBOX: drop ${op.type} after $_maxRetries attempts. Error: $e');
+            print(
+                'OUTBOX: drop ${op.type} after $_maxRetries attempts. Error: $e');
           }
           _queue.removeFirst();
         } else {
           final backoff = _baseDelay * (1 << (op.attempts - 1));
           op.nextAt = DateTime.now().add(backoff);
           if (kDebugMode) {
-            print('OUTBOX: retry ${op.type} in ${backoff.inSeconds}s (attempt ${op.attempts})');
+            print(
+                'OUTBOX: retry ${op.type} in ${backoff.inSeconds}s (attempt ${op.attempts})');
           }
           _queue.removeFirst();
           _queue.add(op);
@@ -91,31 +92,35 @@ class SyncOutbox {
 class WorkoutOpType {
   static const String createExercise = 'workout.create_exercise';
   static const String deleteExercise = 'workout.delete_exercise';
-  static const String createWorkout  = 'workout.create_workout';
-  static const String deleteWorkout  = 'workout.delete_workout';
+  static const String createWorkout = 'workout.create_workout';
+  static const String deleteWorkout = 'workout.delete_workout';
 }
 
 // ----------- Builders (cache uses these to enqueue ops) ----------- //
 SyncOp buildCreateExerciseOp(ApiExercise e) {
-  final Map<String, dynamic> map = (e as dynamic).toJson?.call() ?? {
-    'name': e.name,
-    'default_rep_base': e.defaultRepBase,
-    'default_rep_max': e.defaultRepMax,
-    'default_increment': e.defaultIncrement,
-  };
+  final Map<String, dynamic> map = (e as dynamic).toJson?.call() ??
+      {
+        'name': e.name,
+        'default_rep_base': e.defaultRepBase,
+        'default_rep_max': e.defaultRepMax,
+        'default_increment': e.defaultIncrement,
+      };
   return SyncOp(WorkoutOpType.createExercise, map);
 }
 
-SyncOp buildDeleteExerciseOp(String id) => SyncOp(WorkoutOpType.deleteExercise, id);
+SyncOp buildDeleteExerciseOp(String id) =>
+    SyncOp(WorkoutOpType.deleteExercise, id);
 
 SyncOp buildCreateWorkoutOp(ApiWorkout w) {
-  final Map<String, dynamic> map = (w as dynamic).toJson?.call() ?? {
-    'name': w.name,
-  };
+  final Map<String, dynamic> map = (w as dynamic).toJson?.call() ??
+      {
+        'name': w.name,
+      };
   return SyncOp(WorkoutOpType.createWorkout, map);
 }
 
-SyncOp buildDeleteWorkoutOp(String id) => SyncOp(WorkoutOpType.deleteWorkout, id);
+SyncOp buildDeleteWorkoutOp(String id) =>
+    SyncOp(WorkoutOpType.deleteWorkout, id);
 
 // ----------- Performer (wired into SyncOutbox) ----------- //
 Future<void> performWorkoutOp(SyncOp op) async {
@@ -134,9 +139,12 @@ Future<void> performWorkoutOp(SyncOp op) async {
 
     case WorkoutOpType.createWorkout:
       final map = op.payload as Map<String, dynamic>;
-      final name = (map['name'] ?? map['workout_name'] ?? map['title'] ?? '').toString();
+      final name =
+          (map['name'] ?? map['workout_name'] ?? map['title'] ?? '').toString();
+
       if (name.isEmpty) throw Exception('Workout create requires a name');
-      await woService.createWorkout(name: name);
+      //TODO WORKOUT UNITS ÜBERGEBEN
+      await woService.createWorkout(name: name, units: []);
       return;
     case WorkoutOpType.deleteWorkout:
       final id2 = int.tryParse(op.payload.toString());

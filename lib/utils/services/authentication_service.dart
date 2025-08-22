@@ -4,7 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import '../../config/api_config.dart';
-import '../api/api.dart';
+import '../api/api_export.dart';
 
 class AuthenticationService extends ChangeNotifier {
   // Auth0 Configuration

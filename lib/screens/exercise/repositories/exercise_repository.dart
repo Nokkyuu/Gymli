@@ -1,9 +1,8 @@
 import 'package:Gymli/utils/services/temp_service.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
-import '../../../utils/api/api_models.dart';
+import '../../../utils/models/data_models.dart';
 import 'package:get_it/get_it.dart';
-import '../../../utils/api/api.dart';
-
+import '../../../utils/api/api_export.dart';
 
 //TODO: Lokale cache logik für den exercise screen überarbeiten
 
@@ -32,7 +31,8 @@ class ExerciseRepository {
   }
 
   /// Get today's training sets for a specific exercise
-  Future<List<ApiTrainingSet>> getTodaysTrainingSetsForExercise( // TODO: Endpoint
+  Future<List<ApiTrainingSet>> getTodaysTrainingSetsForExercise(
+      // TODO: Endpoint
       String exerciseName) async {
     final allSets = await getTrainingSetsForExercise();
     final today = DateTime.now();
@@ -53,8 +53,9 @@ class ExerciseRepository {
 
     try {
       ApiExercise? exerciseData;
-      try { 
-        exerciseData = _cachedExercises!.firstWhere((item) => item.name == exerciseName);
+      try {
+        exerciseData =
+            _cachedExercises!.firstWhere((item) => item.name == exerciseName);
       } catch (e) {
         exerciseData = null;
       }
@@ -101,7 +102,8 @@ class ExerciseRepository {
       if (createdSetData == null) return null;
 
       // Get exercise data to construct the training set
-      final exercise = await GetIt.I<ExerciseService>().getExerciseById(exerciseId);
+      final exercise =
+          await GetIt.I<ExerciseService>().getExerciseById(exerciseId);
       if (exercise == null) return null;
 
       final newSet = ApiTrainingSet(
@@ -177,8 +179,8 @@ class ExerciseRepository {
     }
 
     try {
-      
-      final __c = await container.getTrainingSetsByExerciseID(_currentExerciseId!);
+      final __c =
+          await container.getTrainingSetsByExerciseID(_currentExerciseId!);
       _cachedTrainingSets =
           __c.map((item) => ApiTrainingSet.fromJson(item)).toList();
       _cachedExercises = await GetIt.I<ExerciseService>().getExercises();

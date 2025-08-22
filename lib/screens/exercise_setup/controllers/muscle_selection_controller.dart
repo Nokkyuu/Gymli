@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 import '../../../utils/globals.dart' as globals;
-import '../../../utils/api/api_models.dart';
+import '../../../utils/models/data_models.dart';
 
 class MuscleSelectionController extends ChangeNotifier {
   // Muscle data

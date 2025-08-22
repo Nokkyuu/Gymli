@@ -1,9 +1,9 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../../../utils/services/temp_service.dart';
-import '../../../utils/api/api_models.dart';
+import '../../../utils/models/data_models.dart';
 import 'package:get_it/get_it.dart';
-import '../../../utils/api/api.dart';
+import '../../../utils/api/api_export.dart';
 //import '../../../utils/services/auth_service.dart';
 
 class WorkoutSetupController extends ChangeNotifier {
@@ -51,9 +51,7 @@ class WorkoutSetupController extends ChangeNotifier {
         ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
 
       if (_workoutName.isNotEmpty) {
-        final workoutData = await _container.getWorkouts();
-        final workouts =
-            workoutData.map((item) => ApiWorkout.fromJson(item)).toList();
+        final workouts = await GetIt.I<WorkoutService>().getWorkouts();
 
         _currentWorkout = workouts.firstWhere(
           (workout) => workout.name == _workoutName,
@@ -124,7 +122,7 @@ class WorkoutSetupController extends ChangeNotifier {
         await GetIt.I<WorkoutService>().deleteWorkout(_currentWorkout!.id!);
 
         // Create new workout with the updated data
-        await _container.createWorkout(
+        await GetIt.I<WorkoutService>().createWorkout(
           name: workoutNameController.text,
           units: _addedExercises.map((unit) => unit.toJson()).toList(),
         );
@@ -133,7 +131,7 @@ class WorkoutSetupController extends ChangeNotifier {
         _currentWorkout = null;
       } else {
         // Create new workout
-        await _container.createWorkout(
+        await GetIt.I<WorkoutService>().createWorkout(
           name: workoutNameController.text,
           units: _addedExercises.map((unit) => unit.toJson()).toList(),
         );

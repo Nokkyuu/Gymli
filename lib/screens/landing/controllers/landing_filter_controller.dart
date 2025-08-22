@@ -4,7 +4,7 @@ library;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../models/landing_filter_state.dart';
-import '../../../utils/api/api_models.dart';
+import '../../../utils/models/data_models.dart';
 
 /// Comparator used app-wide for alphabetic exercise ordering (case/space-insensitive).
 int _byName(ApiExercise a, ApiExercise b) =>

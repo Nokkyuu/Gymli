@@ -4,7 +4,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'dart:math';
 import 'package:Gymli/utils/services/temp_service.dart';
 import 'package:get_it/get_it.dart';
-import '../../../utils/api/api.dart';
+import '../../../utils/api/api_export.dart';
 
 class WorkoutAnalyzerScreen extends StatefulWidget {
   final String? startingDate;

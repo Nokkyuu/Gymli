@@ -6,7 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:Gymli/utils/services/temp_service.dart';
 import '../../../utils/info_dialogues.dart';
 import 'package:get_it/get_it.dart';
-import 'package:Gymli/utils/api/api.dart';
+import 'package:Gymli/utils/api/api_export.dart';
 
 class CalorieBalanceScreen extends StatefulWidget {
   final String? startingDate;

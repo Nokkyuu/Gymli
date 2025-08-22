@@ -1,6 +1,6 @@
 library;
 
-import 'package:Gymli/utils/api/api.dart';
+import 'package:Gymli/utils/api/api_export.dart';
 import 'package:get_it/get_it.dart';
 
 // Class is for temporary convenience and non-existent endpoint compensation
@@ -261,13 +261,13 @@ class TempService {
     int errorCount = 0;
 
     for (var workout in workouts) {
-      if (workout['id'] != null) {
+      if (workout.id != null) {
         try {
-          await GetIt.I<WorkoutService>().deleteWorkout(workout['id']);
+          await GetIt.I<WorkoutService>().deleteWorkout(workout.id!);
           deletedCount++;
         } catch (e) {
           errorCount++;
-          print('Warning: Failed to delete workout ${workout['id']}: $e');
+          print('Warning: Failed to delete workout ${workout.id}: $e');
           // Continue with other workouts instead of stopping
         }
       }
@@ -295,196 +295,5 @@ class TempService {
       }
     }
     print('Cleared exercises: $deletedCount deleted, $errorCount errors');
-  }
-
-  ///Use this instead of workoutService.createWorkout - to connect units and workout name
-  Future<Map<String, dynamic>> createWorkout({
-    required String name,
-    required List<Map<String, dynamic>> units,
-  }) async {
-    // Create the workout first and get its data (including ID)
-    final workoutData =
-        await GetIt.I<WorkoutService>().createWorkout(name: name);
-    final workoutId = workoutData['id'] as int;
-
-    // Now create all the workout units
-    for (final unit in units) {
-      await GetIt.I<WorkoutUnitService>().createWorkoutUnit(
-        workoutId: workoutId,
-        exerciseId: unit['exercise_id'],
-        warmups: unit['warmups'],
-        worksets: unit['worksets'],
-        dropsets: unit['dropsets'],
-        type: unit['type'],
-      );
-    }
-
-    return workoutData;
-  }
-
-  Future<List<dynamic>> getWorkouts() async {
-    final workouts = await GetIt.I<WorkoutService>().getWorkouts();
-// Enrich workouts with workout units for display
-    return await _enrichWorkoutsWithUnits(workouts);
-  }
-
-  Future<List<dynamic>> _enrichWorkoutsWithUnits(List<dynamic> workouts) async {
-    try {
-      // Get all workout units for this user
-      final allWorkoutUnits = await getWorkoutUnits();
-
-      // Group workout units by workout_id
-      final Map<int, List<dynamic>> unitsByWorkoutId = {};
-      for (var workoutUnit in allWorkoutUnits) {
-        final workoutId = workoutUnit['workout_id'] as int?;
-        if (workoutId != null) {
-          unitsByWorkoutId.putIfAbsent(workoutId, () => []);
-          unitsByWorkoutId[workoutId]!.add(workoutUnit);
-        }
-      }
-
-      // Enrich each workout with its units using Future.wait for async operations
-      final List<Future<Map<String, dynamic>>> enrichmentFutures =
-          workouts.map((workout) async {
-        try {
-          final Map<String, dynamic> workoutMap;
-          if (workout is Map<String, dynamic>) {
-            workoutMap = Map<String, dynamic>.from(workout);
-          } else {
-            workoutMap = Map<String, dynamic>.from(workout as Map);
-          }
-
-          final workoutId = workoutMap['id'] as int?;
-
-          // Check if workout already has units (offline mode)
-          if (workoutMap.containsKey('units') &&
-              workoutMap['units'] is List &&
-              (workoutMap['units'] as List).isNotEmpty) {
-            print(
-                'DEBUG: Workout ${workoutMap['name']} already has ${(workoutMap['units'] as List).length} units, keeping them');
-            // Keep existing units but make sure they're enriched with exercise names
-            final existingUnits = workoutMap['units'] as List;
-            final enrichedUnits =
-                await _enrichWorkoutUnitsWithExerciseNames(existingUnits);
-            workoutMap['units'] = enrichedUnits;
-          } else if (workoutId != null) {
-            // Fetch units from workout units collection (online mode)
-            final units = unitsByWorkoutId[workoutId] ?? [];
-            workoutMap['units'] = units;
-          } else {
-            workoutMap['units'] = [];
-          }
-
-          return workoutMap;
-        } catch (e) {
-          print('Error enriching workout with units: $e');
-          // Return the original workout with empty units
-          final Map<String, dynamic> fallbackMap;
-          if (workout is Map<String, dynamic>) {
-            fallbackMap = Map<String, dynamic>.from(workout);
-          } else {
-            fallbackMap = Map<String, dynamic>.from(workout as Map);
-          }
-          fallbackMap['units'] = [];
-          return fallbackMap;
-        }
-      }).toList();
-
-      // Wait for all enrichment operations to complete
-      return await Future.wait(enrichmentFutures);
-    } catch (e) {
-      print('Error in _enrichWorkoutsWithUnits: $e');
-      // Return original workouts with empty units arrays
-      return workouts.map((workout) {
-        try {
-          final Map<String, dynamic> workoutMap;
-          if (workout is Map<String, dynamic>) {
-            workoutMap = Map<String, dynamic>.from(workout);
-          } else {
-            workoutMap = Map<String, dynamic>.from(workout as Map);
-          }
-          workoutMap['units'] = [];
-          return workoutMap;
-        } catch (conversionError) {
-          print(
-              'Error converting workout to Map in fallback: $conversionError');
-          return workout;
-        }
-      }).toList();
-    }
-  }
-
-  Future<List<dynamic>> getWorkoutUnits() async {
-    final workoutUnits = await GetIt.I<WorkoutUnitService>().getWorkoutUnits();
-    return await _enrichWorkoutUnitsWithExerciseNames(workoutUnits);
-  }
-
-  Future<List<dynamic>> _enrichWorkoutUnitsWithExerciseNames(
-      List<dynamic> workoutUnits) async {
-    try {
-      // Get all exercises to create a mapping from ID to name
-      final exerciseService = GetIt.I<ExerciseService>();
-      final exercises = await exerciseService.getExercises();
-      final Map<int, String> exerciseIdToName = {};
-
-      for (var exercise in exercises) {
-        try {
-          exerciseIdToName[exercise.id!] = exercise.name;
-        } catch (e) {
-          print('Error parsing exercise data in workout units: $e');
-        }
-      }
-
-      // Add exercise_name field to each workout unit
-      return workoutUnits.map((workoutUnit) {
-        try {
-          // Handle both Map and LinkedMap types
-          final Map<String, dynamic> workoutUnitMap;
-          if (workoutUnit is Map<String, dynamic>) {
-            workoutUnitMap = Map<String, dynamic>.from(workoutUnit);
-          } else {
-            workoutUnitMap = Map<String, dynamic>.from(workoutUnit as Map);
-          }
-
-          final exerciseId = workoutUnitMap['exercise_id'] as int?;
-          if (exerciseId != null) {
-            final exerciseName =
-                exerciseIdToName[exerciseId] ?? 'Unknown Exercise';
-            workoutUnitMap['exercise_name'] = exerciseName;
-          }
-
-          return workoutUnitMap;
-        } catch (e) {
-          print('Error enriching workout unit: $e');
-          // Return the original workout unit converted to proper Map if enrichment fails
-          try {
-            if (workoutUnit is Map<String, dynamic>) {
-              return Map<String, dynamic>.from(workoutUnit);
-            } else {
-              return Map<String, dynamic>.from(workoutUnit as Map);
-            }
-          } catch (conversionError) {
-            print('Error converting workout unit to Map: $conversionError');
-            return workoutUnit;
-          }
-        }
-      }).toList();
-    } catch (e) {
-      print('Error in _enrichWorkoutUnitsWithExerciseNames: $e');
-      // Return original workout units converted to proper Maps if enrichment completely fails
-      return workoutUnits.map((wu) {
-        try {
-          if (wu is Map<String, dynamic>) {
-            return Map<String, dynamic>.from(wu);
-          } else {
-            return Map<String, dynamic>.from(wu as Map);
-          }
-        } catch (conversionError) {
-          print(
-              'Error converting workout unit to Map in fallback: $conversionError');
-          return wu;
-        }
-      }).toList();
-    }
   }
 }

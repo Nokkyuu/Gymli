@@ -6,7 +6,7 @@
 import 'statistics_data_service.dart';
 import 'statistics_calculation_service.dart';
 import 'statistics_filter_service.dart';
-import '../../../utils/api/api_models.dart';
+import '../../../utils/models/data_models.dart';
 
 class StatisticsCoordinator {
   final StatisticsDataService _dataService;

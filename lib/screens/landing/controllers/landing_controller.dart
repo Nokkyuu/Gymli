@@ -6,9 +6,9 @@ import 'package:Gymli/utils/services/temp_service.dart';
 import 'package:flutter/foundation.dart';
 import '../models/landing_filter_state.dart';
 import 'landing_filter_controller.dart';
-import '../../../utils/api/api_models.dart';
+import '../../../utils/models/data_models.dart';
 import 'package:get_it/get_it.dart';
-import 'package:Gymli/utils/api/api.dart';
+import 'package:Gymli/utils/api/api_export.dart';
 
 import 'package:Gymli/utils/workout_data_cache.dart';
 
@@ -82,9 +82,8 @@ class LandingController extends ChangeNotifier {
           "Using cached data: ${_cache!.exercises.length} exercises and ${_cache!.workouts.length} workouts");
     } else {
       final ex = await GetIt.I<ExerciseService>().getExercises();
-      final wo = (await GetIt.I<TempService>().getWorkouts())
-          .map((e) => ApiWorkout.fromJson(e))
-          .toList();
+      final wo = await GetIt.I<WorkoutService>().getWorkouts();
+
       print(
           "Used fall back data: ${ex.length} exercises and ${wo.length} workouts");
     }

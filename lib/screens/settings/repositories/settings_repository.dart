@@ -5,7 +5,7 @@ import 'package:get_it/get_it.dart';
 
 import 'package:flutter/foundation.dart';
 import 'package:Gymli/utils/services/temp_service.dart';
-import '../../../utils/api/api.dart';
+import '../../../utils/api/api_export.dart';
 //import 'package:Gymli/utils/services/auth_service.dart';
 import 'package:Gymli/utils/services/authentication_service.dart';
 
@@ -147,7 +147,7 @@ class SettingsRepository {
     required List<Map<String, dynamic>> units,
   }) async {
     try {
-      return await container.createWorkout(
+      return await GetIt.I<WorkoutService>().createWorkout(
         name: name,
         units: units,
       );

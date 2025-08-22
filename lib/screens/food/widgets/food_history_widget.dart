@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:intl/intl.dart';
 import '../controllers/food_data_controller.dart';
-import '../../../utils/api/api_models.dart';
+import '../../../utils/models/data_models.dart';
 
 /// Widget to display food history/logs
 class FoodHistoryWidget extends StatelessWidget {

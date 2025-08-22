@@ -4,7 +4,7 @@ import 'package:Gymli/utils/services/temp_service.dart';
 import '../models/models.dart';
 import '../constants/calendar_constants.dart';
 import 'package:get_it/get_it.dart';
-import 'package:Gymli/utils/api/api.dart';
+import 'package:Gymli/utils/api/api_export.dart';
 
 class CalendarController extends ChangeNotifier {
   // Calendar state
@@ -84,7 +84,7 @@ class CalendarController extends ChangeNotifier {
 
     try {
       final workouts = await GetIt.I<WorkoutService>().getWorkouts();
-      _workoutNames = workouts.map<String>((w) => w['name'] as String).toList();
+      _workoutNames = workouts.map<String>((w) => w.name).toList();
     } catch (e) {
       if (kDebugMode) print('Error loading workouts: $e');
     } finally {

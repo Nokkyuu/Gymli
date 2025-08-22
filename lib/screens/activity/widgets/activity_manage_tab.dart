@@ -8,7 +8,7 @@ import 'package:provider/provider.dart';
 import '../controllers/activity_controller.dart';
 import '../controllers/activity_form_controller.dart';
 import 'custom_activity_form_widget.dart';
-import '../../../utils/api/api_models.dart';
+import '../../../utils/models/data_models.dart';
 import '../../../utils/themes/responsive_helper.dart';
 
 class ActivityManageTab extends StatelessWidget {

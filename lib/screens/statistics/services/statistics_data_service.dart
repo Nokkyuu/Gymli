@@ -11,9 +11,9 @@ library;
 import 'package:fl_chart/fl_chart.dart';
 import 'package:Gymli/utils/services/temp_service.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
-import '../../../utils/api/api_models.dart';
+import '../../../utils/models/data_models.dart';
 import 'statistics_filter_service.dart';
-import '../../../utils/api/api.dart';
+import '../../../utils/api/api_export.dart';
 import 'package:get_it/get_it.dart';
 
 /// Service responsible for data fetching and caching for statistics
@@ -93,7 +93,8 @@ class StatisticsDataService {
   Future<Map<String, dynamic>> getActivityStats() async {
     if (_cachedActivityStats == null || !_dataCacheValid || _isCacheExpired) {
       if (kDebugMode) print('Loading activity stats from API...');
-      _cachedActivityStats = await GetIt.I<ActivityService>().getActivityStats();
+      _cachedActivityStats =
+          await GetIt.I<ActivityService>().getActivityStats();
       _dataCacheValid = true;
       _lastCacheTime = DateTime.now();
     } else {

@@ -2,9 +2,9 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../../../utils/services/temp_service.dart';
-import '../../../utils/api/api_models.dart';
+import '../../../utils/models/data_models.dart';
 import 'package:get_it/get_it.dart';
-import  'package:Gymli/utils/api/api.dart';
+import 'package:Gymli/utils/api/api_export.dart';
 
 /// Controller for managing food data, loading, and search functionality
 class FoodDataController extends ChangeNotifier {

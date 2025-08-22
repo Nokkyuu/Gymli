@@ -5,8 +5,8 @@ import 'package:flutter/foundation.dart';
 import 'package:get_it/get_it.dart';
 
 import 'package:Gymli/utils/services/authentication_service.dart';
-import 'package:Gymli/utils/api/api.dart';
-import 'package:Gymli/utils/api/api_models.dart';
+import 'package:Gymli/utils/api/api_export.dart';
+import 'package:Gymli/utils/models/data_models.dart';
 import 'package:Gymli/utils/sync/sync_outbox.dart';
 
 /// WorkoutDataCache: local source of truth for exercises & workouts
@@ -35,8 +35,7 @@ class WorkoutDataCache extends ChangeNotifier {
     if (!GetIt.I<AuthenticationService>().isLoggedIn) return;
 
     _exercises = await GetIt.I<ExerciseService>().getExercises();
-    final raw = await GetIt.I<TempService>().getWorkouts();
-    _workouts = raw.map((e) => ApiWorkout.fromJson(e)).toList();
+    _workouts = await GetIt.I<WorkoutService>().getWorkouts();
 
     _initialized = true;
     if (kDebugMode) {
