@@ -59,8 +59,8 @@ class ExerciseSetupController extends ChangeNotifier {
       final List<ApiExercise> exercises = await exerciseService.getExercises();
       ApiExercise? exerciseData;
       try {
-        exerciseData = exercises.firstWhere(
-        (item) => item.name == _exerciseName);
+        exerciseData =
+            exercises.firstWhere((item) => item.name == _exerciseName);
       } catch (e) {
         exerciseData = null;
       }
@@ -266,9 +266,9 @@ class ExerciseSetupController extends ChangeNotifier {
       await exerciseService.createExercise({
         'name': exerciseName,
         'type': exerciseType,
-        'defaultRepBase': minRep,
-        'defaultRepMax': maxRep,
-        'defaultIncrement': weightInc,
+        'default_rep_base': minRep,
+        'default_rep_max': maxRep,
+        'default_increment': weightInc,
         'pectoralisMajor': muscleIntensities[0],
         'trapezius': muscleIntensities[1],
         'biceps': muscleIntensities[2],
@@ -282,7 +282,7 @@ class ExerciseSetupController extends ChangeNotifier {
         'hamstrings': muscleIntensities[10],
         'quadriceps': muscleIntensities[11],
         'forearms': muscleIntensities[12],
-        'calves': muscleIntensities[13],
+        'calves': muscleIntensities[13]
       });
       if (kDebugMode)
         print('✅ add_exercise: New exercise created successfully');
