@@ -8,7 +8,7 @@ import 'package:http/http.dart' as http;
 import '../../config/api_config.dart';
 import 'api_cache.dart';
 
-const bool useCache = false; // Set to false to disable caching
+const bool useCache = true; // Set to false to disable caching
 // Main API base URL - Azure hosted backend service
 const String baseUrl = kDebugMode
     //? 'http://127.0.0.1:8000'
@@ -25,7 +25,7 @@ Future<T> getData<T>(String url) async {
     final cached = cache.get<T>(url);
     if (cached != null) {
       if (kDebugMode) {
-        print('DEBUG API: Cache hit for $url');
+        print('!!!!!!API CACHE ACTIVE!!!!!!! Cache hit: $url');
       }
       return cached;
     }
