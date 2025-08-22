@@ -10,6 +10,7 @@ import 'package:Gymli/utils/services/temp_service.dart';
 import 'package:Gymli/utils/workout_session_state.dart';
 import 'package:get_it/get_it.dart';
 
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'utils/api/api.dart';
 import 'package:go_router/go_router.dart';
 
@@ -56,7 +57,7 @@ void main() async {
     // Continue with limited functionality
   }
 
-  runApp(const MainApp());
+  runApp(const ProviderScope(child: MainApp()));
 }
 
 /// Builds a widget that is shown when initialization fails
@@ -83,19 +84,19 @@ Widget _buildErrorApp(String error) {
   );
 }
 
-class MainApp extends StatefulWidget {
+class MainApp extends ConsumerStatefulWidget {
   const MainApp({super.key});
 
   @override
-  State<MainApp> createState() => _MainAppState();
+  ConsumerState<MainApp> createState() => _MainAppState();
 }
 
-class _MainAppState extends State<MainApp> {
-  late ThemeService _themeService;
+class _MainAppState extends ConsumerState<MainApp> {
+  // late ThemeService _themeService;
   late final GoRouter _router;
   bool _isInitialized = false;
 
-  @override
+@override
   void initState() {
     super.initState();
     _router = AppRouter.createRouter();
@@ -104,8 +105,6 @@ class _MainAppState extends State<MainApp> {
   }
 
   Future<void> _initializeTheme() async {
-    _themeService = ThemeService();
-    await _themeService.loadThemePreference();
     setState(() {
       _isInitialized = true;
     });
@@ -120,31 +119,26 @@ class _MainAppState extends State<MainApp> {
         ),
       );
     }
-
-    return ChangeNotifierProvider.value(
-      value: _themeService,
-      child: Consumer<ThemeService>(
-        builder: (context, themeService, _) {
-          final ThemeData themeData =
-              buildAppTheme(themeService.mode, themeService.primaryColor);
-
-          return MaterialApp.router(
-            theme: themeData,
-            localizationsDelegates: const [
-              GlobalMaterialLocalizations.delegate,
-              GlobalWidgetsLocalizations.delegate,
-              GlobalCupertinoLocalizations.delegate,
-            ],
-            supportedLocales: const [
-              Locale('en', 'US'),
-              Locale('en', 'GB'),
-              Locale('de', 'DE'),
-            ],
-            title: 'Gymli Gainson',
-            routerConfig: _router,
-          );
-        },
-      ),
+    final mode = ref.watch(themeModeProvider);
+    final seed = ref.watch(seedColorProvider);
+    final themeData = buildAppTheme(
+      mode == ThemeMode.dark ? Brightness.dark : Brightness.light,
+      seed,
+    );
+    return MaterialApp.router(
+      theme: themeData,
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const [
+        Locale('en', 'US'),
+        Locale('en', 'GB'),
+        Locale('de', 'DE'),
+      ],
+      title: 'Gymli Gainson',
+      routerConfig: _router,
     );
   }
 }
