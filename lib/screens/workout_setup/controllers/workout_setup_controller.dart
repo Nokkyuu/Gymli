@@ -4,7 +4,7 @@ import '../../../utils/services/temp_service.dart';
 import '../../../utils/api/api_models.dart';
 import 'package:get_it/get_it.dart';
 import '../../../utils/api/api.dart';
-import '../../../utils/services/auth_service.dart';
+//import '../../../utils/services/auth_service.dart';
 
 class WorkoutSetupController extends ChangeNotifier {
   final TempService _container = GetIt.I<TempService>();
@@ -47,7 +47,8 @@ class WorkoutSetupController extends ChangeNotifier {
     try {
       // Load all exercises
       final exerciseData = await exerciseService.getExercises();
-      _allExercises = exerciseData..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+      _allExercises = exerciseData
+        ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
 
       if (_workoutName.isNotEmpty) {
         final workoutData = await _container.getWorkouts();
@@ -139,7 +140,7 @@ class WorkoutSetupController extends ChangeNotifier {
       }
 
       // Notify that data has changed
-      GetIt.I<AuthService>().notifyAuthStateChanged();
+      //GetIt.I<AuthService>().notifyAuthStateChanged();
       _clearError();
       return true;
     } catch (e) {

@@ -2,12 +2,10 @@ import 'package:Gymli/config/api_config.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:go_router/go_router.dart';
-import '../config/app_router.dart';
+import 'app_router.dart';
 import '../utils/services/temp_service.dart';
-import '../utils/services/auth0_service.dart';
+import 'package:Gymli/utils/services/authentication_service.dart';
 import 'package:get_it/get_it.dart';
-import '../utils/services/auth_service.dart';
-
 
 class LandingChoiceScreen extends StatefulWidget {
   const LandingChoiceScreen({super.key});
@@ -18,7 +16,7 @@ class LandingChoiceScreen extends StatefulWidget {
 
 class _LandingChoiceScreenState extends State<LandingChoiceScreen> {
   final _container = GetIt.I<TempService>();
-  late Auth0Service _authService;
+  late AuthenticationService _authService;
   bool _loading = true;
   bool _isInitialized = false;
 
@@ -29,8 +27,10 @@ class _LandingChoiceScreenState extends State<LandingChoiceScreen> {
   }
 
   Future<void> _initializeServices() async {
-    _authService = Auth0Service();
+    _authService = GetIt.I<AuthenticationService>();
+
     await _authService.initialize();
+    //TODO: is this still necessary? reinitialize?
 
     // Listen to auth changes
     _authService.addListener(_onAuthChanged);
@@ -64,7 +64,7 @@ class _LandingChoiceScreenState extends State<LandingChoiceScreen> {
 
     // The Auth0Service.initialize() already called loadStoredAuthState
     // So we just need to check if we're logged in with a valid token
-    if (GetIt.I<AuthService>().isLoggedIn && _isTokenProperlySet()) {
+    if (GetIt.I<AuthenticationService>().isLoggedIn && _isTokenProperlySet()) {
       _proceedToMainApp();
       return;
     }

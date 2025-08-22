@@ -4,8 +4,8 @@
 /// and sets up the main app widgets
 library;
 
-import 'package:Gymli/config/app_router.dart';
-import 'package:Gymli/utils/services/auth_service.dart';
+import 'package:Gymli/widgets/app_router.dart';
+import 'package:Gymli/utils/services/authentication_service.dart';
 import 'package:Gymli/utils/services/temp_service.dart';
 import 'package:Gymli/utils/workout_session_state.dart';
 import 'package:get_it/get_it.dart';
@@ -32,12 +32,12 @@ void main() async {
   GetIt.I.registerSingleton<FoodService>(FoodService());
   GetIt.I.registerSingleton<ActivityService>(ActivityService());
   GetIt.I.registerSingleton<CalendarService>(CalendarService());
-  GetIt.I.registerSingleton<AuthService>(AuthService());
+  GetIt.I.registerSingleton<AuthenticationService>(AuthenticationService());
 
   // managers are either ttl-singletons with state, or riverpods
   // GetIt.I.registerSingleton<AuthManager>(AuthManager());
   GetIt.I.registerSingleton<WorkoutSessionManager>(WorkoutSessionManager());
-  
+
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding
       .ensureInitialized(); //required for async initialization, ensures that the Flutter engine is ready
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
@@ -96,7 +96,7 @@ class _MainAppState extends ConsumerState<MainApp> {
   late final GoRouter _router;
   bool _isInitialized = false;
 
-@override
+  @override
   void initState() {
     super.initState();
     _router = AppRouter.createRouter();

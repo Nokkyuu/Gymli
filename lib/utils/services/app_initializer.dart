@@ -9,12 +9,10 @@ import '../globals.dart' as globals;
 import '../api/api.dart';
 //import 'user_service.dart';
 import 'package:get_it/get_it.dart';
-import 'package:Gymli/utils/services/auth_service.dart';
+//import 'package:Gymli/utils/services/auth_service.dart';
+import 'package:Gymli/utils/services/authentication_service.dart';
 
 class AppInitializer {
-  static const String _auth0Domain = 'dev-aqz5a2g54oer01tk.us.auth0.com';
-  static const String _auth0ClientId = 'MAxJUti2T7TkLagzT7SdeEzCTZsHyuOa';
-
   static late Auth0Web auth0;
   static bool _isInitialized = false;
 
@@ -46,13 +44,9 @@ class AppInitializer {
       ApiConfig.initialize();
       if (kDebugMode) print('✓ API configuration initialized');
 
-      // 3. Initialize Auth0
-      _initializeAuth0();
-      if (kDebugMode) print('✓ Auth0 initialized');
-
       // 4. Initialize UserService
-      GetIt.I<AuthService>().initializeAuth();
-      if (kDebugMode) print('✓ UserService Container initialized');
+      GetIt.I<AuthenticationService>().initialize();
+      if (kDebugMode) print('✓ AuthenticationService initialized');
 
       await _initializeUserService();
       if (kDebugMode) print('✓ UserService initialized');
@@ -89,11 +83,6 @@ class AppInitializer {
   //       prefs.getBool('detailedGraph') ?? globals.detailedGraph;
   // }
 
-  /// Initialize Auth0 service
-  static void _initializeAuth0() {
-    auth0 = Auth0Web(_auth0Domain, _auth0ClientId);
-  }
-
   /// Initialize UserService and load stored auth state
   /// This will also set the credentials if available.
   ///
@@ -104,9 +93,9 @@ class AppInitializer {
     try {
       // Try to load stored authentication state
       final credentials =
-          await GetIt.I<AuthService>().loadStoredAuthState();
+          await GetIt.I<AuthenticationService>().loadStoredAuthState();
       if (credentials != null) {
-        GetIt.I<AuthService>().setCredentials(credentials);
+        GetIt.I<AuthenticationService>().setCredentials(credentials);
       }
     } catch (e) {
       print('No stored authentication state found: $e');
@@ -130,8 +119,7 @@ class AppInitializer {
 
       final exercises = await GetIt.I<ExerciseService>().getExercises();
 
-      globals.exerciseList =
-          exercises.map<String>((e) => e.name).toList();
+      globals.exerciseList = exercises.map<String>((e) => e.name).toList();
       print('Exercise list loaded: ${globals.exerciseList.length} exercises');
     } catch (e) {
       print('Error loading initial data: $e');

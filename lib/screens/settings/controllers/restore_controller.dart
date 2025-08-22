@@ -73,7 +73,7 @@ class RestoreController extends ChangeNotifier {
       }
 
       // Notify data changed
-      _repository.notifyDataChanged();
+      //_repository.notifyDataChanged();
 
       return result;
     } catch (e) {

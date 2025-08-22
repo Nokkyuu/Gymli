@@ -1,7 +1,7 @@
 /// Landing Controller - Simplified without caching layer
 library;
 
-import 'package:Gymli/utils/services/auth_service.dart';
+import 'package:Gymli/utils/services/authentication_service.dart';
 import 'package:Gymli/utils/services/temp_service.dart';
 import 'package:flutter/foundation.dart';
 import '../models/landing_filter_state.dart';
@@ -74,14 +74,17 @@ class LandingController extends ChangeNotifier {
 
   /// Load all data from repository
   Future<void> _loadData() async {
-      // return exercises.map((e) => ApiExercise.fromJson(e)).toList();
+    // return exercises.map((e) => ApiExercise.fromJson(e)).toList();
 
-    List<dynamic> currentExercises = await GetIt.I<ExerciseService>().getExercises();
+    List<dynamic> currentExercises =
+        await GetIt.I<ExerciseService>().getExercises();
     _exercises = currentExercises as List<ApiExercise>;
 
-    List<dynamic> currentWorkouts = await GetIt.I<WorkoutService>().getWorkouts();
-    currentWorkouts = currentWorkouts.map((e) => ApiWorkout.fromJson(e)).toList();
-    _workouts = currentWorkouts as List<ApiWorkout>; 
+    List<dynamic> currentWorkouts =
+        await GetIt.I<WorkoutService>().getWorkouts();
+    currentWorkouts =
+        currentWorkouts.map((e) => ApiWorkout.fromJson(e)).toList();
+    _workouts = currentWorkouts as List<ApiWorkout>;
 
     // Sort data
     _exercises.sort((a, b) => a.name.compareTo(b.name));
@@ -177,7 +180,8 @@ class LandingController extends ChangeNotifier {
   void showWelcomeMessage() {
     if (!_isInitialized) return;
 
-    if (GetIt.I<AuthService>().isLoggedIn && !_hasShownWelcomeMessage) {
+    if (GetIt.I<AuthenticationService>().isLoggedIn &&
+        !_hasShownWelcomeMessage) {
       _hasShownWelcomeMessage = true;
       notifyListeners();
     }
@@ -268,7 +272,8 @@ class LandingController extends ChangeNotifier {
     try {
       final exerciseNames = _filteredExercises.map((ex) => ex.name).toList();
       // final lastTrainingDays = await _repository.getLastTrainingDaysForExercises(exerciseNames);
-      final lastTrainingDays = await GetIt.I<TempService>().getLastTrainingDatesPerExercise(exerciseNames);
+      final lastTrainingDays = await GetIt.I<TempService>()
+          .getLastTrainingDatesPerExercise(exerciseNames);
 
       for (var ex in _filteredExercises) {
         final lastTraining =
@@ -318,8 +323,8 @@ class LandingController extends ChangeNotifier {
 
     try {
       final exerciseNames = _filteredExercises.map((ex) => ex.name).toList();
-      final lastTrainingDays =
-          await GetIt.I<TempService>().getLastTrainingDatesPerExercise(exerciseNames);
+      final lastTrainingDays = await GetIt.I<TempService>()
+          .getLastTrainingDatesPerExercise(exerciseNames);
 
       for (var ex in _filteredExercises) {
         final lastTraining =

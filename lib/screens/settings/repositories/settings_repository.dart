@@ -1,11 +1,14 @@
 /// Settings Repository - Data access layer for settings operations
 library;
+
 import 'package:get_it/get_it.dart';
 
 import 'package:flutter/foundation.dart';
 import 'package:Gymli/utils/services/temp_service.dart';
 import '../../../utils/api/api.dart';
-import 'package:Gymli/utils/services/auth_service.dart';
+//import 'package:Gymli/utils/services/auth_service.dart';
+import 'package:Gymli/utils/services/authentication_service.dart';
+
 class SettingsRepository {
   final TempService container = GetIt.I<TempService>();
   final ExerciseService exerciseService = GetIt.I<ExerciseService>();
@@ -54,7 +57,7 @@ class SettingsRepository {
   Future<void> clearTrainingSets() async {
     try {
       await GetIt.I<TrainingSetService>().clearTrainingSets();
-      GetIt.I<AuthService>().notifyAuthStateChanged();
+      // GetIt.I<AuthService>().notifyAuthStateChanged();
     } catch (e) {
       if (kDebugMode) print('Error clearing training sets: $e');
       rethrow;
@@ -67,7 +70,7 @@ class SettingsRepository {
       await container.clearWorkouts();
       await GetIt.I<TrainingSetService>().clearTrainingSets();
       await container.clearExercises();
-      GetIt.I<AuthService>().notifyAuthStateChanged();
+      // GetIt.I<AuthService>().notifyAuthStateChanged();
     } catch (e) {
       if (kDebugMode) print('Error clearing exercises: $e');
       rethrow;
@@ -78,7 +81,7 @@ class SettingsRepository {
   Future<void> clearWorkouts() async {
     try {
       await container.clearWorkouts();
-      GetIt.I<AuthService>().notifyAuthStateChanged();
+      //GetIt.I<AuthService>().notifyAuthStateChanged();
     } catch (e) {
       if (kDebugMode) print('Error clearing workouts: $e');
       rethrow;
@@ -89,8 +92,7 @@ class SettingsRepository {
   Future<void> clearFoods() async {
     try {
       await GetIt.I<FoodService>().clearFoods();
-      GetIt.I<AuthService>().notifyAuthStateChanged();
-
+      //GetIt.I<AuthService>().notifyAuthStateChanged();
     } catch (e) {
       if (kDebugMode) print('Error clearing foods: $e');
       rethrow;
@@ -131,8 +133,8 @@ class SettingsRepository {
         'hamstrings': exerciseData['hamstrings'],
         'quadriceps': exerciseData['quadriceps'],
         'forearms': exerciseData['forearms'],
-        'calves': exerciseData['calves']}
-      );
+        'calves': exerciseData['calves']
+      });
     } catch (e) {
       if (kDebugMode) print('Error creating exercise: $e');
       rethrow;
@@ -176,10 +178,10 @@ class SettingsRepository {
   }
 
   /// Notify data changed
-  void notifyDataChanged() {
-    GetIt.I<AuthService>().notifyAuthStateChanged();
-  }
+  // void notifyDataChanged() {
+  //   ((GetIt.I<AuthService>().notifyAuthStateChanged();
+  // }
 
   /// Get current user name
-  String? get userName => GetIt.I<AuthService>().userName;
+  String? get userName => GetIt.I<AuthenticationService>().userName;
 }
