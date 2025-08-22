@@ -43,7 +43,6 @@ class LandingFilterSection extends StatelessWidget {
         TextButton.icon(
           onPressed: () {
             onShowAll();
-            // force rebuild with blank keys (reset dropdowns)
             filterController.clearFilters();
           },
           label: const Text("Show All"),
@@ -71,7 +70,9 @@ class LandingFilterSection extends StatelessWidget {
       width: MediaQuery.of(context).size.width * 0.45,
       enabled: true,
       key: ValueKey('workout-${filterController.selectedWorkout?.id ?? 'none'}'),
-      initialSelection: filterController.filterType == FilterType.workout ? filterController.selectedWorkout : null,
+      initialSelection: (filterController.filterType == FilterType.workout && filterController.hasActiveFilter)
+          ? filterController.selectedWorkout
+          : null,
       requestFocusOnTap: false,
       label: const Text('Workouts'),
       onSelected: (ApiWorkout? workout) {
@@ -106,7 +107,9 @@ class LandingFilterSection extends StatelessWidget {
       width: MediaQuery.of(context).size.width * 0.45,
       enabled: true,
       key: ValueKey('muscle-${filterController.selectedMuscle?.muscleName ?? 'none'}'),
-      initialSelection: filterController.filterType == FilterType.muscle ? filterController.selectedMuscle : null,
+      initialSelection: (filterController.filterType == FilterType.muscle && filterController.hasActiveFilter)
+          ? filterController.selectedMuscle
+          : null,
       requestFocusOnTap: false,
       label: const Text('Muscles'),
       onSelected: (MuscleList? muscle) {

@@ -94,39 +94,27 @@ class LandingFilterController {
   FilterType get filterType => _filterState.filterType;
   bool get hasActiveFilter => _filterState.hasActiveFilter;
 
-  /// Clear all filters.
   void clearFilters() {
     _filterState = _filterState.clear();
   }
-
-  /// Set workout filter.
   void setWorkoutFilter(ApiWorkout workout) {
     _filterState = _filterState.setWorkoutFilter(workout);
   }
-
-  /// Set muscle filter.
   void setMuscleFilter(MuscleList muscle) {
     _filterState = _filterState.setMuscleFilter(muscle);
   }
 
-  /// Restore filter state (kept for API compatibility; UI text controllers were removed).
-  void restoreFilterState() {
-    // No-op: UI widgets should reflect state explicitly when building.
-  }
+  // /// Restore filter state (kept for API compatibility; UI text controllers were removed).
+  // void restoreFilterState() {
+  //   // No-op: UI widgets should reflect state explicitly when building.
+  // }
 
-  /// Get exercise *names* for current filter (sorted where applicable).
-  List<String> getFilteredExerciseNames(
-    List<ApiExercise> allExercises,
-    List<ApiWorkout> allWorkouts, // kept for signature compatibility
-  ) {
-    // allWorkouts not needed because state holds the selected workout
+  
+  List<String> getFilteredExerciseNames(List<ApiExercise> allExercises, List<ApiWorkout> allWorkouts) {
     return computeFilteredExerciseNames(_filterState, allExercises);
   }
 
-  /// Optional: Get an ordered *view* of exercises for current filter.
-  Iterable<ApiExercise> getFilteredExercisesView(
-    Iterable<ApiExercise> allExercises,
-  ) {
+  Iterable<ApiExercise> getFilteredExercisesView(Iterable<ApiExercise> allExercises) {
     return orderedExercisesView(_filterState, allExercises);
   }
 }
