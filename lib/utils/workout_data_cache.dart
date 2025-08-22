@@ -4,8 +4,6 @@ import 'package:Gymli/utils/api/api_models.dart';
 import 'package:get_it/get_it.dart';
 import 'package:Gymli/utils/api/api.dart';
 
-
-
 class WorkoutDataCache extends ChangeNotifier {
   List<ApiExercise> _exercises = [];
   List<ApiWorkout> _workouts = [];
@@ -25,7 +23,7 @@ class WorkoutDataCache extends ChangeNotifier {
     final raw = await GetIt.I<WorkoutService>().getWorkouts();
     _workouts = raw.map((e) => ApiWorkout.fromJson(e)).toList();
     _initialized = true;
-    print("Initialized");
+    print("WorkoutDataCache initialized with ${_exercises.length} exercises and ${_workouts.length} workouts");
   }
 
 

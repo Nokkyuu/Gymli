@@ -4,6 +4,7 @@
 /// and sets up the main app widgets
 library;
 
+import 'package:Gymli/utils/workout_data_cache.dart';
 import 'package:Gymli/widgets/app_router.dart';
 import 'package:Gymli/utils/services/authentication_service.dart';
 import 'package:Gymli/utils/services/temp_service.dart';
@@ -37,6 +38,7 @@ void main() async {
   // managers are either ttl-singletons with state, or riverpods
   // GetIt.I.registerSingleton<AuthManager>(AuthManager());
   GetIt.I.registerSingleton<WorkoutSessionManager>(WorkoutSessionManager());
+  GetIt.I.registerSingleton<WorkoutDataCache>(WorkoutDataCache());
 
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding
       .ensureInitialized(); //required for async initialization, ensures that the Flutter engine is ready

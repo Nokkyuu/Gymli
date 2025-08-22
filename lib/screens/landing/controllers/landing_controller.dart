@@ -11,6 +11,9 @@ import '../../../utils/globals.dart' as globals;
 import 'package:get_it/get_it.dart';
 import 'package:Gymli/utils/api/api.dart';
 
+import 'package:Gymli/utils/workout_data_cache.dart';
+
+
 class LandingController extends ChangeNotifier {
   final LandingFilterController _filterController;
 
@@ -19,6 +22,8 @@ class LandingController extends ChangeNotifier {
   List<ApiWorkout> _workouts = [];
   List<ApiExercise> _filteredExercises = [];
   List<String> _metainfo = [];
+
+  final WorkoutDataCache? _cache;
 
   bool _isLoading = true;
   String? _errorMessage;
@@ -29,9 +34,10 @@ class LandingController extends ChangeNotifier {
 
   LandingController({
     LandingFilterController? filterController,
-  }) : _filterController = filterController ?? LandingFilterController() {
-    // Listen to global exercise data changes
-    globals.exerciseDataChangedNotifier.addListener(_onExerciseDataChanged);
+    WorkoutDataCache? cache})
+    : _filterController = filterController ?? LandingFilterController(),
+    _cache = cache {
+    _cache?.addListener(_onCacheChanged);  // Listen to global exercise data changes
   }
 
   // Getters
@@ -52,17 +58,17 @@ class LandingController extends ChangeNotifier {
       return;
     }
 
-    _setLoading(true);
     _clearError();
+    _setLoading(true);
 
     try {
+      if (_cache != null && !_cache!.isInitialized) {               // <- !!!
+        await _cache!.init();                                       // <- !!!
+      }  
       await _loadData();
       await showAllExercises();
-
-      // // Only add listener after successful initialization
-      // _repository.authStateNotifier.addListener(_onAuthStateChanged);  // TODO: MAYBE
       _isInitialized = true;
-
+      notifyListeners();
       if (kDebugMode) print('✅ LandingController initialized successfully');
     } catch (e) {
       if (kDebugMode) print('❌ LandingController initialization failed: $e');
@@ -74,21 +80,17 @@ class LandingController extends ChangeNotifier {
 
   /// Load all data from repository
   Future<void> _loadData() async {
-    // return exercises.map((e) => ApiExercise.fromJson(e)).toList();
-
-    List<dynamic> currentExercises =
-        await GetIt.I<ExerciseService>().getExercises();
-    _exercises = currentExercises as List<ApiExercise>;
-
-    List<dynamic> currentWorkouts =
-        await GetIt.I<WorkoutService>().getWorkouts();
-    currentWorkouts =
-        currentWorkouts.map((e) => ApiWorkout.fromJson(e)).toList();
-    _workouts = currentWorkouts as List<ApiWorkout>;
-
-    // Sort data
-    _exercises.sort((a, b) => a.name.compareTo(b.name));
-    _workouts.sort((a, b) => a.name.compareTo(b.name));
+      // return exercises.map((e) => ApiExercise.fromJson(e)).toList();
+      if (_cache != null) {
+      // Bei Cache stets bevorzugen; nach obigem await init() sind Daten da       // <- !!!
+      _exercises = List<ApiExercise>.from(_cache!.exercises);
+      _workouts  = List<ApiWorkout>.from(_cache!.workouts);
+      print("Using cached data: ${_exercises.length} exercises and ${_workouts.length} workouts");
+    } else  {
+      _exercises = await GetIt.I<ExerciseService>().getExercises();
+      _workouts = (await GetIt.I<WorkoutService>().getWorkouts()).map((e) => ApiWorkout.fromJson(e)).toList();
+      print("Used fall back data: ${_exercises.length} exercises and ${_workouts.length} workouts");
+    }
   }
 
   /// Reload data (always fetches fresh data)
@@ -114,7 +116,8 @@ class LandingController extends ChangeNotifier {
   /// Show all exercises with training metadata
   Future<void> showAllExercises() async {
     try {
-      _filteredExercises = _exercises;
+      _filterController.clearFilters();
+      _filteredExercises = List<ApiExercise>.from(_filterController.getFilteredExercisesView(_exercises));
       _metainfo = [];
 
       if (_filteredExercises.isEmpty) {
@@ -123,7 +126,6 @@ class LandingController extends ChangeNotifier {
       }
 
       await _buildMetainfoForAllExercises();
-      _filterController.clearFilters();
       _notifyFilterChange();
     } catch (e) {
       _setError('Error showing all exercises: $e');
@@ -135,12 +137,7 @@ class LandingController extends ChangeNotifier {
     try {
       _filterController.setWorkoutFilter(workout);
 
-      final allExercises = _exercises;
-      final exerciseNames =
-          _filterController.getFilteredExerciseNames(allExercises, _workouts);
-
-      _filteredExercises =
-          allExercises.where((ex) => exerciseNames.contains(ex.name)).toList();
+      _filteredExercises = List<ApiExercise>.from(_filterController.getFilteredExercisesView(_exercises));
 
       await _buildMetainfoForWorkout(workout);
       _notifyFilterChange();
@@ -154,12 +151,7 @@ class LandingController extends ChangeNotifier {
     try {
       _filterController.setMuscleFilter(muscle);
 
-      final allExercises = _exercises;
-      final exerciseNames =
-          _filterController.getFilteredExerciseNames(allExercises, _workouts);
-
-      _filteredExercises =
-          allExercises.where((ex) => exerciseNames.contains(ex.name)).toList();
+      _filteredExercises = List<ApiExercise>.from(_filterController.getFilteredExercisesView(_exercises));
 
       await _buildMetainfoForMuscle();
       _notifyFilterChange();
@@ -170,10 +162,7 @@ class LandingController extends ChangeNotifier {
 
   /// Get sorted exercises for display
   List<ApiExercise> getSortedExercises() {
-    final items = List<ApiExercise>.from(_filteredExercises);
-    items.sort((a, b) =>
-        a.name.trim().toLowerCase().compareTo(b.name.trim().toLowerCase()));
-    return items;
+    return List<ApiExercise>.from(_filterController.getFilteredExercisesView(_exercises));
   }
 
   /// Show welcome message (once per session)
@@ -196,18 +185,13 @@ class LandingController extends ChangeNotifier {
 
   void _setLoading(bool loading) {
     // Safety check: don't notify listeners if disposed
-    if (!_isInitialized) return;
-
-    _isLoading = loading;
-    notifyListeners();
-  }
+  _isLoading = loading;                       // immer setzen                  // <- !!!
+  if (_isInitialized) notifyListeners();      // erst nach Init redraw         // <- !!!
+}
 
   void _setError(String error) {
-    // Safety check: don't notify listeners if disposed
-    if (!_isInitialized) return;
-
-    _errorMessage = error;
-    notifyListeners();
+    _errorMessage = error;                      // immer setzen                  // <- !!!
+    if (_isInitialized) notifyListeners();      // erst nach Init redraw         // <- !!!
   }
 
   void _clearError() {
@@ -217,19 +201,26 @@ class LandingController extends ChangeNotifier {
   void _notifyFilterChange() {
     // Safety check: don't notify if disposed
     if (!_isInitialized) return;
-
     filterApplied.value = !filterApplied.value;
   }
 
-  void _onExerciseDataChanged() {
-    // Safety check: don't operate on disposed controller
-    if (!_isInitialized) return;
+  // <- !!! neu: Reaktion auf Cache-Änderungen
+  void _onCacheChanged() { // <- !!!
+    if (_cache == null) return;
 
-    if (kDebugMode) {
-      print('🔄 Exercise data changed - reloading landing screen');
+    // Daten immer übernehmen (Hydration), auch vor _isInitialized              // <- !!!
+    _exercises = List<ApiExercise>.from(_cache!.exercises);
+    _workouts  = List<ApiWorkout>.from(_cache!.workouts);
+
+    if (!_isInitialized) {
+      if (kDebugMode) print('🔄 Cache changed (pre-init) - hydrated');         // <- !!!
+      return; // noch nicht redrawen
     }
-    reload();
-  }
+
+    if (kDebugMode) print('🔄 Cache changed - updating landing view');
+    _restoreFilterState();
+    notifyListeners();
+  } // <
 
   void _onAuthStateChanged() {
     // Safety check: don't operate on disposed controller
@@ -246,11 +237,7 @@ class LandingController extends ChangeNotifier {
 
     try {
       // Remove global listener safely
-      globals.exerciseDataChangedNotifier
-          .removeListener(_onExerciseDataChanged);
-
-      // Remove repository listener safely
-      // _repository.authStateNotifier.removeListener(_onAuthStateChanged);
+      _cache?.removeListener(_onCacheChanged); // <- !!!
 
       // Dispose filter applied notifier
       filterApplied.dispose();
