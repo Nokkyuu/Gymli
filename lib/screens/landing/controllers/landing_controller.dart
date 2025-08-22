@@ -12,7 +12,6 @@ import 'package:Gymli/utils/api/api.dart';
 
 import 'package:Gymli/utils/workout_data_cache.dart';
 
-
 class LandingController extends ChangeNotifier {
   final LandingFilterController _filterController;
 
@@ -27,12 +26,12 @@ class LandingController extends ChangeNotifier {
 
   final ValueNotifier<bool> filterApplied = ValueNotifier<bool>(true);
 
-  LandingController({
-    LandingFilterController? filterController,
-    WorkoutDataCache? cache})
-    : _filterController = filterController ?? LandingFilterController(),
-    _cache = cache {
-    _cache?.addListener(_onCacheChanged);  // Listen to global exercise data changes
+  LandingController(
+      {LandingFilterController? filterController, WorkoutDataCache? cache})
+      : _filterController = filterController ?? LandingFilterController(),
+        _cache = cache {
+    _cache?.addListener(
+        _onCacheChanged); // Listen to global exercise data changes
   }
 
   // Getters
@@ -57,9 +56,10 @@ class LandingController extends ChangeNotifier {
     _setLoading(true);
 
     try {
-      if (_cache != null && !_cache!.isInitialized) {               // <- !!!
-        await _cache!.init();                                       // <- !!!
-      }  
+      if (_cache != null && !_cache!.isInitialized) {
+        // <- !!!
+        await _cache!.init(); // <- !!!
+      }
       await _loadData();
       await showAllExercises();
       _isInitialized = true;
@@ -75,14 +75,18 @@ class LandingController extends ChangeNotifier {
 
   /// Load all data from repository
   Future<void> _loadData() async {
-      // return exercises.map((e) => ApiExercise.fromJson(e)).toList();
-      if (_cache != null) {
+    // return exercises.map((e) => ApiExercise.fromJson(e)).toList();
+    if (_cache != null) {
       // Bei Cache stets bevorzugen; nach obigem await init() sind Daten da       // <- !!!
-      print("Using cached data: ${_cache!.exercises.length} exercises and ${_cache!.workouts.length} workouts");
-    } else  {
+      print(
+          "Using cached data: ${_cache!.exercises.length} exercises and ${_cache!.workouts.length} workouts");
+    } else {
       final ex = await GetIt.I<ExerciseService>().getExercises();
-      final wo = (await GetIt.I<WorkoutService>().getWorkouts()).map((e) => ApiWorkout.fromJson(e)).toList();
-      print("Used fall back data: ${ex.length} exercises and ${wo.length} workouts");
+      final wo = (await GetIt.I<TempService>().getWorkouts())
+          .map((e) => ApiWorkout.fromJson(e))
+          .toList();
+      print(
+          "Used fall back data: ${ex.length} exercises and ${wo.length} workouts");
     }
   }
 
@@ -128,6 +132,9 @@ class LandingController extends ChangeNotifier {
 
   /// Apply workout filter
   Future<void> applyWorkoutFilter(ApiWorkout workout) async {
+    if (kDebugMode) {
+      print('🔄 Applying workout filter: ${workout.name}');
+    }
     try {
       _filterController.setWorkoutFilter(workout);
 
@@ -156,7 +163,8 @@ class LandingController extends ChangeNotifier {
 
   /// Get sorted exercises for display
   List<ApiExercise> getSortedExercises() {
-    return List<ApiExercise>.from(_filterController.getFilteredExercisesView(exercises));
+    return List<ApiExercise>.from(
+        _filterController.getFilteredExercisesView(exercises));
   }
 
   /// Show welcome message (once per session)
@@ -177,7 +185,8 @@ class LandingController extends ChangeNotifier {
 
   // Private methods
 
-  void _setLoading(bool loading) { // Safety check: don't notify listeners if disposed
+  void _setLoading(bool loading) {
+    // Safety check: don't notify listeners if disposed
     _isLoading = loading;
     if (_isInitialized) notifyListeners();
   }

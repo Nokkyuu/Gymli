@@ -69,8 +69,10 @@ class LandingFilterSection extends StatelessWidget {
     return DropdownMenu<ApiWorkout>(
       width: MediaQuery.of(context).size.width * 0.45,
       enabled: true,
-      key: ValueKey('workout-${filterController.selectedWorkout?.id ?? 'none'}'),
-      initialSelection: (filterController.filterType == FilterType.workout && filterController.hasActiveFilter)
+      key:
+          ValueKey('workout-${filterController.selectedWorkout?.id ?? 'none'}'),
+      initialSelection: (filterController.filterType == FilterType.workout &&
+              filterController.hasActiveFilter)
           ? filterController.selectedWorkout
           : null,
       requestFocusOnTap: false,
@@ -106,8 +108,10 @@ class LandingFilterSection extends StatelessWidget {
     return DropdownMenu<MuscleList>(
       width: MediaQuery.of(context).size.width * 0.45,
       enabled: true,
-      key: ValueKey('muscle-${filterController.selectedMuscle?.muscleName ?? 'none'}'),
-      initialSelection: (filterController.filterType == FilterType.muscle && filterController.hasActiveFilter)
+      key: ValueKey(
+          'muscle-${filterController.selectedMuscle?.muscleName ?? 'none'}'),
+      initialSelection: (filterController.filterType == FilterType.muscle &&
+              filterController.hasActiveFilter)
           ? filterController.selectedMuscle
           : null,
       requestFocusOnTap: false,

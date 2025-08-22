@@ -1,6 +1,8 @@
 /// Landing Filter Controller - Pure state + ordered views (no UI controllers, no ChangeNotifier)
 library;
 
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import '../models/landing_filter_state.dart';
 import '../../../utils/api/api_models.dart';
 
@@ -75,9 +77,8 @@ List<String> computeFilteredExerciseNames(
       return names;
 
     case FilterType.none:
-      final names = allExercises
-          .map((ex) => ex.name.trim())
-          .toList(growable: false);
+      final names =
+          allExercises.map((ex) => ex.name.trim()).toList(growable: false);
       names.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
       return names;
   }
@@ -97,9 +98,11 @@ class LandingFilterController {
   void clearFilters() {
     _filterState = _filterState.clear();
   }
+
   void setWorkoutFilter(ApiWorkout workout) {
     _filterState = _filterState.setWorkoutFilter(workout);
   }
+
   void setMuscleFilter(MuscleList muscle) {
     _filterState = _filterState.setMuscleFilter(muscle);
   }
@@ -109,12 +112,13 @@ class LandingFilterController {
   //   // No-op: UI widgets should reflect state explicitly when building.
   // }
 
-  
-  List<String> getFilteredExerciseNames(List<ApiExercise> allExercises, List<ApiWorkout> allWorkouts) {
+  List<String> getFilteredExerciseNames(
+      List<ApiExercise> allExercises, List<ApiWorkout> allWorkouts) {
     return computeFilteredExerciseNames(_filterState, allExercises);
   }
 
-  Iterable<ApiExercise> getFilteredExercisesView(Iterable<ApiExercise> allExercises) {
+  Iterable<ApiExercise> getFilteredExercisesView(
+      Iterable<ApiExercise> allExercises) {
     return orderedExercisesView(_filterState, allExercises);
   }
 }

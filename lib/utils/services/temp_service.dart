@@ -3,31 +3,14 @@ library;
 import 'package:Gymli/utils/api/api.dart';
 import 'package:get_it/get_it.dart';
 
-
 // Class is for temporary convenience and non-existent endpoint compensation
 
 class TempService {
   TempService();
 
-  //replace calls in files, unecessary redundancy
-  Future<List<Map<String, dynamic>>> createTrainingSetsBulk(
-    List<Map<String, dynamic>> trainingSets,
-  ) async {
-    return await GetIt.I<TrainingSetService>().createTrainingSetsBulk(
-        trainingSets: trainingSets);
-  }
-
-  //replace calls in files, unecessary redundancy
-  Future<List<Map<String, dynamic>>> createFoodsBulk(
-    List<Map<String, dynamic>> foods,
-  ) async {
-    return await GetIt.I<FoodService>().createFoodsBulk(foods: foods);
-  }
-
-  // Analytics helper methods
-  //TODO: replace getLastTrainingDatesPerExercise() calls with getLastTrainingDatesPerExercise calls directly
   Future<Map<String, Map<String, dynamic>>> getLastTrainingDatesPerExercise(
       List<String> exerciseNames) async {
+    //TODO:Integrate into TrainingSetService
     final lastDates =
         await GetIt.I<TrainingSetService>().getLastTrainingDatesPerExercise();
 
@@ -49,26 +32,23 @@ class TempService {
 
       result[exerciseName] = {
         'lastTrainingDate': lastTrainingDate,
-        // Note: API endpoint doesn't provide highest weight,
-        // you might need to extend the API or make a separate call
-        'highestWeight': 0.0,
       };
     }
-
     return result;
   }
 
   //TODO: replace the getTrainingSetsByID calls with direct calls to getTrainingSetsForExercise
   Future<List<dynamic>> getTrainingSetsByExerciseID(int exerciseId) async {
-    return await GetIt.I<TrainingSetService>().getTrainingSetsByExerciseID(
-        exerciseId: exerciseId);
+    return await GetIt.I<TrainingSetService>()
+        .getTrainingSetsByExerciseID(exerciseId: exerciseId);
   }
 
   Future<int?> getExerciseIdByName(String exerciseName) async {
     try {
       final exerciseService = GetIt.I<ExerciseService>();
       final exercises = await exerciseService.getExercises();
-      final exerciseData = exercises.firstWhere((item) => item.name == exerciseName);
+      final exerciseData =
+          exercises.firstWhere((item) => item.name == exerciseName);
       return exerciseData?.id;
     } catch (e) {
       print('Error resolving exercise name to ID: $e');
@@ -323,7 +303,8 @@ class TempService {
     required List<Map<String, dynamic>> units,
   }) async {
     // Create the workout first and get its data (including ID)
-    final workoutData = await GetIt.I<WorkoutService>().createWorkout(name: name);
+    final workoutData =
+        await GetIt.I<WorkoutService>().createWorkout(name: name);
     final workoutId = workoutData['id'] as int;
 
     // Now create all the workout units
@@ -437,8 +418,6 @@ class TempService {
     final workoutUnits = await GetIt.I<WorkoutUnitService>().getWorkoutUnits();
     return await _enrichWorkoutUnitsWithExerciseNames(workoutUnits);
   }
-
-
 
   Future<List<dynamic>> _enrichWorkoutUnitsWithExerciseNames(
       List<dynamic> workoutUnits) async {
