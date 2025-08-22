@@ -1,8 +1,10 @@
-import 'package:Gymli/utils/services/auth_service.dart';
+import 'package:Gymli/utils/services/authentication_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:Gymli/utils/api/api_models.dart';
 import 'package:get_it/get_it.dart';
 import 'package:Gymli/utils/api/api.dart';
+
+
 
 class WorkoutDataCache extends ChangeNotifier {
   List<ApiExercise> _exercises = [];
@@ -17,7 +19,7 @@ class WorkoutDataCache extends ChangeNotifier {
   Future<void> init() async {
     // Load initial data from API
     if (_initialized) return;
-    if (!GetIt.I<AuthService>().isLoggedIn) return; // dont initialize if not logged in
+    if (!GetIt.I<AuthenticationService>().isLoggedIn) return; // dont initialize if not logged in
     
     _exercises = await GetIt.I<ExerciseService>().getExercises();
     final raw = await GetIt.I<WorkoutService>().getWorkouts();
