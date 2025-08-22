@@ -44,13 +44,18 @@ class LandingScreen extends ConsumerWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             mainAxisSize: MainAxisSize.max,
             children: [
-              LandingFilterSection(
-                availableWorkouts: controller.workouts,
-                filterController: controller.filterController,
-                onWorkoutSelected: (w) => controller.applyWorkoutFilter(w),
-                onMuscleSelected: (m) => controller.applyMuscleFilter(m),
-                onShowAll: () => controller.showAllExercises(),
-                onWorkoutEdit: (name) => _onWorkoutEdit(context, name, controller),
+              ValueListenableBuilder(
+                valueListenable: controller.filterApplied,
+                builder: (context, _, __) {
+                  return LandingFilterSection(
+                    availableWorkouts: controller.workouts,
+                    filterController: controller.filterController,
+                    onWorkoutSelected: (w) => controller.applyWorkoutFilter(w),
+                    onMuscleSelected: (m) => controller.applyMuscleFilter(m),
+                    onShowAll: () => controller.showAllExercises(),
+                    onWorkoutEdit: (name) => _onWorkoutEdit(context, name, controller),
+                  );
+                },
               ),
               Expanded(
                 child: ValueListenableBuilder(
