@@ -3,7 +3,7 @@ import '../../../utils/models/data_models.dart';
 import 'exercise_graph_controller.dart';
 import 'package:get_it/get_it.dart';
 import '../../../utils/workout_data_cache.dart';
-import '../../../utils/api/api.dart'; // for ExerciseService via GetIt
+import '../../../utils/api/api_export.dart'; // for ExerciseService via GetIt
 import '../../../utils/services/authentication_service.dart';
 
 enum ExerciseType { warmup, work }
