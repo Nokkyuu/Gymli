@@ -357,7 +357,7 @@ class ApiWorkout {
   final int? id;
   final String userName;
   final String name;
-  late final List<ApiWorkoutUnit> units;
+  List<ApiWorkoutUnit> units;
 
   ApiWorkout({
     this.id,

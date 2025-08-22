@@ -24,10 +24,9 @@ class WorkoutService {
   }
 
   Future<List<ApiWorkout>> _enrichWorkoutsWithUnits(
-      List<dynamic> workouts) async {
+      List<ApiWorkout> workouts) async {
     final unitsByWorkoutId = <int, List<ApiWorkoutUnit>>{};
     final workoutUnits = await GetIt.I<WorkoutUnitService>().getWorkoutUnits();
-    List<ApiWorkout> workouts = [];
 
     // Group workout units by workout_id
     for (var unit in workoutUnits) {
