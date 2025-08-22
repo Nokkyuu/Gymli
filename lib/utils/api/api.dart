@@ -13,7 +13,7 @@ import '../../config/api_config.dart';
 import 'api_cache.dart';
 import 'api_models.dart';
 
-const bool useCache = true; // Set to false to disable caching
+const bool useCache = false; // Set to false to disable caching
 // Main API base URL - Azure hosted backend service
 const String baseUrl = kDebugMode
     //? 'http://127.0.0.1:8000'
@@ -81,7 +81,7 @@ Future deleteData(String url) async {
   }
 
   // Invalidate related cache entries
-  _invalidateCacheForMutation(url);
+  // _invalidateCacheForMutation(url);
 
   return response;
 }
@@ -94,7 +94,7 @@ Future updateData<T>(String url, T data) async {
   }
 
   // Invalidate related cache entries
-  _invalidateCacheForMutation(url);
+  // _invalidateCacheForMutation(url);
 
   return response;
 }
@@ -109,7 +109,7 @@ Future createData<T>(String url, T data) async {
   }
 
   // Invalidate related cache entries
-  _invalidateCacheForMutation(url);
+  // _invalidateCacheForMutation(url);
 
   return response.body;
 }

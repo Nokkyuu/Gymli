@@ -1,6 +1,3 @@
-
-
-
 import 'package:get_it/get_it.dart';
 import 'package:Gymli/utils/api/api.dart';
 import 'package:Gymli/utils/api/api_models.dart';
@@ -8,6 +5,7 @@ import 'package:Gymli/utils/api/api_models.dart';
 import 'dart:async';
 import 'dart:collection';
 import 'package:flutter/foundation.dart';
+import 'dart:convert' show jsonEncode;
 
 typedef TrainingSetReconcileHook = void Function(int exerciseId, int clientId, int serverId);
 TrainingSetReconcileHook? trainingSetReconcileHook;
@@ -156,33 +154,55 @@ Future<void> performWorkoutOp(SyncOp op) async {
       return;
     case WorkoutOpType.createTrainingSet:
       final payload = op.payload as Map<String, dynamic>;
-      final res = await tsService.createTrainingSet(
-        exerciseId: payload['exercise_id'] as int,
-        date: payload['date'] as String,
-        weight: (payload['weight'] as num).toDouble(),
-        repetitions: payload['repetitions'] as int,
-        setType: payload['set_type'] as int,
-        phase: payload['phase'] as String?,
-        myoreps: payload['myoreps'] as bool?,
-      );
-      // Reconcile client temp id with server id, if provided
-      final clientId = (payload['client_id'] as num?)?.toInt();
-      final exerciseId = payload['exercise_id'] as int;
-      final serverId = (res is Map && res['id'] != null) ? (res['id'] as num).toInt() : null;
-      if (clientId != null && serverId != null) {
-        // Delegate to hook to avoid cyclic import between cache and outbox
-        final hook = trainingSetReconcileHook;
-        if (hook != null) {
-          hook(exerciseId, clientId, serverId);
-        } else if (kDebugMode) {
-          print('OUTBOX: missing trainingSetReconcileHook; cannot reconcile clientId=$clientId');
+      try {
+        if (kDebugMode) {
+          print('OUTBOX DEBUG: sending create_set payload=${jsonEncode(payload)}');
         }
+        final res = await tsService.createTrainingSet(
+          exerciseId: payload['exercise_id'] as int,
+          date: payload['date'] as String,
+          weight: (payload['weight'] as num).toDouble(),
+          repetitions: payload['repetitions'] as int,
+          setType: payload['set_type'] as int,
+          phase: payload['phase'] as String?,
+          myoreps: payload['myoreps'] as bool?,
+        );
+        if (kDebugMode) {
+          print('OUTBOX DEBUG: response=${res.runtimeType} $res');
+        }
+        // Reconcile client temp id with server id, if provided
+        final clientId = (payload['client_id'] as num?)?.toInt();
+        final exerciseId = payload['exercise_id'] as int;
+        final serverId = (res is Map && res['id'] != null) ? (res['id'] as num).toInt() : null;
+        if (clientId != null && serverId != null) {
+          // Delegate to hook to avoid cyclic import between cache and outbox
+          final hook = trainingSetReconcileHook;
+          if (hook != null) {
+            hook(exerciseId, clientId, serverId);
+          } else if (kDebugMode) {
+            print('OUTBOX: missing trainingSetReconcileHook; cannot reconcile clientId=$clientId');
+          }
+        } else if (kDebugMode) {
+          print('OUTBOX WARN: unexpected response for create_set (clientId=$clientId, serverId=$serverId)');
+        }
+      } catch (e, st) {
+        if (kDebugMode) {
+          print('OUTBOX ERROR create_set: $e');
+          print(st);
+        }
+        rethrow;
       }
       return;
     case WorkoutOpType.deleteTrainingSet:
       final id3 = int.tryParse(op.payload.toString());
       if (id3 == null) throw Exception('Invalid training set id ${op.payload}');
+      if (kDebugMode) {
+        print('OUTBOX DEBUG: sending delete_set id=$id3');
+      }
       await tsService.deleteTrainingSet(id3);
+      if (kDebugMode) {
+        print('OUTBOX DEBUG: delete_set OK id=$id3');
+      }
       return;
     default:
       throw UnimplementedError('Unknown op ${op.type}');

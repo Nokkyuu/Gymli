@@ -35,6 +35,7 @@ class ExerciseController extends ChangeNotifier {
 
   WorkoutDataCache get _cache => GetIt.I<WorkoutDataCache>();
   ExerciseService get _exerciseService => GetIt.I<ExerciseService>();
+  TrainingSetService get _trainingSetService => GetIt.I<TrainingSetService>();
 
   ExerciseController({
     ExerciseGraphController? graphController,
@@ -86,16 +87,8 @@ class ExerciseController extends ChangeNotifier {
       // Update workout counts
       _updateWorkoutCounts();
 
-      // Update graph (cache-only). If empty, show empty graph.
-      if (_currentExercise?.id != null) {
-        final cached = _cache.getCachedTrainingSets(_currentExercise!.id!);
-        if (cached != null && cached.isNotEmpty) {
-          _graphController.updateGraphFromTrainingSets(cached);
-        } else {
-          // No service fetch here; rely on cache.
-          _graphController.updateGraphFromTrainingSets(const <ApiTrainingSet>[]);
-        }
-      }
+      // Update graph (cache-first, then server fetch if needed)
+      await refreshGraphData(exerciseName);
 
       // Update color mapping
       _updateColorMapping();
@@ -225,15 +218,23 @@ class ExerciseController extends ChangeNotifier {
   /// Refresh graph data with latest training sets
   Future<void> refreshGraphData(String exerciseName) async {
     try {
-      if (_currentExercise?.id != null) {
-        final cached = _cache.getCachedTrainingSets(_currentExercise!.id!);
-        if (cached != null && cached.isNotEmpty) {
-          _graphController.updateGraphFromTrainingSets(cached);
-        } else {
-          // No service fetch here; rely on cache.
-          _graphController.updateGraphFromTrainingSets(const <ApiTrainingSet>[]);
-        }
+      final ex = _currentExercise;
+      if (ex?.id == null) return;
+      final exerciseId = ex!.id!;
+      // Cache-first
+      final cached = _cache.getCachedTrainingSets(exerciseId);
+      if (cached != null && cached.isNotEmpty) {
+        _graphController.updateGraphFromTrainingSets(cached);
+        return;
       }
+      // Cache miss: fetch from server, populate cache, then update graph
+      final raw = await _trainingSetService.getTrainingSetsByExerciseID(exerciseId: exerciseId);
+      final sets = raw
+          .whereType<Map<String, dynamic>>()
+          .map((m) => ApiTrainingSet.fromJson(m))
+          .toList();
+      _cache.setExerciseTrainingSets(exerciseId, sets);
+      _graphController.updateGraphFromTrainingSets(sets);
     } catch (e) {
       print('Error refreshing graph data: $e');
     }

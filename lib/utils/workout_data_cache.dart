@@ -54,7 +54,7 @@ class WorkoutDataCache extends ChangeNotifier {
     _outbox.enqueue(buildCreateTrainingSetOp({
       'client_id': tempId,
       'exercise_id': exerciseId,
-      'date': date.toIso8601String(),
+      'date': date.toUtc().toIso8601String(),
       'weight': weight,
       'repetitions': repetitions,
       'set_type': setType,
