@@ -1,6 +1,7 @@
 /// Landing Filter Controller - Manages filter state and operations
 library;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../models/landing_filter_state.dart';
 import '../../../utils/api/api_models.dart';
@@ -78,6 +79,10 @@ class LandingFilterController extends ChangeNotifier {
       List<ApiExercise> allExercises, List<ApiWorkout> allWorkouts) {
     switch (_filterState.filterType) {
       case FilterType.workout:
+        if (kDebugMode) {
+          print(
+              '🔄 Applying workout filter: ${_filterState.selectedWorkout!.name}');
+        }
         return _getWorkoutFilteredExercises();
       case FilterType.muscle:
         return _getMuscleFilteredExercises(allExercises);
@@ -88,10 +93,17 @@ class LandingFilterController extends ChangeNotifier {
 
   /// Get exercises for workout filter
   List<String> _getWorkoutFilteredExercises() {
+    if (kDebugMode) {
+      print('🔄 Workout: ${_filterState.selectedWorkout!.name}');
+      print('Workout Units: ${_filterState.selectedWorkout!.units}');
+    }
     if (_filterState.selectedWorkout == null) return [];
 
     final filterMask = <String>[];
     for (var unit in _filterState.selectedWorkout!.units) {
+      if (kDebugMode) {
+        print('Workout unit: ${unit}');
+      }
       filterMask.add(unit.exerciseName);
     }
     return filterMask;

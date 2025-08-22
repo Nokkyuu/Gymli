@@ -80,8 +80,7 @@ class LandingController extends ChangeNotifier {
         await GetIt.I<ExerciseService>().getExercises();
     _exercises = currentExercises as List<ApiExercise>;
 
-    List<dynamic> currentWorkouts =
-        await GetIt.I<WorkoutService>().getWorkouts();
+    List<dynamic> currentWorkouts = await GetIt.I<TempService>().getWorkouts();
     currentWorkouts =
         currentWorkouts.map((e) => ApiWorkout.fromJson(e)).toList();
     _workouts = currentWorkouts as List<ApiWorkout>;
@@ -132,10 +131,17 @@ class LandingController extends ChangeNotifier {
 
   /// Apply workout filter
   Future<void> applyWorkoutFilter(ApiWorkout workout) async {
+    if (kDebugMode) {
+      print('🔄 Applying workout filter: ${workout.name}');
+    }
     try {
       _filterController.setWorkoutFilter(workout);
 
       final allExercises = _exercises;
+      if (kDebugMode) {
+        print('allExercises: $allExercises');
+        print('workout: $_workouts');
+      }
       final exerciseNames =
           _filterController.getFilteredExerciseNames(allExercises, _workouts);
 
