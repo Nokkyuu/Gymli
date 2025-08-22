@@ -104,6 +104,19 @@ class ExerciseController extends ChangeNotifier {
   }
 
   /// Add a new training set (optimistic, local-first)
+  String _currentUserName() {
+    try {
+      final auth = GetIt.I<AuthenticationService>();
+      // Try common fields without binding to a specific auth model
+      return (auth as dynamic).userName ??
+             (auth as dynamic).currentUserName ??
+             (auth as dynamic).currentUser?.userName ??
+             '';
+    } catch (_) {
+      return '';
+    }
+  }
+
   Future<bool> addTrainingSet(
     String exerciseName,
     double weight,
@@ -119,11 +132,7 @@ class ExerciseController extends ChangeNotifier {
     }
 
     try {
-      final auth = GetIt.I<AuthenticationService>();
-      String userName = '';
-      try {
-        userName = (auth as dynamic).userName ?? (auth as dynamic).currentUserName ?? (auth as dynamic).currentUser?.userName ?? '';
-      } catch (_) {}
+      final userName = _currentUserName();
       final ApiTrainingSet newSet = _cache.createTrainingSetOptimistic(
         userName: userName,
         exerciseId: _currentExercise!.id!,
@@ -173,33 +182,26 @@ class ExerciseController extends ChangeNotifier {
   }
 
   Future<void> refreshTodaysTrainingSets() async {
-    _setLoading(true);
     try {
       if (_currentExercise?.id != null) {
-        // simply recompute from cache and notify
         _updateWorkoutCounts();
         notifyListeners();
       }
     } catch (e) {
       _setError('Fehler beim Aktualisieren der TrainingSets: $e');
-    } finally {
-      _setLoading(false);
     }
   }
 
   /// Update selected exercise type
   void updateSelectedType(Set<ExerciseType> newSelection) {
-    if (_selectedType != newSelection) {
-      _selectedType = newSelection;
-      // Update weight and reps based on the new exercise type selection
-      _updateWeightAndReps().then((_) {
-        notifyListeners();
-      });
-    }
+    if (_selectedType == newSelection) return; // no change
+    _selectedType = newSelection;
+    _updateWeightAndReps().then((_) => notifyListeners()); // recompute then notify once
   }
 
   /// Update weight values
   void updateWeight(int kg, int dg) {
+    if (_weightKg == kg && _weightDg == dg) return; // no change
     _weightKg = kg;
     _weightDg = dg;
     notifyListeners();
@@ -207,6 +209,7 @@ class ExerciseController extends ChangeNotifier {
 
   /// Update repetitions
   void updateRepetitions(int reps) {
+    if (_repetitions == reps) return; // no change
     _repetitions = reps;
     notifyListeners();
   }
@@ -216,7 +219,7 @@ class ExerciseController extends ChangeNotifier {
       _weightKg.toDouble() + _weightDg.toDouble() / 100.0;
 
   /// Refresh graph data with latest training sets
-  Future<void> refreshGraphData(String exerciseName) async {
+  Future<void> refreshGraphData(String _exerciseName) async {
     try {
       final ex = _currentExercise;
       if (ex?.id == null) return;
@@ -241,19 +244,19 @@ class ExerciseController extends ChangeNotifier {
   }
 
   /// Get warm/work text labels
-  Text get warmText =>
-      _numWarmUps > 0 ? Text("${_numWarmUps}x Warm") : const Text("Warm");
-  Text get workText =>
-      _numWorkSets > 0 ? Text("${_numWorkSets}x Work") : const Text("Work");
+  Text get warmText => _numWarmUps > 0 ? Text("${_numWarmUps}x Warm") : const Text("Warm");
+  Text get workText => _numWorkSets > 0 ? Text("${_numWorkSets}x Work") : const Text("Work");
 
   // Private methods
 
   void _setLoading(bool loading) {
+    if (_isLoading == loading) return; // no change
     _isLoading = loading;
     notifyListeners();
   }
 
   void _setError(String error) {
+    if (_errorMessage == error) return; // no change
     _errorMessage = error;
     notifyListeners();
   }
@@ -393,16 +396,13 @@ class ExerciseController extends ChangeNotifier {
   }
 
   void _updateWorkoutCounts() {
-    int originalWarmUps = _numWarmUps;
-    int originalWorkSets = _numWorkSets;
-
-    for (var set in todaysTrainingSets) {
-      if (set.setType == 0) {
-        _numWarmUps = (_numWarmUps - 1).clamp(0, originalWarmUps);
-      } else if (set.setType == 1) {
-        _numWorkSets = (_numWorkSets - 1).clamp(0, originalWorkSets);
-      }
-    }
+    final originalWarmUps = _numWarmUps;
+    final originalWorkSets = _numWorkSets;
+    final today = todaysTrainingSets;
+    final warmDone = today.where((s) => s.setType == 0).length;
+    final workDone = today.where((s) => s.setType > 0).length;
+    _numWarmUps = (originalWarmUps - warmDone).clamp(0, originalWarmUps);
+    _numWorkSets = (originalWorkSets - workDone).clamp(0, originalWorkSets);
   }
 
   /// Load recent training values for weight and reps based on exercise type

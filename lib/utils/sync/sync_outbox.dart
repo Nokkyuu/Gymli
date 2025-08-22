@@ -9,6 +9,16 @@ import 'dart:convert' show jsonEncode;
 
 typedef TrainingSetReconcileHook = void Function(int exerciseId, int clientId, int serverId);
 TrainingSetReconcileHook? trainingSetReconcileHook;
+
+int _toInt(Object? o) => int.tryParse(o.toString()) ?? (throw Exception('Invalid int: $o')); // safe int parse
+
+class _Svc { // bundle DI services to pass to handlers
+  _Svc(this.ex, this.wo, this.ts);
+  final ExerciseService ex; // exercises API
+  final WorkoutService wo; // workouts API
+  final TrainingSetService ts; // training sets API
+}
+
 /// Generic operation type for the outbox.
 class SyncOp {
   SyncOp(this.type, this.payload);
@@ -127,84 +137,79 @@ SyncOp buildDeleteTrainingSetOp(int id) => SyncOp(WorkoutOpType.deleteTrainingSe
 
 // ----------- Performer (wired into SyncOutbox) ----------- //
 Future<void> performWorkoutOp(SyncOp op) async {
-  final exService = GetIt.I<ExerciseService>();
-  final woService = GetIt.I<WorkoutService>();
-  final tsService = GetIt.I<TrainingSetService>();
+  final svc = _Svc( // resolve per-op to avoid stale singletons
+    GetIt.I<ExerciseService>(),
+    GetIt.I<WorkoutService>(),
+    GetIt.I<TrainingSetService>(),
+  );
 
-  switch (op.type) {
-    case WorkoutOpType.createExercise:
-      await exService.createExercise(op.payload as Map<String, dynamic>);
-      return;
-    case WorkoutOpType.deleteExercise:
-      final id = int.tryParse(op.payload.toString());
-      if (id == null) throw Exception('Invalid exercise id ${op.payload}');
-      await exService.deleteExercise(id);
-      return;
-
-    case WorkoutOpType.createWorkout:
-      final map = op.payload as Map<String, dynamic>;
-      final name = (map['name'] ?? map['workout_name'] ?? map['title'] ?? '').toString();
-      if (name.isEmpty) throw Exception('Workout create requires a name');
-      await woService.createWorkout(name: name);
-      return;
-    case WorkoutOpType.deleteWorkout:
-      final id2 = int.tryParse(op.payload.toString());
-      if (id2 == null) throw Exception('Invalid workout id ${op.payload}');
-      await woService.deleteWorkout(id2);
-      return;
-    case WorkoutOpType.createTrainingSet:
-      final payload = op.payload as Map<String, dynamic>;
-      try {
-        if (kDebugMode) {
-          print('OUTBOX DEBUG: sending create_set payload=${jsonEncode(payload)}');
-        }
-        final res = await tsService.createTrainingSet(
-          exerciseId: payload['exercise_id'] as int,
-          date: payload['date'] as String,
-          weight: (payload['weight'] as num).toDouble(),
-          repetitions: payload['repetitions'] as int,
-          setType: payload['set_type'] as int,
-          phase: payload['phase'] as String?,
-          myoreps: payload['myoreps'] as bool?,
-        );
-        if (kDebugMode) {
-          print('OUTBOX DEBUG: response=${res.runtimeType} $res');
-        }
-        // Reconcile client temp id with server id, if provided
-        final clientId = (payload['client_id'] as num?)?.toInt();
-        final exerciseId = payload['exercise_id'] as int;
-        final serverId = (res is Map && res['id'] != null) ? (res['id'] as num).toInt() : null;
-        if (clientId != null && serverId != null) {
-          // Delegate to hook to avoid cyclic import between cache and outbox
-          final hook = trainingSetReconcileHook;
-          if (hook != null) {
-            hook(exerciseId, clientId, serverId);
-          } else if (kDebugMode) {
-            print('OUTBOX: missing trainingSetReconcileHook; cannot reconcile clientId=$clientId');
+  // Handler registry keeps perform logic compact and readable
+  final Map<String, Future<void> Function(SyncOp)> handlers = {
+    WorkoutOpType.createExercise: (o) async {
+      await svc.ex.createExercise(o.payload as Map<String, dynamic>); // create exercise
+    },
+    WorkoutOpType.deleteExercise: (o) async {
+      await svc.ex.deleteExercise(_toInt(o.payload)); // delete exercise by id
+    },
+    WorkoutOpType.createWorkout: (o) async {
+      final m = o.payload as Map<String, dynamic>; // payload map
+      final name = (m['name'] ?? m['workout_name'] ?? m['title'] ?? '').toString(); // support legacy keys
+      if (name.isEmpty) throw Exception('Workout create requires a name'); // guard
+      await svc.wo.createWorkout(name: name); // create workout
+    },
+    WorkoutOpType.deleteWorkout: (o) async {
+      await svc.wo.deleteWorkout(_toInt(o.payload)); // delete workout by id
+    },
+    WorkoutOpType.createTrainingSet: (o) async {
+      final p = o.payload as Map<String, dynamic>; // typed payload
+      if (kDebugMode) print('OUTBOX DEBUG: sending create_set payload=${jsonEncode(p)}'); // trace
+      final res = await svc.ts.createTrainingSet( // server call
+        exerciseId: p['exercise_id'] as int,
+        date: p['date'] as String,
+        weight: (p['weight'] as num).toDouble(),
+        repetitions: p['repetitions'] as int,
+        setType: p['set_type'] as int,
+        phase: p['phase'] as String?,
+        myoreps: p['myoreps'] as bool?,
+      );
+      if (kDebugMode) print('OUTBOX DEBUG: response=${res.runtimeType} $res'); // trace
+      final clientId = (p['client_id'] as num?)?.toInt(); // temp id from client
+      final exerciseId = p['exercise_id'] as int; // exercise id
+      final serverId = (res is Map && res['id'] != null) ? (res['id'] as num).toInt() : null; // server id
+      if (clientId != null && serverId != null) {
+        final hook = trainingSetReconcileHook; // injected reconcile
+        if (hook != null) {
+          hook(exerciseId, clientId, serverId); // update cache ids
+          if (kDebugMode) {
+            print('OUTBOX DEBUG: reconciled clientId=$clientId -> serverId=$serverId for exerciseId=$exerciseId');
           }
         } else if (kDebugMode) {
-          print('OUTBOX WARN: unexpected response for create_set (clientId=$clientId, serverId=$serverId)');
+          print('OUTBOX: missing trainingSetReconcileHook; cannot reconcile clientId=$clientId'); // warn
         }
-      } catch (e, st) {
-        if (kDebugMode) {
-          print('OUTBOX ERROR create_set: $e');
-          print(st);
-        }
-        rethrow;
+      } else if (kDebugMode) {
+        print('OUTBOX WARN: unexpected response for create_set (clientId=$clientId, serverId=$serverId)'); // warn
       }
-      return;
-    case WorkoutOpType.deleteTrainingSet:
-      final id3 = int.tryParse(op.payload.toString());
-      if (id3 == null) throw Exception('Invalid training set id ${op.payload}');
-      if (kDebugMode) {
-        print('OUTBOX DEBUG: sending delete_set id=$id3');
-      }
-      await tsService.deleteTrainingSet(id3);
-      if (kDebugMode) {
-        print('OUTBOX DEBUG: delete_set OK id=$id3');
-      }
-      return;
-    default:
-      throw UnimplementedError('Unknown op ${op.type}');
+    },
+    WorkoutOpType.deleteTrainingSet: (o) async {
+      final id = _toInt(o.payload); // training set id
+      if (kDebugMode) print('OUTBOX DEBUG: sending delete_set id=$id'); // trace
+      await svc.ts.deleteTrainingSet(id); // server delete
+      if (kDebugMode) print('OUTBOX DEBUG: delete_set OK id=$id'); // trace
+    },
+  };
+
+  final handler = handlers[op.type]; // lookup
+  if (handler == null) {
+    throw UnimplementedError('Unknown op ${op.type}'); // explicit failure
+  }
+
+  try {
+    await handler(op); // run handler
+  } catch (e, st) {
+    if (kDebugMode) {
+      print('OUTBOX ERROR ${op.type}: $e'); // error trace
+      print(st);
+    }
+    rethrow; // let the outbox handle retries/backoff
   }
 }
