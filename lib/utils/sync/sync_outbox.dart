@@ -1,15 +1,16 @@
-library;
+
+
 
 import 'package:get_it/get_it.dart';
 import 'package:Gymli/utils/api/api.dart';
 import 'package:Gymli/utils/api/api_models.dart';
-import 'package:Gymli/utils/sync/sync_outbox.dart';
-
 
 import 'dart:async';
 import 'dart:collection';
 import 'package:flutter/foundation.dart';
 
+typedef TrainingSetReconcileHook = void Function(int exerciseId, int clientId, int serverId);
+TrainingSetReconcileHook? trainingSetReconcileHook;
 /// Generic operation type for the outbox.
 class SyncOp {
   SyncOp(this.type, this.payload);
@@ -93,6 +94,8 @@ class WorkoutOpType {
   static const String deleteExercise = 'workout.delete_exercise';
   static const String createWorkout  = 'workout.create_workout';
   static const String deleteWorkout  = 'workout.delete_workout';
+  static const String createTrainingSet = 'training.create_set';
+  static const String deleteTrainingSet = 'training.delete_set';
 }
 
 // ----------- Builders (cache uses these to enqueue ops) ----------- //
@@ -117,10 +120,18 @@ SyncOp buildCreateWorkoutOp(ApiWorkout w) {
 
 SyncOp buildDeleteWorkoutOp(String id) => SyncOp(WorkoutOpType.deleteWorkout, id);
 
+SyncOp buildCreateTrainingSetOp(Map<String, dynamic> map) {
+  // map should contain: exercise_id, date (ISO string), weight, repetitions, set_type, optional: phase, myoreps
+  return SyncOp(WorkoutOpType.createTrainingSet, map);
+}
+
+SyncOp buildDeleteTrainingSetOp(int id) => SyncOp(WorkoutOpType.deleteTrainingSet, id);
+
 // ----------- Performer (wired into SyncOutbox) ----------- //
 Future<void> performWorkoutOp(SyncOp op) async {
   final exService = GetIt.I<ExerciseService>();
   final woService = GetIt.I<WorkoutService>();
+  final tsService = GetIt.I<TrainingSetService>();
 
   switch (op.type) {
     case WorkoutOpType.createExercise:
@@ -143,7 +154,36 @@ Future<void> performWorkoutOp(SyncOp op) async {
       if (id2 == null) throw Exception('Invalid workout id ${op.payload}');
       await woService.deleteWorkout(id2);
       return;
-
+    case WorkoutOpType.createTrainingSet:
+      final payload = op.payload as Map<String, dynamic>;
+      final res = await tsService.createTrainingSet(
+        exerciseId: payload['exercise_id'] as int,
+        date: payload['date'] as String,
+        weight: (payload['weight'] as num).toDouble(),
+        repetitions: payload['repetitions'] as int,
+        setType: payload['set_type'] as int,
+        phase: payload['phase'] as String?,
+        myoreps: payload['myoreps'] as bool?,
+      );
+      // Reconcile client temp id with server id, if provided
+      final clientId = (payload['client_id'] as num?)?.toInt();
+      final exerciseId = payload['exercise_id'] as int;
+      final serverId = (res is Map && res['id'] != null) ? (res['id'] as num).toInt() : null;
+      if (clientId != null && serverId != null) {
+        // Delegate to hook to avoid cyclic import between cache and outbox
+        final hook = trainingSetReconcileHook;
+        if (hook != null) {
+          hook(exerciseId, clientId, serverId);
+        } else if (kDebugMode) {
+          print('OUTBOX: missing trainingSetReconcileHook; cannot reconcile clientId=$clientId');
+        }
+      }
+      return;
+    case WorkoutOpType.deleteTrainingSet:
+      final id3 = int.tryParse(op.payload.toString());
+      if (id3 == null) throw Exception('Invalid training set id ${op.payload}');
+      await tsService.deleteTrainingSet(id3);
+      return;
     default:
       throw UnimplementedError('Unknown op ${op.type}');
   }
