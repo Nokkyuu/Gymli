@@ -73,7 +73,7 @@ class _WorkoutAnalyzerScreenState extends State<WorkoutAnalyzerScreen> {
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
     try {
-      final workouts = await container.workoutService.getWorkouts();
+      final workouts = await GetIt.I<WorkoutService>().getWorkouts();
       final exercises = await exerciseService.getExercises();
       // Sortiere Workouts alphabetisch nach Name
       final sortedWorkouts = List<Map<String, dynamic>>.from(workouts)

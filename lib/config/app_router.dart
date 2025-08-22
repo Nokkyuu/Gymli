@@ -271,7 +271,7 @@ class _MainAppWrapperState extends State<MainAppWrapper> {
     _getExerciseList();
     setState(() {}); // Trigger rebuild
     await Future.delayed(const Duration(milliseconds: 100));
-    container.authService.notifyAuthStateChanged();
+    GetIt.I<AuthService>().notifyAuthStateChanged();
   }
 
   void _getExerciseList() async {

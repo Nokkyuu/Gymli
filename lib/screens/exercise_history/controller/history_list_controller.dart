@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:Gymli/utils/services/temp_service.dart';
 import '../../../utils/api/api_models.dart';
+import '../../../utils/api/api.dart';
 import '../../exercise/repositories/exercise_repository.dart';
 import '../../exercise_history_screen.dart';
 import 'package:get_it/get_it.dart';
@@ -23,7 +24,7 @@ class HistoryListController {
   Future<void> loadTrainingSets() async {
     isLoading.value = true;
     try {
-      final data = await container.trainingSetService
+      final data = await GetIt.I<TrainingSetService>()
           .getTrainingSetsByExerciseID(exerciseId: exerciseId);
       final trainingSets =
           data.map((item) => ApiTrainingSet.fromJson(item)).toList();
@@ -53,7 +54,7 @@ class HistoryListController {
   Future<void> delete(ApiTrainingSet item) async {
     if (item.id == null) return;
     try {
-      await container.trainingSetService.deleteTrainingSet(item.id!);
+      await GetIt.I<TrainingSetService>().deleteTrainingSet(item.id!);
 
       try {
         if (exerciseRepository != null) {

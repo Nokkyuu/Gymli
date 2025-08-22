@@ -5,6 +5,7 @@ library;
 import 'package:flutter/material.dart';
 import 'package:Gymli/utils/services/temp_service.dart';
 import 'package:get_it/get_it.dart';
+import 'package:Gymli/utils/services/auth_service.dart';
 
 final container = GetIt.I<TempService>();
 
@@ -524,7 +525,7 @@ void showInfoDialogMain(BuildContext context) {
               const Text(
                   '• navigate to the other modules to create exercises, workout, log your nutrition or activities'),
               const SizedBox(height: 12),
-              if (!container.authService.isLoggedIn) ...[
+              if (!GetIt.I<AuthService>().isLoggedIn) ...[
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
@@ -546,7 +547,7 @@ void showInfoDialogMain(BuildContext context) {
                     border: Border.all(color: Colors.green.withOpacity(0.3)),
                   ),
                   child: Text(
-                    'Logged in as: ${container.authService.userName}',
+                    'Logged in as: ${GetIt.I<AuthService>().userName}',
                     style: const TextStyle(color: Colors.green, fontSize: 12),
                   ),
                 ),

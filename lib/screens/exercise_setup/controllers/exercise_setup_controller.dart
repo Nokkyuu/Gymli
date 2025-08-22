@@ -1,3 +1,4 @@
+import 'package:Gymli/utils/services/auth_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../../../utils/globals.dart' as globals;
@@ -142,7 +143,7 @@ class ExerciseSetupController extends ChangeNotifier {
       await _getExerciseList();
 
       //if (kDebugMode) print('🔧 Notifying data service...');
-      _container.notifyDataChanged();
+      GetIt.I<AuthService>().notifyAuthStateChanged();
 
       // // Wait for cache invalidation to complete by forcing a fresh fetch
       // if (kDebugMode) print('🔧 Ensuring cache is refreshed...');
@@ -172,22 +173,22 @@ class ExerciseSetupController extends ChangeNotifier {
       final exerciseId = _currentExercise!.id!;
       //TODO: create specific endpoint to delete a bunch of sets by id
       if (kDebugMode) print('Deleting training sets for exercise $exerciseId');
-      final trainingSets = await _container.trainingSetService
+      final trainingSets = await GetIt.I<TrainingSetService>()
           .getTrainingSetsByExerciseID(exerciseId: exerciseId);
       for (var set in trainingSets) {
-        await _container.trainingSetService.deleteTrainingSet(set['id']);
+        await GetIt.I<TrainingSetService>().deleteTrainingSet(set['id']);
       }
       final workoutUnits =
-          await _container.workoutUnitService.getWorkoutUnits();
+          await GetIt.I<WorkoutUnitService>().getWorkoutUnits();
       for (var unit in workoutUnits) {
         if (unit['exercise_id'] == exerciseId) {
-          await _container.workoutUnitService.deleteWorkoutUnit(unit['id']);
+          await GetIt.I<WorkoutUnitService>().deleteWorkoutUnit(unit['id']);
         }
       }
       if (kDebugMode) print('Deleting exercise $exerciseId');
       await exerciseService.deleteExercise(exerciseId);
 
-      _container.notifyDataChanged();
+      GetIt.I<AuthService>().notifyAuthStateChanged();
       _clearError();
       return true;
     } catch (e) {
@@ -237,7 +238,7 @@ class ExerciseSetupController extends ChangeNotifier {
             '🔧 add_exercise: Updating existing exercise with ID: ${existing.id}');
       // Update existing exercise
       await exerciseService.updateExercise(existing.id!, {
-        'user_name': _container.authService.userName,
+        'user_name': GetIt.I<AuthService>().userName,
         'name': exerciseName,
         'type': exerciseType,
         'default_rep_base': minRep,

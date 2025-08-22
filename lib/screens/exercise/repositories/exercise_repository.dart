@@ -84,7 +84,7 @@ class ExerciseRepository {
   }) async {
     try {
       final createdSetData =
-          await container.trainingSetService.createTrainingSet(
+          await GetIt.I<TrainingSetService>().createTrainingSet(
         exerciseId: exerciseId,
         date: date,
         weight: weight,
@@ -133,7 +133,7 @@ class ExerciseRepository {
   /// Delete a training set
   Future<bool> deleteTrainingSet(int trainingSetId) async {
     try {
-      await container.trainingSetService.deleteTrainingSet(trainingSetId);
+      await GetIt.I<TrainingSetService>().deleteTrainingSet(trainingSetId);
 
       // Update cache
       _cachedTrainingSets?.removeWhere((set) => set.id == trainingSetId);

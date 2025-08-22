@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:Gymli/utils/services/temp_service.dart';
 import '../../../utils/info_dialogues.dart';
 import 'package:get_it/get_it.dart';
+import 'package:Gymli/utils/api/api.dart';
 
 class CalorieBalanceScreen extends StatefulWidget {
   final String? startingDate;
@@ -211,7 +212,7 @@ class _CalorieBalanceScreenState extends State<CalorieBalanceScreen> {
       );
 
       // Load activity expenditure data
-      final activityLogs = await container.activityService.getActivityLogs(
+      final activityLogs = await GetIt.I<ActivityService>().getActivityLogs(
         startDate: dateRange['start']!,
         endDate: dateRange['end']!,
       );

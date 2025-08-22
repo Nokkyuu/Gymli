@@ -26,6 +26,7 @@ void main() async {
   GetIt.I.registerSingleton<TempService>(TempService());
   GetIt.I.registerSingleton<ExerciseService>(ExerciseService());
   GetIt.I.registerSingleton<WorkoutService>(WorkoutService());
+  GetIt.I.registerSingleton<WorkoutUnitService>(WorkoutUnitService());
   GetIt.I.registerSingleton<TrainingSetService>(TrainingSetService());
   GetIt.I.registerSingleton<FoodService>(FoodService());
   GetIt.I.registerSingleton<ActivityService>(ActivityService());

@@ -53,7 +53,7 @@ class StatisticsDataService {
   Future<List<Map<String, dynamic>>> getTrainingSets() async {
     if (_cachedTrainingSets == null || !_dataCacheValid || _isCacheExpired) {
       if (kDebugMode) print('Loading training sets from API...');
-      final rawData = await container.trainingSetService.getTrainingSets();
+      final rawData = await GetIt.I<TrainingSetService>().getTrainingSets();
       _cachedTrainingSets = rawData.cast<Map<String, dynamic>>();
       _dataCacheValid = true;
       _lastCacheTime = DateTime.now();
@@ -80,7 +80,7 @@ class StatisticsDataService {
   Future<List<dynamic>> getActivityLogs() async {
     if (_cachedActivityLogs == null || !_dataCacheValid || _isCacheExpired) {
       if (kDebugMode) print('Loading activity logs from API...');
-      _cachedActivityLogs = await container.activityService.getActivityLogs();
+      _cachedActivityLogs = await GetIt.I<ActivityService>().getActivityLogs();
       _dataCacheValid = true;
       _lastCacheTime = DateTime.now();
     } else {
@@ -93,7 +93,7 @@ class StatisticsDataService {
   Future<Map<String, dynamic>> getActivityStats() async {
     if (_cachedActivityStats == null || !_dataCacheValid || _isCacheExpired) {
       if (kDebugMode) print('Loading activity stats from API...');
-      _cachedActivityStats = await container.activityService.getActivityStats();
+      _cachedActivityStats = await GetIt.I<ActivityService>().getActivityStats();
       _dataCacheValid = true;
       _lastCacheTime = DateTime.now();
     } else {
@@ -111,11 +111,11 @@ class StatisticsDataService {
   }) async {
     try {
       // Load activity statistics from API
-      final statsData = await container.activityService.getActivityStats();
+      final statsData = await GetIt.I<ActivityService>().getActivityStats();
       if (kDebugMode) print('Activity stats loaded: $statsData');
 
       // Load activity logs for trend data
-      final logsData = await container.activityService.getActivityLogs();
+      final logsData = await GetIt.I<ActivityService>().getActivityLogs();
       if (kDebugMode) print('Activity logs count: ${logsData.length}');
 
       // Convert logs to ApiActivityLog objects and sort by date

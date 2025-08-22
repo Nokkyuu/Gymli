@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../../../utils/services/temp_service.dart';
 import '../../../utils/api/api_models.dart';
+import '../../../utils/api/api.dart';
 import 'package:get_it/get_it.dart';
 
 /// Controller for food logging functionality
@@ -40,7 +41,7 @@ class FoodLoggingController extends ChangeNotifier {
     );
 
     try {
-      await container.foodService.createFoodLog(
+      await GetIt.I<FoodService>().createFoodLog(
         foodName: selectedFoodName,
         date: selectedDate,
         grams: grams,

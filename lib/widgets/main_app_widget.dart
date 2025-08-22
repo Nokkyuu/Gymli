@@ -15,6 +15,7 @@ import '../utils/info_dialogues.dart';
 import '../utils/services/auth0_service.dart';
 import '../utils/services/theme_service.dart';
 import 'navigation_drawer.dart';
+import '../utils/services/auth_service.dart';
 
 
 
@@ -79,7 +80,7 @@ class _MainAppWidgetState extends State<MainAppWidget> {
     _getExerciseList();
     setState(() {}); // Trigger rebuild
     await Future.delayed(const Duration(milliseconds: 100));
-    container.authService.notifyAuthStateChanged();
+    GetIt.I<AuthService>().notifyAuthStateChanged();
   }
 
   void _getExerciseList() async {

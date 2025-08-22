@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../utils/services/temp_service.dart';
 import '../../../utils/api/api_models.dart';
 import 'package:get_it/get_it.dart';
+import 'package:Gymli/utils/api/api.dart';
 
 /// Component for ingredients when creating custom food
 class FoodComponent {
@@ -64,8 +65,8 @@ class FoodManagementController extends ChangeNotifier {
     }
 
     try {
-      if (kDebugMode) print('Calling container.foodService.createFood...');
-      final result = await container.foodService.createFood(
+      if (kDebugMode) print('Calling FoodServce.createFood...');
+      final result = await GetIt.I<FoodService>().createFood(
         name: customFoodNameController.text,
         kcalPer100g: calories,
         proteinPer100g: protein,

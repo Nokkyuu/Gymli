@@ -79,7 +79,7 @@ class LandingController extends ChangeNotifier {
     List<dynamic> currentExercises = await GetIt.I<ExerciseService>().getExercises();
     _exercises = currentExercises as List<ApiExercise>;
 
-    List<dynamic> currentWorkouts = await GetIt.I<TempService>().workoutService.getWorkouts();
+    List<dynamic> currentWorkouts = await GetIt.I<WorkoutService>().getWorkouts();
     currentWorkouts = currentWorkouts.map((e) => ApiWorkout.fromJson(e)).toList();
     _workouts = currentWorkouts as List<ApiWorkout>; 
 

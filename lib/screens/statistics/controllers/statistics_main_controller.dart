@@ -14,6 +14,7 @@ import '../services/statistics_filter_service.dart';
 import '../services/statistics_calculation_service.dart';
 import '../services/statistics_coordinator.dart';
 import 'package:get_it/get_it.dart';
+import 'package:Gymli/utils/services/auth_service.dart';
 
 //TODO: Refactor into smaller and more specialized controllers
 class StatisticsMainController extends ChangeNotifier {
@@ -143,7 +144,7 @@ class StatisticsMainController extends ChangeNotifier {
 
   @override
   void dispose() {
-    _container.authService.authStateNotifier.removeListener(_onDataChanged);
+    GetIt.I<AuthService>().authStateNotifier.removeListener(_onDataChanged);
     super.dispose();
   }
 
@@ -156,7 +157,7 @@ class StatisticsMainController extends ChangeNotifier {
       await loadStatistics();
 
       // Listen for data changes
-      _container.authService.authStateNotifier.addListener(_onDataChanged);
+      GetIt.I<AuthService>().authStateNotifier.addListener(_onDataChanged);
     } catch (e) {
       _setError('Failed to initialize statistics: $e');
     } finally {

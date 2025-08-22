@@ -5,7 +5,9 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:Gymli/utils/services/temp_service.dart';
 import '../../../utils/api/api_models.dart';
+import 'package:Gymli/utils/api/api.dart';
 import 'package:get_it/get_it.dart';
+import 'package:Gymli/utils/services/auth_service.dart';
 
 class ActivityController extends ChangeNotifier {
   final TempService container = GetIt.I<TempService>();
@@ -29,8 +31,8 @@ class ActivityController extends ChangeNotifier {
 
     try {
       // Load all data - getActivities will handle initialization if needed
-      final activitiesData = await container.activityService.getActivities();
-      final logsData = await container.activityService.getActivityLogs();
+      final activitiesData = await GetIt.I<ActivityService>().getActivities();
+      final logsData = await GetIt.I<ActivityService>().getActivityLogs();
       //final statsData = await container.activityService.getActivityStats();
 
       activities =
@@ -57,7 +59,7 @@ class ActivityController extends ChangeNotifier {
     String? notes,
   }) async {
     try {
-      await container.activityService.createActivityLog(
+      await GetIt.I<ActivityService>().createActivityLog(
         activityName: activityName,
         date: date,
         durationMinutes: durationMinutes,
@@ -78,7 +80,7 @@ class ActivityController extends ChangeNotifier {
     required double kcalPerHour,
   }) async {
     try {
-      final result = await container.activityService.createActivity(
+      final result = await GetIt.I<ActivityService>().createActivity(
         name: name,
         kcalPerHour: kcalPerHour,
       );
@@ -96,7 +98,7 @@ class ActivityController extends ChangeNotifier {
   /// Delete an activity log
   Future<void> deleteActivityLog(int logId) async {
     try {
-      await container.activityService.deleteActivityLog(logId: logId);
+      await GetIt.I<ActivityService>().deleteActivityLog(logId: logId);
       await loadData();
     } catch (e) {
       if (kDebugMode) print('Error deleting activity log: $e');
@@ -107,7 +109,7 @@ class ActivityController extends ChangeNotifier {
   /// Delete an activity
   Future<void> deleteActivity(int activityId) async {
     try {
-      await container.activityService.deleteActivity(activityId: activityId);
+      await GetIt.I<ActivityService>().deleteActivity(activityId: activityId);
       await loadData();
     } catch (e) {
       if (kDebugMode) print('Error deleting activity: $e');
@@ -139,7 +141,7 @@ class ActivityController extends ChangeNotifier {
   bool shouldShowDeleteButton(ApiActivity activity) {
     if (activity.id == null) return false;
 
-    if (container.authService.isLoggedIn) {
+    if (GetIt.I<AuthService>().isLoggedIn) {
       // Logged-in users can delete any activity
       return true;
     } else {

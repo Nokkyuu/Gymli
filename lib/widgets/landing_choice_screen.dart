@@ -6,6 +6,7 @@ import '../config/app_router.dart';
 import '../utils/services/temp_service.dart';
 import '../utils/services/auth0_service.dart';
 import 'package:get_it/get_it.dart';
+import '../utils/services/auth_service.dart';
 
 
 class LandingChoiceScreen extends StatefulWidget {
@@ -63,7 +64,7 @@ class _LandingChoiceScreenState extends State<LandingChoiceScreen> {
 
     // The Auth0Service.initialize() already called loadStoredAuthState
     // So we just need to check if we're logged in with a valid token
-    if (_container.authService.isLoggedIn && _isTokenProperlySet()) {
+    if (GetIt.I<AuthService>().isLoggedIn && _isTokenProperlySet()) {
       _proceedToMainApp();
       return;
     }

@@ -16,52 +16,34 @@ class TempService {
   }
 
   // Core services
-  late final AuthService authService;
+  // late final AuthService authService;
 
   // Domain services
-  late final ExerciseService exerciseService;
-  late final WorkoutService workoutService;
-  late final TrainingSetService trainingSetService;
-  late final ActivityService activityService;
-  late final FoodService foodService;
-  late final CalendarService calendarService;
-  late final WorkoutUnitService workoutUnitService;
 
   void _setupServices() {
     // Initialize core services first
-    authService = AuthService();
 
     // Initialize domain services (they depend on core services)
     // exerciseService = ExerciseService();
-    workoutService = WorkoutService();
-    trainingSetService = TrainingSetService();
-    activityService = ActivityService();
-    foodService = FoodService();
-    calendarService = CalendarService();
-    workoutUnitService = WorkoutUnitService();
   }
 
   // Convenience getters for common operations
   //TODO: mostly not needed anymore?
-  bool get isLoggedIn => authService.isLoggedIn;
-  String get userName => authService.userName;
-  String get userEmail => authService.userEmail;
+  // bool get isLoggedIn => authService.isLoggedIn;
+  // String get userName => authService.userName;
+  // String get userEmail => authService.userEmail;
 
   // Initialize all services (call this at app startup)
-  Future<void> initialize() async {
-    await authService.initializeAuth();
-  }
+  // Future<void> initialize() async {
+  //   await authService.initializeAuth();
+  // }
 
-  // Notification method for data changes
-  void notifyDataChanged() {
-    authService.notifyAuthStateChanged();
-  }
 
   //replace calls in files, unecessary redundancy
   Future<List<Map<String, dynamic>>> createTrainingSetsBulk(
     List<Map<String, dynamic>> trainingSets,
   ) async {
-    return await trainingSetService.createTrainingSetsBulk(
+    return await GetIt.I<TrainingSetService>().createTrainingSetsBulk(
         trainingSets: trainingSets);
   }
 
@@ -69,7 +51,7 @@ class TempService {
   Future<List<Map<String, dynamic>>> createFoodsBulk(
     List<Map<String, dynamic>> foods,
   ) async {
-    return await foodService.createFoodsBulk(foods: foods);
+    return await GetIt.I<FoodService>().createFoodsBulk(foods: foods);
   }
 
   // Analytics helper methods
@@ -77,7 +59,7 @@ class TempService {
   Future<Map<String, Map<String, dynamic>>> getLastTrainingDatesPerExercise(
       List<String> exerciseNames) async {
     final lastDates =
-        await trainingSetService.getLastTrainingDatesPerExercise();
+        await GetIt.I<TrainingSetService>().getLastTrainingDatesPerExercise();
 
     Map<String, Map<String, dynamic>> result = {};
 
@@ -108,7 +90,7 @@ class TempService {
 
   //TODO: replace the getTrainingSetsByID calls with direct calls to getTrainingSetsForExercise
   Future<List<dynamic>> getTrainingSetsByExerciseID(int exerciseId) async {
-    return await trainingSetService.getTrainingSetsByExerciseID(
+    return await GetIt.I<TrainingSetService>().getTrainingSetsByExerciseID(
         exerciseId: exerciseId);
   }
 
@@ -130,9 +112,9 @@ class TempService {
     final dateString =
         date.toIso8601String().split('T')[0]; // Get YYYY-MM-DD format
 
-    final notes = await calendarService.getCalendarNotes();
-    final workouts = await calendarService.getCalendarWorkouts();
-    final periods = await calendarService.getCalendarPeriods();
+    final notes = await GetIt.I<CalendarService>().getCalendarNotes();
+    final workouts = await GetIt.I<CalendarService>().getCalendarWorkouts();
+    final periods = await GetIt.I<CalendarService>().getCalendarPeriods();
 
     // Filter by date
     final notesForDate = notes.where((note) {
@@ -166,9 +148,9 @@ class TempService {
     required DateTime startDate,
     required DateTime endDate,
   }) async {
-    final notes = await calendarService.getCalendarNotes();
-    final workouts = await calendarService.getCalendarWorkouts();
-    final periods = await calendarService.getCalendarPeriods();
+    final notes = await GetIt.I<CalendarService>().getCalendarNotes();
+    final workouts = await GetIt.I<CalendarService>().getCalendarWorkouts();
+    final periods = await GetIt.I<CalendarService>().getCalendarPeriods();
 
     // Filter by date range
     final notesInRange = notes.where((note) {
@@ -204,7 +186,7 @@ class TempService {
     DateTime? startDate,
     DateTime? endDate,
   }) async {
-    final logs = await foodService.getFoodLogs(
+    final logs = await GetIt.I<FoodService>().getFoodLogs(
       startDate: startDate,
       endDate: endDate,
     );
@@ -240,7 +222,7 @@ class TempService {
     DateTime? startDate,
     DateTime? endDate,
   }) async {
-    final logs = await foodService.getFoodLogs(
+    final logs = await GetIt.I<FoodService>().getFoodLogs(
       startDate: startDate,
       endDate: endDate,
     );
@@ -323,7 +305,7 @@ class TempService {
 
   Future<void> clearWorkouts() async {
     // Get all workouts for this user and delete them
-    final workouts = await workoutService
+    final workouts = await GetIt.I<WorkoutService>()
         .getWorkouts(); // Get raw workouts without enrichment for efficiency
     int deletedCount = 0;
     int errorCount = 0;
@@ -331,7 +313,7 @@ class TempService {
     for (var workout in workouts) {
       if (workout['id'] != null) {
         try {
-          await workoutService.deleteWorkout(workout['id']);
+          await GetIt.I<WorkoutService>().deleteWorkout(workout['id']);
           deletedCount++;
         } catch (e) {
           errorCount++;
@@ -371,12 +353,12 @@ class TempService {
     required List<Map<String, dynamic>> units,
   }) async {
     // Create the workout first and get its data (including ID)
-    final workoutData = await workoutService.createWorkout(name: name);
+    final workoutData = await GetIt.I<WorkoutService>().createWorkout(name: name);
     final workoutId = workoutData['id'] as int;
 
     // Now create all the workout units
     for (final unit in units) {
-      await workoutUnitService.createWorkoutUnit(
+      await GetIt.I<WorkoutUnitService>().createWorkoutUnit(
         workoutId: workoutId,
         exerciseId: unit['exercise_id'],
         warmups: unit['warmups'],
@@ -390,7 +372,7 @@ class TempService {
   }
 
   Future<List<dynamic>> getWorkouts() async {
-    final workouts = await workoutService.getWorkouts();
+    final workouts = await GetIt.I<WorkoutService>().getWorkouts();
 // Enrich workouts with workout units for display
     return await _enrichWorkoutsWithUnits(workouts);
   }
@@ -482,7 +464,7 @@ class TempService {
   }
 
   Future<List<dynamic>> getWorkoutUnits() async {
-    final workoutUnits = await workoutUnitService.getWorkoutUnits();
+    final workoutUnits = await GetIt.I<WorkoutUnitService>().getWorkoutUnits();
     return await _enrichWorkoutUnitsWithExerciseNames(workoutUnits);
   }
 

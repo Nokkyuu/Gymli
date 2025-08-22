@@ -4,6 +4,7 @@ import '../../../utils/services/temp_service.dart';
 import '../../../utils/api/api_models.dart';
 import 'package:get_it/get_it.dart';
 import '../../../utils/api/api.dart';
+import '../../../utils/services/auth_service.dart';
 
 class WorkoutSetupController extends ChangeNotifier {
   final TempService _container = GetIt.I<TempService>();
@@ -119,7 +120,7 @@ class WorkoutSetupController extends ChangeNotifier {
           _currentWorkout!.id != null &&
           _currentWorkout!.id! > 0) {
         // Delete existing workout (this should also delete associated workout units)
-        await _container.workoutService.deleteWorkout(_currentWorkout!.id!);
+        await GetIt.I<WorkoutService>().deleteWorkout(_currentWorkout!.id!);
 
         // Create new workout with the updated data
         await _container.createWorkout(
@@ -138,7 +139,7 @@ class WorkoutSetupController extends ChangeNotifier {
       }
 
       // Notify that data has changed
-      _container.notifyDataChanged();
+      GetIt.I<AuthService>().notifyAuthStateChanged();
       _clearError();
       return true;
     } catch (e) {
@@ -156,7 +157,7 @@ class WorkoutSetupController extends ChangeNotifier {
 
     _setLoading(true);
     try {
-      await _container.workoutService.deleteWorkout(_currentWorkout!.id!);
+      await GetIt.I<WorkoutService>().deleteWorkout(_currentWorkout!.id!);
       _clearError();
       return true;
     } catch (e) {

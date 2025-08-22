@@ -5,7 +5,7 @@ import 'package:get_it/get_it.dart';
 import 'package:flutter/foundation.dart';
 import 'package:Gymli/utils/services/temp_service.dart';
 import '../../../utils/api/api.dart';
-
+import 'package:Gymli/utils/services/auth_service.dart';
 class SettingsRepository {
   final TempService container = GetIt.I<TempService>();
   final ExerciseService exerciseService = GetIt.I<ExerciseService>();
@@ -13,7 +13,7 @@ class SettingsRepository {
   /// Get training sets data
   Future<List<dynamic>> getTrainingSets() async {
     try {
-      return await container.trainingSetService.getTrainingSets();
+      return await GetIt.I<TrainingSetService>().getTrainingSets();
     } catch (e) {
       if (kDebugMode) print('Error getting training sets: $e');
       rethrow;
@@ -33,7 +33,7 @@ class SettingsRepository {
   /// Get workouts data
   Future<List<dynamic>> getWorkouts() async {
     try {
-      return await container.workoutService.getWorkouts();
+      return await GetIt.I<WorkoutService>().getWorkouts();
     } catch (e) {
       if (kDebugMode) print('Error getting workouts: $e');
       rethrow;
@@ -43,7 +43,7 @@ class SettingsRepository {
   /// Get foods data
   Future<List<dynamic>> getFoods() async {
     try {
-      return await container.foodService.getFoods();
+      return await GetIt.I<FoodService>().getFoods();
     } catch (e) {
       if (kDebugMode) print('Error getting foods: $e');
       rethrow;
@@ -53,8 +53,8 @@ class SettingsRepository {
   /// Clear training sets
   Future<void> clearTrainingSets() async {
     try {
-      await container.trainingSetService.clearTrainingSets();
-      container.notifyDataChanged();
+      await GetIt.I<TrainingSetService>().clearTrainingSets();
+      GetIt.I<AuthService>().notifyAuthStateChanged();
     } catch (e) {
       if (kDebugMode) print('Error clearing training sets: $e');
       rethrow;
@@ -65,9 +65,9 @@ class SettingsRepository {
   Future<void> clearExercises() async {
     try {
       await container.clearWorkouts();
-      await container.trainingSetService.clearTrainingSets();
+      await GetIt.I<TrainingSetService>().clearTrainingSets();
       await container.clearExercises();
-      container.notifyDataChanged();
+      GetIt.I<AuthService>().notifyAuthStateChanged();
     } catch (e) {
       if (kDebugMode) print('Error clearing exercises: $e');
       rethrow;
@@ -78,7 +78,7 @@ class SettingsRepository {
   Future<void> clearWorkouts() async {
     try {
       await container.clearWorkouts();
-      container.notifyDataChanged();
+      GetIt.I<AuthService>().notifyAuthStateChanged();
     } catch (e) {
       if (kDebugMode) print('Error clearing workouts: $e');
       rethrow;
@@ -88,8 +88,9 @@ class SettingsRepository {
   /// Clear foods
   Future<void> clearFoods() async {
     try {
-      await container.foodService.clearFoods();
-      container.notifyDataChanged();
+      await GetIt.I<FoodService>().clearFoods();
+      GetIt.I<AuthService>().notifyAuthStateChanged();
+
     } catch (e) {
       if (kDebugMode) print('Error clearing foods: $e');
       rethrow;
@@ -100,7 +101,7 @@ class SettingsRepository {
   Future<void> createTrainingSetsBulk(
       List<Map<String, dynamic>> trainingSets) async {
     try {
-      await container.trainingSetService
+      await GetIt.I<TrainingSetService>()
           .createTrainingSetsBulk(trainingSets: trainingSets);
     } catch (e) {
       if (kDebugMode) print('Error creating training sets bulk: $e');
@@ -157,7 +158,7 @@ class SettingsRepository {
   /// Create foods in bulk
   Future<void> createFoodsBulk(List<Map<String, dynamic>> foods) async {
     try {
-      await container.foodService.createFoodsBulk(foods: foods);
+      await GetIt.I<FoodService>().createFoodsBulk(foods: foods);
     } catch (e) {
       if (kDebugMode) print('Error creating foods bulk: $e');
       rethrow;
@@ -176,9 +177,9 @@ class SettingsRepository {
 
   /// Notify data changed
   void notifyDataChanged() {
-    container.notifyDataChanged();
+    GetIt.I<AuthService>().notifyAuthStateChanged();
   }
 
   /// Get current user name
-  String? get userName => container.authService.userName;
+  String? get userName => GetIt.I<AuthService>().userName;
 }

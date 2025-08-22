@@ -4,6 +4,7 @@ import 'package:fl_chart/fl_chart.dart';
 import '../../../utils/services/temp_service.dart';
 import '../../../utils/api/api_models.dart';
 import 'package:get_it/get_it.dart';
+import  'package:Gymli/utils/api/api.dart';
 
 /// Controller for managing food data, loading, and search functionality
 class FoodDataController extends ChangeNotifier {
@@ -47,8 +48,8 @@ class FoodDataController extends ChangeNotifier {
 
     try {
       // Load all data
-      final foodsData = await container.foodService.getFoods();
-      final logsData = await container.foodService.getFoodLogs();
+      final foodsData = await GetIt.I<FoodService>().getFoods();
+      final logsData = await GetIt.I<FoodService>().getFoodLogs();
       final statsData = await container.getFoodLogStats();
 
       foods = foodsData.map((data) => ApiFood.fromJson(data)).toList();
@@ -139,7 +140,7 @@ class FoodDataController extends ChangeNotifier {
     if (log.id == null) return;
 
     try {
-      await container.foodService.deleteFoodLog(logId: log.id!);
+      await GetIt.I<FoodService>().deleteFoodLog(logId: log.id!);
       await loadData(); // Reload data after deletion
     } catch (e) {
       if (kDebugMode) print('Error deleting food log: $e');
@@ -152,7 +153,7 @@ class FoodDataController extends ChangeNotifier {
     if (food.id == null) return;
 
     try {
-      await container.foodService.deleteFood(foodId: food.id!);
+      await GetIt.I<FoodService>().deleteFood(foodId: food.id!);
       await loadData(); // Reload data after deletion
     } catch (e) {
       if (kDebugMode) print('Error deleting food: $e');
