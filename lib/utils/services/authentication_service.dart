@@ -22,7 +22,6 @@ class AuthenticationService extends ChangeNotifier {
   // Getters
   bool get isLoggedIn => _credentials != null;
   String get userName => _credentials?.user.name ?? 'DefaultUser';
-  String get userEmail => _credentials?.user.email ?? '';
   Credentials? get credentials => _credentials;
   Auth0Web get auth0 => _auth0;
   bool get isInitialized => _isInitialized;
@@ -143,25 +142,6 @@ class AuthenticationService extends ChangeNotifier {
         'user': {
           'sub': credentials.user.sub,
           'name': credentials.user.name,
-          'givenName': credentials.user.givenName,
-          'familyName': credentials.user.familyName,
-          'middleName': credentials.user.middleName,
-          'nickname': credentials.user.nickname,
-          'preferredUsername': credentials.user.preferredUsername,
-          'pictureUrl': credentials.user.pictureUrl?.toString(),
-          'profileUrl': credentials.user.profileUrl?.toString(),
-          'websiteUrl': credentials.user.websiteUrl?.toString(),
-          'email': credentials.user.email,
-          'isEmailVerified': credentials.user.isEmailVerified,
-          'gender': credentials.user.gender,
-          'birthdate': credentials.user.birthdate,
-          'zoneinfo': credentials.user.zoneinfo,
-          'locale': credentials.user.locale,
-          'phoneNumber': credentials.user.phoneNumber,
-          'isPhoneNumberVerified': credentials.user.isPhoneNumberVerified,
-          'address': credentials.user.address,
-          'updatedAt': credentials.user.updatedAt?.toIso8601String(),
-          'customClaims': credentials.user.customClaims,
         }
       };
       await prefs.setString('auth_credentials', json.encode(authData));
@@ -194,42 +174,11 @@ class AuthenticationService extends ChangeNotifier {
         return null;
       }
 
-      // Reconstruct credentials
+      // Reconstruct credentials with minimal user data
       final userData = authData['user'];
       final user = UserProfile(
         sub: userData['sub'],
         name: userData['name'],
-        givenName: userData['givenName'],
-        familyName: userData['familyName'],
-        middleName: userData['middleName'],
-        nickname: userData['nickname'],
-        preferredUsername: userData['preferredUsername'],
-        pictureUrl: userData['pictureUrl'] != null
-            ? Uri.parse(userData['pictureUrl'])
-            : null,
-        profileUrl: userData['profileUrl'] != null
-            ? Uri.parse(userData['profileUrl'])
-            : null,
-        websiteUrl: userData['websiteUrl'] != null
-            ? Uri.parse(userData['websiteUrl'])
-            : null,
-        email: userData['email'],
-        isEmailVerified: userData['isEmailVerified'],
-        gender: userData['gender'],
-        birthdate: userData['birthdate'],
-        zoneinfo: userData['zoneinfo'],
-        locale: userData['locale'],
-        phoneNumber: userData['phoneNumber'],
-        isPhoneNumberVerified: userData['isPhoneNumberVerified'],
-        address: userData['address'] != null
-            ? Map<String, String>.from(userData['address'])
-            : null,
-        updatedAt: userData['updatedAt'] != null
-            ? DateTime.parse(userData['updatedAt'])
-            : null,
-        customClaims: userData['customClaims'] != null
-            ? Map<String, dynamic>.from(userData['customClaims'])
-            : null,
       );
 
       final credentials = Credentials(
