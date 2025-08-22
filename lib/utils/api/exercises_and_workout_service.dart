@@ -7,6 +7,8 @@
 library;
 
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
+
 import 'api_base.dart';
 import '../models/data_models.dart';
 import 'package:get_it/get_it.dart';
@@ -100,8 +102,9 @@ class WorkoutUnitService {
   /// Returns a list of workout unit objects
   Future<List<ApiWorkoutUnit>> getWorkoutUnits() async {
     final raw = await getData<List<dynamic>>('workout_units');
-    _enrichWorkoutUnitsWithExerciseNames(raw);
-    return raw.map((e) => ApiWorkoutUnit.fromJson(e)).toList();
+    final enriched_raw = await _enrichWorkoutUnitsWithExerciseNames(raw);
+    final wu = enriched_raw.map((e) => ApiWorkoutUnit.fromJson(e)).toList();
+    return wu;
     ;
   }
 
