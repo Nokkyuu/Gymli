@@ -171,7 +171,7 @@ class _AppDrawerState extends State<AppDrawer> {
                   Navigator.pop(context);
                   await widget.auth0.logout(returnToUrl: redirectUrl);
                   // Clear user data after logout
-                  authService.setCredentials(null);
+                  authService.logout();
                   // Reload data for default user
                   // widget.onReloadUserData();
                 },
