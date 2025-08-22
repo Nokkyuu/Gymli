@@ -1,43 +1,13 @@
-/// TempService is a singleton that manages all services in the application.
-/// Replacement for the deprecated UserService.
-/// please see the seperate service files for more details on each service.
 library;
 
-import 'auth_service.dart';
 import 'package:Gymli/utils/api/api.dart';
-import 'package:Gymli/utils/api/api_models.dart';
 import 'package:get_it/get_it.dart';
 
-String userName = 'DefaultUser';
+
+// Class is for temporary convenience and non-existent endpoint compensation
 
 class TempService {
-  TempService() {
-    _setupServices();
-  }
-
-  // Core services
-  // late final AuthService authService;
-
-  // Domain services
-
-  void _setupServices() {
-    // Initialize core services first
-
-    // Initialize domain services (they depend on core services)
-    // exerciseService = ExerciseService();
-  }
-
-  // Convenience getters for common operations
-  //TODO: mostly not needed anymore?
-  // bool get isLoggedIn => authService.isLoggedIn;
-  // String get userName => authService.userName;
-  // String get userEmail => authService.userEmail;
-
-  // Initialize all services (call this at app startup)
-  // Future<void> initialize() async {
-  //   await authService.initializeAuth();
-  // }
-
+  TempService();
 
   //replace calls in files, unecessary redundancy
   Future<List<Map<String, dynamic>>> createTrainingSetsBulk(
