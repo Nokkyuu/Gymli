@@ -2,14 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:Gymli/utils/services/temp_service.dart';
 import '../../../utils/models/data_models.dart';
 import '../../../utils/api/api_export.dart';
-import '../../exercise/repositories/exercise_repository.dart';
 import '../../exercise_history_screen.dart';
 import 'package:get_it/get_it.dart';
+import '../../../utils/workout_data_cache.dart';
 
 class HistoryListController {
   final String exercise;
   final int exerciseId;
-  final ExerciseRepository? exerciseRepository;
   final TempService container = GetIt.I<TempService>();
 
   final ValueNotifier<List<ListEntry>> entries = ValueNotifier([]);
@@ -18,24 +17,34 @@ class HistoryListController {
   HistoryListController({
     required this.exercise,
     required this.exerciseId,
-    this.exerciseRepository,
   });
 
   Future<void> loadTrainingSets() async {
     isLoading.value = true;
     try {
-      final data = await GetIt.I<TrainingSetService>()
-          .getTrainingSetsByExerciseID(exerciseId: exerciseId);
-      final trainingSets =
-          data.map((item) => ApiTrainingSet.fromJson(item)).toList();
-      final filtered =
-          trainingSets.where((item) => item.exerciseId == exerciseId).toList();
-      filtered.sort((a, b) => b.date.compareTo(a.date));
-
-      List<ListEntry> newEntries = [];
+      final cache = GetIt.I<WorkoutDataCache>();
+      // Cache-first
+      List<ApiTrainingSet>? fromCache = cache.getCachedTrainingSets(exerciseId);
+      List<ApiTrainingSet> trainingSets;
+      if (fromCache != null && fromCache.isNotEmpty) {
+        trainingSets = List<ApiTrainingSet>.from(fromCache);
+      } else {
+        // Fetch from server and seed cache
+        final data = await GetIt.I<TrainingSetService>()
+            .getTrainingSetsByExerciseID(exerciseId: exerciseId);
+        trainingSets = data
+            .whereType<Map<String, dynamic>>()
+            .map(ApiTrainingSet.fromJson)
+            .toList();
+        cache.setExerciseTrainingSets(exerciseId, trainingSets);
+      }
+      // Sort desc by date
+      trainingSets.sort((a, b) => b.date.compareTo(a.date));
+      // Build grouped entries by date (YYYY-MM-DD)
+      final List<ListEntry> newEntries = [];
       String? lastDate;
-      for (final set in filtered) {
-        final dateStr = set.date.toString().split(" ")[0];
+      for (final set in trainingSets) {
+        final dateStr = set.date.toIso8601String().split('T').first;
         if (lastDate != dateStr) {
           newEntries.add(ListEntry.header(dateStr));
           lastDate = dateStr;
@@ -54,29 +63,23 @@ class HistoryListController {
   Future<void> delete(ApiTrainingSet item) async {
     if (item.id == null) return;
     try {
-      await GetIt.I<TrainingSetService>().deleteTrainingSet(item.id!);
-
-      try {
-        if (exerciseRepository != null) {
-          await exerciseRepository!.refreshCache();
-        } else {
-          final exerciseRepo = ExerciseRepository();
-          await exerciseRepo.refreshCache();
-        }
-      } catch (e) {
-        debugPrint('Warning: Could not refresh exercise repository cache: $e');
-      }
+      // Optimistic delete in cache (+ enqueues server delete if id >= 0)
+      final cache = GetIt.I<WorkoutDataCache>();
+      cache.deleteTrainingSetOptimistic(
+          exerciseId: exerciseId, setId: item.id!);
 
       // Remove from entries and update headers if needed
       final currentEntries = List<ListEntry>.from(entries.value);
-      int setIndex = currentEntries.indexWhere((e) => e.set?.id == item.id);
+      final setIndex = currentEntries.indexWhere((e) => e.set?.id == item.id);
       if (setIndex == -1) return;
 
+      // Determine if header before this set becomes orphaned
       bool removeHeader = false;
       int headerIndex = -1;
       if (setIndex > 0 && currentEntries[setIndex - 1].isHeader) {
-        bool isLastSetForHeader = (setIndex + 1 >= currentEntries.length) ||
-            currentEntries[setIndex + 1].isHeader;
+        final bool isLastSetForHeader =
+            (setIndex + 1 >= currentEntries.length) ||
+                currentEntries[setIndex + 1].isHeader;
         if (isLastSetForHeader) {
           removeHeader = true;
           headerIndex = setIndex - 1;

@@ -8,7 +8,6 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:Gymli/utils/themes/themes.dart' show setIcons;
 import '../utils/models/data_models.dart';
-import 'exercise/repositories/exercise_repository.dart';
 import 'exercise_history/controller/history_list_controller.dart';
 
 final _setTypeIcons = setIcons;
@@ -17,14 +16,12 @@ class ExerciseListScreen extends StatefulWidget {
   final int exerciseId;
   final String exercise;
   final VoidCallback? onSetDeleted;
-  final ExerciseRepository? exerciseRepository;
 
   const ExerciseListScreen(
     this.exerciseId,
     this.exercise, {
     super.key,
     this.onSetDeleted,
-    this.exerciseRepository,
   });
 
   @override
@@ -50,7 +47,6 @@ class _ExerciseListScreenState extends State<ExerciseListScreen> {
     controller = HistoryListController(
       exerciseId: widget.exerciseId,
       exercise: widget.exercise,
-      exerciseRepository: widget.exerciseRepository,
     );
     controller.loadTrainingSets();
     controller.entries.addListener(_onEntriesChanged);

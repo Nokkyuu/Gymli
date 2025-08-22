@@ -1,18 +1,19 @@
 import 'package:flutter/material.dart';
 import '../../../utils/models/data_models.dart';
-import '../repositories/exercise_repository.dart';
 import 'exercise_graph_controller.dart';
+import 'package:get_it/get_it.dart';
+import '../../../utils/workout_data_cache.dart';
+import '../../../utils/api/api.dart'; // for ExerciseService via GetIt
+import '../../../utils/services/authentication_service.dart';
 
 enum ExerciseType { warmup, work }
 
 /// Controller for managing exercise screen state and business logic
 class ExerciseController extends ChangeNotifier {
-  final ExerciseRepository _repository;
   final ExerciseGraphController _graphController;
 
   // Exercise data
   ApiExercise? _currentExercise;
-  List<ApiTrainingSet> _todaysTrainingSets = [];
   bool _isLoading = false;
   String? _errorMessage;
   String? phase;
@@ -32,15 +33,24 @@ class ExerciseController extends ChangeNotifier {
   // Color mapping for reps
   final Map<int, Color> _colorMap = {};
 
+  WorkoutDataCache get _cache => GetIt.I<WorkoutDataCache>();
+  ExerciseService get _exerciseService => GetIt.I<ExerciseService>();
+  TrainingSetService get _trainingSetService => GetIt.I<TrainingSetService>();
+
   ExerciseController({
-    ExerciseRepository? repository,
     ExerciseGraphController? graphController,
-  })  : _repository = repository ?? ExerciseRepository(),
-        _graphController = graphController ?? ExerciseGraphController();
+  }) : _graphController = graphController ?? ExerciseGraphController();
 
   // Getters
   ApiExercise? get currentExercise => _currentExercise;
-  List<ApiTrainingSet> get todaysTrainingSets => _todaysTrainingSets;
+  List<ApiTrainingSet> get todaysTrainingSets {
+    if (_currentExercise?.id == null) return const [];
+    final all = _cache.getCachedTrainingSets(_currentExercise!.id!) ??
+        const <ApiTrainingSet>[];
+    final now = DateTime.now();
+    return all.where((s) => _isSameDay(s.date, now)).toList();
+  }
+
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
   Set<ExerciseType> get selectedType => _selectedType;
@@ -53,7 +63,6 @@ class ExerciseController extends ChangeNotifier {
   DateTime get workoutStartTime => _workoutStartTime;
   Map<int, Color> get colorMap => _colorMap;
   ExerciseGraphController get graphController => _graphController;
-  ExerciseRepository get repository => _repository;
 
   /// Initialize the exercise screen with data
   Future<void> initialize(
@@ -65,11 +74,8 @@ class ExerciseController extends ChangeNotifier {
       // Parse workout description
       _parseWorkoutDescription(workoutDescription);
 
-      // Load exercise and training data
-      await Future.wait([
-        _loadExerciseData(exerciseName),
-        _loadTodaysTrainingSets(exerciseName),
-      ]);
+      // Load exercise data
+      await _loadExerciseData(exerciseName);
 
       // Pass exercise data to graph controller
       _graphController.setCurrentExercise(_currentExercise);
@@ -83,9 +89,8 @@ class ExerciseController extends ChangeNotifier {
       // Update workout counts
       _updateWorkoutCounts();
 
-      // Update graph
-      final allTrainingSets = await _repository.getTrainingSetsForExercise();
-      _graphController.updateGraphFromTrainingSets(allTrainingSets);
+      // Update graph (cache-first, then server fetch if needed)
+      await refreshGraphData(exerciseName);
 
       // Update color mapping
       _updateColorMapping();
@@ -100,7 +105,20 @@ class ExerciseController extends ChangeNotifier {
     }
   }
 
-  /// Add a new training set
+  /// Add a new training set (optimistic, local-first)
+  String _currentUserName() {
+    try {
+      final auth = GetIt.I<AuthenticationService>();
+      // Try common fields without binding to a specific auth model
+      return (auth as dynamic).userName ??
+          (auth as dynamic).currentUserName ??
+          (auth as dynamic).currentUser?.userName ??
+          '';
+    } catch (_) {
+      return '';
+    }
+  }
+
   Future<bool> addTrainingSet(
     String exerciseName,
     double weight,
@@ -116,39 +134,27 @@ class ExerciseController extends ChangeNotifier {
     }
 
     try {
-      final newSet = await _repository.createTrainingSet(
+      final userName = _currentUserName();
+      final ApiTrainingSet newSet = _cache.createTrainingSetOptimistic(
+        userName: userName,
         exerciseId: _currentExercise!.id!,
-        date: when,
+        exerciseName: _currentExercise!.name,
+        date: DateTime.tryParse(when) ?? DateTime.now(),
         weight: weight,
         repetitions: repetitions,
         setType: setType,
         phase: phase,
         myoreps: myoreps,
-        // baseReps: _currentExercise!.defaultRepBase,
-        // maxReps: _currentExercise!.defaultRepMax,
-        // increment: _currentExercise!.defaultIncrement,
       );
-
-      if (newSet == null) {
-        _setError('Failed to create training set');
-        return false;
-      }
-
-      // Update local cache
-      _todaysTrainingSets.add(newSet);
       _lastActivity = DateTime.now();
-
-      // Update graph efficiently
       final graphUpdated = _graphController.updateGraphWithNewSet(newSet);
       if (!graphUpdated) {
-        // Fallback to full graph update
-        final allTrainingSets = await _repository.getTrainingSetsForExercise();
+        final allTrainingSets =
+            _cache.getCachedTrainingSets(_currentExercise!.id!) ??
+                const <ApiTrainingSet>[];
         _graphController.updateGraphFromTrainingSets(allTrainingSets);
       }
-
-      // Update workout counts
       _updateWorkoutCounts();
-
       notifyListeners();
       return true;
     } catch (e) {
@@ -157,28 +163,24 @@ class ExerciseController extends ChangeNotifier {
     }
   }
 
-  /// Delete a training set
+  /// Delete a training set (optimistic, local-first)
   Future<bool> deleteTrainingSet(ApiTrainingSet trainingSet) async {
     try {
-      final success = await _repository.deleteTrainingSet(trainingSet.id!);
-
-      if (success) {
-        await _repository.refreshCache(); // <--- Cache neu laden!
-        _todaysTrainingSets = await _repository
-            .getTodaysTrainingSetsForExercise(_currentExercise!.name);
-
-        // Update graph
-        if (_currentExercise != null) {
-          final allTrainingSets =
-              await _repository.getTrainingSetsForExercise();
-          _graphController.updateGraphFromTrainingSets(allTrainingSets);
-        }
-
-        _updateWorkoutCounts();
-        notifyListeners();
+      if (_currentExercise?.id == null || trainingSet.id == null) {
+        _setError('Invalid delete parameters');
+        return false;
       }
-
-      return success;
+      _cache.deleteTrainingSetOptimistic(
+        exerciseId: _currentExercise!.id!,
+        setId: trainingSet.id!,
+      );
+      final allTrainingSets =
+          _cache.getCachedTrainingSets(_currentExercise!.id!) ??
+              const <ApiTrainingSet>[];
+      _graphController.updateGraphFromTrainingSets(allTrainingSets);
+      _updateWorkoutCounts();
+      notifyListeners();
+      return true;
     } catch (e) {
       _setError('Failed to delete training set: $e');
       return false;
@@ -186,34 +188,27 @@ class ExerciseController extends ChangeNotifier {
   }
 
   Future<void> refreshTodaysTrainingSets() async {
-    _setLoading(true);
     try {
-      if (_currentExercise != null) {
-        _todaysTrainingSets = await _repository
-            .getTodaysTrainingSetsForExercise(_currentExercise!.name);
+      if (_currentExercise?.id != null) {
         _updateWorkoutCounts();
         notifyListeners();
       }
     } catch (e) {
       _setError('Fehler beim Aktualisieren der TrainingSets: $e');
-    } finally {
-      _setLoading(false);
     }
   }
 
   /// Update selected exercise type
   void updateSelectedType(Set<ExerciseType> newSelection) {
-    if (_selectedType != newSelection) {
-      _selectedType = newSelection;
-      // Update weight and reps based on the new exercise type selection
-      _updateWeightAndReps().then((_) {
-        notifyListeners();
-      });
-    }
+    if (_selectedType == newSelection) return; // no change
+    _selectedType = newSelection;
+    _updateWeightAndReps()
+        .then((_) => notifyListeners()); // recompute then notify once
   }
 
   /// Update weight values
   void updateWeight(int kg, int dg) {
+    if (_weightKg == kg && _weightDg == dg) return; // no change
     _weightKg = kg;
     _weightDg = dg;
     notifyListeners();
@@ -221,6 +216,7 @@ class ExerciseController extends ChangeNotifier {
 
   /// Update repetitions
   void updateRepetitions(int reps) {
+    if (_repetitions == reps) return; // no change
     _repetitions = reps;
     notifyListeners();
   }
@@ -230,10 +226,26 @@ class ExerciseController extends ChangeNotifier {
       _weightKg.toDouble() + _weightDg.toDouble() / 100.0;
 
   /// Refresh graph data with latest training sets
-  Future<void> refreshGraphData(String exerciseName) async {
+  Future<void> refreshGraphData(String _exerciseName) async {
     try {
-      final allTrainingSets = await _repository.getTrainingSetsForExercise();
-      _graphController.updateGraphFromTrainingSets(allTrainingSets);
+      final ex = _currentExercise;
+      if (ex?.id == null) return;
+      final exerciseId = ex!.id!;
+      // Cache-first
+      final cached = _cache.getCachedTrainingSets(exerciseId);
+      if (cached != null && cached.isNotEmpty) {
+        _graphController.updateGraphFromTrainingSets(cached);
+        return;
+      }
+      // Cache miss: fetch from server, populate cache, then update graph
+      final raw = await _trainingSetService.getTrainingSetsByExerciseID(
+          exerciseId: exerciseId);
+      final sets = raw
+          .whereType<Map<String, dynamic>>()
+          .map((m) => ApiTrainingSet.fromJson(m))
+          .toList();
+      _cache.setExerciseTrainingSets(exerciseId, sets);
+      _graphController.updateGraphFromTrainingSets(sets);
     } catch (e) {
       print('Error refreshing graph data: $e');
     }
@@ -248,11 +260,13 @@ class ExerciseController extends ChangeNotifier {
   // Private methods
 
   void _setLoading(bool loading) {
+    if (_isLoading == loading) return; // no change
     _isLoading = loading;
     notifyListeners();
   }
 
   void _setError(String error) {
+    if (_errorMessage == error) return; // no change
     _errorMessage = error;
     notifyListeners();
   }
@@ -262,12 +276,32 @@ class ExerciseController extends ChangeNotifier {
   }
 
   Future<void> _loadExerciseData(String exerciseName) async {
-    _currentExercise = await _repository.getExerciseByName(exerciseName);
-  }
-
-  Future<void> _loadTodaysTrainingSets(String exerciseName) async {
-    _todaysTrainingSets =
-        await _repository.getTodaysTrainingSetsForExercise(exerciseName);
+    // Try cache first
+    _currentExercise = null;
+    for (final e in _cache.exercises) {
+      if (e.name == exerciseName) {
+        _currentExercise = e;
+        break;
+      }
+    }
+    if (_currentExercise == null) {
+      try {
+        // Fallback: fetch exercises metadata (not training sets)
+        final all = await _exerciseService.getExercises();
+        ApiExercise? match;
+        for (final e in all) {
+          if (e.name == exerciseName) {
+            match = e;
+            break;
+          }
+        }
+        _currentExercise = match;
+        // Optionally seed cache:
+        // _cache.setExercises(all);
+      } catch (_) {
+        // ignore; caller will handle error state
+      }
+    }
   }
 
   void _parseWorkoutDescription(String workoutDescription) {
@@ -302,9 +336,10 @@ class ExerciseController extends ChangeNotifier {
   }
 
   void _updateWorkoutTiming() {
-    if (_todaysTrainingSets.isNotEmpty) {
-      _workoutStartTime = _todaysTrainingSets.first.date;
-      _lastActivity = _todaysTrainingSets.last.date;
+    final today = todaysTrainingSets;
+    if (today.isNotEmpty) {
+      _workoutStartTime = today.first.date;
+      _lastActivity = today.last.date;
     }
   }
 
@@ -318,11 +353,11 @@ class ExerciseController extends ChangeNotifier {
     // First, try to get values from today's sets
     bool foundValuesFromToday = false;
 
-    if (_todaysTrainingSets.isNotEmpty) {
+    if (todaysTrainingSets.isNotEmpty) {
       if (_selectedType.first == ExerciseType.warmup) {
         // For warmup: Look for the most recent warmup set
         final warmupSets =
-            _todaysTrainingSets.where((set) => set.setType == 0).toList();
+            todaysTrainingSets.where((set) => set.setType == 0).toList();
 
         if (warmupSets.isNotEmpty) {
           final lastWarmupSet = warmupSets.last;
@@ -333,7 +368,7 @@ class ExerciseController extends ChangeNotifier {
       } else {
         // For work sets: Find the best set from today's sessions
         final workSets =
-            _todaysTrainingSets.where((set) => set.setType > 0).toList();
+            todaysTrainingSets.where((set) => set.setType > 0).toList();
 
         if (workSets.isNotEmpty) {
           // Find the best set (highest weight, then most reps)
@@ -371,16 +406,13 @@ class ExerciseController extends ChangeNotifier {
   }
 
   void _updateWorkoutCounts() {
-    int originalWarmUps = _numWarmUps;
-    int originalWorkSets = _numWorkSets;
-
-    for (var set in _todaysTrainingSets) {
-      if (set.setType == 0) {
-        _numWarmUps = (_numWarmUps - 1).clamp(0, originalWarmUps);
-      } else if (set.setType == 1) {
-        _numWorkSets = (_numWorkSets - 1).clamp(0, originalWorkSets);
-      }
-    }
+    final originalWarmUps = _numWarmUps;
+    final originalWorkSets = _numWorkSets;
+    final today = todaysTrainingSets;
+    final warmDone = today.where((s) => s.setType == 0).length;
+    final workDone = today.where((s) => s.setType > 0).length;
+    _numWarmUps = (originalWarmUps - warmDone).clamp(0, originalWarmUps);
+    _numWorkSets = (originalWorkSets - workDone).clamp(0, originalWorkSets);
   }
 
   /// Load recent training values for weight and reps based on exercise type
@@ -388,17 +420,18 @@ class ExerciseController extends ChangeNotifier {
     if (_currentExercise == null) return null;
 
     try {
-      // Get all training sets for this exercise
-      final allTrainingSets = await _repository.getTrainingSetsForExercise();
+      final sets = _currentExercise?.id != null
+          ? (_cache.getCachedTrainingSets(_currentExercise!.id!) ??
+              const <ApiTrainingSet>[])
+          : const <ApiTrainingSet>[];
+      if (sets.isEmpty) return null;
 
-      if (allTrainingSets.isEmpty) return null;
-
-      // Sort by date (most recent first)
-      allTrainingSets.sort((a, b) => b.date.compareTo(a.date));
+      final sortedSets = List<ApiTrainingSet>.from(sets)
+        ..sort((a, b) => b.date.compareTo(a.date));
 
       if (_selectedType.first == ExerciseType.warmup) {
         // For warmup: Look for the most recent warmup set
-        final recentWarmupSets = allTrainingSets
+        final recentWarmupSets = sortedSets
             .where((set) => set.setType == 0)
             .take(5) // Look at last 5 warmup sets
             .toList();
@@ -412,7 +445,7 @@ class ExerciseController extends ChangeNotifier {
         } else {
           // Fallback: Use the most recent work set and halve the weight
           final recentWorkSets =
-              allTrainingSets.where((set) => set.setType > 0).take(5).toList();
+              sortedSets.where((set) => set.setType > 0).take(5).toList();
 
           if (recentWorkSets.isNotEmpty) {
             final lastWorkSet = recentWorkSets.first;
@@ -429,7 +462,7 @@ class ExerciseController extends ChangeNotifier {
         }
       } else {
         // For work sets: Find the best recent work set
-        final recentWorkSets = allTrainingSets
+        final recentWorkSets = sortedSets
             .where((set) => set.setType > 0)
             .take(10) // Look at last 10 work sets
             .toList();
@@ -481,5 +514,9 @@ class ExerciseController extends ChangeNotifier {
         _colorMap[i] = Colors.red;
       }
     }
+  }
+
+  bool _isSameDay(DateTime a, DateTime b) {
+    return a.year == b.year && a.month == b.month && a.day == b.day;
   }
 }
