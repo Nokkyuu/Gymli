@@ -11,6 +11,7 @@ import '../api/api.dart';
 import 'package:get_it/get_it.dart';
 //import 'package:Gymli/utils/services/auth_service.dart';
 import 'package:Gymli/utils/services/authentication_service.dart';
+import 'package:Gymli/utils/workout_data_cache.dart';
 
 class AppInitializer {
   static late Auth0Web auth0;
@@ -57,6 +58,7 @@ class AppInitializer {
 
       _isInitialized = true;
       if (kDebugMode) print('App initialization completed successfully');
+      await GetIt.I<WorkoutDataCache>().init();
 
       return AppInitializationResult.success();
     } catch (e) {

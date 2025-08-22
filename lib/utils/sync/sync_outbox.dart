@@ -1,0 +1,150 @@
+library;
+
+import 'package:get_it/get_it.dart';
+import 'package:Gymli/utils/api/api.dart';
+import 'package:Gymli/utils/api/api_models.dart';
+import 'package:Gymli/utils/sync/sync_outbox.dart';
+
+
+import 'dart:async';
+import 'dart:collection';
+import 'package:flutter/foundation.dart';
+
+/// Generic operation type for the outbox.
+class SyncOp {
+  SyncOp(this.type, this.payload);
+
+  final String type;
+  final Object? payload;
+
+  int attempts = 0;
+  DateTime? nextAt;
+}
+
+/// Reusable background outbox with retry & exponential backoff.
+/// Provide a [perform] callback that executes a [SyncOp].
+class SyncOutbox {
+  SyncOutbox({
+    required Future<void> Function(SyncOp op) perform,
+    int maxRetries = 5,
+    Duration baseDelay = const Duration(seconds: 1),
+  })  : _perform = perform,
+        _maxRetries = maxRetries,
+        _baseDelay = baseDelay;
+
+  final Future<void> Function(SyncOp op) _perform;
+  final int _maxRetries;
+  final Duration _baseDelay;
+
+  final Queue<SyncOp> _queue = Queue<SyncOp>();
+  bool _draining = false;
+
+  void enqueue(SyncOp op) {
+    _queue.add(op);
+    if (kDebugMode) {
+      print('OUTBOX: enqueued ${op.type} (attempts=${op.attempts})');
+    }
+    _ensureDraining();
+  }
+
+  void _ensureDraining() {
+    if (_draining) return;
+    _draining = true;
+    unawaited(_drainLoop());
+  }
+
+  Future<void> _drainLoop() async {
+    while (_queue.isNotEmpty) {
+      final op = _queue.first;
+      final now = DateTime.now();
+      if (op.nextAt != null && now.isBefore(op.nextAt!)) {
+        await Future.delayed(op.nextAt!.difference(now));
+      }
+
+      try {
+        await _perform(op);
+        if (kDebugMode) print('OUTBOX: success ${op.type}');
+        _queue.removeFirst();
+      } catch (e) {
+        op.attempts += 1;
+        if (op.attempts > _maxRetries) {
+          if (kDebugMode) {
+            print('OUTBOX: drop ${op.type} after $_maxRetries attempts. Error: $e');
+          }
+          _queue.removeFirst();
+        } else {
+          final backoff = _baseDelay * (1 << (op.attempts - 1));
+          op.nextAt = DateTime.now().add(backoff);
+          if (kDebugMode) {
+            print('OUTBOX: retry ${op.type} in ${backoff.inSeconds}s (attempt ${op.attempts})');
+          }
+          _queue.removeFirst();
+          _queue.add(op);
+        }
+      }
+    }
+    _draining = false;
+  }
+}
+
+/// Domain-specific operation types for workout/exercise syncing.
+class WorkoutOpType {
+  static const String createExercise = 'workout.create_exercise';
+  static const String deleteExercise = 'workout.delete_exercise';
+  static const String createWorkout  = 'workout.create_workout';
+  static const String deleteWorkout  = 'workout.delete_workout';
+}
+
+// ----------- Builders (cache uses these to enqueue ops) ----------- //
+SyncOp buildCreateExerciseOp(ApiExercise e) {
+  final Map<String, dynamic> map = (e as dynamic).toJson?.call() ?? {
+    'name': e.name,
+    'default_rep_base': e.defaultRepBase,
+    'default_rep_max': e.defaultRepMax,
+    'default_increment': e.defaultIncrement,
+  };
+  return SyncOp(WorkoutOpType.createExercise, map);
+}
+
+SyncOp buildDeleteExerciseOp(String id) => SyncOp(WorkoutOpType.deleteExercise, id);
+
+SyncOp buildCreateWorkoutOp(ApiWorkout w) {
+  final Map<String, dynamic> map = (w as dynamic).toJson?.call() ?? {
+    'name': w.name,
+  };
+  return SyncOp(WorkoutOpType.createWorkout, map);
+}
+
+SyncOp buildDeleteWorkoutOp(String id) => SyncOp(WorkoutOpType.deleteWorkout, id);
+
+// ----------- Performer (wired into SyncOutbox) ----------- //
+Future<void> performWorkoutOp(SyncOp op) async {
+  final exService = GetIt.I<ExerciseService>();
+  final woService = GetIt.I<WorkoutService>();
+
+  switch (op.type) {
+    case WorkoutOpType.createExercise:
+      await exService.createExercise(op.payload as Map<String, dynamic>);
+      return;
+    case WorkoutOpType.deleteExercise:
+      final id = int.tryParse(op.payload.toString());
+      if (id == null) throw Exception('Invalid exercise id ${op.payload}');
+      await exService.deleteExercise(id);
+      return;
+
+    case WorkoutOpType.createWorkout:
+      final map = op.payload as Map<String, dynamic>;
+      final name = (map['name'] ?? map['workout_name'] ?? map['title'] ?? '').toString();
+      if (name.isEmpty) throw Exception('Workout create requires a name');
+      await woService.createWorkout(name: name);
+      return;
+    case WorkoutOpType.deleteWorkout:
+      final id2 = int.tryParse(op.payload.toString());
+      if (id2 == null) throw Exception('Invalid workout id ${op.payload}');
+      await woService.deleteWorkout(id2);
+      return;
+
+    default:
+      throw UnimplementedError('Unknown op ${op.type}');
+  }
+}

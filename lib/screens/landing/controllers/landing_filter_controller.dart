@@ -1,4 +1,4 @@
-/// Landing Filter Controller - Manages filter state and operations
+/// Landing Filter Controller - Pure state + ordered views (no UI controllers, no ChangeNotifier)
 library;
 
 import 'package:flutter/foundation.dart';
@@ -6,117 +6,119 @@ import 'package:flutter/material.dart';
 import '../models/landing_filter_state.dart';
 import '../../../utils/api/api_models.dart';
 
-class LandingFilterController extends ChangeNotifier {
-  // Controllers for dropdown inputs
-  final TextEditingController workoutController = TextEditingController();
-  final TextEditingController muscleController = TextEditingController();
+/// Comparator used app-wide for alphabetic exercise ordering (case/space-insensitive).
+int _byName(ApiExercise a, ApiExercise b) =>
+    a.name.trim().toLowerCase().compareTo(b.name.trim().toLowerCase());
 
-  // Filter state
+/// Return an ordered *view* of exercises for display, without mutating the source list.
+/// - For workout filter: preserves the unit order from the workout.
+/// - For muscle/none: yields alphabetically by name.
+Iterable<ApiExercise> orderedExercisesView(
+  LandingFilterState state,
+  Iterable<ApiExercise> allExercises,
+) sync* {
+  switch (state.filterType) {
+    case FilterType.workout:
+      final w = state.selectedWorkout;
+      if (w == null) return;
+      // Build a lookup once; does not copy exercise objects
+      final Map<String, ApiExercise> byName = {
+        for (final e in allExercises) e.name: e,
+      };
+      for (final u in w.units) {
+        final ex = byName[u.exerciseName];
+        if (ex != null) yield ex;
+      }
+      return;
+
+    case FilterType.muscle:
+      // Filter and sort on the fly; sort uses a small in-memory list of refs
+      final filtered = allExercises.where((e) =>
+          state.selectedMuscle != null &&
+          e.primaryMuscleGroups.contains(state.selectedMuscle!.muscleName));
+      final list = filtered.toList(growable: false);
+      list.sort(_byName);
+      for (final e in list) {
+        yield e;
+      }
+      return;
+
+    case FilterType.none:
+      final list = allExercises.toList(growable: false);
+      list.sort(_byName);
+      for (final e in list) {
+        yield e;
+      }
+      return;
+  }
+}
+
+/// Stateless helper: compute *names* for a given filter state (sorted where applicable).
+List<String> computeFilteredExerciseNames(
+  LandingFilterState state,
+  List<ApiExercise> allExercises,
+) {
+  switch (state.filterType) {
+    case FilterType.workout:
+      final w = state.selectedWorkout;
+      if (w == null) return const <String>[];
+      // Preserve workout order
+      return w.units.map((u) => u.exerciseName).toList(growable: false);
+
+    case FilterType.muscle:
+      final m = state.selectedMuscle;
+      if (m == null) return const <String>[];
+      final muscleName = m.muscleName;
+      final names = allExercises
+          .where((ex) => ex.primaryMuscleGroups.contains(muscleName))
+          .map((ex) => ex.name.trim())
+          .toList(growable: false);
+      names.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+      return names;
+
+    case FilterType.none:
+      final names =
+          allExercises.map((ex) => ex.name.trim()).toList(growable: false);
+      names.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+      return names;
+  }
+}
+
+/// Controller with immutable state. No framework/UI coupling.
+class LandingFilterController {
   LandingFilterState _filterState = const LandingFilterState();
 
-  // Getters
+  // --- Getters (public surface) ---
   LandingFilterState get filterState => _filterState;
   ApiWorkout? get selectedWorkout => _filterState.selectedWorkout;
   MuscleList? get selectedMuscle => _filterState.selectedMuscle;
   FilterType get filterType => _filterState.filterType;
   bool get hasActiveFilter => _filterState.hasActiveFilter;
 
-  @override
-  void dispose() {
-    workoutController.dispose();
-    muscleController.dispose();
-    super.dispose();
-  }
-
-  /// Clear all filters and reset controllers
   void clearFilters() {
     _filterState = _filterState.clear();
-    workoutController.clear();
-    muscleController.clear();
-    notifyListeners();
   }
 
-  /// Set workout filter
   void setWorkoutFilter(ApiWorkout workout) {
     _filterState = _filterState.setWorkoutFilter(workout);
-    workoutController.text = workout.name;
-    muscleController.clear();
-    notifyListeners();
   }
 
-  /// Set muscle filter
   void setMuscleFilter(MuscleList muscle) {
     _filterState = _filterState.setMuscleFilter(muscle);
-    muscleController.text = muscle.muscleName;
-    workoutController.clear();
-    notifyListeners();
   }
 
-  /// Restore filter state (used when returning from other screens)
-  void restoreFilterState() {
-    switch (_filterState.filterType) {
-      case FilterType.workout:
-        if (_filterState.selectedWorkout != null) {
-          workoutController.text = _filterState.selectedWorkout!.name;
-          muscleController.clear();
-        }
-        break;
-      case FilterType.muscle:
-        if (_filterState.selectedMuscle != null) {
-          muscleController.text = _filterState.selectedMuscle!.muscleName;
-          workoutController.clear();
-        }
-        break;
-      case FilterType.none:
-        workoutController.clear();
-        muscleController.clear();
-        break;
-    }
-  }
+  // /// Restore filter state (kept for API compatibility; UI text controllers were removed).
+  // void restoreFilterState() {
+  //   // No-op: UI widgets should reflect state explicitly when building.
+  // }
 
-  /// Get exercises that should be shown based on current filter
   List<String> getFilteredExerciseNames(
       List<ApiExercise> allExercises, List<ApiWorkout> allWorkouts) {
-    switch (_filterState.filterType) {
-      case FilterType.workout:
-        if (kDebugMode) {
-          print(
-              '🔄 Applying workout filter: ${_filterState.selectedWorkout!.name}');
-        }
-        return _getWorkoutFilteredExercises();
-      case FilterType.muscle:
-        return _getMuscleFilteredExercises(allExercises);
-      case FilterType.none:
-        return allExercises.map((ex) => ex.name).toList();
-    }
+    return computeFilteredExerciseNames(_filterState, allExercises);
   }
 
-  /// Get exercises for workout filter
-  List<String> _getWorkoutFilteredExercises() {
-    if (kDebugMode) {
-      print('🔄 Workout: ${_filterState.selectedWorkout!.name}');
-      print('Workout Units: ${_filterState.selectedWorkout!.units}');
-    }
-    if (_filterState.selectedWorkout == null) return [];
-
-    final filterMask = <String>[];
-    for (var unit in _filterState.selectedWorkout!.units) {
-      if (kDebugMode) {
-        print('Workout unit: ${unit}');
-      }
-      filterMask.add(unit.exerciseName);
-    }
-    return filterMask;
-  }
-
-  /// Get exercises for muscle filter
-  List<String> _getMuscleFilteredExercises(List<ApiExercise> allExercises) {
-    if (_filterState.selectedMuscle == null) return [];
-
-    final muscleName = _filterState.selectedMuscle!.muscleName;
-    return allExercises
-        .where((ex) => ex.primaryMuscleGroups.contains(muscleName))
-        .map((ex) => ex.name)
-        .toList();
+  Iterable<ApiExercise> getFilteredExercisesView(
+      Iterable<ApiExercise> allExercises) {
+    return orderedExercisesView(_filterState, allExercises);
   }
 }

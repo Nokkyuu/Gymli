@@ -7,18 +7,17 @@ import 'package:flutter/foundation.dart';
 import '../models/landing_filter_state.dart';
 import 'landing_filter_controller.dart';
 import '../../../utils/api/api_models.dart';
-import '../../../utils/globals.dart' as globals;
 import 'package:get_it/get_it.dart';
 import 'package:Gymli/utils/api/api.dart';
+
+import 'package:Gymli/utils/workout_data_cache.dart';
 
 class LandingController extends ChangeNotifier {
   final LandingFilterController _filterController;
 
-  // Direct data storage (no separate cache)
-  List<ApiExercise> _exercises = [];
-  List<ApiWorkout> _workouts = [];
-  List<ApiExercise> _filteredExercises = [];
   List<String> _metainfo = [];
+
+  final WorkoutDataCache? _cache;
 
   bool _isLoading = true;
   String? _errorMessage;
@@ -27,17 +26,18 @@ class LandingController extends ChangeNotifier {
 
   final ValueNotifier<bool> filterApplied = ValueNotifier<bool>(true);
 
-  LandingController({
-    LandingFilterController? filterController,
-  }) : _filterController = filterController ?? LandingFilterController() {
-    // Listen to global exercise data changes
-    globals.exerciseDataChangedNotifier.addListener(_onExerciseDataChanged);
+  LandingController(
+      {LandingFilterController? filterController, WorkoutDataCache? cache})
+      : _filterController = filterController ?? LandingFilterController(),
+        _cache = cache {
+    _cache?.addListener(
+        _onCacheChanged); // Listen to global exercise data changes
   }
 
   // Getters
-  List<ApiExercise> get exercises => List.from(_exercises);
-  List<ApiWorkout> get workouts => List.from(_workouts);
-  List<ApiExercise> get filteredExercises => List.from(_filteredExercises);
+  List<ApiExercise> get exercises => _cache?.exercises ?? [];
+  List<ApiWorkout> get workouts => _cache?.workouts ?? [];
+  List<ApiExercise> get filteredExercises => getSortedExercises();
   List<String> get metainfo => List.from(_metainfo);
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
@@ -52,17 +52,18 @@ class LandingController extends ChangeNotifier {
       return;
     }
 
-    _setLoading(true);
     _clearError();
+    _setLoading(true);
 
     try {
+      if (_cache != null && !_cache!.isInitialized) {
+        // <- !!!
+        await _cache!.init(); // <- !!!
+      }
       await _loadData();
       await showAllExercises();
-
-      // // Only add listener after successful initialization
-      // _repository.authStateNotifier.addListener(_onAuthStateChanged);  // TODO: MAYBE
       _isInitialized = true;
-
+      notifyListeners();
       if (kDebugMode) print('✅ LandingController initialized successfully');
     } catch (e) {
       if (kDebugMode) print('❌ LandingController initialization failed: $e');
@@ -75,19 +76,18 @@ class LandingController extends ChangeNotifier {
   /// Load all data from repository
   Future<void> _loadData() async {
     // return exercises.map((e) => ApiExercise.fromJson(e)).toList();
-
-    List<dynamic> currentExercises =
-        await GetIt.I<ExerciseService>().getExercises();
-    _exercises = currentExercises as List<ApiExercise>;
-
-    List<dynamic> currentWorkouts = await GetIt.I<TempService>().getWorkouts();
-    currentWorkouts =
-        currentWorkouts.map((e) => ApiWorkout.fromJson(e)).toList();
-    _workouts = currentWorkouts as List<ApiWorkout>;
-
-    // Sort data
-    _exercises.sort((a, b) => a.name.compareTo(b.name));
-    _workouts.sort((a, b) => a.name.compareTo(b.name));
+    if (_cache != null) {
+      // Bei Cache stets bevorzugen; nach obigem await init() sind Daten da       // <- !!!
+      print(
+          "Using cached data: ${_cache!.exercises.length} exercises and ${_cache!.workouts.length} workouts");
+    } else {
+      final ex = await GetIt.I<ExerciseService>().getExercises();
+      final wo = (await GetIt.I<TempService>().getWorkouts())
+          .map((e) => ApiWorkout.fromJson(e))
+          .toList();
+      print(
+          "Used fall back data: ${ex.length} exercises and ${wo.length} workouts");
+    }
   }
 
   /// Reload data (always fetches fresh data)
@@ -113,16 +113,17 @@ class LandingController extends ChangeNotifier {
   /// Show all exercises with training metadata
   Future<void> showAllExercises() async {
     try {
-      _filteredExercises = _exercises;
+      _filterController.clearFilters();
       _metainfo = [];
 
-      if (_filteredExercises.isEmpty) {
+      final filtered = getSortedExercises();
+
+      if (filtered.isEmpty) {
         _notifyFilterChange();
         return;
       }
 
       await _buildMetainfoForAllExercises();
-      _filterController.clearFilters();
       _notifyFilterChange();
     } catch (e) {
       _setError('Error showing all exercises: $e');
@@ -137,16 +138,7 @@ class LandingController extends ChangeNotifier {
     try {
       _filterController.setWorkoutFilter(workout);
 
-      final allExercises = _exercises;
-      if (kDebugMode) {
-        print('allExercises: $allExercises');
-        print('workout: $_workouts');
-      }
-      final exerciseNames =
-          _filterController.getFilteredExerciseNames(allExercises, _workouts);
-
-      _filteredExercises =
-          allExercises.where((ex) => exerciseNames.contains(ex.name)).toList();
+      _metainfo = [];
 
       await _buildMetainfoForWorkout(workout);
       _notifyFilterChange();
@@ -160,12 +152,7 @@ class LandingController extends ChangeNotifier {
     try {
       _filterController.setMuscleFilter(muscle);
 
-      final allExercises = _exercises;
-      final exerciseNames =
-          _filterController.getFilteredExerciseNames(allExercises, _workouts);
-
-      _filteredExercises =
-          allExercises.where((ex) => exerciseNames.contains(ex.name)).toList();
+      _metainfo = [];
 
       await _buildMetainfoForMuscle();
       _notifyFilterChange();
@@ -176,10 +163,8 @@ class LandingController extends ChangeNotifier {
 
   /// Get sorted exercises for display
   List<ApiExercise> getSortedExercises() {
-    final items = List<ApiExercise>.from(_filteredExercises);
-    items.sort((a, b) =>
-        a.name.trim().toLowerCase().compareTo(b.name.trim().toLowerCase()));
-    return items;
+    return List<ApiExercise>.from(
+        _filterController.getFilteredExercisesView(exercises));
   }
 
   /// Show welcome message (once per session)
@@ -202,18 +187,13 @@ class LandingController extends ChangeNotifier {
 
   void _setLoading(bool loading) {
     // Safety check: don't notify listeners if disposed
-    if (!_isInitialized) return;
-
     _isLoading = loading;
-    notifyListeners();
+    if (_isInitialized) notifyListeners();
   }
 
   void _setError(String error) {
-    // Safety check: don't notify listeners if disposed
-    if (!_isInitialized) return;
-
     _errorMessage = error;
-    notifyListeners();
+    if (_isInitialized) notifyListeners();
   }
 
   void _clearError() {
@@ -221,42 +201,32 @@ class LandingController extends ChangeNotifier {
   }
 
   void _notifyFilterChange() {
-    // Safety check: don't notify if disposed
-    if (!_isInitialized) return;
-
+    // Toggle the ValueListenable to force UI rebuilds (even pre-init harmless)
     filterApplied.value = !filterApplied.value;
-  }
-
-  void _onExerciseDataChanged() {
-    // Safety check: don't operate on disposed controller
-    if (!_isInitialized) return;
-
-    if (kDebugMode) {
-      print('🔄 Exercise data changed - reloading landing screen');
+    if (_isInitialized) {
+      notifyListeners();
     }
-    reload();
   }
 
-  void _onAuthStateChanged() {
-    // Safety check: don't operate on disposed controller
-    if (!_isInitialized) return;
+  void _onCacheChanged() {
+    if (_cache == null) return;
+    if (kDebugMode) print('🔄 Cache changed - updating landing view');
 
-    resetWelcomeMessage();
-    reload();
+    // Restore current filter and then signal a UI rebuild via the ValueListenable.
+    // Use microtask to ensure restore completes before toggling the flag.
+    Future.microtask(() async {
+      await _restoreFilterState();
+      _notifyFilterChange();
+    });
   }
 
   @override
   void dispose() {
-    // Add safety check to prevent calling dispose multiple times
     if (!_isInitialized) return;
 
     try {
       // Remove global listener safely
-      globals.exerciseDataChangedNotifier
-          .removeListener(_onExerciseDataChanged);
-
-      // Remove repository listener safely
-      // _repository.authStateNotifier.removeListener(_onAuthStateChanged);
+      _cache?.removeListener(_onCacheChanged);
 
       // Dispose filter applied notifier
       filterApplied.dispose();
@@ -276,12 +246,13 @@ class LandingController extends ChangeNotifier {
     _metainfo.clear();
 
     try {
-      final exerciseNames = _filteredExercises.map((ex) => ex.name).toList();
+      final filtered = getSortedExercises();
+      final exerciseNames = filtered.map((ex) => ex.name).toList();
       // final lastTrainingDays = await _repository.getLastTrainingDaysForExercises(exerciseNames);
       final lastTrainingDays = await GetIt.I<TempService>()
           .getLastTrainingDatesPerExercise(exerciseNames);
 
-      for (var ex in _filteredExercises) {
+      for (var ex in filtered) {
         final lastTraining =
             lastTrainingDays[ex.name]?['lastTrainingDate'] ?? DateTime.now();
         final lastTrainingWeight =
@@ -303,12 +274,13 @@ class LandingController extends ChangeNotifier {
 
   /// Build metainfo for workout filter
   Future<void> _buildMetainfoForWorkout(ApiWorkout workout) async {
-    _metainfo = List.filled(_filteredExercises.length, "");
+    final filtered = getSortedExercises();
+    _metainfo = List.filled(filtered.length, "");
 
     // Fill in workout-specific information
     for (var unit in workout.units) {
-      for (int i = 0; i < _filteredExercises.length; ++i) {
-        if (_filteredExercises[i].name == unit.exerciseName) {
+      for (int i = 0; i < filtered.length; ++i) {
+        if (filtered[i].name == unit.exerciseName) {
           _metainfo[i] = 'Warm: ${unit.warmups}, Work: ${unit.worksets}';
         }
       }
@@ -317,7 +289,7 @@ class LandingController extends ChangeNotifier {
     // Fill remaining empty entries with default info
     for (int i = 0; i < _metainfo.length; i++) {
       if (_metainfo[i].isEmpty) {
-        final ex = _filteredExercises[i];
+        final ex = filtered[i];
         _metainfo[i] = '${ex.defaultRepBase}-${ex.defaultRepMax} Reps';
       }
     }
@@ -328,11 +300,12 @@ class LandingController extends ChangeNotifier {
     _metainfo.clear();
 
     try {
-      final exerciseNames = _filteredExercises.map((ex) => ex.name).toList();
+      final filtered = getSortedExercises();
+      final exerciseNames = filtered.map((ex) => ex.name).toList();
       final lastTrainingDays = await GetIt.I<TempService>()
           .getLastTrainingDatesPerExercise(exerciseNames);
 
-      for (var ex in _filteredExercises) {
+      for (var ex in filtered) {
         final lastTraining =
             lastTrainingDays[ex.name]?['lastTrainingDate'] ?? DateTime.now();
         final dayDiff = DateTime.now().difference(lastTraining).inDays;
@@ -351,7 +324,8 @@ class LandingController extends ChangeNotifier {
   /// Build fallback metainfo without training data
   void _buildFallbackMetainfo() {
     _metainfo.clear();
-    for (var ex in _filteredExercises) {
+    final filtered = getSortedExercises();
+    for (var ex in filtered) {
       _metainfo.add('${ex.defaultRepBase}-${ex.defaultRepMax} Reps');
     }
   }
@@ -359,7 +333,8 @@ class LandingController extends ChangeNotifier {
   /// Build fallback metainfo for muscle filter
   void _buildFallbackMetainfoForMuscle() {
     _metainfo.clear();
-    for (var ex in _filteredExercises) {
+    final filtered = getSortedExercises();
+    for (var ex in filtered) {
       _metainfo.add(
           '${ex.defaultRepBase}-${ex.defaultRepMax} Reps @ ${ex.defaultIncrement}kg');
     }
@@ -367,8 +342,9 @@ class LandingController extends ChangeNotifier {
 
   /// Ensure metainfo and filteredExercises have same length
   void _ensureMetainfoLength() {
-    while (_metainfo.length < _filteredExercises.length) {
-      final ex = _filteredExercises[_metainfo.length];
+    final filtered = getSortedExercises();
+    while (_metainfo.length < filtered.length) {
+      final ex = filtered[_metainfo.length];
       _metainfo.add('${ex.defaultRepBase}-${ex.defaultRepMax} Reps');
     }
   }
@@ -381,13 +357,11 @@ class LandingController extends ChangeNotifier {
       case FilterType.workout:
         if (filterState.selectedWorkout != null) {
           await applyWorkoutFilter(filterState.selectedWorkout!);
-          _filterController.restoreFilterState();
         }
         break;
       case FilterType.muscle:
         if (filterState.selectedMuscle != null) {
           await applyMuscleFilter(filterState.selectedMuscle!);
-          _filterController.restoreFilterState();
         }
         break;
       case FilterType.none:
