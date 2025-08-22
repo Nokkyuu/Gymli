@@ -4,7 +4,7 @@
 /// and sets up the main app widgets
 library;
 
-import 'package:Gymli/config/app_router.dart';
+import 'package:Gymli/widgets/app_router.dart';
 import 'package:Gymli/utils/services/authentication_service.dart';
 import 'package:Gymli/utils/services/temp_service.dart';
 import 'package:Gymli/utils/workout_session_state.dart';

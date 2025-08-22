@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import '../controllers/exercise_setup_controller.dart';
 import '../../../utils/globals.dart' as globals;
 import 'package:go_router/go_router.dart';
-import 'package:Gymli/config/app_router.dart';
+import 'package:Gymli/widgets/app_router.dart';
 
 class ExerciseConfirmButtonWidget extends StatelessWidget {
   final VoidCallback? onSuccess;

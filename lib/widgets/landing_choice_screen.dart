@@ -2,7 +2,7 @@ import 'package:Gymli/config/api_config.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:go_router/go_router.dart';
-import '../config/app_router.dart';
+import 'app_router.dart';
 import '../utils/services/temp_service.dart';
 import 'package:Gymli/utils/services/authentication_service.dart';
 import 'package:get_it/get_it.dart';

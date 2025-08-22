@@ -90,9 +90,9 @@ class AuthenticationService extends ChangeNotifier {
   }
 
   // Force refresh authentication state (for UI updates)
-  void notifyAuthStateChanged() {
-    authStateNotifier.value = isLoggedIn;
-  }
+  // void notifyAuthStateChanged() {
+  //   authStateNotifier.value = isLoggedIn;
+  // }
 
   // Perform login with Auth0
   Future<void> login() async {

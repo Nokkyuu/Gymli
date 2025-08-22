@@ -8,7 +8,7 @@ import 'dart:math';
 import 'package:get_it/get_it.dart';
 
 // Import screens
-import '../widgets/landing_choice_screen.dart';
+import 'landing_choice_screen.dart';
 import '../screens/exercise_setup_screen.dart';
 import '../screens/workout_setup_screen.dart';
 import '../screens/activity_screen.dart';
@@ -19,14 +19,13 @@ import '../screens/settings_screen.dart';
 import '../screens/exercise_screen.dart';
 import '../screens/exercise_history_screen.dart';
 import '../screens/landing_screen.dart';
-import '../widgets/navigation_drawer.dart';
+import 'navigation_drawer.dart';
 
 // Import services
-import '../utils/services/temp_service.dart';
+
 //import '../utils/services/auth0_service.dart';
 import '../utils/services/theme_service.dart';
 import '../utils/info_dialogues.dart';
-import '../utils/api/api.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -270,15 +269,15 @@ class _MainAppWrapperState extends ConsumerState<MainAppWrapper> {
   }
 
   Future<void> _reloadUserData() async {
-    _getExerciseList();
+    //_getExerciseList();
     setState(() {}); // Trigger rebuild
     await Future.delayed(const Duration(milliseconds: 100));
-    _authService.notifyAuthStateChanged();
+    //_authService.notifyAuthStateChanged();
   }
 
-  void _getExerciseList() async {
-    // ... existing exercise loading logic
-  }
+  // void _getExerciseList() async {
+  //   // ... existing exercise loading logic
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -307,8 +306,8 @@ class _MainAppWrapperState extends ConsumerState<MainAppWrapper> {
                   b == Brightness.dark ? ThemeMode.dark : ThemeMode.light,
                 ),
         //onCredentialsChanged: _authService.updateCredentials,
-        onReloadUserData: _reloadUserData,
-        getExerciseList: _getExerciseList,
+        // onReloadUserData: _reloadUserData,
+        // getExerciseList: _getExerciseList,
       ),
       onDrawerChanged: (isOpened) {
         if (isOpened) {

@@ -8,7 +8,7 @@ import 'package:flutter/foundation.dart';
 import 'package:get_it/get_it.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
-import 'package:Gymli/config/app_router.dart';
+import 'package:Gymli/widgets/app_router.dart';
 import 'landing/controllers/landing_controller.dart';
 import 'landing/controllers/landing_filter_controller.dart';
 import 'landing/widgets/landing_loading_widget.dart';

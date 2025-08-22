@@ -6,7 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:auth0_flutter/auth0_flutter.dart';
 import 'package:auth0_flutter/auth0_flutter_web.dart';
 import 'package:go_router/go_router.dart';
-import 'package:Gymli/config/app_router.dart';
+import 'package:Gymli/widgets/app_router.dart';
 import '../../utils/themes/themes.dart';
 import '../../utils/globals.dart' as globals;
 import 'package:get_it/get_it.dart';
@@ -20,8 +20,8 @@ class AppDrawer extends StatefulWidget {
   final Brightness mode;
   final Function(Brightness) onModeChanged;
   //final Function(Credentials?) onCredentialsChanged;
-  final VoidCallback onReloadUserData;
-  final Function() getExerciseList;
+  // final VoidCallback onReloadUserData;
+  // final Function() getExerciseList;
 
   const AppDrawer({
     super.key,
@@ -33,8 +33,8 @@ class AppDrawer extends StatefulWidget {
     required this.mode,
     required this.onModeChanged,
     //required this.onCredentialsChanged,
-    required this.onReloadUserData,
-    required this.getExerciseList,
+    // required this.onReloadUserData,
+    // required this.getExerciseList,
   });
 
   @override
@@ -173,7 +173,7 @@ class _AppDrawerState extends State<AppDrawer> {
                   // Clear user data after logout
                   authService.setCredentials(null);
                   // Reload data for default user
-                  widget.onReloadUserData();
+                  // widget.onReloadUserData();
                 },
               ),
               _buildUserDataIndicator(),

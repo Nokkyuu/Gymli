@@ -8,7 +8,7 @@ import 'package:provider/provider.dart';
 import '../utils/themes/responsive_helper.dart';
 import 'workout_setup/workout_setup_exports.dart';
 import 'package:go_router/go_router.dart';
-import 'package:Gymli/config/app_router.dart';
+import 'package:Gymli/widgets/app_router.dart';
 import '../utils/info_dialogues.dart';
 
 //TODO: raarrange desktop layout, showing the radar chart for muslce activity distribution
