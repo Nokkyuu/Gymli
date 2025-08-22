@@ -30,6 +30,8 @@ import '../utils/services/theme_service.dart';
 import '../utils/info_dialogues.dart';
 import '../utils/api/api.dart';
 
+import 'package:Gymli/utils/services/auth_service.dart';
+
 class AppRouter {
   static const String landing = '/';
   static const String main = '/main';
@@ -164,26 +166,11 @@ class AppRouter {
       redirect: (context, state) {
         // Check if we're on the landing page
         final isOnLanding = state.matchedLocation == landing;
+        final auth = GetIt.I<AuthService>();
+        final isLoggedIn = auth.isLoggedIn;
 
-        // Get auth service from the context if available
-        try {
-          final isLoggedIn = container.authService.isLoggedIn;
-
-          // If logged in but on landing page, redirect to main
-          if (isLoggedIn && isOnLanding) {
-            return main;
-          }
-
-          // If not logged in and not on landing page, redirect to landing
-          if (!isLoggedIn && !isOnLanding) {
-            return landing;
-          }
-        } catch (e) {
-          // If auth service is not available, allow landing page
-          if (!isOnLanding) {
-            return landing;
-          }
-        }
+        if (isLoggedIn && isOnLanding) return main;
+        if (!isLoggedIn && !isOnLanding) return landing;
 
         // No redirect needed
         return null;

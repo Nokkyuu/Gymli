@@ -36,8 +36,10 @@ class Auth0Service extends ChangeNotifier {
     _auth0 = AppInitializer.getAuth0();
 
     // Set up Auth0 callback
-    _auth0.onLoad().then((credentials) {
-      _setCredentials(credentials);
+    auth0.onLoad().then((credentials) {
+      if (credentials != null && credentials.accessToken.isNotEmpty) {
+        _setCredentials(credentials);
+      }
     }).catchError((error) {
       if (kDebugMode) {
         print('Auth0 onLoad error: $error');

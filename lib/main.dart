@@ -11,6 +11,7 @@ import 'package:Gymli/utils/workout_session_state.dart';
 import 'package:get_it/get_it.dart';
 
 import 'utils/api/api.dart';
+import 'package:go_router/go_router.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
@@ -90,11 +91,13 @@ class MainApp extends StatefulWidget {
 
 class _MainAppState extends State<MainApp> {
   late ThemeService _themeService;
+  late final GoRouter _router;
   bool _isInitialized = false;
 
   @override
   void initState() {
     super.initState();
+    _router = AppRouter.createRouter();
     _initializeTheme();
     FlutterNativeSplash.remove();
   }
@@ -137,7 +140,7 @@ class _MainAppState extends State<MainApp> {
               Locale('de', 'DE'),
             ],
             title: 'Gymli Gainson',
-            routerConfig: AppRouter.createRouter(),
+            routerConfig: _router,
           );
         },
       ),

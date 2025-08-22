@@ -18,40 +18,25 @@ class AuthService {
   void setCredentials(Credentials? credentials) {
     final wasLoggedIn = isLoggedIn;
     _credentials = credentials;
-    final isNowLoggedIn = isLoggedIn;
+    final isNowLoggedIn = _credentials != null;
 
-    // Single place where API token is set
     ApiConfig.setAccessToken(credentials?.accessToken);
     clearApiCache();
 
-    if (kDebugMode) {
-      if (credentials?.accessToken != null) {
-        print("AuthService: Access Token TYPE: ${credentials?.tokenType}");
-        print(
-            "AuthService: Access Token set: ${credentials!.accessToken.substring(0, 20)}...");
-      } else {
-        print("AuthService: Access Token cleared");
-      }
-    }
-
-    if (!isLoggedIn) {
-      // Clear stored auth state when logging out
+    if (!isNowLoggedIn) {
       _clearStoredAuthState();
     } else {
-      // Save auth state when logging in
       _saveAuthState(credentials!);
     }
 
-    // Notify listeners if auth state changed
     if (wasLoggedIn != isNowLoggedIn) {
-      authStateNotifier.value = isNowLoggedIn;
+      authStateNotifier.value = isNowLoggedIn;   // <--- nicht toggeln, direkt setzen
     }
   }
 
   void notifyAuthStateChanged() {
     /// Notifies listeners about authentication state changes
-    authStateNotifier.value = !authStateNotifier.value;
-
+    authStateNotifier.value = isLoggedIn;
     ///TODO: This is used as a force refresh,
     ///but maybe it should be changed into a different notifier to not
     ///interfere with the actual authentication state
