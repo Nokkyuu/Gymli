@@ -4,7 +4,6 @@ library;
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:provider/provider.dart';
 import 'dart:math';
 import 'package:get_it/get_it.dart';
 
@@ -29,6 +28,8 @@ import '../utils/services/auth0_service.dart';
 import '../utils/services/theme_service.dart';
 import '../utils/info_dialogues.dart';
 import '../utils/api/api.dart';
+
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:Gymli/utils/services/auth_service.dart';
 
@@ -126,23 +127,22 @@ class AppRouter {
         ),
 
         // Exercise Route (standalone - outside shell to avoid double AppBar)
-        GoRoute(
+       GoRoute(
           path: exercise,
           name: 'exercise',
           builder: (context, state) {
-            final exerciseId =
-                int.tryParse(state.uri.queryParameters['id'] ?? '0') ?? 0;
+            final exerciseId = int.tryParse(state.uri.queryParameters['id'] ?? '0') ?? 0;
             final exerciseName = state.uri.queryParameters['name'] ?? '';
-            final workoutDescription =
-                state.uri.queryParameters['description'] ?? '';
+            final workoutDescription = state.uri.queryParameters['description'] ?? '';
 
-            return Consumer<ThemeService>(
-              builder: (context, themeService, _) {
+            return Consumer(
+              builder: (context, ref, _) {
                 return ExerciseScreen(
                   exerciseId,
                   exerciseName,
                   workoutDescription,
-                  onPhaseColorChanged: themeService.setPrimaryColor,
+                  onPhaseColorChanged: (c) =>
+                      ref.read(themeControllerProvider.notifier).setSeedColor(c),
                 );
               },
             );
@@ -213,16 +213,16 @@ class MainAppShell extends StatelessWidget {
 }
 
 /// Wrapper that provides the MainAppWidget functionality but takes a child
-class MainAppWrapper extends StatefulWidget {
+class MainAppWrapper extends ConsumerStatefulWidget  {
   final Widget child;
 
   const MainAppWrapper({super.key, required this.child});
 
   @override
-  State<MainAppWrapper> createState() => _MainAppWrapperState();
+  ConsumerState<MainAppWrapper> createState() => _MainAppWrapperState();
 }
 
-class _MainAppWrapperState extends State<MainAppWrapper> {
+class _MainAppWrapperState extends ConsumerState<MainAppWrapper> {
   String? _drawerImage;
   late Auth0Service _authService;
   bool _isInitialized = false;
@@ -285,35 +285,35 @@ class _MainAppWrapperState extends State<MainAppWrapper> {
         body: Center(child: CircularProgressIndicator()),
       );
     }
-
-    return Consumer<ThemeService>(
-      builder: (context, themeService, _) {
-        return Scaffold(
-          appBar: _buildAppBar(context, themeService.isDarkMode),
-          body: widget.child,
-          drawer: AppDrawer(
-            credentials: _authService.credentials,
-            auth0: _authService.auth0,
-            drawerImage: _drawerImage,
-            drawerImages: drawerImages,
-            isDarkMode: themeService.isDarkMode,
-            mode: themeService.mode,
-            onModeChanged: themeService.setMode,
-            onCredentialsChanged: _authService.updateCredentials,
-            onReloadUserData: _reloadUserData,
-            getExerciseList: _getExerciseList,
+    final isDarkMode = ref.watch(isDarkModeProvider); 
+    final mode = ref.watch(themeModeProvider); 
+  
+      return Scaffold(
+        appBar: _buildAppBar(context, isDarkMode),
+        body: widget.child,
+        drawer: AppDrawer(
+          credentials: _authService.credentials,
+          auth0: _authService.auth0,
+          drawerImage: _drawerImage,
+          drawerImages: drawerImages,
+          isDarkMode: isDarkMode,
+          mode: mode == ThemeMode.dark ? Brightness.dark : Brightness.light, // <!!!!!
+          onModeChanged: (b) => ref.read(themeControllerProvider.notifier).setThemeMode(
+            b == Brightness.dark ? ThemeMode.dark : ThemeMode.light,
           ),
-          onDrawerChanged: (isOpened) {
-            if (isOpened) {
-              setState(() {
-                _drawerImage =
-                    drawerImages[Random().nextInt(drawerImages.length)];
-              });
-            }
-          },
-        );
-      },
-    );
+          onCredentialsChanged: _authService.updateCredentials,
+          onReloadUserData: _reloadUserData,
+          getExerciseList: _getExerciseList,
+        ),
+        onDrawerChanged: (isOpened) {
+          if (isOpened) {
+            setState(() {
+              _drawerImage =
+                  drawerImages[Random().nextInt(drawerImages.length)];
+            });
+          }
+        },
+      );
   }
 
   AppBar _buildAppBar(BuildContext context, bool isDarkMode) {
@@ -412,17 +412,13 @@ class _MainAppWrapperState extends State<MainAppWrapper> {
 }
 
 /// Content widget for the main dashboard
-class MainAppContent extends StatelessWidget {
+class MainAppContent extends ConsumerWidget  {
   const MainAppContent({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return Consumer<ThemeService>(
-      builder: (context, themeService, _) {
-        return LandingScreen(
-          onPhaseColorChanged: themeService.setPrimaryColor,
-        );
-      },
-    );
+  Widget build(BuildContext context, WidgetRef ref) {
+    return LandingScreen(
+        onPhaseColorChanged: (c) => ref.read(themeControllerProvider.notifier).setSeedColor(c),
+      );
   }
 }

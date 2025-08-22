@@ -16,20 +16,18 @@ import '../utils/services/auth0_service.dart';
 import '../utils/services/theme_service.dart';
 import 'navigation_drawer.dart';
 import '../utils/services/auth_service.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 
-
-class MainAppWidget extends StatefulWidget {
+class MainAppWidget extends ConsumerStatefulWidget {
   const MainAppWidget({super.key});
-
   @override
-  State<MainAppWidget> createState() => _MainAppWidgetState();
+  ConsumerState<MainAppWidget> createState() => _MainAppWidgetState();
 }
 
-class _MainAppWidgetState extends State<MainAppWidget> {
+class _MainAppWidgetState extends ConsumerState<MainAppWidget> {
   String? _drawerImage;
   late Auth0Service _authService;
-  late ThemeService _themeService;
   final container = GetIt.I<TempService>();
   final exerciseService = GetIt.I<ExerciseService>();
   bool _isInitialized = false; // Add this flag
@@ -54,12 +52,7 @@ class _MainAppWidgetState extends State<MainAppWidget> {
 
   Future<void> _initializeServices() async {
     _authService = Auth0Service();
-    _themeService = ThemeService();
-
-    await _themeService.loadThemePreference();
     await _authService.initialize();
-
-    // Listen to auth changes for reloading user data
     _authService.addListener(_onAuthChanged);
 
     // Set initialization flag and trigger rebuild
@@ -97,36 +90,43 @@ class _MainAppWidgetState extends State<MainAppWidget> {
         ),
       );
     }
+        // THEME: reaktiver Zugriff via Riverpod
+    final isDarkMode = ref.watch(isDarkModeProvider);
+    final seedColor  = ref.watch(seedColorProvider);
+    final mode       = ref.watch(themeModeProvider);
 
-    return MultiProvider(
-      providers: [
-        ChangeNotifierProvider.value(value: _authService),
-      ],
-      child: Consumer<Auth0Service>(
-        builder: (context, authService, _) {
-          // Get ThemeService from the parent context
-          final themeService = Provider.of<ThemeService>(context);
+    // return MultiProvider(
+      // providers: [
+      //   ChangeNotifierProvider.value(value: _authService),
+      // ],
+      // child:
+      // Consumer<Auth0Service>(
+      //   builder: (context, authService, _) {
+      //     // Get ThemeService from the parent context
+      //     final themeService = Provider.of<ThemeService>(context);
 
-          if (authService.auth0 == null) {
-            return const Scaffold(
-              body: Center(
-                child: CircularProgressIndicator(),
-              ),
-            );
-          }
+      //     if (authService.auth0 == null) {
+      //       return const Scaffold(
+      //         body: Center(
+      //           child: CircularProgressIndicator(),
+      //         ),
+      //       );
+      //     }
           return Scaffold(
-            appBar: _buildAppBar(context, themeService.isDarkMode),
+            appBar: _buildAppBar(context, isDarkMode),
             body: LandingScreen(
-                onPhaseColorChanged: themeService.setPrimaryColor),
+                onPhaseColorChanged: (c) => ref.themeCtrl.setSeedColor(c)),
             drawer: AppDrawer(
-              credentials: authService.credentials,
-              auth0: authService.auth0,
+              credentials: _authService.credentials,
+              auth0: _authService.auth0,
               drawerImage: _drawerImage,
               drawerImages: drawerImages,
-              isDarkMode: themeService.isDarkMode,
-              mode: themeService.mode,
-              onModeChanged: themeService.setMode,
-              onCredentialsChanged: authService.updateCredentials,
+              isDarkMode: isDarkMode,
+              mode: mode == ThemeMode.dark ? Brightness.dark : Brightness.light, // falls du Brightness erwartest
+              onModeChanged: (b) => ref.themeCtrl.setThemeMode(
+                b == Brightness.dark ? ThemeMode.dark : ThemeMode.light,
+              ),
+              onCredentialsChanged: _authService.updateCredentials,
               onReloadUserData: _reloadUserData,
               getExerciseList: _getExerciseList,
             ),
@@ -139,10 +139,7 @@ class _MainAppWidgetState extends State<MainAppWidget> {
               }
             },
           );
-        },
-      ),
-    );
-  }
+}
 
   AppBar _buildAppBar(BuildContext context, bool isDarkMode) {
     return AppBar(
