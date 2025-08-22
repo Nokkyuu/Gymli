@@ -7,7 +7,6 @@ import 'package:go_router/go_router.dart';
 import 'dart:math';
 import 'package:get_it/get_it.dart';
 
-
 // Import screens
 import '../widgets/landing_choice_screen.dart';
 import '../screens/exercise_setup_screen.dart';
@@ -24,14 +23,14 @@ import '../widgets/navigation_drawer.dart';
 
 // Import services
 import '../utils/services/temp_service.dart';
-import '../utils/services/auth0_service.dart';
+//import '../utils/services/auth0_service.dart';
 import '../utils/services/theme_service.dart';
 import '../utils/info_dialogues.dart';
 import '../utils/api/api.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:Gymli/utils/services/auth_service.dart';
+import 'package:Gymli/utils/services/authentication_service.dart';
 
 class AppRouter {
   static const String landing = '/';
@@ -127,13 +126,15 @@ class AppRouter {
         ),
 
         // Exercise Route (standalone - outside shell to avoid double AppBar)
-       GoRoute(
+        GoRoute(
           path: exercise,
           name: 'exercise',
           builder: (context, state) {
-            final exerciseId = int.tryParse(state.uri.queryParameters['id'] ?? '0') ?? 0;
+            final exerciseId =
+                int.tryParse(state.uri.queryParameters['id'] ?? '0') ?? 0;
             final exerciseName = state.uri.queryParameters['name'] ?? '';
-            final workoutDescription = state.uri.queryParameters['description'] ?? '';
+            final workoutDescription =
+                state.uri.queryParameters['description'] ?? '';
 
             return Consumer(
               builder: (context, ref, _) {
@@ -141,8 +142,9 @@ class AppRouter {
                   exerciseId,
                   exerciseName,
                   workoutDescription,
-                  onPhaseColorChanged: (c) =>
-                      ref.read(themeControllerProvider.notifier).setSeedColor(c),
+                  onPhaseColorChanged: (c) => ref
+                      .read(themeControllerProvider.notifier)
+                      .setSeedColor(c),
                 );
               },
             );
@@ -166,7 +168,7 @@ class AppRouter {
       redirect: (context, state) {
         // Check if we're on the landing page
         final isOnLanding = state.matchedLocation == landing;
-        final auth = GetIt.I<AuthService>();
+        final auth = GetIt.I<AuthenticationService>();
         final isLoggedIn = auth.isLoggedIn;
 
         if (isLoggedIn && isOnLanding) return main;
@@ -213,7 +215,7 @@ class MainAppShell extends StatelessWidget {
 }
 
 /// Wrapper that provides the MainAppWidget functionality but takes a child
-class MainAppWrapper extends ConsumerStatefulWidget  {
+class MainAppWrapper extends ConsumerStatefulWidget {
   final Widget child;
 
   const MainAppWrapper({super.key, required this.child});
@@ -224,7 +226,7 @@ class MainAppWrapper extends ConsumerStatefulWidget  {
 
 class _MainAppWrapperState extends ConsumerState<MainAppWrapper> {
   String? _drawerImage;
-  late Auth0Service _authService;
+  late AuthenticationService _authService;
   bool _isInitialized = false;
 
   //drawer images to circle through, without file extensions because they will be added dynamically and switch for dark mode
@@ -246,7 +248,7 @@ class _MainAppWrapperState extends ConsumerState<MainAppWrapper> {
   }
 
   Future<void> _initializeServices() async {
-    _authService = Auth0Service();
+    _authService = GetIt.I<AuthenticationService>();
 
     await _authService.initialize();
 
@@ -271,7 +273,7 @@ class _MainAppWrapperState extends ConsumerState<MainAppWrapper> {
     _getExerciseList();
     setState(() {}); // Trigger rebuild
     await Future.delayed(const Duration(milliseconds: 100));
-    GetIt.I<AuthService>().notifyAuthStateChanged();
+    _authService.notifyAuthStateChanged();
   }
 
   void _getExerciseList() async {
@@ -285,35 +287,37 @@ class _MainAppWrapperState extends ConsumerState<MainAppWrapper> {
         body: Center(child: CircularProgressIndicator()),
       );
     }
-    final isDarkMode = ref.watch(isDarkModeProvider); 
-    final mode = ref.watch(themeModeProvider); 
-  
-      return Scaffold(
-        appBar: _buildAppBar(context, isDarkMode),
-        body: widget.child,
-        drawer: AppDrawer(
-          credentials: _authService.credentials,
-          auth0: _authService.auth0,
-          drawerImage: _drawerImage,
-          drawerImages: drawerImages,
-          isDarkMode: isDarkMode,
-          mode: mode == ThemeMode.dark ? Brightness.dark : Brightness.light, // <!!!!!
-          onModeChanged: (b) => ref.read(themeControllerProvider.notifier).setThemeMode(
-            b == Brightness.dark ? ThemeMode.dark : ThemeMode.light,
-          ),
-          onCredentialsChanged: _authService.updateCredentials,
-          onReloadUserData: _reloadUserData,
-          getExerciseList: _getExerciseList,
-        ),
-        onDrawerChanged: (isOpened) {
-          if (isOpened) {
-            setState(() {
-              _drawerImage =
-                  drawerImages[Random().nextInt(drawerImages.length)];
-            });
-          }
-        },
-      );
+    final isDarkMode = ref.watch(isDarkModeProvider);
+    final mode = ref.watch(themeModeProvider);
+
+    return Scaffold(
+      appBar: _buildAppBar(context, isDarkMode),
+      body: widget.child,
+      drawer: AppDrawer(
+        credentials: _authService.credentials,
+        auth0: _authService.auth0,
+        drawerImage: _drawerImage,
+        drawerImages: drawerImages,
+        isDarkMode: isDarkMode,
+        mode: mode == ThemeMode.dark
+            ? Brightness.dark
+            : Brightness.light, // <!!!!!
+        onModeChanged: (b) =>
+            ref.read(themeControllerProvider.notifier).setThemeMode(
+                  b == Brightness.dark ? ThemeMode.dark : ThemeMode.light,
+                ),
+        //onCredentialsChanged: _authService.updateCredentials,
+        onReloadUserData: _reloadUserData,
+        getExerciseList: _getExerciseList,
+      ),
+      onDrawerChanged: (isOpened) {
+        if (isOpened) {
+          setState(() {
+            _drawerImage = drawerImages[Random().nextInt(drawerImages.length)];
+          });
+        }
+      },
+    );
   }
 
   AppBar _buildAppBar(BuildContext context, bool isDarkMode) {
@@ -412,13 +416,14 @@ class _MainAppWrapperState extends ConsumerState<MainAppWrapper> {
 }
 
 /// Content widget for the main dashboard
-class MainAppContent extends ConsumerWidget  {
+class MainAppContent extends ConsumerWidget {
   const MainAppContent({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return LandingScreen(
-        onPhaseColorChanged: (c) => ref.read(themeControllerProvider.notifier).setSeedColor(c),
-      );
+      onPhaseColorChanged: (c) =>
+          ref.read(themeControllerProvider.notifier).setSeedColor(c),
+    );
   }
 }

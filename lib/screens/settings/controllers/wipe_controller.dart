@@ -43,7 +43,7 @@ class WipeController extends ChangeNotifier {
       }
 
       if (result.isSuccess) {
-        _repository.notifyDataChanged();
+        // _repository.notifyDataChanged();
       }
 
       return result;
@@ -89,7 +89,7 @@ class WipeController extends ChangeNotifier {
       }
 
       _setClearing(true, 'Finalizing...', 0.9);
-      _repository.notifyDataChanged();
+      //_repository.notifyDataChanged();
 
       if (errors.isEmpty) {
         return SettingsOperationResult.success(

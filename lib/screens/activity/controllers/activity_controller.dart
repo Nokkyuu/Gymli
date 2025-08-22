@@ -7,7 +7,7 @@ import 'package:Gymli/utils/services/temp_service.dart';
 import '../../../utils/api/api_models.dart';
 import 'package:Gymli/utils/api/api.dart';
 import 'package:get_it/get_it.dart';
-import 'package:Gymli/utils/services/auth_service.dart';
+//import 'package:Gymli/utils/services/auth_service.dart';
 
 class ActivityController extends ChangeNotifier {
   final TempService container = GetIt.I<TempService>();
@@ -139,15 +139,10 @@ class ActivityController extends ChangeNotifier {
 
   /// Check if delete button should be shown for an activity
   bool shouldShowDeleteButton(ApiActivity activity) {
-    if (activity.id == null) return false;
-
-    if (GetIt.I<AuthService>().isLoggedIn) {
-      // Logged-in users can delete any activity
+    if (activity.id == null)
+      return false;
+    else
       return true;
-    } else {
-      // Non-authenticated users can only delete custom activities
-      return activity.id! > 16;
-    }
   }
 
   /// Get sorted activity logs (newest first)

@@ -1,4 +1,4 @@
-import 'package:Gymli/utils/services/auth_service.dart';
+import 'package:Gymli/utils/services/authentication_service.dart';
 import 'package:Gymli/utils/workout_session_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
@@ -11,7 +11,6 @@ import '../../utils/themes/themes.dart';
 import '../../utils/globals.dart' as globals;
 import 'package:get_it/get_it.dart';
 
-
 class AppDrawer extends StatefulWidget {
   final Credentials? credentials;
   final Auth0Web auth0;
@@ -20,7 +19,7 @@ class AppDrawer extends StatefulWidget {
   final bool isDarkMode;
   final Brightness mode;
   final Function(Brightness) onModeChanged;
-  final Function(Credentials?) onCredentialsChanged;
+  //final Function(Credentials?) onCredentialsChanged;
   final VoidCallback onReloadUserData;
   final Function() getExerciseList;
 
@@ -33,7 +32,7 @@ class AppDrawer extends StatefulWidget {
     required this.isDarkMode,
     required this.mode,
     required this.onModeChanged,
-    required this.onCredentialsChanged,
+    //required this.onCredentialsChanged,
     required this.onReloadUserData,
     required this.getExerciseList,
   });
@@ -43,7 +42,7 @@ class AppDrawer extends StatefulWidget {
 }
 
 class _AppDrawerState extends State<AppDrawer> {
-  final AuthService authService = GetIt.I<AuthService>();
+  final AuthenticationService authService = GetIt.I<AuthenticationService>();
 
   @override
   Widget build(BuildContext context) {
@@ -172,7 +171,7 @@ class _AppDrawerState extends State<AppDrawer> {
                   Navigator.pop(context);
                   await widget.auth0.logout(returnToUrl: redirectUrl);
                   // Clear user data after logout
-                  widget.onCredentialsChanged(null);
+                  authService.setCredentials(null);
                   // Reload data for default user
                   widget.onReloadUserData();
                 },

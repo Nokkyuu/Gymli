@@ -1,4 +1,4 @@
-import 'package:Gymli/utils/services/auth_service.dart';
+//import 'package:Gymli/utils/services/auth_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../../../utils/globals.dart' as globals;
@@ -143,7 +143,7 @@ class ExerciseSetupController extends ChangeNotifier {
       await _getExerciseList();
 
       //if (kDebugMode) print('🔧 Notifying data service...');
-      GetIt.I<AuthService>().notifyAuthStateChanged();
+      //GetIt.I<AuthService>().notifyAuthStateChanged();
 
       // // Wait for cache invalidation to complete by forcing a fresh fetch
       // if (kDebugMode) print('🔧 Ensuring cache is refreshed...');
@@ -188,7 +188,7 @@ class ExerciseSetupController extends ChangeNotifier {
       if (kDebugMode) print('Deleting exercise $exerciseId');
       await exerciseService.deleteExercise(exerciseId);
 
-      GetIt.I<AuthService>().notifyAuthStateChanged();
+      //GetIt.I<AuthService>().notifyAuthStateChanged();
       _clearError();
       return true;
     } catch (e) {
@@ -238,7 +238,7 @@ class ExerciseSetupController extends ChangeNotifier {
             '🔧 add_exercise: Updating existing exercise with ID: ${existing.id}');
       // Update existing exercise
       await exerciseService.updateExercise(existing.id!, {
-        'user_name': GetIt.I<AuthService>().userName,
+        //'user_name': GetIt.I<AuthService>().userName,
         'name': exerciseName,
         'type': exerciseType,
         'default_rep_base': minRep,

@@ -1,45 +1,132 @@
 import 'package:auth0_flutter/auth0_flutter.dart';
+import 'package:auth0_flutter/auth0_flutter_web.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
-import '../../config/api_config.dart'; // Add this import
+import '../../config/api_config.dart';
 import '../api/api.dart';
 
-class AuthService {
+class AuthenticationService extends ChangeNotifier {
+  // Auth0 Configuration
+  static const String _auth0Domain = 'dev-aqz5a2g54oer01tk.us.auth0.com';
+  static const String _auth0ClientId = 'MAxJUti2T7TkLagzT7SdeEzCTZsHyuOa';
 
+  // Private fields
   Credentials? _credentials;
-  bool get isLoggedIn => _credentials != null;
-  String get userName => _credentials?.user.name ?? 'DefaultUser';
-  String get userEmail => _credentials?.user.email ?? '';
+  late Auth0Web _auth0;
+  bool _isInitialized = false;
 
   // Notifier for authentication state changes
   final ValueNotifier<bool> authStateNotifier = ValueNotifier<bool>(false);
 
+  // Getters
+  bool get isLoggedIn => _credentials != null;
+  String get userName => _credentials?.user.name ?? 'DefaultUser';
+  String get userEmail => _credentials?.user.email ?? '';
+  Credentials? get credentials => _credentials;
+  Auth0Web get auth0 => _auth0;
+  bool get isInitialized => _isInitialized;
+
+  // Initialize the service
+  Future<void> initialize() async {
+    if (_isInitialized) return;
+
+    // Initialize Auth0
+    _auth0 = Auth0Web(_auth0Domain, _auth0ClientId);
+
+    // Set up Auth0 callback
+    _auth0.onLoad().then((credentials) {
+      if (credentials != null && credentials.accessToken.isNotEmpty) {
+        _setCredentials(credentials);
+      }
+    }).catchError((error) {
+      if (kDebugMode) {
+        print('Auth0 onLoad error: $error');
+      }
+    });
+
+    // Try to load stored auth state
+    await _loadStoredAuthState();
+
+    _isInitialized = true;
+  }
+
+  // Set credentials and update all related state
   void setCredentials(Credentials? credentials) {
     final wasLoggedIn = isLoggedIn;
     _credentials = credentials;
     final isNowLoggedIn = _credentials != null;
 
+    // Update API configuration
     ApiConfig.setAccessToken(credentials?.accessToken);
     clearApiCache();
 
+    // Handle persistent storage
     if (!isNowLoggedIn) {
       _clearStoredAuthState();
     } else {
       _saveAuthState(credentials!);
     }
 
+    // Notify listeners if state changed
     if (wasLoggedIn != isNowLoggedIn) {
-      authStateNotifier.value = isNowLoggedIn;   // <--- nicht toggeln, direkt setzen
+      authStateNotifier.value = isNowLoggedIn;
+      notifyListeners();
+    }
+
+    if (kDebugMode) {
+      print(
+          'AuthenticationService: Credentials ${credentials != null ? "set" : "cleared"}');
+      if (credentials != null) {
+        print(
+            'AuthenticationService: Token preview: ${credentials.accessToken.substring(0, 20)}...');
+      }
     }
   }
 
+  // Private method for internal credential setting
+  void _setCredentials(Credentials? credentials) {
+    setCredentials(credentials);
+  }
+
+  // Force refresh authentication state (for UI updates)
   void notifyAuthStateChanged() {
-    /// Notifies listeners about authentication state changes
     authStateNotifier.value = isLoggedIn;
-    ///TODO: This is used as a force refresh,
-    ///but maybe it should be changed into a different notifier to not
-    ///interfere with the actual authentication state
+  }
+
+  // Perform login with Auth0
+  Future<void> login() async {
+    if (!_isInitialized) {
+      throw StateError('AuthenticationService not initialized');
+    }
+
+    const redirectUrl =
+        kDebugMode ? 'http://localhost:3000' : 'https://gymli.brgmnn.de/';
+
+    await _auth0.loginWithRedirect(redirectUrl: redirectUrl);
+  }
+
+  // Perform logout
+  Future<void> logout() async {
+    await _clearStoredAuthState();
+    setCredentials(null);
+  }
+
+  // Load stored authentication state
+  Future<void> _loadStoredAuthState() async {
+    try {
+      final credentials = await loadStoredAuthState();
+      if (credentials != null) {
+        _setCredentials(credentials);
+        if (kDebugMode) {
+          print('Loaded stored authentication state successfully');
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error loading stored authentication state: $e');
+      }
+    }
   }
 
   // Save authentication state to persistent storage
@@ -79,9 +166,9 @@ class AuthService {
       };
       await prefs.setString('auth_credentials', json.encode(authData));
       await prefs.setBool('is_logged_in', true);
-      print('Auth state saved to persistent storage');
+      if (kDebugMode) print('Auth state saved to persistent storage');
     } catch (e) {
-      print('Error saving auth state: $e');
+      if (kDebugMode) print('Error saving auth state: $e');
     }
   }
 
@@ -91,14 +178,10 @@ class AuthService {
       final prefs = await SharedPreferences.getInstance();
       final isLoggedIn = prefs.getBool('is_logged_in') ?? false;
 
-      if (!isLoggedIn) {
-        return null;
-      }
+      if (!isLoggedIn) return null;
 
       final authDataString = prefs.getString('auth_credentials');
-      if (authDataString == null) {
-        return null;
-      }
+      if (authDataString == null) return null;
 
       final authData = json.decode(authDataString);
 
@@ -106,12 +189,12 @@ class AuthService {
       final expiresAt =
           DateTime.fromMillisecondsSinceEpoch(authData['expiresAt']);
       if (DateTime.now().isAfter(expiresAt)) {
-        print('Stored credentials have expired');
+        if (kDebugMode) print('Stored credentials have expired');
         await _clearStoredAuthState();
         return null;
       }
 
-      // Reconstruct credentials with only available UserProfile fields
+      // Reconstruct credentials
       final userData = authData['user'];
       final user = UserProfile(
         sub: userData['sub'],
@@ -159,10 +242,12 @@ class AuthService {
         user: user,
       );
 
-      print('Auth state loaded from persistent storage for user: ${user.name}');
+      if (kDebugMode)
+        print(
+            'Auth state loaded from persistent storage for user: ${user.name}');
       return credentials;
     } catch (e) {
-      print('Error loading stored auth state: $e');
+      if (kDebugMode) print('Error loading stored auth state: $e');
       await _clearStoredAuthState();
       return null;
     }
@@ -174,20 +259,15 @@ class AuthService {
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove('auth_credentials');
       await prefs.setBool('is_logged_in', false);
-      print('Stored auth state cleared');
+      if (kDebugMode) print('Stored auth state cleared');
     } catch (e) {
-      print('Error clearing stored auth state: $e');
+      if (kDebugMode) print('Error clearing stored auth state: $e');
     }
   }
 
-  // Initialize with stored credentials if available
-  Future<void> initializeAuth() async {
-    final storedCredentials = await loadStoredAuthState();
-    if (storedCredentials != null) {
-      _credentials = storedCredentials;
-      // Set the access token in ApiConfig
-      ApiConfig.setAccessToken(storedCredentials.accessToken);
-      authStateNotifier.value = true;
-    }
+  @override
+  void dispose() {
+    authStateNotifier.dispose();
+    super.dispose();
   }
 }

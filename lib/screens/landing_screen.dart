@@ -15,7 +15,7 @@ import 'landing/widgets/landing_loading_widget.dart';
 import 'landing/widgets/landing_demo_watermark.dart';
 import 'landing/widgets/landing_exercise_list.dart';
 import 'landing/widgets/landing_filter_section.dart';
-import 'package:Gymli/utils/services/auth_service.dart';
+import 'package:Gymli/utils/services/authentication_service.dart';
 
 class LandingScreen extends StatefulWidget {
   final void Function(Color)? onPhaseColorChanged;
@@ -122,7 +122,7 @@ class _LandingScreenState extends State<LandingScreen> {
           ],
         ),
         LandingDemoWatermark(
-          isLoggedIn: GetIt.I<AuthService>().isLoggedIn,
+          isLoggedIn: GetIt.I<AuthenticationService>().isLoggedIn,
         ),
       ],
     );

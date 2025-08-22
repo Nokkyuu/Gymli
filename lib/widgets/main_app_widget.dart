@@ -12,12 +12,11 @@ import '../screens/landing_screen.dart';
 import '../utils/themes/themes.dart';
 import 'package:Gymli/utils/services/temp_service.dart';
 import '../utils/info_dialogues.dart';
-import '../utils/services/auth0_service.dart';
+
 import '../utils/services/theme_service.dart';
 import 'navigation_drawer.dart';
-import '../utils/services/auth_service.dart';
+import '../utils/services/authentication_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 
 class MainAppWidget extends ConsumerStatefulWidget {
   const MainAppWidget({super.key});
@@ -27,7 +26,7 @@ class MainAppWidget extends ConsumerStatefulWidget {
 
 class _MainAppWidgetState extends ConsumerState<MainAppWidget> {
   String? _drawerImage;
-  late Auth0Service _authService;
+  late AuthenticationService _authService;
   final container = GetIt.I<TempService>();
   final exerciseService = GetIt.I<ExerciseService>();
   bool _isInitialized = false; // Add this flag
@@ -51,7 +50,7 @@ class _MainAppWidgetState extends ConsumerState<MainAppWidget> {
   }
 
   Future<void> _initializeServices() async {
-    _authService = Auth0Service();
+    _authService = GetIt.I<AuthenticationService>();
     await _authService.initialize();
     _authService.addListener(_onAuthChanged);
 
@@ -73,7 +72,7 @@ class _MainAppWidgetState extends ConsumerState<MainAppWidget> {
     _getExerciseList();
     setState(() {}); // Trigger rebuild
     await Future.delayed(const Duration(milliseconds: 100));
-    GetIt.I<AuthService>().notifyAuthStateChanged();
+    GetIt.I<AuthenticationService>().notifyAuthStateChanged();
   }
 
   void _getExerciseList() async {
@@ -90,56 +89,57 @@ class _MainAppWidgetState extends ConsumerState<MainAppWidget> {
         ),
       );
     }
-        // THEME: reaktiver Zugriff via Riverpod
+    // THEME: reaktiver Zugriff via Riverpod
     final isDarkMode = ref.watch(isDarkModeProvider);
-    final seedColor  = ref.watch(seedColorProvider);
-    final mode       = ref.watch(themeModeProvider);
+    final seedColor = ref.watch(seedColorProvider);
+    final mode = ref.watch(themeModeProvider);
 
     // return MultiProvider(
-      // providers: [
-      //   ChangeNotifierProvider.value(value: _authService),
-      // ],
-      // child:
-      // Consumer<Auth0Service>(
-      //   builder: (context, authService, _) {
-      //     // Get ThemeService from the parent context
-      //     final themeService = Provider.of<ThemeService>(context);
+    // providers: [
+    //   ChangeNotifierProvider.value(value: _authService),
+    // ],
+    // child:
+    // Consumer<Auth0Service>(
+    //   builder: (context, authService, _) {
+    //     // Get ThemeService from the parent context
+    //     final themeService = Provider.of<ThemeService>(context);
 
-      //     if (authService.auth0 == null) {
-      //       return const Scaffold(
-      //         body: Center(
-      //           child: CircularProgressIndicator(),
-      //         ),
-      //       );
-      //     }
-          return Scaffold(
-            appBar: _buildAppBar(context, isDarkMode),
-            body: LandingScreen(
-                onPhaseColorChanged: (c) => ref.themeCtrl.setSeedColor(c)),
-            drawer: AppDrawer(
-              credentials: _authService.credentials,
-              auth0: _authService.auth0,
-              drawerImage: _drawerImage,
-              drawerImages: drawerImages,
-              isDarkMode: isDarkMode,
-              mode: mode == ThemeMode.dark ? Brightness.dark : Brightness.light, // falls du Brightness erwartest
-              onModeChanged: (b) => ref.themeCtrl.setThemeMode(
-                b == Brightness.dark ? ThemeMode.dark : ThemeMode.light,
-              ),
-              onCredentialsChanged: _authService.updateCredentials,
-              onReloadUserData: _reloadUserData,
-              getExerciseList: _getExerciseList,
-            ),
-            onDrawerChanged: (isOpened) {
-              if (isOpened) {
-                setState(() {
-                  _drawerImage =
-                      drawerImages[Random().nextInt(drawerImages.length)];
-                });
-              }
-            },
-          );
-}
+    //     if (authService.auth0 == null) {
+    //       return const Scaffold(
+    //         body: Center(
+    //           child: CircularProgressIndicator(),
+    //         ),
+    //       );
+    //     }
+    return Scaffold(
+      appBar: _buildAppBar(context, isDarkMode),
+      body: LandingScreen(
+          onPhaseColorChanged: (c) => ref.themeCtrl.setSeedColor(c)),
+      drawer: AppDrawer(
+        credentials: _authService.credentials,
+        auth0: _authService.auth0,
+        drawerImage: _drawerImage,
+        drawerImages: drawerImages,
+        isDarkMode: isDarkMode,
+        mode: mode == ThemeMode.dark
+            ? Brightness.dark
+            : Brightness.light, // falls du Brightness erwartest
+        onModeChanged: (b) => ref.themeCtrl.setThemeMode(
+          b == Brightness.dark ? ThemeMode.dark : ThemeMode.light,
+        ),
+        //onCredentialsChanged: _authService.setCredentials(null),
+        onReloadUserData: _reloadUserData,
+        getExerciseList: _getExerciseList,
+      ),
+      onDrawerChanged: (isOpened) {
+        if (isOpened) {
+          setState(() {
+            _drawerImage = drawerImages[Random().nextInt(drawerImages.length)];
+          });
+        }
+      },
+    );
+  }
 
   AppBar _buildAppBar(BuildContext context, bool isDarkMode) {
     return AppBar(
