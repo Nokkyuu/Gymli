@@ -6,6 +6,7 @@ import '../../../utils/services/temp_service.dart';
 import '../../../utils/api/api_models.dart';
 import 'package:get_it/get_it.dart';
 import '../../../utils/api/api.dart';
+import 'package:Gymli/utils/workout_data_cache.dart';
 
 enum ExerciseDevice { free, machine, cable, body }
 
@@ -13,6 +14,8 @@ class ExerciseSetupController extends ChangeNotifier {
   final TempService _container = GetIt.I<TempService>();
 
   final ExerciseService exerciseService = GetIt.I<ExerciseService>();
+
+  final WorkoutDataCache _cache = GetIt.I<WorkoutDataCache>();
 
   // Exercise data
   String _exerciseName = '';
@@ -186,7 +189,7 @@ class ExerciseSetupController extends ChangeNotifier {
         }
       }
       if (kDebugMode) print('Deleting exercise $exerciseId');
-      await exerciseService.deleteExercise(exerciseId);
+      await _cache.removeExerciseById(exerciseId.toString());
 
       //GetIt.I<AuthService>().notifyAuthStateChanged();
       _clearError();
@@ -261,38 +264,28 @@ class ExerciseSetupController extends ChangeNotifier {
       });
       if (kDebugMode) print('✅ add_exercise: Exercise updated successfully');
     } else {
-      if (kDebugMode) print('🔧 add_exercise: Creating new exercise...');
-      // Create new exercise
-      await exerciseService.createExercise({
+      if (kDebugMode) print('🔧 add_exercise: Creating new exercise (optimistic via cache)...');
+      // Build a minimal ApiExercise locally and let the cache/outbox sync to the server.
+      // Using fromJson to avoid depending on a specific constructor signature.
+      final newExercise = ApiExercise.fromJson({
+        'id': null,
         'name': exerciseName,
         'type': exerciseType,
         'default_rep_base': minRep,
         'default_rep_max': maxRep,
         'default_increment': weightInc,
-        'pectoralisMajor': muscleIntensities[0],
-        'trapezius': muscleIntensities[1],
-        'biceps': muscleIntensities[2],
-        'abdominals': muscleIntensities[3],
-        'frontDelts': muscleIntensities[4],
-        'deltoids': muscleIntensities[5],
-        'backDelts': muscleIntensities[6],
-        'latissimusDorsi': muscleIntensities[7],
-        'triceps': muscleIntensities[8],
-        'gluteusMaximus': muscleIntensities[9],
-        'hamstrings': muscleIntensities[10],
-        'quadriceps': muscleIntensities[11],
-        'forearms': muscleIntensities[12],
-        'calves': muscleIntensities[13]
+        // Persist intensities so the UI can immediately reflect them
+        'muscle_intensities': muscleIntensities,
       });
-      if (kDebugMode)
-        print('✅ add_exercise: New exercise created successfully');
+      await _cache.addExercise(newExercise);
+      if (kDebugMode) print('✅ add_exercise: New exercise added to cache (sync enqueued)');
     }
     return true;
   }
 
   Future<void> _getExerciseList() async {
     try {
-      final exercises = await exerciseService.getExercises();
+      final exercises = _cache.exercises;
       List<String> exerciseList = [];
       for (var e in exercises) {
         exerciseList.add(e.name);

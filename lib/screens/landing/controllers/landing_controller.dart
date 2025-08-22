@@ -192,18 +192,23 @@ class LandingController extends ChangeNotifier {
   }
 
   void _notifyFilterChange() {
-    // Safety check: don't notify if disposed
-    if (!_isInitialized) return;
+    // Toggle the ValueListenable to force UI rebuilds (even pre-init harmless)
     filterApplied.value = !filterApplied.value;
-    notifyListeners();
+    if (_isInitialized) {
+      notifyListeners();
+    }
   }
 
   void _onCacheChanged() {
     if (_cache == null) return;
-
     if (kDebugMode) print('🔄 Cache changed - updating landing view');
-    _restoreFilterState();
-    notifyListeners();
+
+    // Restore current filter and then signal a UI rebuild via the ValueListenable.
+    // Use microtask to ensure restore completes before toggling the flag.
+    Future.microtask(() async {
+      await _restoreFilterState();
+      _notifyFilterChange();
+    });
   }
 
   @override
