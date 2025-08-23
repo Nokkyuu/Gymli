@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:Gymli/config/app_router.dart';
+import 'package:Gymli/widgets/app_router.dart';
 import '../controllers/exercise_phase_controller.dart';
 import '../controllers/exercise_animation_controller.dart';
 import '../controllers/exercise_timer_controller.dart';

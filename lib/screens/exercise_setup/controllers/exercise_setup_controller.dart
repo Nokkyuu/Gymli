@@ -1,13 +1,18 @@
+//import 'package:Gymli/utils/services/auth_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../../../utils/globals.dart' as globals;
-import '../../../utils/services/service_container.dart';
-import '../../../utils/api/api_models.dart';
+import '../../../utils/models/data_models.dart';
+import 'package:get_it/get_it.dart';
+import '../../../utils/services/service_export.dart';
+import 'package:Gymli/utils/workout_data_cache.dart';
 
 enum ExerciseDevice { free, machine, cable, body }
 
 class ExerciseSetupController extends ChangeNotifier {
-  final ServiceContainer _container = ServiceContainer();
+  final ExerciseService exerciseService = GetIt.I<ExerciseService>();
+
+  final WorkoutDataCache _cache = GetIt.I<WorkoutDataCache>();
 
   // Exercise data
   String _exerciseName = '';
@@ -16,7 +21,7 @@ class ExerciseSetupController extends ChangeNotifier {
   double _maxRep = 15;
   RangeValues _repRange = const RangeValues(10, 20);
   double _weightInc = 2.5;
-  ApiExercise? _currentExercise;
+  Exercise? _currentExercise;
 
   // Form controller
   final TextEditingController exerciseTitleController = TextEditingController();
@@ -32,7 +37,7 @@ class ExerciseSetupController extends ChangeNotifier {
   double get maxRep => _maxRep;
   RangeValues get repRange => _repRange;
   double get weightInc => _weightInc;
-  ApiExercise? get currentExercise => _currentExercise;
+  Exercise? get currentExercise => _currentExercise;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
 
@@ -51,21 +56,23 @@ class ExerciseSetupController extends ChangeNotifier {
 
     _setLoading(true);
     try {
-      final exercises = await _container.exerciseService.getExercises();
-      final exerciseData = exercises.firstWhere(
-        (item) => item['name'] == _exerciseName,
-        orElse: () => null,
-      );
+      final List<Exercise> exercises = await exerciseService.getExercises();
+      Exercise? exerciseData;
+      try {
+        exerciseData =
+            exercises.firstWhere((item) => item.name == _exerciseName);
+      } catch (e) {
+        exerciseData = null;
+      }
 
       if (exerciseData != null) {
-        final exercise = ApiExercise.fromJson(exerciseData);
-        _currentExercise = exercise;
-        exerciseTitleController.text = exercise.name;
-        _chosenDevice = ExerciseDevice.values[exercise.type];
-        _minRep = exercise.defaultRepBase.toDouble();
-        _maxRep = exercise.defaultRepMax.toDouble();
+        _currentExercise = exerciseData;
+        exerciseTitleController.text = exerciseData.name;
+        _chosenDevice = ExerciseDevice.values[exerciseData.type];
+        _minRep = exerciseData.defaultRepBase.toDouble();
+        _maxRep = exerciseData.defaultRepMax.toDouble();
         _repRange = RangeValues(_minRep, _maxRep);
-        _weightInc = exercise.defaultIncrement;
+        _weightInc = exerciseData.defaultIncrement;
 
         // Reset all muscle values
         for (var m in muscleGroupNames) {
@@ -73,7 +80,7 @@ class ExerciseSetupController extends ChangeNotifier {
         }
 
         // Set muscle intensities
-        final intensities = exercise.muscleIntensities;
+        final intensities = exerciseData.muscleIntensities;
         for (int i = 0;
             i < muscleGroupNames.length && i < intensities.length;
             i++) {
@@ -121,10 +128,10 @@ class ExerciseSetupController extends ChangeNotifier {
 
     _setLoading(true);
     try {
-      bool added_finished = false;
+      //bool added_finished = false;
       if (kDebugMode) print('🔧 Starting exercise save process...');
 
-      added_finished = await _addExercise(
+      await _addExercise(
         exerciseTitleController.text,
         _chosenDevice,
         _minRep.toInt(),
@@ -136,11 +143,11 @@ class ExerciseSetupController extends ChangeNotifier {
       await _getExerciseList();
 
       //if (kDebugMode) print('🔧 Notifying data service...');
-      _container.notifyDataChanged();
+      //GetIt.I<AuthService>().notifyAuthStateChanged();
 
       // // Wait for cache invalidation to complete by forcing a fresh fetch
       // if (kDebugMode) print('🔧 Ensuring cache is refreshed...');
-      // await _container.exerciseService.getExercises();
+      // await exerciseService.getExercises();
 
       await Future.delayed(const Duration(milliseconds: 1500));
       //TODO: workaround to wait for cache invalidation, there must be a better solution
@@ -166,22 +173,22 @@ class ExerciseSetupController extends ChangeNotifier {
       final exerciseId = _currentExercise!.id!;
       //TODO: create specific endpoint to delete a bunch of sets by id
       if (kDebugMode) print('Deleting training sets for exercise $exerciseId');
-      final trainingSets = await _container.trainingSetService
+      final trainingSets = await GetIt.I<TrainingSetService>()
           .getTrainingSetsByExerciseID(exerciseId: exerciseId);
       for (var set in trainingSets) {
-        await _container.trainingSetService.deleteTrainingSet(set['id']);
+        await GetIt.I<TrainingSetService>().deleteTrainingSet(set['id']);
       }
       final workoutUnits =
-          await _container.workoutUnitService.getWorkoutUnits();
+          await GetIt.I<WorkoutUnitService>().getWorkoutUnits();
       for (var unit in workoutUnits) {
-        if (unit['exercise_id'] == exerciseId) {
-          await _container.workoutUnitService.deleteWorkoutUnit(unit['id']);
+        if (unit.exerciseId == exerciseId) {
+          await GetIt.I<WorkoutUnitService>().deleteWorkoutUnit(unit.id!);
         }
       }
       if (kDebugMode) print('Deleting exercise $exerciseId');
-      await _container.exerciseService.deleteExercise(exerciseId);
+      await _cache.removeExerciseById(exerciseId.toString());
 
-      _container.notifyDataChanged();
+      //GetIt.I<AuthService>().notifyAuthStateChanged();
       _clearError();
       return true;
     } catch (e) {
@@ -206,9 +213,10 @@ class ExerciseSetupController extends ChangeNotifier {
     for (var m in muscleGroupNames) {
       muscleIntensities.add(globals.muscle_val[m] ?? 0.0);
     }
-    if (kDebugMode)
+    if (kDebugMode) {
       print(
           '🔧 add_exercise: Muscle intensities collected: ${muscleIntensities.length}');
+    }
 
     // Pad or trim to match expected muscle groups (14 total)
     while (muscleIntensities.length < 14) {
@@ -217,19 +225,22 @@ class ExerciseSetupController extends ChangeNotifier {
 
     if (kDebugMode) print('🔧 add_exercise: Getting existing exercises...');
     // Check if exercise exists
-    final exercises = await _container.exerciseService.getExercises();
-    final existing = exercises.firstWhere(
-      (e) => e['name'] == exerciseName,
-      orElse: () => null,
-    );
+    final exercises = await exerciseService.getExercises();
+    Exercise? existing;
+    try {
+      existing = exercises.firstWhere((e) => e.name == exerciseName);
+    } catch (e) {
+      existing = null;
+    }
 
-    if (existing != null && existing['id'] != null) {
-      if (kDebugMode)
+    if (existing != null && existing.id != null) {
+      if (kDebugMode) {
         print(
-            '🔧 add_exercise: Updating existing exercise with ID: ${existing['id']}');
+            '🔧 add_exercise: Updating existing exercise with ID: ${existing.id}');
+      }
       // Update existing exercise
-      await _container.exerciseService.updateExercise(existing['id'], {
-        'user_name': _container.authService.userName,
+      await exerciseService.updateExercise(existing.id!, {
+        //'user_name': GetIt.I<AuthService>().userName,
         'name': exerciseName,
         'type': exerciseType,
         'default_rep_base': minRep,
@@ -252,41 +263,36 @@ class ExerciseSetupController extends ChangeNotifier {
       });
       if (kDebugMode) print('✅ add_exercise: Exercise updated successfully');
     } else {
-      if (kDebugMode) print('🔧 add_exercise: Creating new exercise...');
-      // Create new exercise
-      await _container.exerciseService.createExercise(
-        name: exerciseName,
-        type: exerciseType,
-        defaultRepBase: minRep,
-        defaultRepMax: maxRep,
-        defaultIncrement: weightInc,
-        pectoralisMajor: muscleIntensities[0],
-        trapezius: muscleIntensities[1],
-        biceps: muscleIntensities[2],
-        abdominals: muscleIntensities[3],
-        frontDelts: muscleIntensities[4],
-        deltoids: muscleIntensities[5],
-        backDelts: muscleIntensities[6],
-        latissimusDorsi: muscleIntensities[7],
-        triceps: muscleIntensities[8],
-        gluteusMaximus: muscleIntensities[9],
-        hamstrings: muscleIntensities[10],
-        quadriceps: muscleIntensities[11],
-        forearms: muscleIntensities[12],
-        calves: muscleIntensities[13],
-      );
-      if (kDebugMode)
-        print('✅ add_exercise: New exercise created successfully');
+      if (kDebugMode) {
+        print(
+            '🔧 add_exercise: Creating new exercise (optimistic via cache)...');
+      }
+      // Build a minimal ApiExercise locally and let the cache/outbox sync to the server.
+      // Using fromJson to avoid depending on a specific constructor signature.
+      final newExercise = Exercise.fromJson({
+        'id': null,
+        'name': exerciseName,
+        'type': exerciseType,
+        'default_rep_base': minRep,
+        'default_rep_max': maxRep,
+        'default_increment': weightInc,
+        // Persist intensities so the UI can immediately reflect them
+        'muscle_intensities': muscleIntensities,
+      });
+      await _cache.addExercise(newExercise);
+      if (kDebugMode) {
+        print('✅ add_exercise: New exercise added to cache (sync enqueued)');
+      }
     }
     return true;
   }
 
   Future<void> _getExerciseList() async {
     try {
-      final exercises = await _container.exerciseService.getExercises();
+      final exercises = _cache.exercises;
       List<String> exerciseList = [];
       for (var e in exercises) {
-        exerciseList.add(e['name']);
+        exerciseList.add(e.name);
       }
       globals.exerciseList = exerciseList;
     } catch (e) {

@@ -2,14 +2,14 @@
 library;
 
 import 'package:flutter/material.dart';
-import '../../../utils/api/api_models.dart';
+import '../../../utils/models/data_models.dart';
 import '../models/landing_filter_state.dart';
 import '../controllers/landing_filter_controller.dart';
 
 class LandingFilterSection extends StatelessWidget {
-  final List<ApiWorkout> availableWorkouts;
+  final List<Workout> availableWorkouts;
   final LandingFilterController filterController;
-  final Function(ApiWorkout) onWorkoutSelected;
+  final Function(Workout) onWorkoutSelected;
   final Function(MuscleList) onMuscleSelected;
   final VoidCallback onShowAll;
   final Function(String) onWorkoutEdit;
@@ -41,7 +41,10 @@ class LandingFilterSection extends StatelessWidget {
       children: [
         const Text("Filter by or "),
         TextButton.icon(
-          onPressed: onShowAll,
+          onPressed: () {
+            onShowAll();
+            filterController.clearFilters();
+          },
           label: const Text("Show All"),
           icon: const Icon(Icons.search),
         )
@@ -63,14 +66,18 @@ class LandingFilterSection extends StatelessWidget {
   }
 
   Widget _buildWorkoutDropdown(BuildContext context) {
-    return DropdownMenu<ApiWorkout>(
+    return DropdownMenu<Workout>(
       width: MediaQuery.of(context).size.width * 0.45,
       enabled: true,
-      key: UniqueKey(),
-      controller: filterController.workoutController,
+      key:
+          ValueKey('workout-${filterController.selectedWorkout?.id ?? 'none'}'),
+      initialSelection: (filterController.filterType == FilterType.workout &&
+              filterController.hasActiveFilter)
+          ? filterController.selectedWorkout
+          : null,
       requestFocusOnTap: false,
       label: const Text('Workouts'),
-      onSelected: (ApiWorkout? workout) {
+      onSelected: (Workout? workout) {
         if (workout != null) {
           onWorkoutSelected(workout);
         }
@@ -83,9 +90,9 @@ class LandingFilterSection extends StatelessWidget {
           borderRadius: BorderRadius.circular(8),
         ),
       ),
-      dropdownMenuEntries: availableWorkouts
-          .map<DropdownMenuEntry<ApiWorkout>>((ApiWorkout workout) {
-        return DropdownMenuEntry<ApiWorkout>(
+      dropdownMenuEntries:
+          availableWorkouts.map<DropdownMenuEntry<Workout>>((Workout workout) {
+        return DropdownMenuEntry<Workout>(
           value: workout,
           label: workout.name,
           trailingIcon: IconButton(
@@ -101,7 +108,12 @@ class LandingFilterSection extends StatelessWidget {
     return DropdownMenu<MuscleList>(
       width: MediaQuery.of(context).size.width * 0.45,
       enabled: true,
-      controller: filterController.muscleController,
+      key: ValueKey(
+          'muscle-${filterController.selectedMuscle?.muscleName ?? 'none'}'),
+      initialSelection: (filterController.filterType == FilterType.muscle &&
+              filterController.hasActiveFilter)
+          ? filterController.selectedMuscle
+          : null,
       requestFocusOnTap: false,
       label: const Text('Muscles'),
       onSelected: (MuscleList? muscle) {

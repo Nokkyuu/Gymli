@@ -4,11 +4,11 @@ library;
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:intl/intl.dart';
-import '../../../utils/api/api_models.dart';
+import '../../../utils/models/data_models.dart';
 
 class ActivityHistoryListWidget extends StatelessWidget {
-  final List<ApiActivityLog> activityLogs;
-  final Function(ApiActivityLog) onDelete;
+  final List<ActivityLog> activityLogs;
+  final Function(ActivityLog) onDelete;
 
   const ActivityHistoryListWidget({
     super.key,
@@ -79,7 +79,7 @@ class ActivityHistoryListWidget extends StatelessWidget {
     );
   }
 
-  void _showDeleteConfirmation(BuildContext context, ApiActivityLog log) {
+  void _showDeleteConfirmation(BuildContext context, ActivityLog log) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -121,8 +121,9 @@ class ActivityHistoryListWidget extends StatelessWidget {
     final name = activityName.toLowerCase();
     if (name.contains('walk')) return FontAwesomeIcons.personWalking;
     if (name.contains('run')) return FontAwesomeIcons.personRunning;
-    if (name.contains('cycling') || name.contains('bike'))
+    if (name.contains('cycling') || name.contains('bike')) {
       return FontAwesomeIcons.bicycle;
+    }
     if (name.contains('swim')) return FontAwesomeIcons.personSwimming;
     if (name.contains('row')) return Icons.rowing;
     if (name.contains('yoga')) return FontAwesomeIcons.om;

@@ -3,8 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:Gymli/utils/services/service_container.dart';
 import '../../../utils/info_dialogues.dart';
+import 'package:get_it/get_it.dart';
+import 'package:Gymli/utils/services/service_export.dart';
 
 class CalorieBalanceScreen extends StatefulWidget {
   final String? startingDate;
@@ -23,7 +24,7 @@ class CalorieBalanceScreen extends StatefulWidget {
 }
 
 class _CalorieBalanceScreenState extends State<CalorieBalanceScreen> {
-  final ServiceContainer container = ServiceContainer();
+  final TempService container = GetIt.I<TempService>();
 
   // User data for metabolic rate calculation
   String? _sex;
@@ -189,8 +190,8 @@ class _CalorieBalanceScreenState extends State<CalorieBalanceScreen> {
     }
 
     // Make end date inclusive
-    endDate = DateTime(endDate.year, endDate.month, endDate.day)
-        .add(Duration(hours: 23, minutes: 59, seconds: 59, milliseconds: 999));
+    endDate = DateTime(endDate.year, endDate.month, endDate.day).add(
+        const Duration(hours: 23, minutes: 59, seconds: 59, milliseconds: 999));
 
     return {'start': startDate, 'end': endDate};
   }
@@ -204,13 +205,13 @@ class _CalorieBalanceScreenState extends State<CalorieBalanceScreen> {
       final baselineCalories = _calculateBaselineCalories();
 
       // Load food intake data
-      final dailyFoodData = await container.getDailyFoodLogStats(
+      final dailyFoodData = await GetIt.I<FoodService>().getDailyFoodLogStats(
         startDate: dateRange['start']!,
         endDate: dateRange['end']!,
       );
 
       // Load activity expenditure data
-      final activityLogs = await container.activityService.getActivityLogs(
+      final activityLogs = await GetIt.I<ActivityService>().getActivityLogs(
         startDate: dateRange['start']!,
         endDate: dateRange['end']!,
       );
@@ -818,7 +819,7 @@ class _CalorieBalanceScreenState extends State<CalorieBalanceScreen> {
                   child: _buildBreakdownCard(
                     'Activity-Adjusted BMR',
                     '${baselineCalories.toStringAsFixed(0)} kcal/day',
-                    'BMR × ${_activityMultiplier}',
+                    'BMR × $_activityMultiplier',
                     Colors.indigo,
                   ),
                 ),
@@ -920,7 +921,7 @@ class _CalorieBalanceScreenState extends State<CalorieBalanceScreen> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Daily Expenditure = BMR × ${_activityMultiplier} (${_getActivityLevelDescription(_activityMultiplier).split(' - ')[1]})',
+                    'Daily Expenditure = BMR × $_activityMultiplier (${_getActivityLevelDescription(_activityMultiplier).split(' - ')[1]})',
                     style: TextStyle(
                       fontWeight: FontWeight.w500,
                       color: Colors.amber[700],

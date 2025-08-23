@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../constants/calendar_constants.dart';
 import '../controllers/calendar_controller.dart';
 import 'calendar_dialogs.dart';
 
@@ -63,12 +62,17 @@ Future<void> showDayPopupMenu({
     ],
   ).then((value) async {
     if (value == 'note') {
+      // ignore: use_build_context_synchronously
       await showDayActionDialog(context, controller, normalized);
     } else if (value == 'workout') {
+      // ignore: use_build_context_synchronously
       await showWorkoutDialog(context, controller, normalized);
     } else if (value == 'period') {
       await showAddPeriodDialog(
-          context: context, controller: controller, startDate: normalized);
+          // ignore: use_build_context_synchronously
+          context: context,
+          controller: controller,
+          startDate: normalized);
     } else if (value == 'clear') {
       await controller.clearNotesAndWorkoutsForDay(normalized);
     }

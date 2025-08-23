@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../models/calendar_period.dart';
+import 'package:Gymli/utils/models/data_models.dart';
 import 'package:Gymli/utils/themes/themes.dart' show ThemeColors;
 
 class CalendarConstants {

@@ -2,11 +2,14 @@
 ///
 /// This coordinator manages the interaction between different statistics services
 /// and provides a unified interface for the StatisticsScreen.
+library;
+
+import 'package:flutter/foundation.dart' show kDebugMode;
 
 import 'statistics_data_service.dart';
 import 'statistics_calculation_service.dart';
 import 'statistics_filter_service.dart';
-import '../../../utils/api/api_models.dart';
+import '../../../utils/models/data_models.dart';
 
 class StatisticsCoordinator {
   final StatisticsDataService _dataService;
@@ -45,7 +48,9 @@ class StatisticsCoordinator {
         'exercises': exercises,
       };
     } catch (e) {
-      print('Error in StatisticsCoordinator.getFilteredData: $e');
+      if (kDebugMode) {
+        print('Error in StatisticsCoordinator.getFilteredData: $e');
+      }
       rethrow;
     }
   }
@@ -55,7 +60,9 @@ class StatisticsCoordinator {
     try {
       return _calculationService.calculateHeatMapData(muscleHistoryScore);
     } catch (e) {
-      print('Error getting heat map data: $e');
+      if (kDebugMode) {
+        print('Error getting heat map data: $e');
+      }
       return List.filled(14, 0.0);
     }
   }
@@ -85,7 +92,9 @@ class StatisticsCoordinator {
         'bodyweight': equipmentUsage.bodyweight,
       };
     } catch (e) {
-      print('Error getting equipment usage: $e');
+      if (kDebugMode) {
+        print('Error getting equipment usage: $e');
+      }
       return {'freeWeights': 0, 'machines': 0, 'cables': 0, 'bodyweight': 0};
     }
   }
@@ -95,7 +104,9 @@ class StatisticsCoordinator {
     try {
       return await _dataService.getActivityStats();
     } catch (e) {
-      print('Error getting activity statistics: $e');
+      if (kDebugMode) {
+        print('Error getting activity statistics: $e');
+      }
       return {};
     }
   }
@@ -115,7 +126,7 @@ class StatisticsCoordinator {
       );
 
       final trainingSets = data['trainingSets'] as List<Map<String, dynamic>>;
-      final exercises = data['exercises'] as List<ApiExercise>;
+      final exercises = data['exercises'] as List<Exercise>;
 
       // Extract filtered training dates
       Set<DateTime> uniqueDates = {};
@@ -126,7 +137,9 @@ class StatisticsCoordinator {
             uniqueDates.add(DateTime(date.year, date.month, date.day));
           }
         } catch (e) {
-          print('Error parsing date: $e');
+          if (kDebugMode) {
+            print('Error parsing date: $e');
+          }
         }
       }
       final filteredTrainingDates = uniqueDates.toList()..sort();
@@ -138,7 +151,9 @@ class StatisticsCoordinator {
         filteredTrainingDates: filteredTrainingDates,
       );
     } catch (e) {
-      print('Error in StatisticsCoordinator.calculateBarStatistics: $e');
+      if (kDebugMode) {
+        print('Error in StatisticsCoordinator.calculateBarStatistics: $e');
+      }
       return StatisticsCalculationResult.empty();
     }
   }
@@ -156,7 +171,9 @@ class StatisticsCoordinator {
         useDefaultFilter: useDefaultFilter,
       );
     } catch (e) {
-      print('Error in StatisticsCoordinator.loadActivityData: $e');
+      if (kDebugMode) {
+        print('Error in StatisticsCoordinator.loadActivityData: $e');
+      }
       return ActivityDataResult.empty();
     }
   }
@@ -180,7 +197,9 @@ class StatisticsCoordinator {
         useDefaultFilter: useDefaultFilter,
       );
     } catch (e) {
-      print('Error in StatisticsCoordinator.loadExerciseGraphData: $e');
+      if (kDebugMode) {
+        print('Error in StatisticsCoordinator.loadExerciseGraphData: $e');
+      }
       return ExerciseGraphDataResult.empty();
     }
   }

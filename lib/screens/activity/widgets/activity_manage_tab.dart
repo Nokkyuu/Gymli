@@ -8,7 +8,7 @@ import 'package:provider/provider.dart';
 import '../controllers/activity_controller.dart';
 import '../controllers/activity_form_controller.dart';
 import 'custom_activity_form_widget.dart';
-import '../../../utils/api/api_models.dart';
+import '../../../utils/models/data_models.dart';
 import '../../../utils/themes/responsive_helper.dart';
 
 class ActivityManageTab extends StatelessWidget {
@@ -213,7 +213,7 @@ class ActivityManageTab extends StatelessWidget {
   void _showDeleteActivityConfirmation(
     BuildContext context,
     ActivityController controller,
-    ApiActivity activity,
+    Activity activity,
   ) {
     final bool isDefaultActivity = activity.id != null && activity.id! <= 16;
 
@@ -308,8 +308,9 @@ class ActivityManageTab extends StatelessWidget {
     final name = activityName.toLowerCase();
     if (name.contains('walk')) return FontAwesomeIcons.personWalking;
     if (name.contains('run')) return FontAwesomeIcons.personRunning;
-    if (name.contains('cycling') || name.contains('bike'))
+    if (name.contains('cycling') || name.contains('bike')) {
       return FontAwesomeIcons.bicycle;
+    }
     if (name.contains('swim')) return FontAwesomeIcons.personSwimming;
     if (name.contains('row')) return Icons.rowing;
     if (name.contains('yoga')) return FontAwesomeIcons.om;

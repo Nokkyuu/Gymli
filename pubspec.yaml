@@ -7,6 +7,8 @@ environment:
   sdk: '>=3.6.2 <4.0.0'
 
 dependencies:
+  get_it: ^7.6.4
+  flutter_riverpod: ^2.6.1
   fl_chart: ^1.0.0
   flutter:
     sdk: flutter

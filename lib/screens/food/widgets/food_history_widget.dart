@@ -3,14 +3,14 @@ import 'package:provider/provider.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:intl/intl.dart';
 import '../controllers/food_data_controller.dart';
-import '../../../utils/api/api_models.dart';
+import '../../../utils/models/data_models.dart';
 
 /// Widget to display food history/logs
 class FoodHistoryWidget extends StatelessWidget {
   const FoodHistoryWidget({super.key});
 
   void _showDeleteConfirmation(
-      BuildContext context, ApiFoodLog log, FoodDataController controller) {
+      BuildContext context, FoodLog log, FoodDataController controller) {
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
@@ -79,31 +79,42 @@ class FoodHistoryWidget extends StatelessWidget {
         name.contains('banane') ||
         name.contains('orange') ||
         name.contains('beere') ||
-        name.contains('berry')) return FontAwesomeIcons.appleWhole;
+        name.contains('berry')) {
+      return FontAwesomeIcons.appleWhole;
+    }
 
     if (name.contains('bread') ||
         name.contains('grain') ||
         name.contains('brot') ||
-        name.contains('brötchen')) return FontAwesomeIcons.breadSlice;
+        name.contains('brötchen')) {
+      return FontAwesomeIcons.breadSlice;
+    }
 
     if (name.contains('chicken') ||
         name.contains('meat') ||
         name.contains('huhn') ||
         name.contains('hähnchen') ||
-        name.contains('fleisch')) return FontAwesomeIcons.drumstickBite;
+        name.contains('fleisch')) {
+      return FontAwesomeIcons.drumstickBite;
+    }
 
     if (name.contains('fish') ||
         name.contains('fisch') ||
         name.contains('lachs') ||
-        name.contains('salmon')) return FontAwesomeIcons.fish;
+        name.contains('salmon')) {
+      return FontAwesomeIcons.fish;
+    }
 
     if (name.contains('cheese') ||
         name.contains('käse') ||
         name.contains('milk') ||
-        name.contains('milch')) return FontAwesomeIcons.cheese;
+        name.contains('milch')) {
+      return FontAwesomeIcons.cheese;
+    }
 
-    if (name.contains('egg') || name.contains('ei') || name.contains('eier'))
+    if (name.contains('egg') || name.contains('ei') || name.contains('eier')) {
       return FontAwesomeIcons.egg;
+    }
 
     return FontAwesomeIcons.utensils;
   }
@@ -113,7 +124,7 @@ class FoodHistoryWidget extends StatelessWidget {
     return Consumer<FoodDataController>(
       builder: (context, controller, child) {
         // Sort logs by date (newest first)
-        final sortedLogs = List<ApiFoodLog>.from(controller.foodLogs);
+        final sortedLogs = List<FoodLog>.from(controller.foodLogs);
         sortedLogs.sort((a, b) => b.date.compareTo(a.date));
 
         if (sortedLogs.isEmpty) {

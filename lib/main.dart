@@ -4,24 +4,49 @@
 /// and sets up the main app widgets
 library;
 
-import 'package:Gymli/config/app_router.dart';
+import 'package:Gymli/utils/workout_data_cache.dart';
+import 'package:Gymli/widgets/app_router.dart';
+import 'package:Gymli/utils/services/authentication_service.dart';
+import 'package:Gymli/utils/workout_session_state.dart';
+import 'package:get_it/get_it.dart';
+
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'utils/services/service_export.dart';
+import 'package:go_router/go_router.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:provider/provider.dart';
 import 'utils/services/app_initializer.dart';
 import 'utils/services/theme_service.dart';
 import 'utils/themes/themes.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 
 void main() async {
+  GetIt.I.registerSingleton<TempService>(TempService());
+  GetIt.I.registerSingleton<ExerciseService>(ExerciseService());
+  GetIt.I.registerSingleton<WorkoutService>(WorkoutService());
+  GetIt.I.registerSingleton<WorkoutUnitService>(WorkoutUnitService());
+  GetIt.I.registerSingleton<TrainingSetService>(TrainingSetService());
+  GetIt.I.registerSingleton<FoodService>(FoodService());
+  GetIt.I.registerSingleton<ActivityService>(ActivityService());
+  GetIt.I.registerSingleton<CalendarService>(CalendarService());
+  GetIt.I.registerSingleton<AuthenticationService>(AuthenticationService());
+
+  // managers are either ttl-singletons with state, or riverpods
+  // GetIt.I.registerSingleton<AuthManager>(AuthManager());
+  GetIt.I.registerSingleton<WorkoutSessionManager>(WorkoutSessionManager());
+  GetIt.I.registerSingleton<WorkoutDataCache>(WorkoutDataCache());
+
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding
       .ensureInitialized(); //required for async initialization, ensures that the Flutter engine is ready
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
   final initResult = await AppInitializer.initialize();
 
   if (!initResult.success) {
-    print('Critical initialization failure: ${initResult.error}');
+    if (kDebugMode) {
+      print('Critical initialization failure: ${initResult.error}');
+    }
     if (!kDebugMode) {
       // In production, show error screen or exit
       runApp(_buildErrorApp(initResult.error!));
@@ -30,11 +55,13 @@ void main() async {
   }
 
   if (initResult.partial) {
-    print('Partial initialization failure: ${initResult.error}');
+    if (kDebugMode) {
+      print('Partial initialization failure: ${initResult.error}');
+    }
     // Continue with limited functionality
   }
 
-  runApp(const MainApp());
+  runApp(const ProviderScope(child: MainApp()));
 }
 
 /// Builds a widget that is shown when initialization fails
@@ -61,27 +88,27 @@ Widget _buildErrorApp(String error) {
   );
 }
 
-class MainApp extends StatefulWidget {
+class MainApp extends ConsumerStatefulWidget {
   const MainApp({super.key});
 
   @override
-  State<MainApp> createState() => _MainAppState();
+  ConsumerState<MainApp> createState() => _MainAppState();
 }
 
-class _MainAppState extends State<MainApp> {
-  late ThemeService _themeService;
+class _MainAppState extends ConsumerState<MainApp> {
+  // late ThemeService _themeService;
+  late final GoRouter _router;
   bool _isInitialized = false;
 
   @override
   void initState() {
     super.initState();
+    _router = AppRouter.createRouter();
     _initializeTheme();
     FlutterNativeSplash.remove();
   }
 
   Future<void> _initializeTheme() async {
-    _themeService = ThemeService();
-    await _themeService.loadThemePreference();
     setState(() {
       _isInitialized = true;
     });
@@ -96,31 +123,26 @@ class _MainAppState extends State<MainApp> {
         ),
       );
     }
-
-    return ChangeNotifierProvider.value(
-      value: _themeService,
-      child: Consumer<ThemeService>(
-        builder: (context, themeService, _) {
-          final ThemeData themeData =
-              buildAppTheme(themeService.mode, themeService.primaryColor);
-
-          return MaterialApp.router(
-            theme: themeData,
-            localizationsDelegates: const [
-              GlobalMaterialLocalizations.delegate,
-              GlobalWidgetsLocalizations.delegate,
-              GlobalCupertinoLocalizations.delegate,
-            ],
-            supportedLocales: const [
-              Locale('en', 'US'),
-              Locale('en', 'GB'),
-              Locale('de', 'DE'),
-            ],
-            title: 'Gymli Gainson',
-            routerConfig: AppRouter.createRouter(),
-          );
-        },
-      ),
+    final mode = ref.watch(themeModeProvider);
+    final seed = ref.watch(seedColorProvider);
+    final themeData = buildAppTheme(
+      mode == ThemeMode.dark ? Brightness.dark : Brightness.light,
+      seed,
+    );
+    return MaterialApp.router(
+      theme: themeData,
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const [
+        Locale('en', 'US'),
+        Locale('en', 'GB'),
+        Locale('de', 'DE'),
+      ],
+      title: 'Gymli Gainson',
+      routerConfig: _router,
     );
   }
 }

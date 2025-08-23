@@ -177,7 +177,7 @@ class StatisticTexts extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
+                  const Icon(
                     Icons.calendar_today,
                   ),
                   const SizedBox(width: 8),
@@ -191,7 +191,7 @@ class StatisticTexts extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
+                  const Icon(
                     Icons.timer,
                   ),
                   const SizedBox(width: 8),
@@ -207,19 +207,19 @@ class StatisticTexts extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.fitness_center, size: 20),
+                      const Icon(Icons.fitness_center, size: 20),
                       const SizedBox(width: 4),
                       Text("$freeWeightsCount"),
                       const SizedBox(width: 8),
-                      Icon(Icons.forklift, size: 20),
+                      const Icon(Icons.forklift, size: 20),
                       const SizedBox(width: 4),
                       Text("$machinesCount"),
                       const SizedBox(width: 8),
-                      Icon(Icons.cable, size: 20),
+                      const Icon(Icons.cable, size: 20),
                       const SizedBox(width: 4),
                       Text("$cablesCount"),
                       const SizedBox(width: 8),
-                      Icon(Icons.sports_gymnastics, size: 20),
+                      const Icon(Icons.sports_gymnastics, size: 20),
                       const SizedBox(width: 4),
                       Text("$bodyweightCount"),
                     ],
@@ -232,16 +232,16 @@ class StatisticTexts extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.sports, size: 20),
+                      const Icon(Icons.sports, size: 20),
                       const SizedBox(width: 4),
                       Text("${activityStats['total_sessions'] ?? 0}"),
                       const SizedBox(width: 8),
-                      Icon(Icons.timer, size: 20),
+                      const Icon(Icons.timer, size: 20),
                       const SizedBox(width: 4),
                       Text(
                           "${activityStats['total_duration_minutes'] ?? 0} min"),
                       const SizedBox(width: 8),
-                      Icon(Icons.local_fire_department, size: 20),
+                      const Icon(Icons.local_fire_department, size: 20),
                       const SizedBox(width: 4),
                       Text("${getCaloriesDisplayValue()} kcal"),
                     ],

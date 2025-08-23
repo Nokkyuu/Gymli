@@ -47,10 +47,12 @@ class SettingsController extends ChangeNotifier {
 
   // Progress information
   String? get currentOperation {
-    if (_backupController.isExporting)
+    if (_backupController.isExporting) {
       return _backupController.currentOperation;
-    if (_restoreController.isImporting)
+    }
+    if (_restoreController.isImporting) {
       return _restoreController.currentOperation;
+    }
     if (_wipeController.isClearing) return _wipeController.currentOperation;
     return null;
   }
@@ -72,7 +74,7 @@ class SettingsController extends ChangeNotifier {
   Future<SettingsOperationResult> exportAllData(BuildContext context) async {
     // Since BackupController doesn't have exportAllData, we'll implement it here
     final results = <SettingsOperationResult>[];
-    final dataTypes = SettingsDataType.values;
+    const dataTypes = SettingsDataType.values;
 
     for (final dataType in dataTypes) {
       final result = await _backupController.exportData(dataType, context);
@@ -155,8 +157,9 @@ class SettingsController extends ChangeNotifier {
       }
       return data.isNotEmpty;
     } catch (e) {
-      if (kDebugMode)
+      if (kDebugMode) {
         print('Error checking data for ${dataType.displayName}: $e');
+      }
       return false;
     }
   }

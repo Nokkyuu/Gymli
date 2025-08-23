@@ -54,10 +54,10 @@ class FoodLogTab extends StatelessWidget {
                         Consumer<FoodDataController>(
                           builder: (context, dataController, child) {
                             if (dataController.selectedFoodName != null) {
-                              return Column(
+                              return const Column(
                                 children: [
-                                  const NutritionalInfoWidget(),
-                                  const SizedBox(height: 16),
+                                  NutritionalInfoWidget(),
+                                  SizedBox(height: 16),
                                 ],
                               );
                             }
@@ -76,10 +76,10 @@ class FoodLogTab extends StatelessWidget {
                             if (loggingController
                                     .gramsController.text.isNotEmpty &&
                                 dataController.selectedFoodName != null) {
-                              return Column(
+                              return const Column(
                                 children: [
-                                  const CalculatedNutritionWidget(),
-                                  const SizedBox(height: 16),
+                                  CalculatedNutritionWidget(),
+                                  SizedBox(height: 16),
                                 ],
                               );
                             }

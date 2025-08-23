@@ -2,7 +2,6 @@
 library;
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import '../repositories/settings_repository.dart';
 import '../models/settings_data_type.dart';
 import '../models/settings_operation_result.dart';
@@ -43,7 +42,7 @@ class WipeController extends ChangeNotifier {
       }
 
       if (result.isSuccess) {
-        _repository.notifyDataChanged();
+        // _repository.notifyDataChanged();
       }
 
       return result;
@@ -89,7 +88,7 @@ class WipeController extends ChangeNotifier {
       }
 
       _setClearing(true, 'Finalizing...', 0.9);
-      _repository.notifyDataChanged();
+      //_repository.notifyDataChanged();
 
       if (errors.isEmpty) {
         return SettingsOperationResult.success(

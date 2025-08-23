@@ -1,5 +1,7 @@
 /// Theme File for Gymli, defines colors and icons used thorugh the app
 ///
+library;
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -44,10 +46,10 @@ class ThemeColors {
     'power': _colorPower,
   };
 
-  static final Color themeOrange = _colorOrange; // Main brand orange color
-  static final Color themeWhite = _colorWhite;
-  static final Color themeBlack = _colorDark;
-  static final Color themeBlue = _colorBlue;
+  static const Color themeOrange = _colorOrange; // Main brand orange color
+  static const Color themeWhite = _colorWhite;
+  static const Color themeBlack = _colorDark;
+  static const Color themeBlue = _colorBlue;
 }
 
 ThemeData buildAppTheme(Brightness mode, Color primaryColor) {

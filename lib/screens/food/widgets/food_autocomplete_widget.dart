@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../controllers/food_data_controller.dart';
-import '../../../utils/api/api_models.dart';
+import '../../../utils/models/data_models.dart';
 
 /// Widget for food autocomplete selection
 class FoodAutocompleteWidget extends StatelessWidget {
@@ -11,16 +11,16 @@ class FoodAutocompleteWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<FoodDataController>(
       builder: (context, controller, child) {
-        return Autocomplete<ApiFood>(
+        return Autocomplete<FoodItem>(
           optionsBuilder: (TextEditingValue textEditingValue) {
             if (textEditingValue.text.isEmpty) {
               return controller.foods;
             }
-            return controller.foods.where((ApiFood food) => food.name
+            return controller.foods.where((FoodItem food) => food.name
                 .toLowerCase()
                 .contains(textEditingValue.text.toLowerCase()));
           },
-          displayStringForOption: (ApiFood food) => food.name,
+          displayStringForOption: (FoodItem food) => food.name,
           fieldViewBuilder: (BuildContext context,
               TextEditingController textEditingController,
               FocusNode focusNode,
@@ -40,8 +40,8 @@ class FoodAutocompleteWidget extends StatelessWidget {
             );
           },
           optionsViewBuilder: (BuildContext context,
-              AutocompleteOnSelected<ApiFood> onSelected,
-              Iterable<ApiFood> options) {
+              AutocompleteOnSelected<FoodItem> onSelected,
+              Iterable<FoodItem> options) {
             return Align(
               alignment: Alignment.topLeft,
               child: Material(
@@ -53,7 +53,7 @@ class FoodAutocompleteWidget extends StatelessWidget {
                     shrinkWrap: true,
                     itemCount: options.length,
                     itemBuilder: (BuildContext context, int index) {
-                      final ApiFood food = options.elementAt(index);
+                      final FoodItem food = options.elementAt(index);
                       return InkWell(
                         onTap: () => onSelected(food),
                         child: Container(
@@ -83,7 +83,7 @@ class FoodAutocompleteWidget extends StatelessWidget {
               ),
             );
           },
-          onSelected: (ApiFood selectedFood) {
+          onSelected: (FoodItem selectedFood) {
             controller.setSelectedFood(selectedFood.name);
           },
         );

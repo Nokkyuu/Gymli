@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../controllers/exercise_selection_controller.dart';
 import '../controllers/workout_setup_controller.dart';
-import '../../../utils/api/api_models.dart';
+import '../../../utils/models/data_models.dart';
 
 class ExerciseSelectionMobileWidget extends StatelessWidget {
   const ExerciseSelectionMobileWidget({super.key});
@@ -15,7 +15,7 @@ class ExerciseSelectionMobileWidget extends StatelessWidget {
         return Column(
           children: [
             // Exercise dropdown
-            DropdownMenu<ApiExercise>(
+            DropdownMenu<Exercise>(
               width: MediaQuery.of(context).size.width * 0.7,
               controller: selectionController.exerciseController,
               menuHeight: 500,
@@ -33,8 +33,8 @@ class ExerciseSelectionMobileWidget extends StatelessWidget {
                 selectionController.setSelectedExercise(selectedExercise);
               },
               dropdownMenuEntries: workoutController.allExercises
-                  .map<DropdownMenuEntry<ApiExercise>>((ApiExercise exercise) {
-                return DropdownMenuEntry<ApiExercise>(
+                  .map<DropdownMenuEntry<Exercise>>((Exercise exercise) {
+                return DropdownMenuEntry<Exercise>(
                     value: exercise,
                     label: exercise.name,
                     leadingIcon: SizedBox(

@@ -1,10 +1,11 @@
 /// Exercise Screen - Main Workout Interface
 library;
 
+import 'package:Gymli/utils/workout_session_state.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../utils/themes/responsive_helper.dart';
-import 'exercise/repositories/exercise_repository.dart';
+import '../utils/workout_data_cache.dart';
 import 'exercise/controllers/exercise_controller.dart';
 import 'exercise/controllers/exercise_timer_controller.dart';
 import 'exercise/controllers/exercise_phase_controller.dart';
@@ -14,6 +15,8 @@ import 'exercise/widgets/exercise_controls_widget.dart';
 import 'exercise/widgets/training_sets_list_widget.dart';
 import 'exercise/widgets/exercise_app_bar_widget.dart';
 import 'exercise/widgets/animated_text_widget.dart';
+import 'package:get_it/get_it.dart';
+
 
 class ExerciseScreen extends StatefulWidget {
   final int exerciseId;
@@ -32,7 +35,6 @@ class ExerciseScreen extends StatefulWidget {
 class _ExerciseScreenState extends State<ExerciseScreen>
     with TickerProviderStateMixin {
   // Controllers
-  late ExerciseRepository _repository;
   late ExerciseController _exerciseController;
   late ExerciseTimerController _timerController;
   late ExercisePhaseController _phaseController;
@@ -46,16 +48,40 @@ class _ExerciseScreenState extends State<ExerciseScreen>
     _initializeComponents();
   }
 
+  @override
+  void didUpdateWidget(covariant ExerciseScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final switchedExercise = oldWidget.exerciseId != widget.exerciseId || oldWidget.exerciseName != widget.exerciseName;
+    if (switchedExercise) {
+      final cache = GetIt.I<WorkoutDataCache>();
+      cache.markActiveExercise(widget.exerciseId);
+      final cached = cache.getCachedTrainingSets(widget.exerciseId);
+      if (cached != null && cached.isNotEmpty) {
+        _exerciseController.graphController.updateGraphFromTrainingSets(cached);
+      } else {
+        // Fall back to controller refresh which will fetch & populate cache
+        _exerciseController.refreshGraphData(widget.exerciseName);
+      }
+    }
+  }
+
   void _initializeComponents() async {
     // Initialize controllers
-    _repository = ExerciseRepository();
-    _repository.setCurrentExerciseId(widget.exerciseId);
-    _exerciseController = ExerciseController(repository: _repository);
+    _exerciseController = ExerciseController();
     _timerController = ExerciseTimerController();
     _phaseController = ExercisePhaseController(
       onPhaseColorChanged: widget.onPhaseColorChanged,
     );
     _animationController = ExerciseAnimationController();
+
+    // Mark this exercise as active in the LRU cache and try to render graph from cache
+    final cache = GetIt.I<WorkoutDataCache>();
+    cache.markActiveExercise(widget.exerciseId);
+    final cached = cache.getCachedTrainingSets(widget.exerciseId);
+    if (cached != null && cached.isNotEmpty) {
+      // GraphController is ready after ExerciseController construction
+      _exerciseController.graphController.updateGraphFromTrainingSets(cached);
+    }
 
     // Initialize animation controller
     _animationController.initialize(this);
@@ -240,6 +266,8 @@ class _ExerciseScreenState extends State<ExerciseScreen>
   }
 
   Future<void> _onSetAdded() async {
+    final workoutState = GetIt.I<WorkoutSessionManager>().getSession();
+    workoutState.addExercise(widget.exerciseName);
     await _exerciseController.refreshGraphData(widget.exerciseName);
     _timerController.updateLastActivity();
   }

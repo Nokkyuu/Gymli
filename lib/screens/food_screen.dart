@@ -50,9 +50,7 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
     super.didChangeDependencies();
 
     // Initialize TabController here where MediaQuery is available
-    if (_tabController == null) {
-      _tabController = TabController(length: _getTabCount(), vsync: this);
-    }
+    _tabController ??= TabController(length: _getTabCount(), vsync: this);
 
     // Rebuild tab controller if screen size changes
     final currentTabCount = _getTabCount();
@@ -90,9 +88,7 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     // Ensure TabController is initialized
-    if (_tabController == null) {
-      _tabController = TabController(length: _getTabCount(), vsync: this);
-    }
+    _tabController ??= TabController(length: _getTabCount(), vsync: this);
 
     return MultiProvider(
       providers: [

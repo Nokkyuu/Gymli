@@ -3,9 +3,10 @@
 library;
 
 import 'package:flutter/material.dart';
-import 'package:Gymli/utils/services/service_container.dart';
+import 'package:Gymli/utils/services/temp_service.dart';
+import 'package:get_it/get_it.dart';
 
-final container = ServiceContainer();
+final container = GetIt.I<TempService>();
 
 Widget buildInfoButton(
     String tooltip, BuildContext context, VoidCallback onPressed) {
@@ -487,71 +488,42 @@ void showInfoDialogMain(BuildContext context) {
         title: const Text('About Gymli'),
         content: SingleChildScrollView(
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text(
-                'Gymli, the son of Gain, proud member of the fellowship of the Gym.',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-              ),
-              const SizedBox(height: 12),
-              const Text(
-                'Features:',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
-              buildInfoItem(
-                  '🏋️', 'Browse and organize your favorite Exercises'),
-              buildInfoItem('📋', 'Follow structured workout routines'),
-              buildInfoItem('📊',
-                  'Track your progress in your progressive overload journey'),
-              buildInfoItem('🏃', 'track your extracurricular activities'),
-              buildInfoItem('🍽️', 'Log your meals and track your nutrition'),
-              buildInfoItem('🤓', 'Check your statistics'),
-              const SizedBox(height: 12),
-              const Text(
-                'On this screen:',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
-              const Text('The heart of Gymli, where you can:',
-                  style: TextStyle(fontWeight: FontWeight.bold)),
-              const Text('• See your exercise list and'),
-              const Text('• Filter them by your workout routine'),
-              const Text('• or by muscle group'),
-              const Text('• start your training by selecting an exercise'),
-              const Text(
-                  '• navigate to the other modules to create exercises, workout, log your nutrition or activities'),
-              const SizedBox(height: 12),
-              if (!container.authService.isLoggedIn) ...[
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.orange.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.orange.withOpacity(0.3)),
-                  ),
-                  child: const Text(
-                    'Demo Mode: You\'re currently browsing in demo mode. Log in to save your progress and access personalized features.',
-                    style: TextStyle(color: Colors.orange, fontSize: 12),
-                  ),
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'Gymli, the son of Gain, proud member of the fellowship of the Gym.',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                 ),
-              ] else ...[
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.green.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.green.withOpacity(0.3)),
-                  ),
-                  child: Text(
-                    'Logged in as: ${container.authService.userName}',
-                    style: const TextStyle(color: Colors.green, fontSize: 12),
-                  ),
+                const SizedBox(height: 12),
+                const Text(
+                  'Features:',
+                  style: TextStyle(fontWeight: FontWeight.bold),
                 ),
-              ],
-            ],
-          ),
+                const SizedBox(height: 8),
+                buildInfoItem(
+                    '🏋️', 'Browse and organize your favorite Exercises'),
+                buildInfoItem('📋', 'Follow structured workout routines'),
+                buildInfoItem('📊',
+                    'Track your progress in your progressive overload journey'),
+                buildInfoItem('🏃', 'track your extracurricular activities'),
+                buildInfoItem('🍽️', 'Log your meals and track your nutrition'),
+                buildInfoItem('🤓', 'Check your statistics'),
+                const SizedBox(height: 12),
+                const Text(
+                  'On this screen:',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                const Text('The heart of Gymli, where you can:',
+                    style: TextStyle(fontWeight: FontWeight.bold)),
+                const Text('• See your exercise list and'),
+                const Text('• Filter them by your workout routine'),
+                const Text('• or by muscle group'),
+                const Text('• start your training by selecting an exercise'),
+                const Text(
+                    '• navigate to the other modules to create exercises, workout, log your nutrition or activities'),
+              ]),
         ),
         actions: [
           TextButton(

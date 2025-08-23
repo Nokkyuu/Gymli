@@ -166,11 +166,11 @@ class ImportSectionWidget extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('This will:'),
+                const Text('This will:'),
                 const SizedBox(height: 8),
                 Row(
                   children: [
-                    Icon(
+                    const Icon(
                       Icons.delete_forever,
                       color: Colors.red,
                       size: 16,
@@ -183,15 +183,15 @@ class ImportSectionWidget extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 4),
-                Row(
+                const Row(
                   children: [
                     Icon(
                       Icons.upload_file,
                       color: Colors.blue,
                       size: 16,
                     ),
-                    const SizedBox(width: 8),
-                    const Expanded(
+                    SizedBox(width: 8),
+                    Expanded(
                       child: Text('Import data from your CSV file'),
                     ),
                   ],

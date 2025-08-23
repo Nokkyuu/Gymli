@@ -3,11 +3,11 @@ library;
 
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import '../../../utils/api/api_models.dart';
+import '../../../utils/models/data_models.dart';
 import '../../../utils/themes/responsive_helper.dart';
 
 class LandingExerciseItem extends StatelessWidget {
-  final ApiExercise exercise;
+  final Exercise exercise;
   final String metainfo;
   final VoidCallback onTap;
 

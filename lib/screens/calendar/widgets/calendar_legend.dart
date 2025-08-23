@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../constants/calendar_constants.dart';
-import '../models/calendar_period.dart';
+import 'package:Gymli/utils/models/data_models.dart';
 
 /// A widget that displays the calendar legend showing:
 /// - Period type colors (Cut, Bulk, Other)
@@ -20,9 +20,10 @@ class CalendarLegend extends StatelessWidget {
           const Text('Bulk  '),
           _buildLegendDot(CalendarConstants.getPeriodColor(PeriodType.other)),
           const Text('Other  '),
-          Icon(Icons.note, size: 16, color: CalendarConstants.noteIconColor),
+          const Icon(Icons.note,
+              size: 16, color: CalendarConstants.noteIconColor),
           const Text(' Note  '),
-          Icon(Icons.fitness_center,
+          const Icon(Icons.fitness_center,
               size: 16, color: CalendarConstants.workoutIconColor),
           const Text(' Workout'),
         ],

@@ -2,7 +2,8 @@ import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
-import 'package:Gymli/utils/services/service_container.dart';
+import 'package:Gymli/utils/services/service_export.dart';
+import 'package:get_it/get_it.dart';
 
 class FoodStatsScreen extends StatefulWidget {
   final String? startingDate;
@@ -21,7 +22,6 @@ class FoodStatsScreen extends StatefulWidget {
 }
 
 class _StatsScreenState extends State<FoodStatsScreen> {
-  final ServiceContainer container = ServiceContainer();
   Map<String, double> nutritionStats = {};
   List<Map<String, dynamic>> dailyNutritionData = [];
 
@@ -64,21 +64,21 @@ class _StatsScreenState extends State<FoodStatsScreen> {
           : DateTime.now();
     }
     // Alternative approach - add one day to make it exclusive
-    endDate = DateTime(endDate.year, endDate.month, endDate.day)
-        .add(Duration(hours: 23, minutes: 59, seconds: 59, milliseconds: 999));
+    endDate = DateTime(endDate.year, endDate.month, endDate.day).add(
+        const Duration(hours: 23, minutes: 59, seconds: 59, milliseconds: 999));
     return {'start': startDate, 'end': endDate};
   }
 
   void _loadNutritionStats() async {
     try {
       final dateRange = _getDateRange();
-      final stats = await container.getFoodLogStats(
+      final stats = await GetIt.I<FoodService>().getFoodLogStats(
         startDate: dateRange['start']!,
         endDate: dateRange['end']!,
       );
 
       // Load daily data for the chart
-      final dailyData = await container.getDailyFoodLogStats(
+      final dailyData = await GetIt.I<FoodService>().getDailyFoodLogStats(
         startDate: dateRange['start']!,
         endDate: dateRange['end']!,
       );
@@ -111,17 +111,15 @@ class _StatsScreenState extends State<FoodStatsScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
+                  const Text(
                     'Daily Nutrition Trends',
-                    style: const TextStyle(
-                        fontSize: 18, fontWeight: FontWeight.bold),
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 16),
                   // Calories Chart
-                  Text(
+                  const Text(
                     'Daily Calories',
-                    style: const TextStyle(
-                        fontSize: 16, fontWeight: FontWeight.w600),
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                   ),
                   const SizedBox(height: 8),
                   SizedBox(
@@ -131,10 +129,9 @@ class _StatsScreenState extends State<FoodStatsScreen> {
                   _buildCaloriesLegend(),
                   const SizedBox(height: 24),
                   // Macros Chart
-                  Text(
+                  const Text(
                     'Daily Macronutrients',
-                    style: const TextStyle(
-                        fontSize: 16, fontWeight: FontWeight.w600),
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                   ),
                   const SizedBox(height: 8),
                   SizedBox(
@@ -173,17 +170,20 @@ class _StatsScreenState extends State<FoodStatsScreen> {
                           Colors.orange),
                       _buildStatCard(
                           'Total Protein',
-                          '${nutritionStats['total_protein']?.toStringAsFixed(1) ?? '0'}',
+                          nutritionStats['total_protein']?.toStringAsFixed(1) ??
+                              '0',
                           'g',
                           Colors.red),
                       _buildStatCard(
                           'Total Carbs',
-                          '${nutritionStats['total_carbs']?.toStringAsFixed(1) ?? '0'}',
+                          nutritionStats['total_carbs']?.toStringAsFixed(1) ??
+                              '0',
                           'g',
                           Colors.green),
                       _buildStatCard(
                           'Total Fat',
-                          '${nutritionStats['total_fat']?.toStringAsFixed(1) ?? '0'}',
+                          nutritionStats['total_fat']?.toStringAsFixed(1) ??
+                              '0',
                           'g',
                           Colors.purple),
                     ],
@@ -257,10 +257,10 @@ class _StatsScreenState extends State<FoodStatsScreen> {
 
     return LineChart(
       LineChartData(
-        gridData: FlGridData(show: true),
+        gridData: const FlGridData(show: true),
         titlesData: FlTitlesData(
           leftTitles: AxisTitles(
-            axisNameWidget: Text('Calories (kcal)',
+            axisNameWidget: const Text('Calories (kcal)',
                 style: TextStyle(color: Colors.orange, fontSize: 12)),
             sideTitles: SideTitles(
               showTitles: true,
@@ -268,12 +268,13 @@ class _StatsScreenState extends State<FoodStatsScreen> {
               getTitlesWidget: (value, meta) {
                 return Text(
                   value.toInt().toString(),
-                  style: TextStyle(color: Colors.orange, fontSize: 10),
+                  style: const TextStyle(color: Colors.orange, fontSize: 10),
                 );
               },
             ),
           ),
-          rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          rightTitles:
+              const AxisTitles(sideTitles: SideTitles(showTitles: false)),
           bottomTitles: AxisTitles(
             sideTitles: SideTitles(
               showTitles: true,
@@ -298,7 +299,8 @@ class _StatsScreenState extends State<FoodStatsScreen> {
               },
             ),
           ),
-          topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          topTitles:
+              const AxisTitles(sideTitles: const SideTitles(showTitles: false)),
         ),
         borderData: FlBorderData(show: true),
         minX: 0,
@@ -311,7 +313,7 @@ class _StatsScreenState extends State<FoodStatsScreen> {
             isCurved: false,
             color: Colors.orange,
             barWidth: 3,
-            dotData: FlDotData(show: false),
+            dotData: const FlDotData(show: false),
             belowBarData: BarAreaData(
               show: true,
               color: Colors.orange.withOpacity(0.1),
@@ -333,7 +335,7 @@ class _StatsScreenState extends State<FoodStatsScreen> {
 
                       return LineTooltipItem(
                         '${DateFormat('dd/MM').format(date)}\nCalories: $calories kcal',
-                        TextStyle(color: Colors.orange),
+                        const TextStyle(color: Colors.orange),
                       );
                     }
                     return null;
@@ -380,10 +382,10 @@ class _StatsScreenState extends State<FoodStatsScreen> {
 
     return LineChart(
       LineChartData(
-        gridData: FlGridData(show: true),
+        gridData: const FlGridData(show: true),
         titlesData: FlTitlesData(
           leftTitles: AxisTitles(
-            axisNameWidget: Text('Macros (g)',
+            axisNameWidget: const Text('Macros (g)',
                 style: TextStyle(color: Colors.blue, fontSize: 12)),
             sideTitles: SideTitles(
               showTitles: true,
@@ -391,12 +393,13 @@ class _StatsScreenState extends State<FoodStatsScreen> {
               getTitlesWidget: (value, meta) {
                 return Text(
                   value.toInt().toString(),
-                  style: TextStyle(color: Colors.blue, fontSize: 10),
+                  style: const TextStyle(color: Colors.blue, fontSize: 10),
                 );
               },
             ),
           ),
-          rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          rightTitles:
+              const AxisTitles(sideTitles: SideTitles(showTitles: false)),
           bottomTitles: AxisTitles(
             sideTitles: SideTitles(
               showTitles: true,
@@ -421,7 +424,8 @@ class _StatsScreenState extends State<FoodStatsScreen> {
               },
             ),
           ),
-          topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          topTitles:
+              const AxisTitles(sideTitles: SideTitles(showTitles: false)),
         ),
         borderData: FlBorderData(show: true),
         minX: 0,
@@ -435,7 +439,7 @@ class _StatsScreenState extends State<FoodStatsScreen> {
             isCurved: false,
             color: Colors.red,
             barWidth: 2,
-            dotData: FlDotData(show: false),
+            dotData: const FlDotData(show: false),
             belowBarData: BarAreaData(show: false),
           ),
           // Carbs line
@@ -444,7 +448,7 @@ class _StatsScreenState extends State<FoodStatsScreen> {
             isCurved: false,
             color: Colors.green,
             barWidth: 2,
-            dotData: FlDotData(show: false),
+            dotData: const FlDotData(show: false),
             belowBarData: BarAreaData(show: false),
           ),
           // Fat line
@@ -453,7 +457,7 @@ class _StatsScreenState extends State<FoodStatsScreen> {
             isCurved: false,
             color: Colors.purple,
             barWidth: 2,
-            dotData: FlDotData(show: false),
+            dotData: const FlDotData(show: false),
             belowBarData: BarAreaData(show: false),
           ),
         ],

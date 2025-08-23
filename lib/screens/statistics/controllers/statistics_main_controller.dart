@@ -7,16 +7,18 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:time_machine/time_machine.dart';
 import 'package:fl_chart/fl_chart.dart';
-import '../../../utils/api/api_models.dart';
-import '../../../utils/services/service_container.dart';
+import '../../../utils/models/data_models.dart';
+import '../../../utils/services/temp_service.dart';
 import '../services/statistics_data_service.dart';
 import '../services/statistics_filter_service.dart';
 import '../services/statistics_calculation_service.dart';
 import '../services/statistics_coordinator.dart';
+import 'package:get_it/get_it.dart';
+//import 'package:Gymli/utils/services/auth_service.dart';
 
 //TODO: Refactor into smaller and more specialized controllers
 class StatisticsMainController extends ChangeNotifier {
-  final ServiceContainer _container;
+  final TempService _container;
 
   // Service instances
   late final StatisticsDataService _dataService;
@@ -31,8 +33,8 @@ class StatisticsMainController extends ChangeNotifier {
   // Statistics data
   int _numberOfTrainingDays = 0;
   String _trainingDuration = "";
-  List<String> _trainingDates = [];
-  List<LineChartBarData> _trainingsPerWeekChart = [];
+  final List<String> _trainingDates = [];
+  final List<LineChartBarData> _trainingsPerWeekChart = [];
   List<BarChartGroupData> _barChartStatistics = [];
   List<double> _heatMapMulti = [];
   List<List<double>> _muscleHistoryScore = [];
@@ -57,7 +59,7 @@ class StatisticsMainController extends ChangeNotifier {
   bool _isLoadingActivityData = false;
 
   // Exercise progress
-  List<ApiExercise> _availableExercises = [];
+  List<Exercise> _availableExercises = [];
   String? _selectedExerciseForGraph;
   List<LineChartBarData> _exerciseGraphData = [];
   Map<int, List<String>> _exerciseGraphTooltip = {};
@@ -90,8 +92,8 @@ class StatisticsMainController extends ChangeNotifier {
     [0.31, 1 - 0.20], //calv
   ];
 
-  StatisticsMainController({ServiceContainer? container})
-      : _container = container ?? ServiceContainer() {
+  StatisticsMainController({TempService? container})
+      : _container = container ?? GetIt.I<TempService>() {
     _initializeServices();
     _initializeDatePicker();
   }
@@ -126,7 +128,7 @@ class StatisticsMainController extends ChangeNotifier {
   List<FlSpot> get durationTrendData => List.from(_durationTrendData);
   bool get isLoadingActivityData => _isLoadingActivityData;
 
-  List<ApiExercise> get availableExercises => List.from(_availableExercises);
+  List<Exercise> get availableExercises => List.from(_availableExercises);
   String? get selectedExerciseForGraph => _selectedExerciseForGraph;
   List<LineChartBarData> get exerciseGraphData => List.from(_exerciseGraphData);
   Map<int, List<String>> get exerciseGraphTooltip =>
@@ -142,7 +144,7 @@ class StatisticsMainController extends ChangeNotifier {
 
   @override
   void dispose() {
-    _container.authService.authStateNotifier.removeListener(_onDataChanged);
+    //GetIt.I<AuthService>().authStateNotifier.removeListener(_onDataChanged);
     super.dispose();
   }
 
@@ -155,7 +157,7 @@ class StatisticsMainController extends ChangeNotifier {
       await loadStatistics();
 
       // Listen for data changes
-      _container.authService.authStateNotifier.addListener(_onDataChanged);
+      //GetIt.I<AuthService>().authStateNotifier.addListener(_onDataChanged);
     } catch (e) {
       _setError('Failed to initialize statistics: $e');
     } finally {
@@ -592,10 +594,5 @@ class StatisticsMainController extends ChangeNotifier {
     } catch (e) {
       if (kDebugMode) print('Error loading exercises: $e');
     }
-  }
-
-  void _onDataChanged() {
-    _dataService.invalidateCache();
-    loadStatistics();
   }
 }

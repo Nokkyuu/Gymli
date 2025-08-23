@@ -1,16 +1,21 @@
 /// Settings Repository - Data access layer for settings operations
 library;
 
+import 'package:get_it/get_it.dart';
+
 import 'package:flutter/foundation.dart';
-import 'package:Gymli/utils/services/service_container.dart';
+import '../../../utils/services/service_export.dart';
+//import 'package:Gymli/utils/services/auth_service.dart';
+import 'package:Gymli/utils/services/authentication_service.dart';
 
 class SettingsRepository {
-  final ServiceContainer container = ServiceContainer();
+  final TempService container = GetIt.I<TempService>();
+  final ExerciseService exerciseService = GetIt.I<ExerciseService>();
 
   /// Get training sets data
   Future<List<dynamic>> getTrainingSets() async {
     try {
-      return await container.trainingSetService.getTrainingSets();
+      return await GetIt.I<TrainingSetService>().getTrainingSets();
     } catch (e) {
       if (kDebugMode) print('Error getting training sets: $e');
       rethrow;
@@ -20,7 +25,7 @@ class SettingsRepository {
   /// Get exercises data
   Future<List<dynamic>> getExercises() async {
     try {
-      return await container.exerciseService.getExercises();
+      return await exerciseService.getExercises();
     } catch (e) {
       if (kDebugMode) print('Error getting exercises: $e');
       rethrow;
@@ -30,7 +35,7 @@ class SettingsRepository {
   /// Get workouts data
   Future<List<dynamic>> getWorkouts() async {
     try {
-      return await container.workoutService.getWorkouts();
+      return await GetIt.I<WorkoutService>().getWorkouts();
     } catch (e) {
       if (kDebugMode) print('Error getting workouts: $e');
       rethrow;
@@ -40,7 +45,7 @@ class SettingsRepository {
   /// Get foods data
   Future<List<dynamic>> getFoods() async {
     try {
-      return await container.foodService.getFoods();
+      return await GetIt.I<FoodService>().getFoods();
     } catch (e) {
       if (kDebugMode) print('Error getting foods: $e');
       rethrow;
@@ -50,8 +55,8 @@ class SettingsRepository {
   /// Clear training sets
   Future<void> clearTrainingSets() async {
     try {
-      await container.trainingSetService.clearTrainingSets();
-      container.notifyDataChanged();
+      await GetIt.I<TrainingSetService>().clearTrainingSets();
+      // GetIt.I<AuthService>().notifyAuthStateChanged();
     } catch (e) {
       if (kDebugMode) print('Error clearing training sets: $e');
       rethrow;
@@ -61,10 +66,10 @@ class SettingsRepository {
   /// Clear exercises (also clears dependent data)
   Future<void> clearExercises() async {
     try {
-      await container.clearWorkouts();
-      await container.trainingSetService.clearTrainingSets();
-      await container.clearExercises();
-      container.notifyDataChanged();
+      await GetIt.I<WorkoutService>().clearWorkouts();
+      await GetIt.I<TrainingSetService>().clearTrainingSets();
+      await GetIt.I<ExerciseService>().clearExercises();
+      // GetIt.I<AuthService>().notifyAuthStateChanged();
     } catch (e) {
       if (kDebugMode) print('Error clearing exercises: $e');
       rethrow;
@@ -74,8 +79,8 @@ class SettingsRepository {
   /// Clear workouts
   Future<void> clearWorkouts() async {
     try {
-      await container.clearWorkouts();
-      container.notifyDataChanged();
+      await GetIt.I<WorkoutService>().clearWorkouts();
+      //GetIt.I<AuthService>().notifyAuthStateChanged();
     } catch (e) {
       if (kDebugMode) print('Error clearing workouts: $e');
       rethrow;
@@ -85,8 +90,8 @@ class SettingsRepository {
   /// Clear foods
   Future<void> clearFoods() async {
     try {
-      await container.foodService.clearFoods();
-      container.notifyDataChanged();
+      await GetIt.I<FoodService>().clearFoods();
+      //GetIt.I<AuthService>().notifyAuthStateChanged();
     } catch (e) {
       if (kDebugMode) print('Error clearing foods: $e');
       rethrow;
@@ -97,7 +102,7 @@ class SettingsRepository {
   Future<void> createTrainingSetsBulk(
       List<Map<String, dynamic>> trainingSets) async {
     try {
-      await container.trainingSetService
+      await GetIt.I<TrainingSetService>()
           .createTrainingSetsBulk(trainingSets: trainingSets);
     } catch (e) {
       if (kDebugMode) print('Error creating training sets bulk: $e');
@@ -108,27 +113,27 @@ class SettingsRepository {
   /// Create exercise
   Future<void> createExercise(Map<String, dynamic> exerciseData) async {
     try {
-      await container.exerciseService.createExercise(
-        name: exerciseData['name'],
-        type: exerciseData['type'],
-        defaultRepBase: exerciseData['defaultRepBase'],
-        defaultRepMax: exerciseData['defaultRepMax'],
-        defaultIncrement: exerciseData['defaultIncrement'],
-        pectoralisMajor: exerciseData['pectoralisMajor'],
-        trapezius: exerciseData['trapezius'],
-        biceps: exerciseData['biceps'],
-        abdominals: exerciseData['abdominals'],
-        frontDelts: exerciseData['frontDelts'],
-        deltoids: exerciseData['deltoids'],
-        backDelts: exerciseData['backDelts'],
-        latissimusDorsi: exerciseData['latissimusDorsi'],
-        triceps: exerciseData['triceps'],
-        gluteusMaximus: exerciseData['gluteusMaximus'],
-        hamstrings: exerciseData['hamstrings'],
-        quadriceps: exerciseData['quadriceps'],
-        forearms: exerciseData['forearms'],
-        calves: exerciseData['calves'],
-      );
+      await exerciseService.createExercise({
+        'name': exerciseData['name'],
+        'type': exerciseData['type'],
+        'defaultRepBase': exerciseData['defaultRepBase'],
+        'defaultRepMax': exerciseData['defaultRepMax'],
+        'defaultIncrement': exerciseData['defaultIncrement'],
+        'pectoralisMajor': exerciseData['pectoralisMajor'],
+        'trapezius': exerciseData['trapezius'],
+        'biceps': exerciseData['biceps'],
+        'abdominals': exerciseData['abdominals'],
+        'frontDelts': exerciseData['frontDelts'],
+        'deltoids': exerciseData['deltoids'],
+        'backDelts': exerciseData['backDelts'],
+        'latissimusDorsi': exerciseData['latissimusDorsi'],
+        'triceps': exerciseData['triceps'],
+        'gluteusMaximus': exerciseData['gluteusMaximus'],
+        'hamstrings': exerciseData['hamstrings'],
+        'quadriceps': exerciseData['quadriceps'],
+        'forearms': exerciseData['forearms'],
+        'calves': exerciseData['calves']
+      });
     } catch (e) {
       if (kDebugMode) print('Error creating exercise: $e');
       rethrow;
@@ -141,7 +146,7 @@ class SettingsRepository {
     required List<Map<String, dynamic>> units,
   }) async {
     try {
-      return await container.createWorkout(
+      return await GetIt.I<WorkoutService>().createWorkout(
         name: name,
         units: units,
       );
@@ -154,7 +159,7 @@ class SettingsRepository {
   /// Create foods in bulk
   Future<void> createFoodsBulk(List<Map<String, dynamic>> foods) async {
     try {
-      await container.foodService.createFoodsBulk(foods: foods);
+      await GetIt.I<FoodService>().createFoodsBulk(foods: foods);
     } catch (e) {
       if (kDebugMode) print('Error creating foods bulk: $e');
       rethrow;
@@ -164,7 +169,7 @@ class SettingsRepository {
   /// Get exercise ID by name
   Future<int?> getExerciseIdByName(String name) async {
     try {
-      return await container.getExerciseIdByName(name);
+      return await GetIt.I<ExerciseService>().getExerciseIdByName(name);
     } catch (e) {
       if (kDebugMode) print('Error getting exercise ID by name: $e');
       rethrow;
@@ -172,10 +177,10 @@ class SettingsRepository {
   }
 
   /// Notify data changed
-  void notifyDataChanged() {
-    container.notifyDataChanged();
-  }
+  // void notifyDataChanged() {
+  //   ((GetIt.I<AuthService>().notifyAuthStateChanged();
+  // }
 
   /// Get current user name
-  String? get userName => container.authService.userName;
+  String? get userName => GetIt.I<AuthenticationService>().userName;
 }

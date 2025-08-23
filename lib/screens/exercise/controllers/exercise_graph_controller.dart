@@ -1,10 +1,12 @@
 import 'package:fl_chart/fl_chart.dart';
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'dart:math';
-import '../../../utils/api/api_models.dart';
+import '../../../utils/models/data_models.dart';
 import '../../../utils/globals.dart' as globals;
 import 'package:flutter/material.dart';
-import 'package:Gymli/utils/services/service_container.dart';
 import '../../../utils/themes/themes.dart';
+import 'package:get_it/get_it.dart';
+import 'package:Gymli/utils/services/service_export.dart';
 
 final themeColors = ThemeColors();
 
@@ -30,20 +32,20 @@ class ExerciseGraphController extends ChangeNotifier {
     // 'recovery': Color.fromARGB(80, 33, 150, 243), // Blue with transparency
   };
 
-  List<List<FlSpot>> _trainingGraphs = [[], [], [], []];
-  List<List<FlSpot>> _additionalGraphs = [];
-  Map<int, List<String>> _graphToolTip = {};
-  List<BetweenBarsData> _periodBarsData = [];
+  final List<List<FlSpot>> _trainingGraphs = [[], [], [], []];
+  final List<List<FlSpot>> _additionalGraphs = [];
+  final Map<int, List<String>> _graphToolTip = {};
+  final List<BetweenBarsData> _periodBarsData = [];
 
   double _minScore = 1e6;
   double _maxScore = 0.0;
   double _maxHistoryDistance = 90.0;
   DateTime? _mostRecentTrainingDate;
 
-  ApiExercise? _currentExercise; // Add this field
+  Exercise? _currentExercise; // Add this field
 
   // Add this field to store period types
-  List<String> _periodTypes = [];
+  final List<String> _periodTypes = [];
 
   // 1. Feld für Notiz-Daten
   Set<String> _noteDates = {};
@@ -58,12 +60,11 @@ class ExerciseGraphController extends ChangeNotifier {
   double get maxScore => _maxScore;
   double get maxHistoryDistance => _maxHistoryDistance;
   DateTime? get mostRecentTrainingDate => _mostRecentTrainingDate;
-  ApiExercise? get currentExercise => _currentExercise;
+  Exercise? get currentExercise => _currentExercise;
 
 // 2. Methode zum Laden der Notizdaten
   Future<void> loadNoteDates() async {
-    final container = ServiceContainer();
-    final notes = await container.calendarService.getCalendarNotes();
+    final notes = await GetIt.I<CalendarService>().getCalendarNotes();
     _noteDates = notes
         .map<String>((n) => (n['date'] as String).substring(0, 10))
         .toSet();
@@ -74,13 +75,13 @@ class ExerciseGraphController extends ChangeNotifier {
   }
 
   /// Set the current exercise - call this when exercise data is available
-  void setCurrentExercise(ApiExercise? exercise) {
+  void setCurrentExercise(Exercise? exercise) {
     _currentExercise = exercise;
     // Don't notify listeners here as this is just setting up data
   }
 
   /// Update graph data from training sets
-  Future<void> updateGraphFromTrainingSets(List<ApiTrainingSet> trainingSets,
+  Future<void> updateGraphFromTrainingSets(List<TrainingSet> trainingSets,
       {bool detailedGraph = false}) async {
     await loadNoteDates();
     // Add async here
@@ -115,8 +116,7 @@ class ExerciseGraphController extends ChangeNotifier {
   /// Load period data and create helper lines with belowBarData
   Future<void> _loadPeriodData() async {
     try {
-      final container = ServiceContainer();
-      final periods = await container.calendarService.getCalendarPeriods();
+      final periods = await GetIt.I<CalendarService>().getCalendarPeriods();
       _periodTypes.clear(); // Clear period types
 
       if (_mostRecentTrainingDate == null) return;
@@ -140,7 +140,7 @@ class ExerciseGraphController extends ChangeNotifier {
 
           // Check if period overlaps with graph range
           final graphStartX = -_maxHistoryDistance;
-          final graphEndX = 0.0;
+          const graphEndX = 0.0;
 
           if (startX <= graphEndX && endX >= graphStartX) {
             // Clamp the period to the visible range
@@ -157,15 +157,19 @@ class ExerciseGraphController extends ChangeNotifier {
             _periodTypes.add(type); // Store the period type
           }
         } catch (e) {
-          print('Error parsing period dates: $e');
+          if (kDebugMode) {
+            print('Error parsing period dates: $e');
+          }
         }
       }
     } catch (e) {
-      print('Error loading period data: $e');
+      if (kDebugMode) {
+        print('Error loading period data: $e');
+      }
     }
   } // Efficiently update graph with a single new training set
 
-  bool updateGraphWithNewSet(ApiTrainingSet newSet) {
+  bool updateGraphWithNewSet(TrainingSet newSet) {
     try {
       // Only update if this is a work set (not warmup)
       if (newSet.setType == 0) return false;
@@ -199,13 +203,15 @@ class ExerciseGraphController extends ChangeNotifier {
       }
       return false;
     } catch (e) {
-      print('Error updating graph with new set: $e');
+      if (kDebugMode) {
+        print('Error updating graph with new set: $e');
+      }
       return false;
     }
   }
 
   /// Calculate score for a training set using the appropriate method
-  double _calculateScoreForSet(ApiTrainingSet trainingSet) {
+  double _calculateScoreForSet(TrainingSet trainingSet) {
     if (_currentExercise != null) {
       return globals.calculateScoreWithExercise(trainingSet, _currentExercise!);
     } else {
@@ -215,8 +221,8 @@ class ExerciseGraphController extends ChangeNotifier {
   }
 
   /// Update graph points from processed data
-  void _updateGraphPoints(Map<String, ApiTrainingSet> graphData,
-      Map<String, List<ApiTrainingSet>> dataByDate, bool detailedGraph) {
+  void _updateGraphPoints(Map<String, TrainingSet> graphData,
+      Map<String, List<TrainingSet>> dataByDate, bool detailedGraph) {
     if (graphData.isEmpty || _mostRecentTrainingDate == null) return;
 
     final List<FlSpot> bestPoints = [];
@@ -231,7 +237,7 @@ class ExerciseGraphController extends ChangeNotifier {
       if (setsForDay.isEmpty) continue;
 
       // Sort sets by score descending using the new score calculation
-      final sortedSets = List<ApiTrainingSet>.from(setsForDay)
+      final sortedSets = List<TrainingSet>.from(setsForDay)
         ..sort((a, b) =>
             _calculateScoreForSet(b).compareTo(_calculateScoreForSet(a)));
 
@@ -397,9 +403,9 @@ class ExerciseGraphController extends ChangeNotifier {
   }
 
   /// Group training sets by date
-  Map<String, List<ApiTrainingSet>> _groupTrainingSetsByDate(
-      List<ApiTrainingSet> trainingSets) {
-    final Map<String, List<ApiTrainingSet>> dataByDate = {};
+  Map<String, List<TrainingSet>> _groupTrainingSetsByDate(
+      List<TrainingSet> trainingSets) {
+    final Map<String, List<TrainingSet>> dataByDate = {};
 
     for (var set in trainingSets) {
       final dateKey = _formatDateKey(set.date);
@@ -413,9 +419,9 @@ class ExerciseGraphController extends ChangeNotifier {
   }
 
   /// Process graph data from grouped training sets
-  Map<String, ApiTrainingSet> _processGraphData(
-      Map<String, List<ApiTrainingSet>> dataByDate, bool detailedGraph) {
-    final Map<String, ApiTrainingSet> graphData = {};
+  Map<String, TrainingSet> _processGraphData(
+      Map<String, List<TrainingSet>> dataByDate, bool detailedGraph) {
+    final Map<String, TrainingSet> graphData = {};
 
     for (var entry in dataByDate.entries) {
       final dateKey = entry.key;
@@ -435,8 +441,8 @@ class ExerciseGraphController extends ChangeNotifier {
   }
 
   /// Find the best training set from a list (highest score)
-  ApiTrainingSet _findBestSet(List<ApiTrainingSet> sets) {
-    ApiTrainingSet bestSet = sets.first;
+  TrainingSet _findBestSet(List<TrainingSet> sets) {
+    TrainingSet bestSet = sets.first;
 
     for (var set in sets) {
       if (_calculateScoreForSet(set) > _calculateScoreForSet(bestSet)) {
@@ -448,7 +454,7 @@ class ExerciseGraphController extends ChangeNotifier {
   }
 
   /// Update graph ranges based on data
-  void _updateGraphRanges(Map<String, List<ApiTrainingSet>> dataByDate) {
+  void _updateGraphRanges(Map<String, List<TrainingSet>> dataByDate) {
     if (dataByDate.isEmpty) return;
 
     final sortedDates = dataByDate.keys.toList()..sort();

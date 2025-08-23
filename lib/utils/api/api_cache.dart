@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 class ApiCache {
   static final ApiCache _instance = ApiCache._internal();
   factory ApiCache() => _instance;

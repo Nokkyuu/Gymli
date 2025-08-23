@@ -1,16 +1,17 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import '../../../utils/services/service_container.dart';
-import '../../../utils/api/api_models.dart';
+import '../../../utils/models/data_models.dart';
+import 'package:get_it/get_it.dart';
+import '../../../utils/services/service_export.dart';
+//import '../../../utils/services/auth_service.dart';
 
 class WorkoutSetupController extends ChangeNotifier {
-  final ServiceContainer _container = ServiceContainer();
-
+  final ExerciseService exerciseService = GetIt.I<ExerciseService>();
   // Workout data
   String _workoutName = '';
-  ApiWorkout? _currentWorkout;
-  List<ApiExercise> _allExercises = [];
-  List<ApiWorkoutUnit> _addedExercises = [];
+  Workout? _currentWorkout;
+  List<Exercise> _allExercises = [];
+  List<WorkoutUnit> _addedExercises = [];
 
   // Form controller
   final TextEditingController workoutNameController = TextEditingController();
@@ -24,9 +25,9 @@ class WorkoutSetupController extends ChangeNotifier {
 
   // Getters
   String get workoutName => _workoutName;
-  ApiWorkout? get currentWorkout => _currentWorkout;
-  List<ApiExercise> get allExercises => _allExercises;
-  List<ApiWorkoutUnit> get addedExercises => _addedExercises;
+  Workout? get currentWorkout => _currentWorkout;
+  List<Exercise> get allExercises => _allExercises;
+  List<WorkoutUnit> get addedExercises => _addedExercises;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
   ValueNotifier<bool> get exerciseListNotifier => _exerciseListNotifier;
@@ -43,21 +44,16 @@ class WorkoutSetupController extends ChangeNotifier {
     _setLoading(true);
     try {
       // Load all exercises
-      final exerciseData = await _container.exerciseService.getExercises();
+      final exerciseData = await exerciseService.getExercises();
       _allExercises = exerciseData
-          .map((item) => ApiExercise.fromJson(item))
-          .toList()
         ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
 
       if (_workoutName.isNotEmpty) {
-        final workoutData = await _container.getWorkouts();
-        final workouts =
-            workoutData.map((item) => ApiWorkout.fromJson(item)).toList();
+        final workouts = await GetIt.I<WorkoutService>().getWorkouts();
 
         _currentWorkout = workouts.firstWhere(
           (workout) => workout.name == _workoutName,
-          orElse: () => ApiWorkout(
-              id: 0, userName: "DefaultUser", name: _workoutName, units: []),
+          orElse: () => Workout(id: 0, name: _workoutName, units: []),
         );
 
         if (_currentWorkout != null) {
@@ -78,7 +74,7 @@ class WorkoutSetupController extends ChangeNotifier {
   }
 
   // Add exercise to workout
-  void addExercise(ApiExercise exercise, int warmups, int worksets) {
+  void addExercise(Exercise exercise, int warmups, int worksets) {
     // Check if exercise already exists
     for (int i = 0; i < _addedExercises.length; ++i) {
       if (_addedExercises[i].exerciseName == exercise.name) {
@@ -86,9 +82,9 @@ class WorkoutSetupController extends ChangeNotifier {
       }
     }
 
-    _addedExercises.add(ApiWorkoutUnit(
+    _addedExercises.add(WorkoutUnit(
         id: 0,
-        userName: "DefaultUser",
+        //userName: "DefaultUser",
         workoutId: 0,
         exerciseId: exercise.id ?? 0,
         exerciseName: exercise.name,
@@ -101,7 +97,7 @@ class WorkoutSetupController extends ChangeNotifier {
   }
 
   // Remove exercise from workout
-  void removeExercise(ApiWorkoutUnit exercise) {
+  void removeExercise(WorkoutUnit exercise) {
     _addedExercises.remove(exercise);
     _exerciseListNotifier.value = !_exerciseListNotifier.value;
     notifyListeners();
@@ -120,10 +116,10 @@ class WorkoutSetupController extends ChangeNotifier {
           _currentWorkout!.id != null &&
           _currentWorkout!.id! > 0) {
         // Delete existing workout (this should also delete associated workout units)
-        await _container.workoutService.deleteWorkout(_currentWorkout!.id!);
+        await GetIt.I<WorkoutService>().deleteWorkout(_currentWorkout!.id!);
 
         // Create new workout with the updated data
-        await _container.createWorkout(
+        await GetIt.I<WorkoutService>().createWorkout(
           name: workoutNameController.text,
           units: _addedExercises.map((unit) => unit.toJson()).toList(),
         );
@@ -132,14 +128,14 @@ class WorkoutSetupController extends ChangeNotifier {
         _currentWorkout = null;
       } else {
         // Create new workout
-        await _container.createWorkout(
+        await GetIt.I<WorkoutService>().createWorkout(
           name: workoutNameController.text,
           units: _addedExercises.map((unit) => unit.toJson()).toList(),
         );
       }
 
       // Notify that data has changed
-      _container.notifyDataChanged();
+      //GetIt.I<AuthService>().notifyAuthStateChanged();
       _clearError();
       return true;
     } catch (e) {
@@ -157,7 +153,7 @@ class WorkoutSetupController extends ChangeNotifier {
 
     _setLoading(true);
     try {
-      await _container.workoutService.deleteWorkout(_currentWorkout!.id!);
+      await GetIt.I<WorkoutService>().deleteWorkout(_currentWorkout!.id!);
       _clearError();
       return true;
     } catch (e) {

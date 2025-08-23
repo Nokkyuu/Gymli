@@ -1,17 +1,18 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import '../../../utils/services/service_container.dart';
-import '../../../utils/api/api_models.dart';
+import '../../../utils/models/data_models.dart';
+import 'package:get_it/get_it.dart';
+import 'package:Gymli/utils/services/service_export.dart';
 
 /// Component for ingredients when creating custom food
 class FoodComponent {
-  ApiFood? food;
+  FoodItem? food;
   double grams = 0;
 }
 
 /// Controller for custom food creation and management
 class FoodManagementController extends ChangeNotifier {
-  final ServiceContainer container = ServiceContainer();
+  final TempService container = GetIt.I<TempService>();
 
   // Form controllers for custom food creation
   final TextEditingController customFoodNameController =
@@ -63,8 +64,8 @@ class FoodManagementController extends ChangeNotifier {
     }
 
     try {
-      if (kDebugMode) print('Calling container.foodService.createFood...');
-      final result = await container.foodService.createFood(
+      if (kDebugMode) print('Calling FoodServce.createFood...');
+      final result = await GetIt.I<FoodService>().createFood(
         name: customFoodNameController.text,
         kcalPer100g: calories,
         proteinPer100g: protein,
@@ -138,7 +139,7 @@ class FoodManagementController extends ChangeNotifier {
   }
 
   /// Update food component
-  void updateFoodComponent(int index, {ApiFood? food, double? grams}) {
+  void updateFoodComponent(int index, {FoodItem? food, double? grams}) {
     if (index < _foodComponents.length) {
       if (food != null) _foodComponents[index].food = food;
       if (grams != null) _foodComponents[index].grams = grams;

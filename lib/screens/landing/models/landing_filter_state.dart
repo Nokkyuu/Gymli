@@ -1,7 +1,7 @@
 /// Landing Filter State - Model for filter state management
 library;
 
-import '../../../utils/api/api_models.dart';
+import '../../../utils/models/data_models.dart';
 
 enum MuscleList {
   Pectoralis_major("Pectoralis major"),
@@ -25,7 +25,7 @@ enum FilterType { none, workout, muscle }
 
 class LandingFilterState {
   final FilterType filterType;
-  final ApiWorkout? selectedWorkout;
+  final Workout? selectedWorkout;
   final MuscleList? selectedMuscle;
 
   const LandingFilterState({
@@ -36,7 +36,7 @@ class LandingFilterState {
 
   LandingFilterState copyWith({
     FilterType? filterType,
-    ApiWorkout? selectedWorkout,
+    Workout? selectedWorkout,
     MuscleList? selectedMuscle,
   }) {
     return LandingFilterState(
@@ -52,7 +52,7 @@ class LandingFilterState {
   }
 
   /// Set workout filter
-  LandingFilterState setWorkoutFilter(ApiWorkout workout) {
+  LandingFilterState setWorkoutFilter(Workout workout) {
     return LandingFilterState(
       filterType: FilterType.workout,
       selectedWorkout: workout,

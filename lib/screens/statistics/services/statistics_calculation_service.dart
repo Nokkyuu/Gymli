@@ -1,10 +1,11 @@
 import 'dart:math';
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:time_machine/time_machine.dart';
 import 'package:tuple/tuple.dart';
 
-import '../../../utils/api/api_models.dart';
+import '../../../utils/models/data_models.dart';
 import '../../../utils/globals.dart' as globals;
 import '../constants/muscle_constants.dart';
 import '../constants/chart_constants.dart';
@@ -18,7 +19,9 @@ class StatisticsCalculationService {
       return List.filled(14, 0.0);
     }
 
-    print("DEBUG _muscleHistoryScore $muscleHistoryScore");
+    if (kDebugMode) {
+      print("DEBUG _muscleHistoryScore $muscleHistoryScore");
+    }
     List<double> muscleHistoryScoreCum = [];
 
     for (int i = 0; i < muscleHistoryScore[0].length; i++) {
@@ -32,7 +35,9 @@ class StatisticsCalculationService {
     }
 
     if (muscleHistoryScoreCum.isNotEmpty) {
-      print("DEBUG muscleHistoryScoreCum $muscleHistoryScoreCum");
+      if (kDebugMode) {
+        print("DEBUG muscleHistoryScoreCum $muscleHistoryScoreCum");
+      }
       var highestValue = muscleHistoryScoreCum.reduce(max);
       return muscleHistoryScoreCum
           .map((score) => highestValue > 0 ? score / highestValue : 0.0)
@@ -45,7 +50,7 @@ class StatisticsCalculationService {
   /// Calculate equipment usage statistics
   EquipmentUsage calculateEquipmentUsage(
     List<Map<String, dynamic>> trainingSets,
-    List<ApiExercise> exercises,
+    List<Exercise> exercises,
   ) {
     try {
       // Create a map of exercise names to their types
@@ -90,7 +95,9 @@ class StatisticsCalculationService {
         bodyweight: bodyweightExercises.length,
       );
     } catch (e) {
-      print('Error calculating equipment usage: $e');
+      if (kDebugMode) {
+        print('Error calculating equipment usage: $e');
+      }
       return EquipmentUsage.empty();
     }
   }
@@ -99,7 +106,7 @@ class StatisticsCalculationService {
   Future<List<List<double>>> calculateMuscleHistoryScores(
     List<DateTime> trainingDates,
     List<Map<String, dynamic>> allTrainingSets,
-    List<ApiExercise> exercises,
+    List<Exercise> exercises,
   ) async {
     // Create muscle mapping
     Map<String, int> muscleMapping = {
@@ -259,7 +266,7 @@ class StatisticsCalculationService {
   ExerciseProgressData calculateExerciseProgress(
     String exerciseName,
     List<Map<String, dynamic>> exerciseTrainingSets,
-    ApiExercise? exercise, // Add exercise parameter
+    Exercise? exercise, // Add exercise parameter
   ) {
     if (exerciseTrainingSets.isEmpty) {
       return ExerciseProgressData.empty();
@@ -311,7 +318,7 @@ class StatisticsCalculationService {
         final setData = bestSetPerDay[dateKey]!;
 
         // Create ApiTrainingSet for score calculation
-        final trainingSet = ApiTrainingSet(
+        final trainingSet = TrainingSet(
           weight: setData['weight'] as double,
           repetitions: setData['repetitions'] as int,
           // baseReps: setData['base_reps'] as int,
@@ -321,7 +328,6 @@ class StatisticsCalculationService {
           setType: setData['set_type'] as int,
           exerciseId: setData['exercise_id'] as int,
           exerciseName: exerciseName,
-          userName: '',
         );
 
         double xValue = -latestDate.difference(date).inDays.toDouble();
@@ -369,14 +375,14 @@ class StatisticsCalculationService {
   Future<ExerciseGraphDataResult> loadExerciseGraphData({
     required String exerciseName,
     required List<Map<String, dynamic>> allTrainingSets,
-    required List<ApiExercise> exercises, // Add exercises parameter
+    required List<Exercise> exercises, // Add exercises parameter
     String? startingDate,
     String? endingDate,
     bool useDefaultFilter = true,
   }) async {
     try {
       // Find the exercise object for this exercise name
-      ApiExercise? exercise;
+      Exercise? exercise;
       try {
         exercise = exercises.firstWhere((e) => e.name == exerciseName);
       } catch (e) {
@@ -493,7 +499,7 @@ class StatisticsCalculationService {
           final setData = bestSetPerDay[dateKey]!;
 
           // Create ApiTrainingSet for score calculation
-          final trainingSet = ApiTrainingSet(
+          final trainingSet = TrainingSet(
             weight: setData['weight'] as double,
             repetitions: setData['repetitions'] as int,
             // baseReps: setData['base_reps'] as int,
@@ -503,7 +509,6 @@ class StatisticsCalculationService {
             setType: setData['set_type'] as int,
             exerciseId: setData['exercise_id'] as int,
             exerciseName: exerciseName,
-            userName: '',
           );
 
           double xValue = -latestDate.difference(date).inDays.toDouble();
@@ -551,14 +556,15 @@ class StatisticsCalculationService {
 
       return ExerciseGraphDataResult.empty();
     } catch (e) {
-      print('Error loading exercise graph data: $e');
+      if (kDebugMode) {
+        print('Error loading exercise graph data: $e');
+      }
       return ExerciseGraphDataResult.empty();
     }
   }
 
   /// Calculate score for a training set using the appropriate method
-  double _calculateScoreForSet(
-      ApiTrainingSet trainingSet, ApiExercise? exercise) {
+  double _calculateScoreForSet(TrainingSet trainingSet, Exercise? exercise) {
     if (exercise != null) {
       return globals.calculateScoreWithExercise(trainingSet, exercise);
     } else {
@@ -580,7 +586,7 @@ class StatisticsCalculationService {
   /// This method handles muscle mapping, training set analysis, and bar chart generation
   Future<StatisticsCalculationResult> calculateBarStatistics({
     required List<Map<String, dynamic>> trainingSets,
-    required List<ApiExercise> exercises,
+    required List<Exercise> exercises,
     required List<DateTime> filteredTrainingDates,
   }) async {
     try {
@@ -675,7 +681,9 @@ class StatisticsCalculationService {
         heatMapData: heatMapData,
       );
     } catch (e) {
-      print('Error calculating bar statistics: $e');
+      if (kDebugMode) {
+        print('Error calculating bar statistics: $e');
+      }
       return StatisticsCalculationResult.empty();
     }
   }

@@ -8,7 +8,7 @@ import 'package:provider/provider.dart';
 import '../utils/themes/responsive_helper.dart';
 import 'exercise_setup/exercise_setup_exports.dart';
 import 'package:go_router/go_router.dart';
-import 'package:Gymli/config/app_router.dart';
+import 'package:Gymli/widgets/app_router.dart';
 import '../utils/info_dialogues.dart';
 
 class ExerciseSetupScreen extends StatefulWidget {
@@ -185,8 +185,9 @@ class _ExerciseSetupScreenState extends State<ExerciseSetupScreen> {
         return;
       }
 
-      if (kDebugMode)
+      if (kDebugMode) {
         print('✅ Screen context is mounted, attempting navigation');
+      }
 
       try {
         if (context.canPop()) {

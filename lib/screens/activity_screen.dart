@@ -42,9 +42,7 @@ class _ActivityScreenState extends State<ActivityScreen>
     super.didChangeDependencies();
 
     // Initialize TabController here where MediaQuery is available
-    if (_tabController == null) {
-      _tabController = TabController(length: _getTabCount(), vsync: this);
-    }
+    _tabController ??= TabController(length: _getTabCount(), vsync: this);
   }
 
   @override
@@ -81,9 +79,7 @@ class _ActivityScreenState extends State<ActivityScreen>
   @override
   Widget build(BuildContext context) {
     // Ensure TabController is initialized
-    if (_tabController == null) {
-      _tabController = TabController(length: _getTabCount(), vsync: this);
-    }
+    _tabController ??= TabController(length: _getTabCount(), vsync: this);
 
     // Rebuild tab controller if screen size changes
     final currentTabCount = _getTabCount();

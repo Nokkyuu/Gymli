@@ -1,16 +1,25 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
-import '../../../utils/services/service_container.dart';
-import '../../../utils/api/api_models.dart';
+import '../../../utils/models/data_models.dart';
+import 'package:get_it/get_it.dart';
+import 'package:Gymli/utils/services/service_export.dart';
 
 /// Controller for managing food data, loading, and search functionality
 class FoodDataController extends ChangeNotifier {
-  final ServiceContainer container = ServiceContainer();
+  final FoodService foodService = GetIt.I<FoodService>();
+  Future<Map<String, double>> getFoodLogStats({
+    DateTime? startDate,
+    DateTime? endDate,
+  }) {
+    return foodService.getFoodLogStats(
+      startDate: startDate,
+      endDate: endDate,
+    );
+  }
 
   // Data lists
-  List<ApiFood> foods = [];
-  List<ApiFoodLog> foodLogs = [];
+  List<FoodItem> foods = [];
+  List<FoodLog> foodLogs = [];
   Map<String, double> nutritionStats = {};
 
   // Loading states
@@ -32,7 +41,7 @@ class FoodDataController extends ChangeNotifier {
   DateTime selectedDate = DateTime.now();
 
   // Filtered foods getter
-  List<ApiFood> get filteredFoods {
+  List<FoodItem> get filteredFoods {
     if (_foodSearchQuery.isEmpty) return foods;
     return foods
         .where((food) =>
@@ -46,12 +55,12 @@ class FoodDataController extends ChangeNotifier {
 
     try {
       // Load all data
-      final foodsData = await container.foodService.getFoods();
-      final logsData = await container.foodService.getFoodLogs();
-      final statsData = await container.getFoodLogStats();
+      final foodsData = await GetIt.I<FoodService>().getFoods();
+      final logsData = await GetIt.I<FoodService>().getFoodLogs();
+      final statsData = await GetIt.I<FoodService>().getFoodLogStats();
 
-      foods = foodsData.map((data) => ApiFood.fromJson(data)).toList();
-      foodLogs = logsData.map((data) => ApiFoodLog.fromJson(data)).toList();
+      foods = foodsData.map((data) => FoodItem.fromJson(data)).toList();
+      foodLogs = logsData.map((data) => FoodLog.fromJson(data)).toList();
       nutritionStats = statsData;
 
       // Set default selected food by name
@@ -96,7 +105,7 @@ class FoodDataController extends ChangeNotifier {
   }
 
   /// Get selected food object
-  ApiFood? get selectedFood {
+  FoodItem? get selectedFood {
     if (selectedFoodName == null) return null;
     try {
       return foods.firstWhere((f) => f.name == selectedFoodName);
@@ -108,7 +117,7 @@ class FoodDataController extends ChangeNotifier {
   /// Update chart data for trends
   void _updateChartData() {
     // Sort logs by date for chart data
-    final sortedLogs = List<ApiFoodLog>.from(foodLogs);
+    final sortedLogs = List<FoodLog>.from(foodLogs);
     sortedLogs.sort((a, b) => a.date.compareTo(b.date));
 
     // Create chart data points
@@ -134,11 +143,11 @@ class FoodDataController extends ChangeNotifier {
   }
 
   /// Delete a food log entry
-  Future<void> deleteFoodLog(ApiFoodLog log) async {
+  Future<void> deleteFoodLog(FoodLog log) async {
     if (log.id == null) return;
 
     try {
-      await container.foodService.deleteFoodLog(logId: log.id!);
+      await GetIt.I<FoodService>().deleteFoodLog(logId: log.id!);
       await loadData(); // Reload data after deletion
     } catch (e) {
       if (kDebugMode) print('Error deleting food log: $e');
@@ -147,11 +156,11 @@ class FoodDataController extends ChangeNotifier {
   }
 
   /// Delete a food item
-  Future<void> deleteFood(ApiFood food) async {
+  Future<void> deleteFood(FoodItem food) async {
     if (food.id == null) return;
 
     try {
-      await container.foodService.deleteFood(foodId: food.id!);
+      await GetIt.I<FoodService>().deleteFood(foodId: food.id!);
       await loadData(); // Reload data after deletion
     } catch (e) {
       if (kDebugMode) print('Error deleting food: $e');
@@ -162,10 +171,5 @@ class FoodDataController extends ChangeNotifier {
   void _setLoading(bool loading) {
     _isLoading = loading;
     notifyListeners();
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
   }
 }

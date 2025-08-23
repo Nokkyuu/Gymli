@@ -1,18 +1,18 @@
 //import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:developer';
 
 import 'package:auth0_flutter/auth0_flutter_web.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
-import 'package:Gymli/utils/services/service_container.dart';
 import '../../config/api_config.dart';
 import '../globals.dart' as globals;
-import '../api/api.dart';
+import 'service_export.dart';
+import '../api/api_base.dart';
 //import 'user_service.dart';
+import 'package:get_it/get_it.dart';
+//import 'package:Gymli/utils/services/auth_service.dart';
+import 'package:Gymli/utils/services/authentication_service.dart';
+import 'package:Gymli/utils/workout_data_cache.dart';
 
 class AppInitializer {
-  static const String _auth0Domain = 'dev-aqz5a2g54oer01tk.us.auth0.com';
-  static const String _auth0ClientId = 'MAxJUti2T7TkLagzT7SdeEzCTZsHyuOa';
-
   static late Auth0Web auth0;
   static bool _isInitialized = false;
 
@@ -32,7 +32,9 @@ class AppInitializer {
     }
 
     try {
-      print('Starting app initialization...');
+      if (kDebugMode) {
+        print('Starting app initialization...');
+      }
 
       // // 1. Load preferences
       // await _loadPreferences(); TODO: delete or implement ?
@@ -44,13 +46,9 @@ class AppInitializer {
       ApiConfig.initialize();
       if (kDebugMode) print('✓ API configuration initialized');
 
-      // 3. Initialize Auth0
-      _initializeAuth0();
-      if (kDebugMode) print('✓ Auth0 initialized');
-
       // 4. Initialize UserService
-      await ServiceContainer().initialize();
-      if (kDebugMode) print('✓ UserService Container initialized');
+      GetIt.I<AuthenticationService>().initialize();
+      if (kDebugMode) print('✓ AuthenticationService initialized');
 
       await _initializeUserService();
       if (kDebugMode) print('✓ UserService initialized');
@@ -61,6 +59,7 @@ class AppInitializer {
 
       _isInitialized = true;
       if (kDebugMode) print('App initialization completed successfully');
+      await GetIt.I<WorkoutDataCache>().init();
 
       return AppInitializationResult.success();
     } catch (e) {
@@ -87,11 +86,6 @@ class AppInitializer {
   //       prefs.getBool('detailedGraph') ?? globals.detailedGraph;
   // }
 
-  /// Initialize Auth0 service
-  static void _initializeAuth0() {
-    auth0 = Auth0Web(_auth0Domain, _auth0ClientId);
-  }
-
   /// Initialize UserService and load stored auth state
   /// This will also set the credentials if available.
   ///
@@ -102,12 +96,14 @@ class AppInitializer {
     try {
       // Try to load stored authentication state
       final credentials =
-          await ServiceContainer().authService.loadStoredAuthState();
+          await GetIt.I<AuthenticationService>().loadStoredAuthState();
       if (credentials != null) {
-        ServiceContainer().authService.setCredentials(credentials);
+        GetIt.I<AuthenticationService>().setCredentials(credentials);
       }
     } catch (e) {
-      print('No stored authentication state found: $e');
+      if (kDebugMode) {
+        print('No stored authentication state found: $e');
+      }
       // Continue without stored auth state
     }
   }
@@ -119,20 +115,25 @@ class AppInitializer {
       // Ensure API is configured before loading data, this should normaly be done in the AppInitializer
       // but we check here to avoid unnecessary API calls if not configured
       if (!ApiConfig.isConfigured) {
-        print('API not configured, skipping exercise list load');
+        if (kDebugMode) {
+          print('API not configured, skipping exercise list load');
+        }
         globals.exerciseList = [];
         return;
       }
 
       //await Future.delayed(const Duration(milliseconds: 100)); TODO: probably not needed anymore, recheck later
 
-      final exercises = await ServiceContainer().exerciseService.getExercises();
+      final exercises = await GetIt.I<ExerciseService>().getExercises();
 
-      globals.exerciseList =
-          exercises.map<String>((e) => e['name'] as String).toList();
-      print('Exercise list loaded: ${globals.exerciseList.length} exercises');
+      globals.exerciseList = exercises.map<String>((e) => e.name).toList();
+      if (kDebugMode) {
+        print('Exercise list loaded: ${globals.exerciseList.length} exercises');
+      }
     } catch (e) {
-      print('Error loading initial data: $e');
+      if (kDebugMode) {
+        print('Error loading initial data: $e');
+      }
       globals.exerciseList = [];
     }
   }

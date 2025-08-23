@@ -1,40 +1,40 @@
+import 'package:Gymli/utils/services/authentication_service.dart';
+import 'package:Gymli/utils/workout_session_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:auth0_flutter/auth0_flutter.dart';
 import 'package:auth0_flutter/auth0_flutter_web.dart';
 import 'package:go_router/go_router.dart';
-import 'package:Gymli/utils/services/service_container.dart';
-import 'package:Gymli/config/app_router.dart';
+import 'package:Gymli/widgets/app_router.dart';
 import '../../utils/themes/themes.dart';
 import '../../utils/globals.dart' as globals;
+import 'package:get_it/get_it.dart';
 
 class AppDrawer extends StatefulWidget {
   final Credentials? credentials;
   final Auth0Web auth0;
-  final ServiceContainer container;
   final String? drawerImage;
   final List<String> drawerImages;
   final bool isDarkMode;
   final Brightness mode;
   final Function(Brightness) onModeChanged;
-  final Function(Credentials?) onCredentialsChanged;
-  final VoidCallback onReloadUserData;
-  final Function() getExerciseList;
+  //final Function(Credentials?) onCredentialsChanged;
+  // final VoidCallback onReloadUserData;
+  // final Function() getExerciseList;
 
   const AppDrawer({
     super.key,
     required this.credentials,
     required this.auth0,
-    required this.container,
     required this.drawerImage,
     required this.drawerImages,
     required this.isDarkMode,
     required this.mode,
     required this.onModeChanged,
-    required this.onCredentialsChanged,
-    required this.onReloadUserData,
-    required this.getExerciseList,
+    //required this.onCredentialsChanged,
+    // required this.onReloadUserData,
+    // required this.getExerciseList,
   });
 
   @override
@@ -42,10 +42,13 @@ class AppDrawer extends StatefulWidget {
 }
 
 class _AppDrawerState extends State<AppDrawer> {
+  final AuthenticationService authService = GetIt.I<AuthenticationService>();
+
   @override
   Widget build(BuildContext context) {
     const redirectUrl =
         kDebugMode ? 'http://localhost:3000' : 'https://gymli.brgmnn.de/';
+
     final imageToShow = widget.drawerImage ?? widget.drawerImages[0];
 
     return Drawer(
@@ -168,9 +171,9 @@ class _AppDrawerState extends State<AppDrawer> {
                   Navigator.pop(context);
                   await widget.auth0.logout(returnToUrl: redirectUrl);
                   // Clear user data after logout
-                  widget.onCredentialsChanged(null);
+                  authService.logout();
                   // Reload data for default user
-                  widget.onReloadUserData();
+                  // widget.onReloadUserData();
                 },
               ),
               _buildUserDataIndicator(),
@@ -191,7 +194,7 @@ class _AppDrawerState extends State<AppDrawer> {
 
   Widget _buildUserDataIndicator() {
     return ValueListenableBuilder<bool>(
-      valueListenable: widget.container.authService.authStateNotifier,
+      valueListenable: authService.authStateNotifier,
       builder: (context, isLoggedIn, child) {
         return FutureBuilder<Map<String, int>>(
           future: _getUserDataCounts(),
@@ -204,12 +207,12 @@ class _AppDrawerState extends State<AppDrawer> {
               margin:
                   const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
               decoration: BoxDecoration(
-                color: widget.container.authService.isLoggedIn
+                color: authService.isLoggedIn
                     ? ThemeColors.themeBlue
                     : Colors.grey.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8.0),
                 border: Border.all(
-                  color: widget.container.authService.isLoggedIn
+                  color: authService.isLoggedIn
                       ? widget.isDarkMode
                           ? Colors.white
                           : Colors.white
@@ -223,10 +226,10 @@ class _AppDrawerState extends State<AppDrawer> {
                   Row(
                     children: [
                       Icon(
-                        widget.container.authService.isLoggedIn
+                        authService.isLoggedIn
                             ? Icons.person
                             : Icons.person_outline,
-                        color: widget.container.authService.isLoggedIn
+                        color: authService.isLoggedIn
                             ? widget.isDarkMode
                                 ? Colors.white
                                 : Colors.white
@@ -236,11 +239,11 @@ class _AppDrawerState extends State<AppDrawer> {
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
-                          widget.container.authService.isLoggedIn
-                              ? 'Logged in as: ${widget.container.authService.userName}'
+                          authService.isLoggedIn
+                              ? 'Logged in as: ${authService.userName}'
                               : 'Not logged in (viewing defaults)',
                           style: TextStyle(
-                            color: widget.container.authService.isLoggedIn
+                            color: authService.isLoggedIn
                                 ? widget.isDarkMode
                                     ? Colors.white
                                     : Colors.white
@@ -273,11 +276,9 @@ class _AppDrawerState extends State<AppDrawer> {
 
   Future<Map<String, int>> _getUserDataCounts() async {
     try {
-      final exercises = await widget.container.exerciseService.getExercises();
-      final workouts = await widget.container.workoutService.getWorkouts();
       return {
-        'exercises': exercises.length,
-        'workouts': workouts.length,
+        'exercises': GetIt.I<WorkoutSessionManager>().getSession().numExercises,
+        'workouts': GetIt.I<WorkoutSessionManager>().getSession().numWorkouts,
       };
     } catch (e) {
       return {'exercises': 0, 'workouts': 0};

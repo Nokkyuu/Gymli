@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../controllers/exercise_controller.dart';
-import '../../../utils/api/api_models.dart';
+import '../../../utils/models/data_models.dart';
 import 'package:Gymli/utils/themes/themes.dart' show setIcons;
 
 /// Widget for displaying the list of training sets
@@ -119,7 +119,7 @@ class _TrainingSetsListWidgetState extends State<TrainingSetsListWidget> {
     );
   }
 
-  Widget _buildTrainingSetItem(ApiTrainingSet trainingSet) {
+  Widget _buildTrainingSetItem(TrainingSet trainingSet) {
     return ListTile(
       leading: CircleAvatar(
         radius: 17.5,
@@ -147,7 +147,7 @@ class _TrainingSetsListWidgetState extends State<TrainingSetsListWidget> {
         "${date.second.toString().padLeft(2, '0')}";
   }
 
-  Future<void> _confirmDelete(ApiTrainingSet trainingSet) async {
+  Future<void> _confirmDelete(TrainingSet trainingSet) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (BuildContext context) {
@@ -164,8 +164,8 @@ class _TrainingSetsListWidgetState extends State<TrainingSetsListWidget> {
             ),
             TextButton(
               onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('Delete'),
               style: TextButton.styleFrom(foregroundColor: Colors.red),
+              child: const Text('Delete'),
             ),
           ],
         );

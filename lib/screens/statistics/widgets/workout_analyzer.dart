@@ -2,7 +2,8 @@ import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'dart:math';
-import 'package:Gymli/utils/services/service_container.dart';
+import 'package:get_it/get_it.dart';
+import '../../../utils/services/service_export.dart';
 
 class WorkoutAnalyzerScreen extends StatefulWidget {
   final String? startingDate;
@@ -21,8 +22,8 @@ class WorkoutAnalyzerScreen extends StatefulWidget {
 }
 
 class _WorkoutAnalyzerScreenState extends State<WorkoutAnalyzerScreen> {
-  final ServiceContainer container = ServiceContainer();
-
+  final TempService container = GetIt.I<TempService>();
+  final ExerciseService exerciseService = GetIt.I<ExerciseService>();
   List<Map<String, dynamic>> _workouts = [];
   List<Map<String, dynamic>> _exercises = [];
   Set<int> _selectedWorkoutIds = {};
@@ -71,8 +72,8 @@ class _WorkoutAnalyzerScreenState extends State<WorkoutAnalyzerScreen> {
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
     try {
-      final workouts = await container.workoutService.getWorkouts();
-      final exercises = await container.exerciseService.getExercises();
+      final workouts = await GetIt.I<WorkoutService>().getWorkouts();
+      final exercises = await exerciseService.getExercises();
       // Sortiere Workouts alphabetisch nach Name
       final sortedWorkouts = List<Map<String, dynamic>>.from(workouts)
         ..sort((a, b) => (a['name'] ?? '').toString().toLowerCase().compareTo(

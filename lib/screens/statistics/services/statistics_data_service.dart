@@ -9,18 +9,20 @@
 library;
 
 import 'package:fl_chart/fl_chart.dart';
-import 'package:Gymli/utils/services/service_container.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
-import '../../../utils/api/api_models.dart';
+import '../../../utils/models/data_models.dart';
 import 'statistics_filter_service.dart';
+import '../../../utils/services/service_export.dart';
+import 'package:get_it/get_it.dart';
 
 /// Service responsible for data fetching and caching for statistics
 class StatisticsDataService {
-  final ServiceContainer container;
+  final TempService container;
+  final ExerciseService exerciseService = GetIt.I<ExerciseService>();
 
   // Caching variables to prevent redundant API calls
   List<Map<String, dynamic>>? _cachedTrainingSets;
-  List<ApiExercise>? _cachedExercises;
+  List<Exercise>? _cachedExercises;
   List<dynamic>? _cachedActivityLogs;
   Map<String, dynamic>? _cachedActivityStats;
   bool _dataCacheValid = false;
@@ -50,7 +52,7 @@ class StatisticsDataService {
   Future<List<Map<String, dynamic>>> getTrainingSets() async {
     if (_cachedTrainingSets == null || !_dataCacheValid || _isCacheExpired) {
       if (kDebugMode) print('Loading training sets from API...');
-      final rawData = await container.trainingSetService.getTrainingSets();
+      final rawData = await GetIt.I<TrainingSetService>().getTrainingSets();
       _cachedTrainingSets = rawData.cast<Map<String, dynamic>>();
       _dataCacheValid = true;
       _lastCacheTime = DateTime.now();
@@ -61,12 +63,10 @@ class StatisticsDataService {
   }
 
   /// Get exercises with smart caching
-  Future<List<ApiExercise>> getExercises() async {
+  Future<List<Exercise>> getExercises() async {
     if (_cachedExercises == null || !_dataCacheValid || _isCacheExpired) {
       if (kDebugMode) print('Loading exercises from API...');
-      final exercisesData = await container.exerciseService.getExercises();
-      _cachedExercises =
-          exercisesData.map((e) => ApiExercise.fromJson(e)).toList();
+      _cachedExercises = await exerciseService.getExercises();
       _dataCacheValid = true;
       _lastCacheTime = DateTime.now();
     } else {
@@ -79,7 +79,7 @@ class StatisticsDataService {
   Future<List<dynamic>> getActivityLogs() async {
     if (_cachedActivityLogs == null || !_dataCacheValid || _isCacheExpired) {
       if (kDebugMode) print('Loading activity logs from API...');
-      _cachedActivityLogs = await container.activityService.getActivityLogs();
+      _cachedActivityLogs = await GetIt.I<ActivityService>().getActivityLogs();
       _dataCacheValid = true;
       _lastCacheTime = DateTime.now();
     } else {
@@ -92,7 +92,8 @@ class StatisticsDataService {
   Future<Map<String, dynamic>> getActivityStats() async {
     if (_cachedActivityStats == null || !_dataCacheValid || _isCacheExpired) {
       if (kDebugMode) print('Loading activity stats from API...');
-      _cachedActivityStats = await container.activityService.getActivityStats();
+      _cachedActivityStats =
+          await GetIt.I<ActivityService>().getActivityStats();
       _dataCacheValid = true;
       _lastCacheTime = DateTime.now();
     } else {
@@ -110,20 +111,20 @@ class StatisticsDataService {
   }) async {
     try {
       // Load activity statistics from API
-      final statsData = await container.activityService.getActivityStats();
+      final statsData = await GetIt.I<ActivityService>().getActivityStats();
       if (kDebugMode) print('Activity stats loaded: $statsData');
 
       // Load activity logs for trend data
-      final logsData = await container.activityService.getActivityLogs();
+      final logsData = await GetIt.I<ActivityService>().getActivityLogs();
       if (kDebugMode) print('Activity logs count: ${logsData.length}');
 
       // Convert logs to ApiActivityLog objects and sort by date
       final activityLogs =
-          logsData.map((data) => ApiActivityLog.fromJson(data)).toList();
+          logsData.map((data) => ActivityLog.fromJson(data)).toList();
       activityLogs.sort((a, b) => a.date.compareTo(b.date));
 
       // Apply date filtering (same logic as other statistics)
-      List<ApiActivityLog> filteredActivityLogs = List.from(activityLogs);
+      List<ActivityLog> filteredActivityLogs = List.from(activityLogs);
 
       // Apply the same filtering logic as in _loadStatistics
       if (useDefaultFilter && startingDate == null && endingDate == null) {

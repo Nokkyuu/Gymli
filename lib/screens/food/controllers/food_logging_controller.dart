@@ -1,11 +1,12 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import '../../../utils/services/service_container.dart';
-import '../../../utils/api/api_models.dart';
+import '../../../utils/models/data_models.dart';
+import '../../../utils/services/service_export.dart';
+import 'package:get_it/get_it.dart';
 
 /// Controller for food logging functionality
 class FoodLoggingController extends ChangeNotifier {
-  final ServiceContainer container = ServiceContainer();
+  final TempService container = GetIt.I<TempService>();
 
   // Form controllers
   final TextEditingController gramsController = TextEditingController();
@@ -21,7 +22,7 @@ class FoodLoggingController extends ChangeNotifier {
   Future<void> logFood({
     required String selectedFoodName,
     required DateTime selectedDate,
-    required List<ApiFood> foods,
+    required List<FoodItem> foods,
   }) async {
     if (gramsController.text.isEmpty) {
       throw Exception('Please enter weight in grams');
@@ -39,7 +40,7 @@ class FoodLoggingController extends ChangeNotifier {
     );
 
     try {
-      await container.foodService.createFoodLog(
+      await GetIt.I<FoodService>().createFoodLog(
         foodName: selectedFoodName,
         date: selectedDate,
         grams: grams,
@@ -58,7 +59,7 @@ class FoodLoggingController extends ChangeNotifier {
   }
 
   /// Calculate nutrition for given grams and food
-  Map<String, double> calculateNutrition(ApiFood food, double grams) {
+  Map<String, double> calculateNutrition(FoodItem food, double grams) {
     final multiplier = grams / 100.0;
     return {
       'calories': food.kcalPer100g * multiplier,

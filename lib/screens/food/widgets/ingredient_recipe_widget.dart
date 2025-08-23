@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../controllers/food_data_controller.dart';
 import '../controllers/food_management_controller.dart';
-import '../../../utils/api/api_models.dart';
+import '../../../utils/models/data_models.dart';
+import '../../../utils/services/service_export.dart';
+import 'package:get_it/get_it.dart';
 
 /// Widget for creating food from ingredients/recipe
 class IngredientRecipeWidget extends StatelessWidget {
@@ -82,7 +84,7 @@ class IngredientRecipeWidget extends StatelessWidget {
           final managementController =
               Provider.of<FoodManagementController>(context, listen: false);
 
-          await dataController.container.foodService.createFood(
+          await GetIt.I<FoodService>().createFood(
             name: result['name'],
             kcalPer100g: nutrition['kcal100']!,
             proteinPer100g: nutrition['protein100']!,
@@ -144,24 +146,24 @@ class IngredientRecipeWidget extends StatelessWidget {
                         children: [
                           Expanded(
                             flex: 2,
-                            child: Autocomplete<ApiFood>(
+                            child: Autocomplete<FoodItem>(
                               optionsBuilder:
                                   (TextEditingValue textEditingValue) {
                                 if (textEditingValue.text.isEmpty) {
                                   return dataController.foods;
                                 }
                                 return dataController.foods.where(
-                                    (ApiFood food) => food.name
+                                    (FoodItem food) => food.name
                                         .toLowerCase()
                                         .contains(textEditingValue.text
                                             .toLowerCase()));
                               },
-                              displayStringForOption: (ApiFood food) =>
+                              displayStringForOption: (FoodItem food) =>
                                   food.name,
                               initialValue: component.food != null
                                   ? TextEditingValue(text: component.food!.name)
                                   : const TextEditingValue(),
-                              onSelected: (ApiFood selected) {
+                              onSelected: (FoodItem selected) {
                                 managementController.updateFoodComponent(index,
                                     food: selected);
                               },

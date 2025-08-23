@@ -2,7 +2,7 @@
 ///
 library;
 
-import 'package:Gymli/utils/api/api_models.dart';
+import 'package:Gymli/utils/models/data_models.dart';
 import 'package:flutter/foundation.dart';
 
 // User preference settings
@@ -33,8 +33,8 @@ List<String> exerciseList = [];
 
 double calculateScoreWithExercise(
     //TODO: extract so somewhere
-    ApiTrainingSet trainingSet,
-    ApiExercise exercise) {
+    TrainingSet trainingSet,
+    Exercise exercise) {
   return trainingSet.weight +
       (((trainingSet.repetitions - exercise.defaultRepBase) /
               (exercise.defaultRepMax - exercise.defaultRepBase)) *

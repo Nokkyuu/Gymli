@@ -7,24 +7,21 @@ library;
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:Gymli/utils/themes/themes.dart' show setIcons;
-import '../utils/api/api_models.dart';
-import 'exercise/repositories/exercise_repository.dart';
+import '../utils/models/data_models.dart';
 import 'exercise_history/controller/history_list_controller.dart';
 
-final _setTypeIcons = setIcons;
+const _setTypeIcons = setIcons;
 
 class ExerciseListScreen extends StatefulWidget {
   final int exerciseId;
   final String exercise;
   final VoidCallback? onSetDeleted;
-  final ExerciseRepository? exerciseRepository;
 
   const ExerciseListScreen(
     this.exerciseId,
     this.exercise, {
     super.key,
     this.onSetDeleted,
-    this.exerciseRepository,
   });
 
   @override
@@ -33,7 +30,7 @@ class ExerciseListScreen extends StatefulWidget {
 
 class ListEntry {
   final String? header;
-  final ApiTrainingSet? set;
+  final TrainingSet? set;
   ListEntry.header(this.header) : set = null;
   ListEntry.set(this.set) : header = null;
   bool get isHeader => header != null;
@@ -50,7 +47,6 @@ class _ExerciseListScreenState extends State<ExerciseListScreen> {
     controller = HistoryListController(
       exerciseId: widget.exerciseId,
       exercise: widget.exercise,
-      exerciseRepository: widget.exerciseRepository,
     );
     controller.loadTrainingSets();
     controller.entries.addListener(_onEntriesChanged);
@@ -85,7 +81,7 @@ class _ExerciseListScreenState extends State<ExerciseListScreen> {
     setState(() {});
   }
 
-  void _delete(ApiTrainingSet item) async {
+  void _delete(TrainingSet item) async {
     await controller.delete(item);
     if (widget.onSetDeleted != null) {
       widget.onSetDeleted!();
