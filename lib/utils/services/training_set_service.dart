@@ -15,7 +15,7 @@ class TrainingSetService {
   /// Retrieves all training sets for a user
   /// Returns a list of training set objects
   Future<List<TrainingSet>> getTrainingSets() async {
-    print("DEBUG: Fetching all training sets from API");
+    if (kDebugMode) print("DEBUG: Fetching all training sets from API");
     final data = await getData<List<dynamic>>('training_sets');
     return data.map((item) => TrainingSet.fromJson(item)).toList();
   }
@@ -23,13 +23,13 @@ class TrainingSetService {
   Future<List<TrainingSet>> getTrainingSetsByExerciseID({required int exerciseId}) async {
     final data = await getData<List<dynamic>>('training_sets/exercise/$exerciseId');
     final length = data.length;
-    if (kDebugMode) { print("DEBUG: Fetching $length training sets for exercise ID $exerciseId from API"); }
+    if (kDebugMode) print("DEBUG: Fetching $length training sets for exercise ID $exerciseId from API");
     return data.map((item) => TrainingSet.fromJson(item)).toList();
   }
 
   Future<TrainingSet?> getTrainingSetById(int id) async {
     final data = await getData<Map<String, dynamic>>('training_sets/$id');
-    return data != null ? TrainingSet.fromJson(data) : null;
+    return TrainingSet.fromJson(data);
   }
 
   /// Creates a new training set record
