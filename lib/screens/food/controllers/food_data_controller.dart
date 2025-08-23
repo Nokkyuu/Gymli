@@ -11,8 +11,8 @@ class FoodDataController extends ChangeNotifier {
   final TempService container = GetIt.I<TempService>();
 
   // Data lists
-  List<ApiFood> foods = [];
-  List<ApiFoodLog> foodLogs = [];
+  List<FoodItem> foods = [];
+  List<FoodLog> foodLogs = [];
   Map<String, double> nutritionStats = {};
 
   // Loading states
@@ -34,7 +34,7 @@ class FoodDataController extends ChangeNotifier {
   DateTime selectedDate = DateTime.now();
 
   // Filtered foods getter
-  List<ApiFood> get filteredFoods {
+  List<FoodItem> get filteredFoods {
     if (_foodSearchQuery.isEmpty) return foods;
     return foods
         .where((food) =>
@@ -52,8 +52,8 @@ class FoodDataController extends ChangeNotifier {
       final logsData = await GetIt.I<FoodService>().getFoodLogs();
       final statsData = await container.getFoodLogStats();
 
-      foods = foodsData.map((data) => ApiFood.fromJson(data)).toList();
-      foodLogs = logsData.map((data) => ApiFoodLog.fromJson(data)).toList();
+      foods = foodsData.map((data) => FoodItem.fromJson(data)).toList();
+      foodLogs = logsData.map((data) => FoodLog.fromJson(data)).toList();
       nutritionStats = statsData;
 
       // Set default selected food by name
@@ -98,7 +98,7 @@ class FoodDataController extends ChangeNotifier {
   }
 
   /// Get selected food object
-  ApiFood? get selectedFood {
+  FoodItem? get selectedFood {
     if (selectedFoodName == null) return null;
     try {
       return foods.firstWhere((f) => f.name == selectedFoodName);
@@ -110,7 +110,7 @@ class FoodDataController extends ChangeNotifier {
   /// Update chart data for trends
   void _updateChartData() {
     // Sort logs by date for chart data
-    final sortedLogs = List<ApiFoodLog>.from(foodLogs);
+    final sortedLogs = List<FoodLog>.from(foodLogs);
     sortedLogs.sort((a, b) => a.date.compareTo(b.date));
 
     // Create chart data points
@@ -136,7 +136,7 @@ class FoodDataController extends ChangeNotifier {
   }
 
   /// Delete a food log entry
-  Future<void> deleteFoodLog(ApiFoodLog log) async {
+  Future<void> deleteFoodLog(FoodLog log) async {
     if (log.id == null) return;
 
     try {
@@ -149,7 +149,7 @@ class FoodDataController extends ChangeNotifier {
   }
 
   /// Delete a food item
-  Future<void> deleteFood(ApiFood food) async {
+  Future<void> deleteFood(FoodItem food) async {
     if (food.id == null) return;
 
     try {

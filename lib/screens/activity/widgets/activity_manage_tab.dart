@@ -213,7 +213,7 @@ class ActivityManageTab extends StatelessWidget {
   void _showDeleteActivityConfirmation(
     BuildContext context,
     ActivityController controller,
-    ApiActivity activity,
+    Activity activity,
   ) {
     final bool isDefaultActivity = activity.id != null && activity.id! <= 16;
 

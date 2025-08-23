@@ -14,8 +14,7 @@ import 'package:Gymli/utils/sync/sync_outbox.dart';
 /// – keeps local state and notifies listeners
 /// – delegates background syncing to a generic SyncOutbox
 class WorkoutDataCache extends ChangeNotifier {
-  WorkoutDataCache()
-      : _outbox = SyncOutbox(perform: performWorkoutOp) {
+  WorkoutDataCache() : _outbox = SyncOutbox(perform: performWorkoutOp) {
     // Hook: allow outbox to reconcile IDs without importing this class (avoid cycles)
     trainingSetReconcileHook = (int exerciseId, int clientId, int serverId) {
       reconcileTrainingSetId(exerciseId, clientId, serverId);
@@ -24,7 +23,7 @@ class WorkoutDataCache extends ChangeNotifier {
   final int _trainingBufferCapacity = 3;
   int _nextTempTrainingSetId = -1; // negative IDs for optimistic local sets
   /// Create a training set optimistically (local-first, negative id).
-  ApiTrainingSet createTrainingSetOptimistic({
+  TrainingSet createTrainingSetOptimistic({
     required String userName,
     required int exerciseId,
     required String exerciseName,
@@ -36,7 +35,7 @@ class WorkoutDataCache extends ChangeNotifier {
     bool? myoreps,
   }) {
     final int tempId = _nextTempTrainingSetId--;
-    final ApiTrainingSet set = ApiTrainingSet(
+    final TrainingSet set = TrainingSet(
       id: tempId,
       userName: userName,
       exerciseId: exerciseId,
@@ -50,7 +49,8 @@ class WorkoutDataCache extends ChangeNotifier {
     );
     updateTrainingSet(set);
     if (kDebugMode) {
-      print('CACHE: enqueue create_set for exercise=$exerciseId client_id=$tempId');
+      print(
+          'CACHE: enqueue create_set for exercise=$exerciseId client_id=$tempId');
     }
     _outbox.enqueue(buildCreateTrainingSetOp({
       'client_id': tempId,
@@ -86,7 +86,7 @@ class WorkoutDataCache extends ChangeNotifier {
     if (list == null) return false;
     final idx = list.indexWhere((s) => s.id == clientId);
     if (idx < 0) return false;
-    final updated = ApiTrainingSet(
+    final updated = TrainingSet(
       id: serverId,
       userName: list[idx].userName,
       exerciseId: list[idx].exerciseId,
@@ -101,12 +101,13 @@ class WorkoutDataCache extends ChangeNotifier {
     list[idx] = updated;
     list.sort((a, b) => a.date.compareTo(b.date));
     // Bump recency
-    final copy = List<ApiTrainingSet>.from(list);
+    final copy = List<TrainingSet>.from(list);
     _trainingSetBuffers.remove(exerciseId);
     _trainingSetBuffers[exerciseId] = copy;
     notifyListeners();
     if (kDebugMode) {
-      print('[WorkoutDataCache] reconcileTrainingSetId(e:$exerciseId, clientId:$clientId -> serverId:$serverId)');
+      print(
+          '[WorkoutDataCache] reconcileTrainingSetId(e:$exerciseId, clientId:$clientId -> serverId:$serverId)');
     }
     return true;
   }
@@ -117,46 +118,53 @@ class WorkoutDataCache extends ChangeNotifier {
   final SyncOutbox _outbox;
 
   // Local state
-  List<ApiExercise> _exercises = [];
-  List<ApiWorkout> _workouts = [];
-  final LinkedHashMap<int, List<ApiTrainingSet>> _trainingSetBuffers = LinkedHashMap<int, List<ApiTrainingSet>>();
+  List<Exercise> _exercises = [];
+  List<Workout> _workouts = [];
+  final LinkedHashMap<int, List<TrainingSet>> _trainingSetBuffers =
+      LinkedHashMap<int, List<TrainingSet>>();
 
-  List<ApiTrainingSet>? getCachedTrainingSets(int exerciseId) => _trainingSetBuffers[exerciseId];
+  List<TrainingSet>? getCachedTrainingSets(int exerciseId) =>
+      _trainingSetBuffers[exerciseId];
 
   /// Should be called when a screen for a given exercise becomes visible/active.
   /// Ensures the exercise is present and becomes MRU in the LRU buffer.
   void markActiveExercise(int exerciseId) {
     if (_trainingSetBuffers.containsKey(exerciseId)) {
-      final v = _trainingSetBuffers.remove(exerciseId)!; // remove to reinsert as MRU
+      final v =
+          _trainingSetBuffers.remove(exerciseId)!; // remove to reinsert as MRU
       _trainingSetBuffers[exerciseId] = v;
     } else {
-      _trainingSetBuffers[exerciseId] = <ApiTrainingSet>[];
+      _trainingSetBuffers[exerciseId] = <TrainingSet>[];
       _evictOldestExerciseIfNeeded();
     }
     if (kDebugMode) {
-      print('[WorkoutDataCache] markActiveExercise($exerciseId) — buffer keys: ${_trainingSetBuffers.keys.toList()}');
+      print(
+          '[WorkoutDataCache] markActiveExercise($exerciseId) — buffer keys: ${_trainingSetBuffers.keys.toList()}');
     }
   }
 
   /// Replace the cached list for an exercise and promote to MRU.
-  void setExerciseTrainingSets(int exerciseId, List<ApiTrainingSet> sets) {
+  void setExerciseTrainingSets(int exerciseId, List<TrainingSet> sets) {
     // Promote to MRU by remove+insert
     _trainingSetBuffers.remove(exerciseId);
-    final sorted = List<ApiTrainingSet>.of(sets)
+    final sorted = List<TrainingSet>.of(sets)
       ..sort((a, b) => a.date.compareTo(b.date));
     _trainingSetBuffers[exerciseId] = sorted;
     _evictOldestExerciseIfNeeded();
     notifyListeners();
     if (kDebugMode) {
-      print('[WorkoutDataCache] setExerciseTrainingSets($exerciseId) — cached ${sorted.length} sets');
+      print(
+          '[WorkoutDataCache] setExerciseTrainingSets($exerciseId) — cached ${sorted.length} sets');
     }
   }
 
   /// Insert/update a single set in the buffer (by set.id if present) and promote to MRU.
-  void updateTrainingSet(ApiTrainingSet set) {
+  void updateTrainingSet(TrainingSet set) {
     final int exerciseId = set.exerciseId;
-    final list = _trainingSetBuffers.putIfAbsent(exerciseId, () => <ApiTrainingSet>[]);
-    final idx = list.indexWhere((s) => s.id != null && set.id != null && s.id == set.id);
+    final list =
+        _trainingSetBuffers.putIfAbsent(exerciseId, () => <TrainingSet>[]);
+    final idx = list
+        .indexWhere((s) => s.id != null && set.id != null && s.id == set.id);
     if (idx >= 0) {
       list[idx] = set;
     } else {
@@ -165,7 +173,7 @@ class WorkoutDataCache extends ChangeNotifier {
     list.sort((a, b) => a.date.compareTo(b.date));
 
     // Bump recency by reinsert
-    final copy = List<ApiTrainingSet>.from(list);
+    final copy = List<TrainingSet>.from(list);
     _trainingSetBuffers.remove(exerciseId);
     _trainingSetBuffers[exerciseId] = copy;
 
@@ -173,7 +181,8 @@ class WorkoutDataCache extends ChangeNotifier {
     notifyListeners();
 
     if (kDebugMode) {
-      print('[WorkoutDataCache] upsertTrainingSet(e:$exerciseId, setId:${set.id}) — count now ${copy.length}');
+      print(
+          '[WorkoutDataCache] upsertTrainingSet(e:$exerciseId, setId:${set.id}) — count now ${copy.length}');
     }
   }
 
@@ -185,12 +194,14 @@ class WorkoutDataCache extends ChangeNotifier {
     list.removeWhere((s) => s.id == setId);
     final bool removed = beforeLen != list.length;
     if (removed) {
-      final copy = List<ApiTrainingSet>.from(list)..sort((a, b) => a.date.compareTo(b.date));
+      final copy = List<TrainingSet>.from(list)
+        ..sort((a, b) => a.date.compareTo(b.date));
       _trainingSetBuffers.remove(exerciseId);
       _trainingSetBuffers[exerciseId] = copy;
       notifyListeners();
       if (kDebugMode) {
-        print('[WorkoutDataCache] removeTrainingSet(e:$exerciseId, setId:$setId) — remaining ${copy.length}');
+        print(
+            '[WorkoutDataCache] removeTrainingSet(e:$exerciseId, setId:$setId) — remaining ${copy.length}');
       }
       return true;
     }
@@ -202,25 +213,27 @@ class WorkoutDataCache extends ChangeNotifier {
     if (_trainingSetBuffers.remove(exerciseId) != null) {
       notifyListeners();
       if (kDebugMode) {
-        print('[WorkoutDataCache] clearTrainingSetCacheForExercise($exerciseId)');
+        print(
+            '[WorkoutDataCache] clearTrainingSetCacheForExercise($exerciseId)');
       }
     }
   }
 
   void _evictOldestExerciseIfNeeded() {
     while (_trainingSetBuffers.length > _trainingBufferCapacity) {
-      final oldestKey = _trainingSetBuffers.keys.first; // LRU by insertion order
+      final oldestKey =
+          _trainingSetBuffers.keys.first; // LRU by insertion order
       _trainingSetBuffers.remove(oldestKey);
       if (kDebugMode) {
-        print('[WorkoutDataCache] evicted exerciseId $oldestKey from training buffer');
+        print(
+            '[WorkoutDataCache] evicted exerciseId $oldestKey from training buffer');
       }
     }
   }
 
-
   // Read-only views
-  List<ApiExercise> get exercises => List.unmodifiable(_exercises);
-  List<ApiWorkout> get workouts => List.unmodifiable(_workouts);
+  List<Exercise> get exercises => List.unmodifiable(_exercises);
+  List<Workout> get workouts => List.unmodifiable(_workouts);
 
   Future<void> init() async {
     if (_initialized) return;
@@ -238,7 +251,7 @@ class WorkoutDataCache extends ChangeNotifier {
   }
 
   // ------------------- Optimistic mutations ------------------- //
-  Future<void> addExercise(ApiExercise exercise) async {
+  Future<void> addExercise(Exercise exercise) async {
     _exercises = List.of(_exercises)..add(exercise);
     notifyListeners();
     _outbox.enqueue(buildCreateExerciseOp(exercise));
@@ -251,7 +264,7 @@ class WorkoutDataCache extends ChangeNotifier {
     _outbox.enqueue(buildDeleteExerciseOp(id));
   }
 
-  Future<void> addWorkout(ApiWorkout workout) async {
+  Future<void> addWorkout(Workout workout) async {
     _workouts = List.of(_workouts)..add(workout);
     notifyListeners();
     _outbox.enqueue(buildCreateWorkoutOp(workout));
@@ -265,12 +278,12 @@ class WorkoutDataCache extends ChangeNotifier {
   }
 
   // Replace all (e.g., after a full refresh)
-  void setExercises(List<ApiExercise> list) {
+  void setExercises(List<Exercise> list) {
     _exercises = List.of(list);
     notifyListeners();
   }
 
-  void setWorkouts(List<ApiWorkout> list) {
+  void setWorkouts(List<Workout> list) {
     _workouts = List.of(list);
     notifyListeners();
   }

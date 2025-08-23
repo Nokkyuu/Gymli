@@ -7,8 +7,8 @@ import 'package:intl/intl.dart';
 import '../../../utils/models/data_models.dart';
 
 class ActivityHistoryListWidget extends StatelessWidget {
-  final List<ApiActivityLog> activityLogs;
-  final Function(ApiActivityLog) onDelete;
+  final List<ActivityLog> activityLogs;
+  final Function(ActivityLog) onDelete;
 
   const ActivityHistoryListWidget({
     super.key,
@@ -79,7 +79,7 @@ class ActivityHistoryListWidget extends StatelessWidget {
     );
   }
 
-  void _showDeleteConfirmation(BuildContext context, ApiActivityLog log) {
+  void _showDeleteConfirmation(BuildContext context, ActivityLog log) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(

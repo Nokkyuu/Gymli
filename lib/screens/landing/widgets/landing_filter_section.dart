@@ -7,9 +7,9 @@ import '../models/landing_filter_state.dart';
 import '../controllers/landing_filter_controller.dart';
 
 class LandingFilterSection extends StatelessWidget {
-  final List<ApiWorkout> availableWorkouts;
+  final List<Workout> availableWorkouts;
   final LandingFilterController filterController;
-  final Function(ApiWorkout) onWorkoutSelected;
+  final Function(Workout) onWorkoutSelected;
   final Function(MuscleList) onMuscleSelected;
   final VoidCallback onShowAll;
   final Function(String) onWorkoutEdit;
@@ -66,7 +66,7 @@ class LandingFilterSection extends StatelessWidget {
   }
 
   Widget _buildWorkoutDropdown(BuildContext context) {
-    return DropdownMenu<ApiWorkout>(
+    return DropdownMenu<Workout>(
       width: MediaQuery.of(context).size.width * 0.45,
       enabled: true,
       key:
@@ -77,7 +77,7 @@ class LandingFilterSection extends StatelessWidget {
           : null,
       requestFocusOnTap: false,
       label: const Text('Workouts'),
-      onSelected: (ApiWorkout? workout) {
+      onSelected: (Workout? workout) {
         if (workout != null) {
           onWorkoutSelected(workout);
         }
@@ -90,9 +90,9 @@ class LandingFilterSection extends StatelessWidget {
           borderRadius: BorderRadius.circular(8),
         ),
       ),
-      dropdownMenuEntries: availableWorkouts
-          .map<DropdownMenuEntry<ApiWorkout>>((ApiWorkout workout) {
-        return DropdownMenuEntry<ApiWorkout>(
+      dropdownMenuEntries:
+          availableWorkouts.map<DropdownMenuEntry<Workout>>((Workout workout) {
+        return DropdownMenuEntry<Workout>(
           value: workout,
           label: workout.name,
           trailingIcon: IconButton(

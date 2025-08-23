@@ -24,17 +24,17 @@ class HistoryListController {
     try {
       final cache = GetIt.I<WorkoutDataCache>();
       // Cache-first
-      List<ApiTrainingSet>? fromCache = cache.getCachedTrainingSets(exerciseId);
-      List<ApiTrainingSet> trainingSets;
+      List<TrainingSet>? fromCache = cache.getCachedTrainingSets(exerciseId);
+      List<TrainingSet> trainingSets;
       if (fromCache != null && fromCache.isNotEmpty) {
-        trainingSets = List<ApiTrainingSet>.from(fromCache);
+        trainingSets = List<TrainingSet>.from(fromCache);
       } else {
         // Fetch from server and seed cache
         final data = await GetIt.I<TrainingSetService>()
             .getTrainingSetsByExerciseID(exerciseId: exerciseId);
         trainingSets = data
             .whereType<Map<String, dynamic>>()
-            .map(ApiTrainingSet.fromJson)
+            .map(TrainingSet.fromJson)
             .toList();
         cache.setExerciseTrainingSets(exerciseId, trainingSets);
       }
@@ -60,7 +60,7 @@ class HistoryListController {
     }
   }
 
-  Future<void> delete(ApiTrainingSet item) async {
+  Future<void> delete(TrainingSet item) async {
     if (item.id == null) return;
     try {
       // Optimistic delete in cache (+ enqueues server delete if id >= 0)

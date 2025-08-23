@@ -59,7 +59,7 @@ class StatisticsMainController extends ChangeNotifier {
   bool _isLoadingActivityData = false;
 
   // Exercise progress
-  List<ApiExercise> _availableExercises = [];
+  List<Exercise> _availableExercises = [];
   String? _selectedExerciseForGraph;
   List<LineChartBarData> _exerciseGraphData = [];
   Map<int, List<String>> _exerciseGraphTooltip = {};
@@ -128,7 +128,7 @@ class StatisticsMainController extends ChangeNotifier {
   List<FlSpot> get durationTrendData => List.from(_durationTrendData);
   bool get isLoadingActivityData => _isLoadingActivityData;
 
-  List<ApiExercise> get availableExercises => List.from(_availableExercises);
+  List<Exercise> get availableExercises => List.from(_availableExercises);
   String? get selectedExerciseForGraph => _selectedExerciseForGraph;
   List<LineChartBarData> get exerciseGraphData => List.from(_exerciseGraphData);
   Map<int, List<String>> get exerciseGraphTooltip =>

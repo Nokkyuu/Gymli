@@ -7,7 +7,7 @@ import '../../../utils/models/data_models.dart';
 import '../../../utils/themes/responsive_helper.dart';
 
 class LandingExerciseItem extends StatelessWidget {
-  final ApiExercise exercise;
+  final Exercise exercise;
   final String metainfo;
   final VoidCallback onTap;
 

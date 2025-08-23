@@ -114,7 +114,7 @@ class WorkoutOpType {
 }
 
 // ----------- Builders (cache uses these to enqueue ops) ----------- //
-SyncOp buildCreateExerciseOp(ApiExercise e) {
+SyncOp buildCreateExerciseOp(Exercise e) {
   final Map<String, dynamic> map = (e as dynamic).toJson?.call() ??
       {
         'name': e.name,
@@ -128,7 +128,7 @@ SyncOp buildCreateExerciseOp(ApiExercise e) {
 SyncOp buildDeleteExerciseOp(String id) =>
     SyncOp(WorkoutOpType.deleteExercise, id);
 
-SyncOp buildCreateWorkoutOp(ApiWorkout w) {
+SyncOp buildCreateWorkoutOp(Workout w) {
   final Map<String, dynamic> map = (w as dynamic).toJson?.call() ??
       {
         'name': w.name,

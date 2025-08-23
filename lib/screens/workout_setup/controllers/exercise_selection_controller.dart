@@ -5,7 +5,7 @@ import '../../../utils/models/data_models.dart';
 
 class ExerciseSelectionController extends ChangeNotifier {
   // Exercise selection data
-  ApiExercise? _selectedExercise;
+  Exercise? _selectedExercise;
   int _warmups = 0;
   int _worksets = 1;
 
@@ -21,12 +21,12 @@ class ExerciseSelectionController extends ChangeNotifier {
   ];
 
   // Getters
-  ApiExercise? get selectedExercise => _selectedExercise;
+  Exercise? get selectedExercise => _selectedExercise;
   int get warmups => _warmups;
   int get worksets => _worksets;
 
   // Set selected exercise
-  void setSelectedExercise(ApiExercise? exercise) {
+  void setSelectedExercise(Exercise? exercise) {
     _selectedExercise = exercise;
     if (exercise != null) {
       exerciseController.text = exercise.name;

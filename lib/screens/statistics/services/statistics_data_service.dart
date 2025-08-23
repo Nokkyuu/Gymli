@@ -23,7 +23,7 @@ class StatisticsDataService {
 
   // Caching variables to prevent redundant API calls
   List<Map<String, dynamic>>? _cachedTrainingSets;
-  List<ApiExercise>? _cachedExercises;
+  List<Exercise>? _cachedExercises;
   List<dynamic>? _cachedActivityLogs;
   Map<String, dynamic>? _cachedActivityStats;
   bool _dataCacheValid = false;
@@ -64,7 +64,7 @@ class StatisticsDataService {
   }
 
   /// Get exercises with smart caching
-  Future<List<ApiExercise>> getExercises() async {
+  Future<List<Exercise>> getExercises() async {
     if (_cachedExercises == null || !_dataCacheValid || _isCacheExpired) {
       if (kDebugMode) print('Loading exercises from API...');
       _cachedExercises = await exerciseService.getExercises();
@@ -121,11 +121,11 @@ class StatisticsDataService {
 
       // Convert logs to ApiActivityLog objects and sort by date
       final activityLogs =
-          logsData.map((data) => ApiActivityLog.fromJson(data)).toList();
+          logsData.map((data) => ActivityLog.fromJson(data)).toList();
       activityLogs.sort((a, b) => a.date.compareTo(b.date));
 
       // Apply date filtering (same logic as other statistics)
-      List<ApiActivityLog> filteredActivityLogs = List.from(activityLogs);
+      List<ActivityLog> filteredActivityLogs = List.from(activityLogs);
 
       // Apply the same filtering logic as in _loadStatistics
       if (useDefaultFilter && startingDate == null && endingDate == null) {

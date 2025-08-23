@@ -146,24 +146,24 @@ class IngredientRecipeWidget extends StatelessWidget {
                         children: [
                           Expanded(
                             flex: 2,
-                            child: Autocomplete<ApiFood>(
+                            child: Autocomplete<FoodItem>(
                               optionsBuilder:
                                   (TextEditingValue textEditingValue) {
                                 if (textEditingValue.text.isEmpty) {
                                   return dataController.foods;
                                 }
                                 return dataController.foods.where(
-                                    (ApiFood food) => food.name
+                                    (FoodItem food) => food.name
                                         .toLowerCase()
                                         .contains(textEditingValue.text
                                             .toLowerCase()));
                               },
-                              displayStringForOption: (ApiFood food) =>
+                              displayStringForOption: (FoodItem food) =>
                                   food.name,
                               initialValue: component.food != null
                                   ? TextEditingValue(text: component.food!.name)
                                   : const TextEditingValue(),
-                              onSelected: (ApiFood selected) {
+                              onSelected: (FoodItem selected) {
                                 managementController.updateFoodComponent(index,
                                     food: selected);
                               },

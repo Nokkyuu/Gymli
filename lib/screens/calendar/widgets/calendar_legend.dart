@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../constants/calendar_constants.dart';
-import '../models/calendar_period.dart';
+import 'package:Gymli/utils/models/data_models.dart';
 
 /// A widget that displays the calendar legend showing:
 /// - Period type colors (Cut, Bulk, Other)

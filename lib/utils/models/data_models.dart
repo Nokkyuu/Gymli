@@ -1,23 +1,6 @@
-/// API Data Models for Gymli Application
-///
-/// This file contains all the data model classes used for API communication
-/// and data storage. It defines the structure of exercises, workouts, training sets,
-/// workout units, and groups used throughout the application.
-///
-/// Key features:
-/// - Type-safe data models with validation
-/// - JSON serialization/deserialization
-/// - Muscle group and exercise type definitions
-/// - Comprehensive exercise metadata structure
+/// Data Models for Gymli Application
 library;
 
-// TODO: Should be moved to models.dart in /utils
-
-// ignore_for_file: file_names
-
-// Data models for API-based storage
-
-// Exercise type constants - defines the equipment/method categories
 final exerciseTypeNames = ["Free", "Machine", "Cable", "Body"];
 
 // Muscle group names - comprehensive list of targeted muscle groups
@@ -41,11 +24,7 @@ final muscleGroupNames = [
 // Training set type constants - categorizes different set purposes
 final setTypeNames = ["Warm", "Work", "Drop"];
 
-/// ApiExercise - Represents an exercise entity with comprehensive metadata
-///
-/// Contains all information about an exercise including muscle activation
-/// percentages, default repetition ranges, and user associations.
-class ApiExercise {
+class Exercise {
   final int? id;
   final String userName;
   final String name;
@@ -68,7 +47,7 @@ class ApiExercise {
   final double forearms;
   final double calves;
 
-  ApiExercise({
+  Exercise({
     this.id,
     required this.userName,
     required this.name,
@@ -92,8 +71,8 @@ class ApiExercise {
     required this.calves,
   });
 
-  factory ApiExercise.fromJson(Map<String, dynamic> json) {
-    return ApiExercise(
+  factory Exercise.fromJson(Map<String, dynamic> json) {
+    return Exercise(
       id: json['id'],
       userName: json['user_name'] ?? '',
       name: json['name'] ?? '',
@@ -201,7 +180,7 @@ class ApiExercise {
 ///
 /// Contains details about the performance of an exercise in a workout, including
 /// weights, repetitions, and set types.
-class ApiTrainingSet {
+class TrainingSet {
   final int? id;
   final String userName;
   final int exerciseId;
@@ -217,7 +196,7 @@ class ApiTrainingSet {
   // final double increment;
   // final String? machineName;
 
-  ApiTrainingSet({
+  TrainingSet({
     this.id,
     required this.userName,
     required this.exerciseId,
@@ -234,8 +213,8 @@ class ApiTrainingSet {
     // this.machineName,
   });
 
-  factory ApiTrainingSet.fromJson(Map<String, dynamic> json) {
-    return ApiTrainingSet(
+  factory TrainingSet.fromJson(Map<String, dynamic> json) {
+    return TrainingSet(
         id: json['id'],
         userName: json['user_name'] ?? '',
         exerciseId: json['exercise_id'] ?? 0,
@@ -295,18 +274,18 @@ class ApiTrainingSet {
 ///
 /// Contains information about the exercise performed, including the number of warm-up,
 /// work, and drop sets, as well as the type of the workout unit.
-class ApiWorkoutUnit {
+class WorkoutUnit {
   final int? id;
   final String userName;
   final int workoutId;
   final int exerciseId;
-  final String exerciseName; // For compatibility
+  String exerciseName; // For compatibility
   final int warmups;
   final int worksets;
   final int dropsets; // Might need to be added to API
   final int type;
 
-  ApiWorkoutUnit({
+  WorkoutUnit({
     this.id,
     required this.userName,
     required this.workoutId,
@@ -318,8 +297,8 @@ class ApiWorkoutUnit {
     required this.type,
   });
 
-  factory ApiWorkoutUnit.fromJson(Map<String, dynamic> json) {
-    return ApiWorkoutUnit(
+  factory WorkoutUnit.fromJson(Map<String, dynamic> json) {
+    return WorkoutUnit(
       id: json['id'],
       userName: json['user_name'] ?? '',
       workoutId: json['workout_id'] ?? 0,
@@ -353,26 +332,26 @@ class ApiWorkoutUnit {
 ///
 /// Contains the details of a workout session, including the user, workout name,
 /// and the units (exercises) included in the workout.
-class ApiWorkout {
+class Workout {
   final int? id;
   final String userName;
   final String name;
-  List<ApiWorkoutUnit> units;
+  List<WorkoutUnit> units;
 
-  ApiWorkout({
+  Workout({
     this.id,
     required this.userName,
     required this.name,
     required this.units,
   });
 
-  factory ApiWorkout.fromJson(Map<String, dynamic> json) {
-    return ApiWorkout(
+  factory Workout.fromJson(Map<String, dynamic> json) {
+    return Workout(
       id: json['id'],
       userName: json['user_name'] ?? '',
       name: json['name'] ?? '',
       units: (json['units'] as List<dynamic>? ?? [])
-          .map((unit) => ApiWorkoutUnit.fromJson(unit))
+          .map((unit) => WorkoutUnit.fromJson(unit))
           .toList(),
     );
   }
@@ -388,7 +367,7 @@ class ApiWorkout {
 
   List<String> toCSVString() {
     List<String> row = [name];
-    for (ApiWorkoutUnit unit in units) {
+    for (WorkoutUnit unit in units) {
       row.add(
           "${unit.exerciseName}, ${unit.warmups}, ${unit.worksets}, ${unit.dropsets}, ${unit.type}");
     }
@@ -396,60 +375,21 @@ class ApiWorkout {
   }
 }
 
-/// ApiGroup - Represents a collection of exercises grouped together
-///
-/// Contains details about a group of exercises, including the user, group name,
-// /// and the list of exercises in the group.
-// class ApiGroup {
-//   final int? id;
-//   final String userName;
-//   final String name;
-//   final List<String> exercises;
-
-//   ApiGroup({
-//     this.id,
-//     required this.userName,
-//     required this.name,
-//     required this.exercises,
-//   });
-
-//   factory ApiGroup.fromJson(Map<String, dynamic> json) {
-//     return ApiGroup(
-//       id: json['id'],
-//       userName: json['user_name'] ?? '',
-//       name: json['name'] ?? '',
-//       exercises: List<String>.from(json['exercises'] ?? []),
-//     );
-//   }
-
-//   Map<String, dynamic> toJson() {
-//     return {
-//       'id': id,
-//       'user_name': userName,
-//       'name': name,
-//       'exercises': exercises,
-//     };
-//   }
-// }
-
-/// ApiActivity - Represents an activity type with calorie information
-///
-/// Contains information about different activity types and their calorie burn rates
-class ApiActivity {
+class Activity {
   final int? id;
   final String userName;
   final String name;
   final double kcalPerHour;
 
-  ApiActivity({
+  Activity({
     this.id,
     required this.userName,
     required this.name,
     required this.kcalPerHour,
   });
 
-  factory ApiActivity.fromJson(Map<String, dynamic> json) {
-    return ApiActivity(
+  factory Activity.fromJson(Map<String, dynamic> json) {
+    return Activity(
       id: json['id'],
       userName: json['user_name'] ?? '',
       name: json['name'] ?? '',
@@ -470,7 +410,7 @@ class ApiActivity {
 /// ApiActivityLog - Represents a logged activity session
 ///
 /// Contains details about an activity session including duration and calculated calories
-class ApiActivityLog {
+class ActivityLog {
   final int? id;
   final String userName;
   final String activityName;
@@ -479,7 +419,7 @@ class ApiActivityLog {
   final double caloriesBurned;
   final String? notes;
 
-  ApiActivityLog({
+  ActivityLog({
     this.id,
     required this.userName,
     required this.activityName,
@@ -489,8 +429,8 @@ class ApiActivityLog {
     this.notes,
   });
 
-  factory ApiActivityLog.fromJson(Map<String, dynamic> json) {
-    return ApiActivityLog(
+  factory ActivityLog.fromJson(Map<String, dynamic> json) {
+    return ActivityLog(
       id: json['id'],
       userName: json['user_name'] ?? '',
       activityName: json['activity_name'] ?? '',
@@ -524,7 +464,7 @@ class ApiActivityLog {
   }
 }
 
-class ApiFood {
+class FoodItem {
   final int? id;
   final String userName;
   final String name;
@@ -534,7 +474,7 @@ class ApiFood {
   final double fatPer100g;
   final String? notes;
 
-  ApiFood({
+  FoodItem({
     this.id,
     required this.userName,
     required this.name,
@@ -545,8 +485,8 @@ class ApiFood {
     this.notes,
   });
 
-  factory ApiFood.fromJson(Map<String, dynamic> json) {
-    return ApiFood(
+  factory FoodItem.fromJson(Map<String, dynamic> json) {
+    return FoodItem(
       id: json['id'],
       userName: json['user_name'] ?? '',
       name: json['name'] ?? '',
@@ -583,7 +523,7 @@ class ApiFood {
   }
 }
 
-class ApiFoodLog {
+class FoodLog {
   final int? id;
   final String userName;
   final String foodName;
@@ -594,7 +534,7 @@ class ApiFoodLog {
   final double carbsPer100g;
   final double fatPer100g;
 
-  ApiFoodLog({
+  FoodLog({
     this.id,
     required this.userName,
     required this.foodName,
@@ -606,8 +546,8 @@ class ApiFoodLog {
     required this.fatPer100g,
   });
 
-  factory ApiFoodLog.fromJson(Map<String, dynamic> json) {
-    return ApiFoodLog(
+  factory FoodLog.fromJson(Map<String, dynamic> json) {
+    return FoodLog(
       id: json['id'],
       userName: json['user_name'] ?? '',
       foodName: json['food_name'] ?? '',
@@ -635,14 +575,40 @@ class ApiFoodLog {
   }
 }
 
-class ApiPeriod {
+enum PeriodType {
+  cut('cut'),
+  bulk('bulk'),
+  other('other');
+
+  const PeriodType(this.value);
+
+  final String value;
+
+  static PeriodType fromString(String value) {
+    switch (value.toLowerCase()) {
+      case 'cut':
+        return PeriodType.cut;
+      case 'bulk':
+        return PeriodType.bulk;
+      case 'other':
+      default:
+        return PeriodType.other;
+    }
+  }
+
+  String get displayName {
+    return '${value[0].toUpperCase()}${value.substring(1)}';
+  }
+}
+
+class CalendarPeriod {
   final int? id;
   final String userName;
-  final String type; // 'cut', 'bulk', etc.
+  final PeriodType type; // Changed from String to enum
   final DateTime startDate;
   final DateTime endDate;
 
-  ApiPeriod({
+  CalendarPeriod({
     this.id,
     required this.userName,
     required this.type,
@@ -650,10 +616,10 @@ class ApiPeriod {
     required this.endDate,
   });
 
-  factory ApiPeriod.fromJson(Map<String, dynamic> json) => ApiPeriod(
+  factory CalendarPeriod.fromJson(Map<String, dynamic> json) => CalendarPeriod(
         id: json['id'],
         userName: json['user_name'],
-        type: json['type'],
+        type: PeriodType.fromString(json['type']),
         startDate: DateTime.parse(json['start_date']),
         endDate: DateTime.parse(json['end_date']),
       );
@@ -661,27 +627,79 @@ class ApiPeriod {
   Map<String, dynamic> toJson() => {
         'id': id,
         'user_name': userName,
-        'type': type,
+        'type': type.value,
         'start_date': startDate.toIso8601String(),
         'end_date': endDate.toIso8601String(),
       };
+
+  // Add helper methods from CalendarPeriod
+  bool containsDate(DateTime date) {
+    return !date.isBefore(startDate) && !date.isAfter(endDate);
+  }
+
+  bool overlaps(CalendarPeriod other) {
+    return startDate.isBefore(other.endDate) &&
+        endDate.isAfter(other.startDate);
+  }
+
+  CalendarPeriod copyWith({
+    int? id,
+    String? userName,
+    PeriodType? type,
+    DateTime? startDate,
+    DateTime? endDate,
+  }) {
+    return CalendarPeriod(
+      id: id ?? this.id,
+      userName: userName ?? this.userName,
+      type: type ?? this.type,
+      startDate: startDate ?? this.startDate,
+      endDate: endDate ?? this.endDate,
+    );
+  }
+
+  // Getters for backward compatibility with CalendarPeriod
+  DateTime get start => startDate;
+  DateTime get end => endDate;
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is CalendarPeriod &&
+        other.id == id &&
+        other.userName == userName &&
+        other.type == type &&
+        other.startDate == startDate &&
+        other.endDate == endDate;
+  }
+
+  @override
+  int get hashCode =>
+      id.hashCode ^
+      userName.hashCode ^
+      type.hashCode ^
+      startDate.hashCode ^
+      endDate.hashCode;
+
+  @override
+  String toString() =>
+      'ApiPeriod(id: $id, userName: $userName, type: $type, startDate: $startDate, endDate: $endDate)';
 }
 
-class ApiCalendarNote {
+class CalendarNote {
   final int? id;
   final String userName;
   final DateTime date;
   final String note;
 
-  ApiCalendarNote({
+  CalendarNote({
     this.id,
     required this.userName,
     required this.date,
     required this.note,
   });
 
-  factory ApiCalendarNote.fromJson(Map<String, dynamic> json) =>
-      ApiCalendarNote(
+  factory CalendarNote.fromJson(Map<String, dynamic> json) => CalendarNote(
         id: json['id'],
         userName: json['user_name'],
         date: DateTime.parse(json['date']),
@@ -694,23 +712,56 @@ class ApiCalendarNote {
         'date': date.toIso8601String(),
         'note': note,
       };
+
+  // Add methods from CalendarNote
+  CalendarNote copyWith({
+    int? id,
+    String? userName,
+    DateTime? date,
+    String? note,
+  }) {
+    return CalendarNote(
+      id: id ?? this.id,
+      userName: userName ?? this.userName,
+      date: date ?? this.date,
+      note: note ?? this.note,
+    );
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is CalendarNote &&
+        other.id == id &&
+        other.userName == userName &&
+        other.date == date &&
+        other.note == note;
+  }
+
+  @override
+  int get hashCode =>
+      id.hashCode ^ userName.hashCode ^ date.hashCode ^ note.hashCode;
+
+  @override
+  String toString() =>
+      'ApiCalendarNote(id: $id, userName: $userName, date: $date, note: $note)';
 }
 
-class ApiCalendarWorkout {
+class CalendarWorkout {
   final int? id;
   final String userName;
   final DateTime date;
   final String workout;
 
-  ApiCalendarWorkout({
+  CalendarWorkout({
     this.id,
     required this.userName,
     required this.date,
     required this.workout,
   });
 
-  factory ApiCalendarWorkout.fromJson(Map<String, dynamic> json) =>
-      ApiCalendarWorkout(
+  factory CalendarWorkout.fromJson(Map<String, dynamic> json) =>
+      CalendarWorkout(
         id: json['id'],
         userName: json['user_name'],
         date: DateTime.parse(json['date']),
@@ -723,4 +774,40 @@ class ApiCalendarWorkout {
         'date': date.toIso8601String(),
         'workout': workout,
       };
+
+  // Add methods from CalendarWorkout
+  CalendarWorkout copyWith({
+    int? id,
+    String? userName,
+    DateTime? date,
+    String? workout,
+  }) {
+    return CalendarWorkout(
+      id: id ?? this.id,
+      userName: userName ?? this.userName,
+      date: date ?? this.date,
+      workout: workout ?? this.workout,
+    );
+  }
+
+  // Getter for backward compatibility
+  String get workoutName => workout;
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is CalendarWorkout &&
+        other.id == id &&
+        other.userName == userName &&
+        other.date == date &&
+        other.workout == workout;
+  }
+
+  @override
+  int get hashCode =>
+      id.hashCode ^ userName.hashCode ^ date.hashCode ^ workout.hashCode;
+
+  @override
+  String toString() =>
+      'ApiCalendarWorkout(id: $id, userName: $userName, date: $date, workout: $workout)';
 }

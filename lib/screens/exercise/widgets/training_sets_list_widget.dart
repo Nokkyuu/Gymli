@@ -119,7 +119,7 @@ class _TrainingSetsListWidgetState extends State<TrainingSetsListWidget> {
     );
   }
 
-  Widget _buildTrainingSetItem(ApiTrainingSet trainingSet) {
+  Widget _buildTrainingSetItem(TrainingSet trainingSet) {
     return ListTile(
       leading: CircleAvatar(
         radius: 17.5,
@@ -147,7 +147,7 @@ class _TrainingSetsListWidgetState extends State<TrainingSetsListWidget> {
         "${date.second.toString().padLeft(2, '0')}";
   }
 
-  Future<void> _confirmDelete(ApiTrainingSet trainingSet) async {
+  Future<void> _confirmDelete(TrainingSet trainingSet) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (BuildContext context) {

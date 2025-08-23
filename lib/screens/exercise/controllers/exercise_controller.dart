@@ -13,7 +13,7 @@ class ExerciseController extends ChangeNotifier {
   final ExerciseGraphController _graphController;
 
   // Exercise data
-  ApiExercise? _currentExercise;
+  Exercise? _currentExercise;
   bool _isLoading = false;
   String? _errorMessage;
   String? phase;
@@ -42,11 +42,11 @@ class ExerciseController extends ChangeNotifier {
   }) : _graphController = graphController ?? ExerciseGraphController();
 
   // Getters
-  ApiExercise? get currentExercise => _currentExercise;
-  List<ApiTrainingSet> get todaysTrainingSets {
+  Exercise? get currentExercise => _currentExercise;
+  List<TrainingSet> get todaysTrainingSets {
     if (_currentExercise?.id == null) return const [];
     final all = _cache.getCachedTrainingSets(_currentExercise!.id!) ??
-        const <ApiTrainingSet>[];
+        const <TrainingSet>[];
     final now = DateTime.now();
     return all.where((s) => _isSameDay(s.date, now)).toList();
   }
@@ -135,7 +135,7 @@ class ExerciseController extends ChangeNotifier {
 
     try {
       final userName = _currentUserName();
-      final ApiTrainingSet newSet = _cache.createTrainingSetOptimistic(
+      final TrainingSet newSet = _cache.createTrainingSetOptimistic(
         userName: userName,
         exerciseId: _currentExercise!.id!,
         exerciseName: _currentExercise!.name,
@@ -151,7 +151,7 @@ class ExerciseController extends ChangeNotifier {
       if (!graphUpdated) {
         final allTrainingSets =
             _cache.getCachedTrainingSets(_currentExercise!.id!) ??
-                const <ApiTrainingSet>[];
+                const <TrainingSet>[];
         _graphController.updateGraphFromTrainingSets(allTrainingSets);
       }
       _updateWorkoutCounts();
@@ -164,7 +164,7 @@ class ExerciseController extends ChangeNotifier {
   }
 
   /// Delete a training set (optimistic, local-first)
-  Future<bool> deleteTrainingSet(ApiTrainingSet trainingSet) async {
+  Future<bool> deleteTrainingSet(TrainingSet trainingSet) async {
     try {
       if (_currentExercise?.id == null || trainingSet.id == null) {
         _setError('Invalid delete parameters');
@@ -176,7 +176,7 @@ class ExerciseController extends ChangeNotifier {
       );
       final allTrainingSets =
           _cache.getCachedTrainingSets(_currentExercise!.id!) ??
-              const <ApiTrainingSet>[];
+              const <TrainingSet>[];
       _graphController.updateGraphFromTrainingSets(allTrainingSets);
       _updateWorkoutCounts();
       notifyListeners();
@@ -242,7 +242,7 @@ class ExerciseController extends ChangeNotifier {
           exerciseId: exerciseId);
       final sets = raw
           .whereType<Map<String, dynamic>>()
-          .map((m) => ApiTrainingSet.fromJson(m))
+          .map((m) => TrainingSet.fromJson(m))
           .toList();
       _cache.setExerciseTrainingSets(exerciseId, sets);
       _graphController.updateGraphFromTrainingSets(sets);
@@ -288,7 +288,7 @@ class ExerciseController extends ChangeNotifier {
       try {
         // Fallback: fetch exercises metadata (not training sets)
         final all = await _exerciseService.getExercises();
-        ApiExercise? match;
+        Exercise? match;
         for (final e in all) {
           if (e.name == exerciseName) {
             match = e;
@@ -372,7 +372,7 @@ class ExerciseController extends ChangeNotifier {
 
         if (workSets.isNotEmpty) {
           // Find the best set (highest weight, then most reps)
-          ApiTrainingSet? bestSet;
+          TrainingSet? bestSet;
           for (var set in workSets) {
             if (bestSet == null ||
                 set.weight > bestSet.weight ||
@@ -422,11 +422,11 @@ class ExerciseController extends ChangeNotifier {
     try {
       final sets = _currentExercise?.id != null
           ? (_cache.getCachedTrainingSets(_currentExercise!.id!) ??
-              const <ApiTrainingSet>[])
-          : const <ApiTrainingSet>[];
+              const <TrainingSet>[])
+          : const <TrainingSet>[];
       if (sets.isEmpty) return null;
 
-      final sortedSets = List<ApiTrainingSet>.from(sets)
+      final sortedSets = List<TrainingSet>.from(sets)
         ..sort((a, b) => b.date.compareTo(a.date));
 
       if (_selectedType.first == ExerciseType.warmup) {
@@ -469,7 +469,7 @@ class ExerciseController extends ChangeNotifier {
 
         if (recentWorkSets.isNotEmpty) {
           // Find the best set (highest weight, then most reps)
-          ApiTrainingSet? bestSet;
+          TrainingSet? bestSet;
           for (var set in recentWorkSets) {
             if (bestSet == null ||
                 set.weight > bestSet.weight ||

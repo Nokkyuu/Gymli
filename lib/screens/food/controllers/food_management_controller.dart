@@ -7,7 +7,7 @@ import 'package:Gymli/utils/api/api_export.dart';
 
 /// Component for ingredients when creating custom food
 class FoodComponent {
-  ApiFood? food;
+  FoodItem? food;
   double grams = 0;
 }
 
@@ -140,7 +140,7 @@ class FoodManagementController extends ChangeNotifier {
   }
 
   /// Update food component
-  void updateFoodComponent(int index, {ApiFood? food, double? grams}) {
+  void updateFoodComponent(int index, {FoodItem? food, double? grams}) {
     if (index < _foodComponents.length) {
       if (food != null) _foodComponents[index].food = food;
       if (grams != null) _foodComponents[index].grams = grams;

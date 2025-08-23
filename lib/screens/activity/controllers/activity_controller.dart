@@ -13,8 +13,8 @@ class ActivityController extends ChangeNotifier {
   final TempService container = GetIt.I<TempService>();
 
   // Data lists
-  List<ApiActivity> activities = [];
-  List<ApiActivityLog> activityLogs = [];
+  List<Activity> activities = [];
+  List<ActivityLog> activityLogs = [];
   Map<String, dynamic> activityStats = {};
 
   // Loading states
@@ -36,9 +36,9 @@ class ActivityController extends ChangeNotifier {
       //final statsData = await container.activityService.getActivityStats();
 
       activities =
-          activitiesData.map((data) => ApiActivity.fromJson(data)).toList();
+          activitiesData.map((data) => Activity.fromJson(data)).toList();
       activityLogs =
-          logsData.map((data) => ApiActivityLog.fromJson(data)).toList();
+          logsData.map((data) => ActivityLog.fromJson(data)).toList();
       // activityStats = statsData;
 
       _isInitialized = true;
@@ -125,7 +125,7 @@ class ActivityController extends ChangeNotifier {
       (a) => a.name == activityName,
       orElse: () => activities.isNotEmpty
           ? activities.first
-          : ApiActivity(
+          : Activity(
               id: 0,
               userName: '',
               name: '',
@@ -138,7 +138,7 @@ class ActivityController extends ChangeNotifier {
   }
 
   /// Check if delete button should be shown for an activity
-  bool shouldShowDeleteButton(ApiActivity activity) {
+  bool shouldShowDeleteButton(Activity activity) {
     if (activity.id == null)
       return false;
     else
@@ -146,8 +146,8 @@ class ActivityController extends ChangeNotifier {
   }
 
   /// Get sorted activity logs (newest first)
-  List<ApiActivityLog> get sortedActivityLogs {
-    final sortedLogs = List<ApiActivityLog>.from(activityLogs);
+  List<ActivityLog> get sortedActivityLogs {
+    final sortedLogs = List<ActivityLog>.from(activityLogs);
     sortedLogs.sort((a, b) => b.date.compareTo(a.date));
     return sortedLogs;
   }

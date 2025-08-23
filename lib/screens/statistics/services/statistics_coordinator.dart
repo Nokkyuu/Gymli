@@ -115,7 +115,7 @@ class StatisticsCoordinator {
       );
 
       final trainingSets = data['trainingSets'] as List<Map<String, dynamic>>;
-      final exercises = data['exercises'] as List<ApiExercise>;
+      final exercises = data['exercises'] as List<Exercise>;
 
       // Extract filtered training dates
       Set<DateTime> uniqueDates = {};

@@ -10,7 +10,7 @@ class FoodHistoryWidget extends StatelessWidget {
   const FoodHistoryWidget({super.key});
 
   void _showDeleteConfirmation(
-      BuildContext context, ApiFoodLog log, FoodDataController controller) {
+      BuildContext context, FoodLog log, FoodDataController controller) {
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
@@ -113,7 +113,7 @@ class FoodHistoryWidget extends StatelessWidget {
     return Consumer<FoodDataController>(
       builder: (context, controller, child) {
         // Sort logs by date (newest first)
-        final sortedLogs = List<ApiFoodLog>.from(controller.foodLogs);
+        final sortedLogs = List<FoodLog>.from(controller.foodLogs);
         sortedLogs.sort((a, b) => b.date.compareTo(a.date));
 
         if (sortedLogs.isEmpty) {

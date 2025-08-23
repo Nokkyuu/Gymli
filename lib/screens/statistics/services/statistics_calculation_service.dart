@@ -45,7 +45,7 @@ class StatisticsCalculationService {
   /// Calculate equipment usage statistics
   EquipmentUsage calculateEquipmentUsage(
     List<Map<String, dynamic>> trainingSets,
-    List<ApiExercise> exercises,
+    List<Exercise> exercises,
   ) {
     try {
       // Create a map of exercise names to their types
@@ -99,7 +99,7 @@ class StatisticsCalculationService {
   Future<List<List<double>>> calculateMuscleHistoryScores(
     List<DateTime> trainingDates,
     List<Map<String, dynamic>> allTrainingSets,
-    List<ApiExercise> exercises,
+    List<Exercise> exercises,
   ) async {
     // Create muscle mapping
     Map<String, int> muscleMapping = {
@@ -259,7 +259,7 @@ class StatisticsCalculationService {
   ExerciseProgressData calculateExerciseProgress(
     String exerciseName,
     List<Map<String, dynamic>> exerciseTrainingSets,
-    ApiExercise? exercise, // Add exercise parameter
+    Exercise? exercise, // Add exercise parameter
   ) {
     if (exerciseTrainingSets.isEmpty) {
       return ExerciseProgressData.empty();
@@ -311,7 +311,7 @@ class StatisticsCalculationService {
         final setData = bestSetPerDay[dateKey]!;
 
         // Create ApiTrainingSet for score calculation
-        final trainingSet = ApiTrainingSet(
+        final trainingSet = TrainingSet(
           weight: setData['weight'] as double,
           repetitions: setData['repetitions'] as int,
           // baseReps: setData['base_reps'] as int,
@@ -369,14 +369,14 @@ class StatisticsCalculationService {
   Future<ExerciseGraphDataResult> loadExerciseGraphData({
     required String exerciseName,
     required List<Map<String, dynamic>> allTrainingSets,
-    required List<ApiExercise> exercises, // Add exercises parameter
+    required List<Exercise> exercises, // Add exercises parameter
     String? startingDate,
     String? endingDate,
     bool useDefaultFilter = true,
   }) async {
     try {
       // Find the exercise object for this exercise name
-      ApiExercise? exercise;
+      Exercise? exercise;
       try {
         exercise = exercises.firstWhere((e) => e.name == exerciseName);
       } catch (e) {
@@ -493,7 +493,7 @@ class StatisticsCalculationService {
           final setData = bestSetPerDay[dateKey]!;
 
           // Create ApiTrainingSet for score calculation
-          final trainingSet = ApiTrainingSet(
+          final trainingSet = TrainingSet(
             weight: setData['weight'] as double,
             repetitions: setData['repetitions'] as int,
             // baseReps: setData['base_reps'] as int,
@@ -557,8 +557,7 @@ class StatisticsCalculationService {
   }
 
   /// Calculate score for a training set using the appropriate method
-  double _calculateScoreForSet(
-      ApiTrainingSet trainingSet, ApiExercise? exercise) {
+  double _calculateScoreForSet(TrainingSet trainingSet, Exercise? exercise) {
     if (exercise != null) {
       return globals.calculateScoreWithExercise(trainingSet, exercise);
     } else {
@@ -580,7 +579,7 @@ class StatisticsCalculationService {
   /// This method handles muscle mapping, training set analysis, and bar chart generation
   Future<StatisticsCalculationResult> calculateBarStatistics({
     required List<Map<String, dynamic>> trainingSets,
-    required List<ApiExercise> exercises,
+    required List<Exercise> exercises,
     required List<DateTime> filteredTrainingDates,
   }) async {
     try {

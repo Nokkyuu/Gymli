@@ -30,7 +30,7 @@ class ExerciseListScreen extends StatefulWidget {
 
 class ListEntry {
   final String? header;
-  final ApiTrainingSet? set;
+  final TrainingSet? set;
   ListEntry.header(this.header) : set = null;
   ListEntry.set(this.set) : header = null;
   bool get isHeader => header != null;
@@ -81,7 +81,7 @@ class _ExerciseListScreenState extends State<ExerciseListScreen> {
     setState(() {});
   }
 
-  void _delete(ApiTrainingSet item) async {
+  void _delete(TrainingSet item) async {
     await controller.delete(item);
     if (widget.onSetDeleted != null) {
       widget.onSetDeleted!();

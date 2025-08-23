@@ -35,9 +35,9 @@ class LandingController extends ChangeNotifier {
   }
 
   // Getters
-  List<ApiExercise> get exercises => _cache?.exercises ?? [];
-  List<ApiWorkout> get workouts => _cache?.workouts ?? [];
-  List<ApiExercise> get filteredExercises => getSortedExercises();
+  List<Exercise> get exercises => _cache?.exercises ?? [];
+  List<Workout> get workouts => _cache?.workouts ?? [];
+  List<Exercise> get filteredExercises => getSortedExercises();
   List<String> get metainfo => List.from(_metainfo);
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
@@ -130,7 +130,7 @@ class LandingController extends ChangeNotifier {
   }
 
   /// Apply workout filter
-  Future<void> applyWorkoutFilter(ApiWorkout workout) async {
+  Future<void> applyWorkoutFilter(Workout workout) async {
     if (kDebugMode) {
       print('🔄 Applying workout filter: ${workout.name}');
     }
@@ -161,8 +161,8 @@ class LandingController extends ChangeNotifier {
   }
 
   /// Get sorted exercises for display
-  List<ApiExercise> getSortedExercises() {
-    return List<ApiExercise>.from(
+  List<Exercise> getSortedExercises() {
+    return List<Exercise>.from(
         _filterController.getFilteredExercisesView(exercises));
   }
 
@@ -272,7 +272,7 @@ class LandingController extends ChangeNotifier {
   }
 
   /// Build metainfo for workout filter
-  Future<void> _buildMetainfoForWorkout(ApiWorkout workout) async {
+  Future<void> _buildMetainfoForWorkout(Workout workout) async {
     final filtered = getSortedExercises();
     _metainfo = List.filled(filtered.length, "");
 

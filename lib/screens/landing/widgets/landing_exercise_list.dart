@@ -7,9 +7,9 @@ import '../../../utils/themes/responsive_helper.dart';
 import 'landing_exercise_item.dart';
 
 class LandingExerciseList extends StatelessWidget {
-  final List<ApiExercise> exercises;
+  final List<Exercise> exercises;
   final List<String> metainfo;
-  final Function(ApiExercise, String) onExerciseTap;
+  final Function(Exercise, String) onExerciseTap;
 
   const LandingExerciseList({
     super.key,
@@ -67,7 +67,7 @@ class LandingExerciseList extends StatelessWidget {
     );
   }
 
-  void _handleExerciseTap(ApiExercise exercise, String meta) {
+  void _handleExerciseTap(Exercise exercise, String meta) {
     String description = "";
     if (meta.split(":").isNotEmpty && meta.split(":")[0] == "Warm") {
       description = meta;

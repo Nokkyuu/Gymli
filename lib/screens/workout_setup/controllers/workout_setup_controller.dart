@@ -11,9 +11,9 @@ class WorkoutSetupController extends ChangeNotifier {
   final ExerciseService exerciseService = GetIt.I<ExerciseService>();
   // Workout data
   String _workoutName = '';
-  ApiWorkout? _currentWorkout;
-  List<ApiExercise> _allExercises = [];
-  List<ApiWorkoutUnit> _addedExercises = [];
+  Workout? _currentWorkout;
+  List<Exercise> _allExercises = [];
+  List<WorkoutUnit> _addedExercises = [];
 
   // Form controller
   final TextEditingController workoutNameController = TextEditingController();
@@ -27,9 +27,9 @@ class WorkoutSetupController extends ChangeNotifier {
 
   // Getters
   String get workoutName => _workoutName;
-  ApiWorkout? get currentWorkout => _currentWorkout;
-  List<ApiExercise> get allExercises => _allExercises;
-  List<ApiWorkoutUnit> get addedExercises => _addedExercises;
+  Workout? get currentWorkout => _currentWorkout;
+  List<Exercise> get allExercises => _allExercises;
+  List<WorkoutUnit> get addedExercises => _addedExercises;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
   ValueNotifier<bool> get exerciseListNotifier => _exerciseListNotifier;
@@ -55,7 +55,7 @@ class WorkoutSetupController extends ChangeNotifier {
 
         _currentWorkout = workouts.firstWhere(
           (workout) => workout.name == _workoutName,
-          orElse: () => ApiWorkout(
+          orElse: () => Workout(
               id: 0, userName: "DefaultUser", name: _workoutName, units: []),
         );
 
@@ -77,7 +77,7 @@ class WorkoutSetupController extends ChangeNotifier {
   }
 
   // Add exercise to workout
-  void addExercise(ApiExercise exercise, int warmups, int worksets) {
+  void addExercise(Exercise exercise, int warmups, int worksets) {
     // Check if exercise already exists
     for (int i = 0; i < _addedExercises.length; ++i) {
       if (_addedExercises[i].exerciseName == exercise.name) {
@@ -85,7 +85,7 @@ class WorkoutSetupController extends ChangeNotifier {
       }
     }
 
-    _addedExercises.add(ApiWorkoutUnit(
+    _addedExercises.add(WorkoutUnit(
         id: 0,
         userName: "DefaultUser",
         workoutId: 0,
@@ -100,7 +100,7 @@ class WorkoutSetupController extends ChangeNotifier {
   }
 
   // Remove exercise from workout
-  void removeExercise(ApiWorkoutUnit exercise) {
+  void removeExercise(WorkoutUnit exercise) {
     _addedExercises.remove(exercise);
     _exerciseListNotifier.value = !_exerciseListNotifier.value;
     notifyListeners();

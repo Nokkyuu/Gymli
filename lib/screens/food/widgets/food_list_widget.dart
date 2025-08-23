@@ -12,7 +12,7 @@ class FoodListWidget extends StatelessWidget {
   const FoodListWidget({super.key});
 
   void _showDeleteFoodConfirmation(
-      BuildContext context, ApiFood food, FoodDataController controller) {
+      BuildContext context, FoodItem food, FoodDataController controller) {
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(

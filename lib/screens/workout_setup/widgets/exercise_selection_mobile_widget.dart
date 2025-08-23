@@ -15,7 +15,7 @@ class ExerciseSelectionMobileWidget extends StatelessWidget {
         return Column(
           children: [
             // Exercise dropdown
-            DropdownMenu<ApiExercise>(
+            DropdownMenu<Exercise>(
               width: MediaQuery.of(context).size.width * 0.7,
               controller: selectionController.exerciseController,
               menuHeight: 500,
@@ -33,8 +33,8 @@ class ExerciseSelectionMobileWidget extends StatelessWidget {
                 selectionController.setSelectedExercise(selectedExercise);
               },
               dropdownMenuEntries: workoutController.allExercises
-                  .map<DropdownMenuEntry<ApiExercise>>((ApiExercise exercise) {
-                return DropdownMenuEntry<ApiExercise>(
+                  .map<DropdownMenuEntry<Exercise>>((Exercise exercise) {
+                return DropdownMenuEntry<Exercise>(
                     value: exercise,
                     label: exercise.name,
                     leadingIcon: SizedBox(

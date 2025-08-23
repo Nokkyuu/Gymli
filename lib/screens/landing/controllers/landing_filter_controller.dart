@@ -7,22 +7,22 @@ import '../models/landing_filter_state.dart';
 import '../../../utils/models/data_models.dart';
 
 /// Comparator used app-wide for alphabetic exercise ordering (case/space-insensitive).
-int _byName(ApiExercise a, ApiExercise b) =>
+int _byName(Exercise a, Exercise b) =>
     a.name.trim().toLowerCase().compareTo(b.name.trim().toLowerCase());
 
 /// Return an ordered *view* of exercises for display, without mutating the source list.
 /// - For workout filter: preserves the unit order from the workout.
 /// - For muscle/none: yields alphabetically by name.
-Iterable<ApiExercise> orderedExercisesView(
+Iterable<Exercise> orderedExercisesView(
   LandingFilterState state,
-  Iterable<ApiExercise> allExercises,
+  Iterable<Exercise> allExercises,
 ) sync* {
   switch (state.filterType) {
     case FilterType.workout:
       final w = state.selectedWorkout;
       if (w == null) return;
       // Build a lookup once; does not copy exercise objects
-      final Map<String, ApiExercise> byName = {
+      final Map<String, Exercise> byName = {
         for (final e in allExercises) e.name: e,
       };
       for (final u in w.units) {
@@ -56,7 +56,7 @@ Iterable<ApiExercise> orderedExercisesView(
 /// Stateless helper: compute *names* for a given filter state (sorted where applicable).
 List<String> computeFilteredExerciseNames(
   LandingFilterState state,
-  List<ApiExercise> allExercises,
+  List<Exercise> allExercises,
 ) {
   switch (state.filterType) {
     case FilterType.workout:
@@ -90,7 +90,7 @@ class LandingFilterController {
 
   // --- Getters (public surface) ---
   LandingFilterState get filterState => _filterState;
-  ApiWorkout? get selectedWorkout => _filterState.selectedWorkout;
+  Workout? get selectedWorkout => _filterState.selectedWorkout;
   MuscleList? get selectedMuscle => _filterState.selectedMuscle;
   FilterType get filterType => _filterState.filterType;
   bool get hasActiveFilter => _filterState.hasActiveFilter;
@@ -99,7 +99,7 @@ class LandingFilterController {
     _filterState = _filterState.clear();
   }
 
-  void setWorkoutFilter(ApiWorkout workout) {
+  void setWorkoutFilter(Workout workout) {
     _filterState = _filterState.setWorkoutFilter(workout);
   }
 
@@ -113,12 +113,11 @@ class LandingFilterController {
   // }
 
   List<String> getFilteredExerciseNames(
-      List<ApiExercise> allExercises, List<ApiWorkout> allWorkouts) {
+      List<Exercise> allExercises, List<Workout> allWorkouts) {
     return computeFilteredExerciseNames(_filterState, allExercises);
   }
 
-  Iterable<ApiExercise> getFilteredExercisesView(
-      Iterable<ApiExercise> allExercises) {
+  Iterable<Exercise> getFilteredExercisesView(Iterable<Exercise> allExercises) {
     return orderedExercisesView(_filterState, allExercises);
   }
 }

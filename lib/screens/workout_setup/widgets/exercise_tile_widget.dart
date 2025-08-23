@@ -3,7 +3,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../../../utils/models/data_models.dart';
 
 class ExerciseTileWidget extends StatelessWidget {
-  final ApiWorkoutUnit exercise;
+  final WorkoutUnit exercise;
   final IconData icon;
   final VoidCallback onRemove;
 

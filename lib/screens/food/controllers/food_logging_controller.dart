@@ -23,7 +23,7 @@ class FoodLoggingController extends ChangeNotifier {
   Future<void> logFood({
     required String selectedFoodName,
     required DateTime selectedDate,
-    required List<ApiFood> foods,
+    required List<FoodItem> foods,
   }) async {
     if (gramsController.text.isEmpty) {
       throw Exception('Please enter weight in grams');
@@ -60,7 +60,7 @@ class FoodLoggingController extends ChangeNotifier {
   }
 
   /// Calculate nutrition for given grams and food
-  Map<String, double> calculateNutrition(ApiFood food, double grams) {
+  Map<String, double> calculateNutrition(FoodItem food, double grams) {
     final multiplier = grams / 100.0;
     return {
       'calories': food.kcalPer100g * multiplier,

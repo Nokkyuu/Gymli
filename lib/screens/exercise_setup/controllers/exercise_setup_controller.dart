@@ -24,7 +24,7 @@ class ExerciseSetupController extends ChangeNotifier {
   double _maxRep = 15;
   RangeValues _repRange = const RangeValues(10, 20);
   double _weightInc = 2.5;
-  ApiExercise? _currentExercise;
+  Exercise? _currentExercise;
 
   // Form controller
   final TextEditingController exerciseTitleController = TextEditingController();
@@ -40,7 +40,7 @@ class ExerciseSetupController extends ChangeNotifier {
   double get maxRep => _maxRep;
   RangeValues get repRange => _repRange;
   double get weightInc => _weightInc;
-  ApiExercise? get currentExercise => _currentExercise;
+  Exercise? get currentExercise => _currentExercise;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
 
@@ -59,8 +59,8 @@ class ExerciseSetupController extends ChangeNotifier {
 
     _setLoading(true);
     try {
-      final List<ApiExercise> exercises = await exerciseService.getExercises();
-      ApiExercise? exerciseData;
+      final List<Exercise> exercises = await exerciseService.getExercises();
+      Exercise? exerciseData;
       try {
         exerciseData =
             exercises.firstWhere((item) => item.name == _exerciseName);
@@ -228,7 +228,7 @@ class ExerciseSetupController extends ChangeNotifier {
     if (kDebugMode) print('🔧 add_exercise: Getting existing exercises...');
     // Check if exercise exists
     final exercises = await exerciseService.getExercises();
-    ApiExercise? existing;
+    Exercise? existing;
     try {
       existing = exercises.firstWhere((e) => e.name == exerciseName);
     } catch (e) {
@@ -269,7 +269,7 @@ class ExerciseSetupController extends ChangeNotifier {
             '🔧 add_exercise: Creating new exercise (optimistic via cache)...');
       // Build a minimal ApiExercise locally and let the cache/outbox sync to the server.
       // Using fromJson to avoid depending on a specific constructor signature.
-      final newExercise = ApiExercise.fromJson({
+      final newExercise = Exercise.fromJson({
         'id': null,
         'name': exerciseName,
         'type': exerciseType,

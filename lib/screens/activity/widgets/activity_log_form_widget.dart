@@ -7,7 +7,7 @@ import 'package:intl/intl.dart';
 import '../../../utils/models/data_models.dart';
 
 class ActivityLogFormWidget extends StatelessWidget {
-  final List<ApiActivity> activities;
+  final List<Activity> activities;
   final String? selectedActivityName;
   final DateTime selectedDate;
   final TextEditingController durationController;
