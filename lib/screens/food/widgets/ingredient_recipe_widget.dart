@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import '../controllers/food_data_controller.dart';
 import '../controllers/food_management_controller.dart';
 import '../../../utils/models/data_models.dart';
-import '../../../utils/api/api_export.dart';
+import '../../../utils/services/service_export.dart';
 import 'package:get_it/get_it.dart';
 
 /// Widget for creating food from ingredients/recipe

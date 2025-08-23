@@ -1,10 +1,8 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
-import 'package:Gymli/utils/services/temp_service.dart';
 import 'package:Gymli/utils/models/data_models.dart';
 import '../constants/calendar_constants.dart';
 import 'package:get_it/get_it.dart';
-import 'package:Gymli/utils/api/api_export.dart';
+import 'package:Gymli/utils/services/service_export.dart';
 
 class CalendarController extends ChangeNotifier {
   // Calendar state
@@ -102,7 +100,7 @@ class CalendarController extends ChangeNotifier {
       _notes.clear();
       for (var n in notes) {
         // Updated to use unified model with fromJson
-        final note = CalendarNote.fromJson(n);
+        final note = n;
         _notes[normalize(note.date)] = note;
       }
     } catch (e) {
@@ -119,7 +117,7 @@ class CalendarController extends ChangeNotifier {
       _calendarWorkouts.clear();
       for (var w in workouts) {
         // Updated to use unified model with fromJson
-        final workout = CalendarWorkout.fromJson(w);
+        final workout = w;
         _calendarWorkouts.add(CalendarWorkout(
           id: workout.id,
           date: normalize(workout.date),
@@ -141,7 +139,7 @@ class CalendarController extends ChangeNotifier {
       _periods.clear();
       for (var p in periods) {
         // Updated to use unified model with fromJson
-        _periods.add(CalendarPeriod.fromJson(p));
+        _periods.add(p);
       }
     } catch (e) {
       if (kDebugMode) print('Error loading periods: $e');
@@ -175,7 +173,7 @@ class CalendarController extends ChangeNotifier {
           final createdNote = await GetIt.I<CalendarService>()
               .createCalendarNote(date: normalizedDate, note: note);
           _notes[normalizedDate] = CalendarNote(
-            id: createdNote['id'],
+            id: createdNote.id,
             date: normalizedDate,
             note: note,
           );
@@ -196,7 +194,7 @@ class CalendarController extends ChangeNotifier {
           .createCalendarWorkout(date: date, workout: workoutName);
 
       _calendarWorkouts.add(CalendarWorkout(
-        id: createdWorkout['id'],
+        id: createdWorkout.id,
         date: normalize(date),
         workout: workoutName,
       ));
@@ -242,7 +240,7 @@ class CalendarController extends ChangeNotifier {
           .createCalendarPeriod(type: type, start_date: start, end_date: end);
 
       _periods.add(CalendarPeriod(
-        id: createdPeriod['id'],
+        id: createdPeriod.id,
         type: PeriodType.fromString(type),
         startDate: start,
         endDate: end,
@@ -414,10 +412,5 @@ class CalendarController extends ChangeNotifier {
   // Getter for notes as a list (sorted by date)
   List<CalendarNote> get notesList {
     return _notes.values.toList()..sort((a, b) => a.date.compareTo(b.date));
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
   }
 }

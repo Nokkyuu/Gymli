@@ -79,31 +79,42 @@ class FoodHistoryWidget extends StatelessWidget {
         name.contains('banane') ||
         name.contains('orange') ||
         name.contains('beere') ||
-        name.contains('berry')) return FontAwesomeIcons.appleWhole;
+        name.contains('berry')) {
+      return FontAwesomeIcons.appleWhole;
+    }
 
     if (name.contains('bread') ||
         name.contains('grain') ||
         name.contains('brot') ||
-        name.contains('brötchen')) return FontAwesomeIcons.breadSlice;
+        name.contains('brötchen')) {
+      return FontAwesomeIcons.breadSlice;
+    }
 
     if (name.contains('chicken') ||
         name.contains('meat') ||
         name.contains('huhn') ||
         name.contains('hähnchen') ||
-        name.contains('fleisch')) return FontAwesomeIcons.drumstickBite;
+        name.contains('fleisch')) {
+      return FontAwesomeIcons.drumstickBite;
+    }
 
     if (name.contains('fish') ||
         name.contains('fisch') ||
         name.contains('lachs') ||
-        name.contains('salmon')) return FontAwesomeIcons.fish;
+        name.contains('salmon')) {
+      return FontAwesomeIcons.fish;
+    }
 
     if (name.contains('cheese') ||
         name.contains('käse') ||
         name.contains('milk') ||
-        name.contains('milch')) return FontAwesomeIcons.cheese;
+        name.contains('milch')) {
+      return FontAwesomeIcons.cheese;
+    }
 
-    if (name.contains('egg') || name.contains('ei') || name.contains('eier'))
+    if (name.contains('egg') || name.contains('ei') || name.contains('eier')) {
       return FontAwesomeIcons.egg;
+    }
 
     return FontAwesomeIcons.utensils;
   }

@@ -2,9 +2,8 @@ import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'dart:math';
-import 'package:Gymli/utils/services/temp_service.dart';
 import 'package:get_it/get_it.dart';
-import '../../../utils/api/api_export.dart';
+import '../../../utils/services/service_export.dart';
 
 class WorkoutAnalyzerScreen extends StatefulWidget {
   final String? startingDate;

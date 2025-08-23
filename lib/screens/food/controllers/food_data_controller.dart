@@ -1,14 +1,21 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
-import '../../../utils/services/temp_service.dart';
 import '../../../utils/models/data_models.dart';
 import 'package:get_it/get_it.dart';
-import 'package:Gymli/utils/api/api_export.dart';
+import 'package:Gymli/utils/services/service_export.dart';
 
 /// Controller for managing food data, loading, and search functionality
 class FoodDataController extends ChangeNotifier {
-  final TempService container = GetIt.I<TempService>();
+  final FoodService foodService = GetIt.I<FoodService>();
+  Future<Map<String, double>> getFoodLogStats({
+    DateTime? startDate,
+    DateTime? endDate,
+  }) {
+    return foodService.getFoodLogStats(
+      startDate: startDate,
+      endDate: endDate,
+    );
+  }
 
   // Data lists
   List<FoodItem> foods = [];
@@ -48,12 +55,10 @@ class FoodDataController extends ChangeNotifier {
 
     try {
       // Load all data
-      final foodsData = await GetIt.I<FoodService>().getFoods();
-      final logsData = await GetIt.I<FoodService>().getFoodLogs();
-      final statsData = await container.getFoodLogStats();
+      final foods = await GetIt.I<FoodService>().getFoods();
+      final foodLogs = await GetIt.I<FoodService>().getFoodLogs();
+      final statsData = await GetIt.I<FoodService>().getFoodLogStats();
 
-      foods = foodsData.map((data) => FoodItem.fromJson(data)).toList();
-      foodLogs = logsData.map((data) => FoodLog.fromJson(data)).toList();
       nutritionStats = statsData;
 
       // Set default selected food by name
@@ -164,10 +169,5 @@ class FoodDataController extends ChangeNotifier {
   void _setLoading(bool loading) {
     _isLoading = loading;
     notifyListeners();
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
   }
 }

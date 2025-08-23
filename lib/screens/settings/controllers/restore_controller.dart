@@ -3,11 +3,13 @@ library;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:get_it/get_it.dart';
 import '../repositories/settings_repository.dart';
 import '../services/csv_service.dart';
 import '../services/file_service.dart';
 import '../models/settings_data_type.dart';
 import '../models/settings_operation_result.dart';
+import 'package:Gymli/utils/services/service_export.dart';
 
 class RestoreController extends ChangeNotifier {
   final SettingsRepository _repository;
@@ -166,8 +168,9 @@ class RestoreController extends ChangeNotifier {
             skippedCount++;
           }
         } catch (e) {
-          if (kDebugMode)
+          if (kDebugMode) {
             print('Error preparing training set for exercise "${row[0]}": $e');
+          }
           skippedCount++;
         }
       } else {
@@ -178,7 +181,7 @@ class RestoreController extends ChangeNotifier {
 
     // Import in batches
     if (trainingSetsToCreate.isNotEmpty) {
-      final batchSize = 1000;
+      const batchSize = 1000;
       final totalBatches = (trainingSetsToCreate.length / batchSize).ceil();
       int importedCount = 0;
 
@@ -198,9 +201,10 @@ class RestoreController extends ChangeNotifier {
         try {
           await _repository.createTrainingSetsBulk(batch);
           importedCount += batch.length;
-          if (kDebugMode)
+          if (kDebugMode) {
             print(
                 'Successfully imported batch of ${batch.length} training sets');
+          }
         } catch (e) {
           if (kDebugMode) print('Error importing batch: $e');
           skippedCount += batch.length;
@@ -317,21 +321,25 @@ class RestoreController extends ChangeNotifier {
                   'type': int.parse(unitStr[4]),
                 });
               } else {
-                if (kDebugMode)
+                if (kDebugMode) {
                   print('Warning: Exercise "${unitStr[0]}" not found');
+                }
                 skippedCount++;
               }
             }
           }
 
           if (units.isNotEmpty) {
-            await _repository.createWorkout(name: workoutName, units: units);
+            await GetIt.I<WorkoutService>()
+                .createWorkout(name: workoutName, units: units);
             importedCount++;
-            if (kDebugMode)
+            if (kDebugMode) {
               print('Successfully imported workout: $workoutName');
+            }
           } else {
-            if (kDebugMode)
+            if (kDebugMode) {
               print('Warning: No valid units found for workout: $workoutName');
+            }
             skippedCount++;
           }
         } catch (e) {
@@ -371,8 +379,9 @@ class RestoreController extends ChangeNotifier {
           });
           if (kDebugMode) print('Prepared food item: ${cleanRow[0]}');
         } catch (e) {
-          if (kDebugMode)
+          if (kDebugMode) {
             print('Error preparing food item "${cleanRow[0]}": $e');
+          }
           skippedCount++;
         }
       } else {
@@ -383,7 +392,7 @@ class RestoreController extends ChangeNotifier {
 
     // Import in batches
     if (foodsToCreate.isNotEmpty) {
-      final batchSize = 1000;
+      const batchSize = 1000;
       final totalBatches = (foodsToCreate.length / batchSize).ceil();
       int importedCount = 0;
 
@@ -403,8 +412,9 @@ class RestoreController extends ChangeNotifier {
         try {
           await _repository.createFoodsBulk(batch);
           importedCount += batch.length;
-          if (kDebugMode)
+          if (kDebugMode) {
             print('Successfully imported batch of ${batch.length} food items');
+          }
         } catch (e) {
           if (kDebugMode) print('Error importing batch: $e');
           skippedCount += batch.length;

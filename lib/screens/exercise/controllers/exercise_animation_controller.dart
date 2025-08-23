@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'dart:math' as Math;
+import 'dart:math' as math;
 
 class ExerciseAnimationController extends ChangeNotifier {
   late AnimationController _myorepParticlesController;
@@ -72,7 +72,9 @@ class ExerciseAnimationController extends ChangeNotifier {
     );
   }
 
+  @override
   void dispose() {
+    super.dispose();
     _myorepParticlesController.dispose();
   }
 }
@@ -92,7 +94,7 @@ class _MyoRepParticlesPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
     final maxRadius = size.width / 2.2;
-    final double particleLifetime = 0.8;
+    const double particleLifetime = 0.8;
 
     for (int i = 0; i < particleCount; i++) {
       final double spawnTime = (i / particleCount) % 1.0;
@@ -103,12 +105,12 @@ class _MyoRepParticlesPainter extends CustomPainter {
       if (t > 1.0) continue;
 
       int currentLoop = (animation.value / 1.0).floor();
-      final rand = Math.Random(currentLoop * particleCount + i);
-      final angle = rand.nextDouble() * 2 * Math.pi;
+      final rand = math.Random(currentLoop * particleCount + i);
+      final angle = rand.nextDouble() * 2 * math.pi;
 
       final particleRadius = maxRadius * t;
-      final dx = center.dx + particleRadius * Math.cos(angle);
-      final dy = center.dy + particleRadius * Math.sin(angle);
+      final dx = center.dx + particleRadius * math.cos(angle);
+      final dy = center.dy + particleRadius * math.sin(angle);
       final opacity = (1.0 - t).clamp(0.0, 1.0);
       final paint = Paint()
         ..color = color.withOpacity(opacity)

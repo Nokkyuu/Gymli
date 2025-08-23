@@ -1,7 +1,6 @@
 import 'package:get_it/get_it.dart';
-import 'package:Gymli/utils/api/api_export.dart';
+import 'package:Gymli/utils/services/service_export.dart';
 import 'package:Gymli/utils/models/data_models.dart';
-import 'package:Gymli/utils/sync/sync_outbox.dart';
 
 import 'dart:async';
 import 'dart:collection';
@@ -197,9 +196,8 @@ Future<void> performWorkoutOp(SyncOp op) async {
         print('OUTBOX DEBUG: response=${res.runtimeType} $res'); // trace
       final clientId = (p['client_id'] as num?)?.toInt(); // temp id from client
       final exerciseId = p['exercise_id'] as int; // exercise id
-      final serverId = (res is Map && res['id'] != null)
-          ? (res['id'] as num).toInt()
-          : null; // server id
+      final serverId =
+          (res.id != null) ? (res.id as num).toInt() : null; // server id
       if (clientId != null && serverId != null) {
         final hook = trainingSetReconcileHook; // injected reconcile
         if (hook != null) {

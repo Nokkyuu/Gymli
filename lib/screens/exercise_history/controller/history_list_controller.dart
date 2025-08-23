@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:Gymli/utils/services/temp_service.dart';
 import '../../../utils/models/data_models.dart';
-import '../../../utils/api/api_export.dart';
+import '../../../utils/services/service_export.dart';
 import '../../exercise_history_screen.dart';
 import 'package:get_it/get_it.dart';
 import '../../../utils/workout_data_cache.dart';

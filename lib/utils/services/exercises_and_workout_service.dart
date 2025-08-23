@@ -7,7 +7,9 @@
 library;
 
 import 'dart:convert';
-import 'api_base.dart';
+import 'package:flutter/foundation.dart' show kDebugMode;
+
+import '../api/api_base.dart';
 import '../models/data_models.dart';
 import 'package:get_it/get_it.dart';
 //----------------- Workout Service -----------------//
@@ -42,14 +44,12 @@ class WorkoutService {
     return getData<Map<String, dynamic>>('workouts/$id');
   }
 
-  Future<Map<String, dynamic>> createWorkout({
-    //TODO: auf models umstellen
+  Future<Workout> createWorkout({
     required String name,
     required List<Map<String, dynamic>> units,
   }) async {
     // Create the workout first and get its data (including ID)
-    final workoutData =
-        json.decode(await createData('workouts', {'name': name}));
+    final workoutData = await createData('workouts', {'name': name});
     final workoutId = workoutData['id'] as int;
 
     // Now create all the workout units
@@ -64,15 +64,45 @@ class WorkoutService {
       );
     }
 
-    return workoutData;
+    return Workout.fromJson(workoutData);
   }
 
-  Future<void> updateWorkout(int id, Map<String, dynamic> data) async {
-    updateData('workouts/$id', data);
+  Future<Workout> updateWorkout(int id, Map<String, dynamic> data) async {
+    final workoutData = await updateData('workouts/$id', data);
+    //TODO: Proper implementation of updating Workout Units
+    return Workout.fromJson(workoutData);
   }
 
   Future<void> deleteWorkout(int id) async {
+    //TODO: implement success reponse?
     return deleteData('workouts/$id');
+  }
+
+  Future<void> clearWorkouts() async {
+    // Get all workouts for this user and delete them
+    //TODO: Integrate clearing of workout units before workouts?
+    final workouts =
+        await getWorkouts(); // Get raw workouts without enrichment for efficiency
+    int deletedCount = 0;
+    int errorCount = 0;
+
+    for (var workout in workouts) {
+      if (workout.id != null) {
+        try {
+          await deleteWorkout(workout.id!);
+          deletedCount++;
+        } catch (e) {
+          errorCount++;
+          if (kDebugMode) {
+            print('Warning: Failed to delete workout ${workout.id}: $e');
+          }
+          // Continue with other workouts instead of stopping
+        }
+      }
+    }
+    if (kDebugMode) {
+      print('Cleared workouts: $deletedCount deleted, $errorCount errors');
+    }
   }
 }
 
@@ -83,7 +113,6 @@ class WorkoutUnitService {
     final raw = await getData<List<dynamic>>('workout_units');
     final wu = raw.map((e) => WorkoutUnit.fromJson(e)).toList();
     return await _enrichWorkoutUnitsWithExerciseNames(wu);
-    ;
   }
 
   Future<List<WorkoutUnit>> _enrichWorkoutUnitsWithExerciseNames(
@@ -98,7 +127,9 @@ class WorkoutUnitService {
         try {
           exerciseIdToName[exercise.id!] = exercise.name;
         } catch (e) {
-          print('Error parsing exercise data in workout units: $e');
+          if (kDebugMode) {
+            print('Error parsing exercise data in workout units: $e');
+          }
         }
       }
 
@@ -109,18 +140,21 @@ class WorkoutUnitService {
 
       return workoutUnits;
     } catch (e) {
-      print('Error in _enrichWorkoutUnitsWithExerciseNames: $e');
+      if (kDebugMode) {
+        print('Error in _enrichWorkoutUnitsWithExerciseNames: $e');
+      }
       // Return original workout units converted to proper Maps if enrichment completely fails
       return workoutUnits;
     }
   }
 
-  Future<Map<String, dynamic>> getWorkoutUnitById(int id) async {
-    return getData<Map<String, dynamic>>('workout_units/$id');
+  Future<WorkoutUnit> getWorkoutUnitById(int id) async {
+    final data = await getData<Map<String, dynamic>>('workout_units/$id');
+    return WorkoutUnit.fromJson(data);
   }
 
   /// Creates a new workout unit record
-  Future<void> createWorkoutUnit({
+  Future<WorkoutUnit> createWorkoutUnit({
     required int workoutId,
     required int exerciseId,
     required int warmups,
@@ -128,7 +162,7 @@ class WorkoutUnitService {
     required int dropsets,
     required int type,
   }) async {
-    createData('workout_units', {
+    final data = await createData('workout_units', {
       'workout_id': workoutId,
       'exercise_id': exerciseId,
       'warmups': warmups,
@@ -136,13 +170,17 @@ class WorkoutUnitService {
       'dropsets': dropsets,
       'type': type,
     });
+    return WorkoutUnit.fromJson(data);
   }
 
-  Future<void> updateWorkoutUnit(int id, Map<String, dynamic> data) async {
-    updateData('workout_units/$id', data);
+  Future<WorkoutUnit> updateWorkoutUnit(
+      int id, Map<String, dynamic> data) async {
+    final updatedData = await updateData('workout_units/$id', data);
+    return WorkoutUnit.fromJson(updatedData);
   }
 
   Future<void> deleteWorkoutUnit(int id) async {
+    //TODO: success response?
     return deleteData('workout_units/$id');
   }
 }
@@ -159,15 +197,57 @@ class ExerciseService {
   }
 
   /// Creates a new exercise record
-  Future<void> createExercise(Map<String, dynamic> data) async {
-    createData('exercises', data);
+  Future<Exercise> createExercise(Map<String, dynamic> data) async {
+    final createdData = await createData('exercises', data);
+    return Exercise.fromJson(createdData);
   }
 
-  Future<void> updateExercise(int id, Map<String, dynamic> data) async {
-    updateData('exercises/$id', data);
+  Future<Exercise> updateExercise(int id, Map<String, dynamic> data) async {
+    final updatedData = await updateData('exercises/$id', data);
+    return Exercise.fromJson(updatedData);
   }
 
   Future<void> deleteExercise(int id) async {
+    //TODO: succcess response?
     return deleteData('exercises/$id');
+  }
+
+  Future<int?> getExerciseIdByName(String exerciseName) async {
+    try {
+      final exercises = await getExercises();
+      final exerciseData =
+          exercises.firstWhere((item) => item.name == exerciseName);
+      return exerciseData.id;
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error resolving exercise name to ID: $e');
+      }
+      return null;
+    }
+  }
+
+  Future<void> clearExercises() async {
+    // Get all exercises for this user and delete them
+    final exercises = await getExercises();
+    int deletedCount = 0;
+    int errorCount = 0;
+
+    for (var exercise in exercises) {
+      if (exercise.id != null) {
+        try {
+          await deleteExercise(exercise.id!);
+          deletedCount++;
+        } catch (e) {
+          errorCount++;
+          if (kDebugMode) {
+            print('Warning: Failed to delete exercise ${exercise.id}: $e');
+          }
+          // Continue with other exercises instead of stopping
+        }
+      }
+    }
+    if (kDebugMode) {
+      print('Cleared exercises: $deletedCount deleted, $errorCount errors');
+    }
   }
 }

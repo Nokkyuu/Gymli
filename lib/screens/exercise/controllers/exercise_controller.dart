@@ -1,9 +1,10 @@
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import '../../../utils/models/data_models.dart';
 import 'exercise_graph_controller.dart';
 import 'package:get_it/get_it.dart';
 import '../../../utils/workout_data_cache.dart';
-import '../../../utils/api/api_export.dart'; // for ExerciseService via GetIt
+import '../../../utils/services/service_export.dart'; // for ExerciseService via GetIt
 import '../../../utils/services/authentication_service.dart';
 
 enum ExerciseType { warmup, work }
@@ -34,8 +35,7 @@ class ExerciseController extends ChangeNotifier {
   final Map<int, Color> _colorMap = {};
 
   WorkoutDataCache get _cache => GetIt.I<WorkoutDataCache>();
-  ExerciseService get _exerciseService => GetIt.I<ExerciseService>();
-  TrainingSetService get _trainingSetService => GetIt.I<TrainingSetService>();
+  // ExerciseService get _exerciseService => GetIt.I<ExerciseService>();
 
   ExerciseController({
     ExerciseGraphController? graphController,
@@ -230,7 +230,9 @@ class ExerciseController extends ChangeNotifier {
       final cached = await _cache.getCachedTrainingSets(exerciseId);
       _graphController.updateGraphFromTrainingSets(cached);
     } catch (e) {
-      print('Error refreshing graph data: $e');
+      if (kDebugMode) {
+        print('Error refreshing graph data: $e');
+      }
     }
   }
 
@@ -270,7 +272,7 @@ class ExerciseController extends ChangeNotifier {
     if (_currentExercise == null) {
       try {
         // Fallback: fetch exercises metadata (not training sets)
-        final all = await _exerciseService.getExercises();
+        final all = _cache.exercises;
         Exercise? match;
         for (final e in all) {
           if (e.name == exerciseName) {
@@ -311,7 +313,9 @@ class ExerciseController extends ChangeNotifier {
           }
         }
       } catch (e) {
-        print('Error parsing workout description: $e');
+        if (kDebugMode) {
+          print('Error parsing workout description: $e');
+        }
         _numWarmUps = 0;
         _numWorkSets = 0;
       }
@@ -471,7 +475,9 @@ class ExerciseController extends ChangeNotifier {
 
       return null;
     } catch (e) {
-      print('Error loading recent training values: $e');
+      if (kDebugMode) {
+        print('Error loading recent training values: $e');
+      }
       return null;
     }
   }

@@ -9,11 +9,10 @@
 library;
 
 import 'package:fl_chart/fl_chart.dart';
-import 'package:Gymli/utils/services/temp_service.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
 import '../../../utils/models/data_models.dart';
 import 'statistics_filter_service.dart';
-import '../../../utils/api/api_export.dart';
+import '../../../utils/services/service_export.dart';
 import 'package:get_it/get_it.dart';
 
 /// Service responsible for data fetching and caching for statistics
@@ -120,8 +119,7 @@ class StatisticsDataService {
       if (kDebugMode) print('Activity logs count: ${logsData.length}');
 
       // Convert logs to ApiActivityLog objects and sort by date
-      final activityLogs =
-          logsData.map((data) => ActivityLog.fromJson(data)).toList();
+      final activityLogs = logsData;
       activityLogs.sort((a, b) => a.date.compareTo(b.date));
 
       // Apply date filtering (same logic as other statistics)

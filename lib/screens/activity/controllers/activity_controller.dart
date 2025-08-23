@@ -2,10 +2,8 @@
 library;
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
-import 'package:Gymli/utils/services/temp_service.dart';
 import '../../../utils/models/data_models.dart';
-import 'package:Gymli/utils/api/api_export.dart';
+import 'package:Gymli/utils/services/service_export.dart';
 import 'package:get_it/get_it.dart';
 //import 'package:Gymli/utils/services/auth_service.dart';
 
@@ -35,10 +33,8 @@ class ActivityController extends ChangeNotifier {
       final logsData = await GetIt.I<ActivityService>().getActivityLogs();
       //final statsData = await container.activityService.getActivityStats();
 
-      activities =
-          activitiesData.map((data) => Activity.fromJson(data)).toList();
-      activityLogs =
-          logsData.map((data) => ActivityLog.fromJson(data)).toList();
+      activities = activitiesData;
+      activityLogs = logsData;
       // activityStats = statsData;
 
       _isInitialized = true;
@@ -138,10 +134,11 @@ class ActivityController extends ChangeNotifier {
 
   /// Check if delete button should be shown for an activity
   bool shouldShowDeleteButton(Activity activity) {
-    if (activity.id == null)
+    if (activity.id == null) {
       return false;
-    else
+    } else {
       return true;
+    }
   }
 
   /// Get sorted activity logs (newest first)

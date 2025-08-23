@@ -4,22 +4,24 @@
 ///
 library;
 
-import 'dart:convert';
-import 'api_base.dart';
+import '../api/api_base.dart';
+import '../models/data_models.dart';
 
 class CalendarService {
-  Future<List<dynamic>> getCalendarNotes() async {
-    return getData<List<dynamic>>('calendar_notes');
+  Future<List<CalendarNote>> getCalendarNotes() async {
+    final data = await getData<List<dynamic>>('calendar_notes');
+    return data.map((item) => CalendarNote.fromJson(item)).toList();
   }
 
-  Future<Map<String, dynamic>> createCalendarNote({
+  Future<CalendarNote> createCalendarNote({
     required DateTime date,
     required String note,
   }) async {
-    return json.decode(await createData('calendar_notes', {
+    final response = await createData('calendar_notes', {
       'date': date.toIso8601String(),
       'note': note,
-    }));
+    });
+    return CalendarNote.fromJson(response);
   }
 
   Future<void> deleteCalendarNote(int id) async {
@@ -29,7 +31,7 @@ class CalendarService {
     }
   }
 
-  Future<Map<String, dynamic>> updateCalendarNote({
+  Future<CalendarNote> updateCalendarNote({
     required int id,
     required DateTime date,
     required String note,
@@ -37,24 +39,26 @@ class CalendarService {
     final response = await updateData(
         'calendar_notes/$id', {'date': date.toIso8601String(), 'note': note});
     if (response.statusCode == 200) {
-      return json.decode(response.body);
+      return CalendarNote.fromJson(response);
     } else {
       throw Exception('Failed to update calendar note');
     }
   }
 
-  Future<List<dynamic>> getCalendarWorkouts() async {
-    return getData<List<dynamic>>('calendar_workouts');
+  Future<List<CalendarWorkout>> getCalendarWorkouts() async {
+    final data = await getData<List<dynamic>>('calendar_workouts');
+    return data.map((item) => CalendarWorkout.fromJson(item)).toList();
   }
 
-  Future<Map<String, dynamic>> createCalendarWorkout({
+  Future<CalendarWorkout> createCalendarWorkout({
     required DateTime date,
     required String workout,
   }) async {
-    return json.decode(await createData('calendar_workouts', {
+    final response = await createData('calendar_workouts', {
       'date': date.toIso8601String(),
       'workout': workout,
-    }));
+    });
+    return CalendarWorkout.fromJson(response);
   }
 
   Future<void> deleteCalendarWorkout(int id) async {
@@ -64,20 +68,22 @@ class CalendarService {
     }
   }
 
-  Future<List<dynamic>> getCalendarPeriods() async {
-    return getData<List<dynamic>>('periods');
+  Future<List<CalendarPeriod>> getCalendarPeriods() async {
+    final data = await getData<List<dynamic>>('periods');
+    return data.map((item) => CalendarPeriod.fromJson(item)).toList();
   }
 
-  Future<Map<String, dynamic>> createCalendarPeriod({
+  Future<CalendarPeriod> createCalendarPeriod({
     required String type,
     required DateTime start_date,
     required DateTime end_date,
   }) async {
-    return json.decode(await createData('periods', {
+    final response = await createData('periods', {
       'type': type,
       'start_date': start_date.toIso8601String(),
       'end_date': end_date.toIso8601String(),
-    }));
+    });
+    return CalendarPeriod.fromJson(response);
   }
 
   Future<void> deleteCalendarPeriod(int id) async {

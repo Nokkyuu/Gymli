@@ -81,7 +81,7 @@ class StatisticsMobileLayout extends StatelessWidget {
                 textAlign: TextAlign.center,
               ),
               initiallyExpanded: false,
-              children: [
+              children: const [
                 StatisticsActivitiesView(),
               ],
             ),

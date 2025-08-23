@@ -4,8 +4,7 @@ library;
 import 'package:get_it/get_it.dart';
 
 import 'package:flutter/foundation.dart';
-import 'package:Gymli/utils/services/temp_service.dart';
-import '../../../utils/api/api_export.dart';
+import '../../../utils/services/service_export.dart';
 //import 'package:Gymli/utils/services/auth_service.dart';
 import 'package:Gymli/utils/services/authentication_service.dart';
 
@@ -67,9 +66,9 @@ class SettingsRepository {
   /// Clear exercises (also clears dependent data)
   Future<void> clearExercises() async {
     try {
-      await container.clearWorkouts();
+      await GetIt.I<WorkoutService>().clearWorkouts();
       await GetIt.I<TrainingSetService>().clearTrainingSets();
-      await container.clearExercises();
+      await GetIt.I<ExerciseService>().clearExercises();
       // GetIt.I<AuthService>().notifyAuthStateChanged();
     } catch (e) {
       if (kDebugMode) print('Error clearing exercises: $e');
@@ -80,7 +79,7 @@ class SettingsRepository {
   /// Clear workouts
   Future<void> clearWorkouts() async {
     try {
-      await container.clearWorkouts();
+      await GetIt.I<WorkoutService>().clearWorkouts();
       //GetIt.I<AuthService>().notifyAuthStateChanged();
     } catch (e) {
       if (kDebugMode) print('Error clearing workouts: $e');
@@ -142,20 +141,6 @@ class SettingsRepository {
   }
 
   /// Create workout
-  Future<Map<String, dynamic>> createWorkout({
-    required String name,
-    required List<Map<String, dynamic>> units,
-  }) async {
-    try {
-      return await GetIt.I<WorkoutService>().createWorkout(
-        name: name,
-        units: units,
-      );
-    } catch (e) {
-      if (kDebugMode) print('Error creating workout: $e');
-      rethrow;
-    }
-  }
 
   /// Create foods in bulk
   Future<void> createFoodsBulk(List<Map<String, dynamic>> foods) async {
@@ -170,7 +155,7 @@ class SettingsRepository {
   /// Get exercise ID by name
   Future<int?> getExerciseIdByName(String name) async {
     try {
-      return await container.getExerciseIdByName(name);
+      return await GetIt.I<ExerciseService>().getExerciseIdByName(name);
     } catch (e) {
       if (kDebugMode) print('Error getting exercise ID by name: $e');
       rethrow;

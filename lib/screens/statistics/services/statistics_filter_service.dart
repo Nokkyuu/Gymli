@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:intl/intl.dart';
 
 /// Service responsible for date filtering operations in statistics
@@ -178,7 +179,9 @@ class StatisticsFilterService {
           uniqueDates.add(DateTime(date.year, date.month, date.day));
         }
       } catch (e) {
-        print('Error parsing date: $e');
+        if (kDebugMode) {
+          print('Error parsing date: $e');
+        }
       }
     }
 

@@ -4,13 +4,11 @@
 library;
 
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
 import 'package:get_it/get_it.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:Gymli/widgets/app_router.dart';
 import 'landing/controllers/landing_controller.dart';
-import 'landing/controllers/landing_filter_controller.dart';
 import 'landing/widgets/landing_loading_widget.dart';
 import 'landing/widgets/landing_demo_watermark.dart';
 import 'landing/widgets/landing_exercise_list.dart';
@@ -53,7 +51,8 @@ class LandingScreen extends ConsumerWidget {
                     onWorkoutSelected: (w) => controller.applyWorkoutFilter(w),
                     onMuscleSelected: (m) => controller.applyMuscleFilter(m),
                     onShowAll: () => controller.showAllExercises(),
-                    onWorkoutEdit: (name) => _onWorkoutEdit(context, name, controller),
+                    onWorkoutEdit: (name) =>
+                        _onWorkoutEdit(context, name, controller),
                   );
                 },
               ),
@@ -66,7 +65,8 @@ class LandingScreen extends ConsumerWidget {
                       return LandingExerciseList(
                         exercises: sortedExercises,
                         metainfo: controller.metainfo,
-                        onExerciseTap: (ex, desc) => _onExerciseTap(context, ex, desc, controller),
+                        onExerciseTap: (ex, desc) =>
+                            _onExerciseTap(context, ex, desc, controller),
                       );
                     } else {
                       return const LandingEmptyWidget();
@@ -86,19 +86,23 @@ class LandingScreen extends ConsumerWidget {
     return Scaffold(body: buildBody());
   }
 
-  void _onWorkoutEdit(BuildContext context, String workoutName, LandingController controller) {
+  void _onWorkoutEdit(
+      BuildContext context, String workoutName, LandingController controller) {
     context
-        .push('${AppRouter.workoutSetup}?type=${Uri.encodeComponent(workoutName)}')
+        .push(
+            '${AppRouter.workoutSetup}?type=${Uri.encodeComponent(workoutName)}')
         .then((_) => controller.reload());
   }
 
-  void _onExerciseTap(BuildContext context, dynamic exercise, String description, LandingController controller) {
+  void _onExerciseTap(BuildContext context, dynamic exercise,
+      String description, LandingController controller) {
     final queryParams = {
       'id': exercise.id.toString(),
       'name': Uri.encodeComponent(exercise.name),
       'description': Uri.encodeComponent(description),
     };
-    final queryString = queryParams.entries.map((e) => '${e.key}=${e.value}').join('&');
+    final queryString =
+        queryParams.entries.map((e) => '${e.key}=${e.value}').join('&');
 
     context
         .push('${AppRouter.exercise}?$queryString')

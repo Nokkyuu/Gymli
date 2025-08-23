@@ -52,7 +52,7 @@ class FoodStatsWidget extends StatelessWidget {
                       final endOfDay = startOfDay
                           .add(const Duration(days: 1))
                           .subtract(const Duration(milliseconds: 1));
-                      return controller.container.getFoodLogStats(
+                      return controller.getFoodLogStats(
                         startDate: startOfDay,
                         endDate: endOfDay,
                       );
@@ -65,25 +65,26 @@ class FoodStatsWidget extends StatelessWidget {
                           children: [
                             _buildStatsChip(
                               'kcal',
-                              '${stats['total_calories']?.toStringAsFixed(0) ?? '0'}',
+                              stats['total_calories']?.toStringAsFixed(0) ??
+                                  '0',
                               '',
                             ),
                             const SizedBox(width: 8),
                             _buildStatsChip(
                               'Protein',
-                              '${stats['total_protein']?.toStringAsFixed(1) ?? '0'}',
+                              stats['total_protein']?.toStringAsFixed(1) ?? '0',
                               'g',
                             ),
                             const SizedBox(width: 8),
                             _buildStatsChip(
                               'Carbs',
-                              '${stats['total_carbs']?.toStringAsFixed(1) ?? '0'}',
+                              stats['total_carbs']?.toStringAsFixed(1) ?? '0',
                               'g',
                             ),
                             const SizedBox(width: 8),
                             _buildStatsChip(
                               'Fat',
-                              '${stats['total_fat']?.toStringAsFixed(1) ?? '0'}',
+                              stats['total_fat']?.toStringAsFixed(1) ?? '0',
                               'g',
                             ),
                           ],

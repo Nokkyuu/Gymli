@@ -1,12 +1,11 @@
 //import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:developer';
 
 import 'package:auth0_flutter/auth0_flutter_web.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
-import 'package:Gymli/utils/services/temp_service.dart';
 import '../../config/api_config.dart';
 import '../globals.dart' as globals;
-import '../api/api_export.dart';
+import 'service_export.dart';
+import '../api/api_base.dart';
 //import 'user_service.dart';
 import 'package:get_it/get_it.dart';
 //import 'package:Gymli/utils/services/auth_service.dart';
@@ -33,7 +32,9 @@ class AppInitializer {
     }
 
     try {
-      print('Starting app initialization...');
+      if (kDebugMode) {
+        print('Starting app initialization...');
+      }
 
       // // 1. Load preferences
       // await _loadPreferences(); TODO: delete or implement ?
@@ -100,7 +101,9 @@ class AppInitializer {
         GetIt.I<AuthenticationService>().setCredentials(credentials);
       }
     } catch (e) {
-      print('No stored authentication state found: $e');
+      if (kDebugMode) {
+        print('No stored authentication state found: $e');
+      }
       // Continue without stored auth state
     }
   }
@@ -112,7 +115,9 @@ class AppInitializer {
       // Ensure API is configured before loading data, this should normaly be done in the AppInitializer
       // but we check here to avoid unnecessary API calls if not configured
       if (!ApiConfig.isConfigured) {
-        print('API not configured, skipping exercise list load');
+        if (kDebugMode) {
+          print('API not configured, skipping exercise list load');
+        }
         globals.exerciseList = [];
         return;
       }
@@ -122,9 +127,13 @@ class AppInitializer {
       final exercises = await GetIt.I<ExerciseService>().getExercises();
 
       globals.exerciseList = exercises.map<String>((e) => e.name).toList();
-      print('Exercise list loaded: ${globals.exerciseList.length} exercises');
+      if (kDebugMode) {
+        print('Exercise list loaded: ${globals.exerciseList.length} exercises');
+      }
     } catch (e) {
-      print('Error loading initial data: $e');
+      if (kDebugMode) {
+        print('Error loading initial data: $e');
+      }
       globals.exerciseList = [];
     }
   }

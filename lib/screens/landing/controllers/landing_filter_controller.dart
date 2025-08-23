@@ -1,8 +1,6 @@
 /// Landing Filter Controller - Pure state + ordered views (no UI controllers, no ChangeNotifier)
 library;
 
-import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import '../models/landing_filter_state.dart';
 import '../../../utils/models/data_models.dart';
 

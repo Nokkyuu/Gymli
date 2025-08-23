@@ -3,8 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../controllers/exercise_setup_controller.dart';
 import '../../../utils/globals.dart' as globals;
-import 'package:go_router/go_router.dart';
-import 'package:Gymli/widgets/app_router.dart';
 
 class ExerciseConfirmButtonWidget extends StatelessWidget {
   final VoidCallback? onSuccess;
@@ -137,14 +135,16 @@ class ExerciseConfirmButtonWidget extends StatelessWidget {
                   ),
                   FilledButton(
                     onPressed: () async {
-                      if (kDebugMode)
+                      if (kDebugMode) {
                         print('🔧 Starting exercise save process...');
+                      }
 
                       try {
                         final saveSuccess = await controller.saveExercise();
                         if (saveSuccess) {
-                          if (kDebugMode)
+                          if (kDebugMode) {
                             print('✅ All operations completed successfully');
+                          }
 
                           // ✅ Close dialog with success=true
                           if (dialogContext.mounted) {
@@ -180,8 +180,9 @@ class ExerciseConfirmButtonWidget extends StatelessWidget {
 
     // ✅ Just call the callback if successful - let parent handle navigation
     if (success == true) {
-      if (kDebugMode)
+      if (kDebugMode) {
         print('🚀 Exercise saved successfully, calling onSuccess callback...');
+      }
 
       // ✅ Call the callback to notify parent screen
       if (onSuccess != null) {

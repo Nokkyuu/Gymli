@@ -1,5 +1,7 @@
 /// Widget for the Exercise Screen control panel where you put in the weight, reps and submit the set.
 ///
+library;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';

@@ -74,8 +74,9 @@ class SettingsOperationResult {
       case OperationStatus.success:
         if (importedCount != null || deletedCount != null) {
           List<String> parts = [];
-          if (importedCount != null)
+          if (importedCount != null) {
             parts.add('Imported: $importedCount items');
+          }
           if (deletedCount != null) parts.add('Deleted: $deletedCount items');
           if (skippedCount != null && skippedCount! > 0) {
             parts.add('Skipped: $skippedCount items');

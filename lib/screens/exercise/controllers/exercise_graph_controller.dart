@@ -1,12 +1,12 @@
 import 'package:fl_chart/fl_chart.dart';
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'dart:math';
 import '../../../utils/models/data_models.dart';
 import '../../../utils/globals.dart' as globals;
 import 'package:flutter/material.dart';
-import 'package:Gymli/utils/services/temp_service.dart';
 import '../../../utils/themes/themes.dart';
 import 'package:get_it/get_it.dart';
-import 'package:Gymli/utils/api/api_export.dart';
+import 'package:Gymli/utils/services/service_export.dart';
 
 final themeColors = ThemeColors();
 
@@ -32,10 +32,10 @@ class ExerciseGraphController extends ChangeNotifier {
     // 'recovery': Color.fromARGB(80, 33, 150, 243), // Blue with transparency
   };
 
-  List<List<FlSpot>> _trainingGraphs = [[], [], [], []];
-  List<List<FlSpot>> _additionalGraphs = [];
-  Map<int, List<String>> _graphToolTip = {};
-  List<BetweenBarsData> _periodBarsData = [];
+  final List<List<FlSpot>> _trainingGraphs = [[], [], [], []];
+  final List<List<FlSpot>> _additionalGraphs = [];
+  final Map<int, List<String>> _graphToolTip = {};
+  final List<BetweenBarsData> _periodBarsData = [];
 
   double _minScore = 1e6;
   double _maxScore = 0.0;
@@ -45,7 +45,7 @@ class ExerciseGraphController extends ChangeNotifier {
   Exercise? _currentExercise; // Add this field
 
   // Add this field to store period types
-  List<String> _periodTypes = [];
+  final List<String> _periodTypes = [];
 
   // 1. Feld für Notiz-Daten
   Set<String> _noteDates = {};
@@ -65,12 +65,11 @@ class ExerciseGraphController extends ChangeNotifier {
 // 2. Methode zum Laden der Notizdaten
   Future<void> loadNoteDates() async {
     final notes = await GetIt.I<CalendarService>().getCalendarNotes();
-    _noteDates = notes
-        .map<String>((n) => (n['date'] as String).substring(0, 10))
-        .toSet();
+    _noteDates =
+        notes.map<String>((n) => (n.date as String).substring(0, 10)).toSet();
     _notesByDate = {
       for (var n in notes)
-        (n['date'] as String).substring(0, 10): (n['note'] as String? ?? '')
+        (n.date as String).substring(0, 10): (n.note as String? ?? '')
     };
   }
 
@@ -122,9 +121,9 @@ class ExerciseGraphController extends ChangeNotifier {
       if (_mostRecentTrainingDate == null) return;
 
       for (var period in periods) {
-        final type = period['type'] as String? ?? 'maintenance';
-        final startDateStr = period['start_date'] as String?;
-        final endDateStr = period['end_date'] as String?;
+        final type = period.type as String? ?? 'maintenance';
+        final startDateStr = period.startDate as String?;
+        final endDateStr = period.endDate as String?;
 
         if (startDateStr == null || endDateStr == null) continue;
 
@@ -140,7 +139,7 @@ class ExerciseGraphController extends ChangeNotifier {
 
           // Check if period overlaps with graph range
           final graphStartX = -_maxHistoryDistance;
-          final graphEndX = 0.0;
+          const graphEndX = 0.0;
 
           if (startX <= graphEndX && endX >= graphStartX) {
             // Clamp the period to the visible range
@@ -157,11 +156,15 @@ class ExerciseGraphController extends ChangeNotifier {
             _periodTypes.add(type); // Store the period type
           }
         } catch (e) {
-          print('Error parsing period dates: $e');
+          if (kDebugMode) {
+            print('Error parsing period dates: $e');
+          }
         }
       }
     } catch (e) {
-      print('Error loading period data: $e');
+      if (kDebugMode) {
+        print('Error loading period data: $e');
+      }
     }
   } // Efficiently update graph with a single new training set
 
@@ -199,7 +202,9 @@ class ExerciseGraphController extends ChangeNotifier {
       }
       return false;
     } catch (e) {
-      print('Error updating graph with new set: $e');
+      if (kDebugMode) {
+        print('Error updating graph with new set: $e');
+      }
       return false;
     }
   }

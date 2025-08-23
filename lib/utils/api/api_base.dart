@@ -88,8 +88,10 @@ Future updateData<T>(String url, T data) async {
 
   // Invalidate related cache entries
   invalidateCacheForMutation(url);
+  final decoded = await _parseJsonInIsolate(response.body);
 
-  return response;
+  return decoded;
+  //TODO: JSON DECODE?
 }
 
 Future createData<T>(String url, T data) async {
@@ -101,8 +103,9 @@ Future createData<T>(String url, T data) async {
 
   // Invalidate related cache entries
   invalidateCacheForMutation(url);
-
-  return response.body;
+  final decoded = await _parseJsonInIsolate(response.body);
+  return decoded;
+  //TODO: JSON DECODE?
 }
 
 void invalidateCacheForMutation(String url) {

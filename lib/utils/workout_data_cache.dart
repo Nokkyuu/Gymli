@@ -1,12 +1,11 @@
 import 'dart:async';
 import 'dart:collection';
 
-import 'package:Gymli/utils/services/temp_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:get_it/get_it.dart';
 
 import 'package:Gymli/utils/services/authentication_service.dart';
-import 'package:Gymli/utils/api/api_export.dart';
+import 'package:Gymli/utils/services/service_export.dart';
 import 'package:Gymli/utils/models/data_models.dart';
 import 'package:Gymli/utils/sync/sync_outbox.dart';
 
@@ -43,19 +42,11 @@ class WorkoutDataCache extends ChangeNotifier {
 
   Future<List<TrainingSet>> getCachedTrainingSets(int exerciseId) async {
     final cached = _trainingSetBuffers[exerciseId];
-    if (cached != null) {
-      return cached; // sofort aus dem Cache
-    }
-
-    // Noch nichts im Cache: vom Server holen, in den Cache legen, zurückgeben
-    final raw = await GetIt.I<TrainingSetService>().getTrainingSetsByExerciseID(exerciseId: exerciseId);
-    final sets = raw.whereType<Map<String, dynamic>>().map((m) => TrainingSet.fromJson(m)).toList();
-
-    // optional: als MRU markieren, dann cachen
+    if (cached != null) return cached;
+    final set = await GetIt.I<TrainingSetService>().getTrainingSetsByExerciseID(exerciseId: exerciseId);
     markActiveExercise(exerciseId);
-    setExerciseTrainingSets(exerciseId, sets);
-
-    return sets;
+    setExerciseTrainingSets(exerciseId, set);
+    return set;
   }
 
 

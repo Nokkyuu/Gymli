@@ -30,7 +30,7 @@ class ExerciseSelectionDesktopWidget extends StatelessWidget {
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
               ),
-              Divider(),
+              const Divider(),
               Expanded(
                 child: ListView.builder(
                   itemCount: workoutController.allExercises.length,
@@ -68,7 +68,7 @@ class ExerciseSelectionDesktopWidget extends StatelessWidget {
                   },
                 ),
               ),
-              Divider(),
+              const Divider(),
             ],
           ),
         );

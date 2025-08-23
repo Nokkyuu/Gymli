@@ -2,17 +2,14 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../../../utils/globals.dart' as globals;
-import '../../../utils/services/temp_service.dart';
 import '../../../utils/models/data_models.dart';
 import 'package:get_it/get_it.dart';
-import '../../../utils/api/api_export.dart';
+import '../../../utils/services/service_export.dart';
 import 'package:Gymli/utils/workout_data_cache.dart';
 
 enum ExerciseDevice { free, machine, cable, body }
 
 class ExerciseSetupController extends ChangeNotifier {
-  final TempService _container = GetIt.I<TempService>();
-
   final ExerciseService exerciseService = GetIt.I<ExerciseService>();
 
   final WorkoutDataCache _cache = GetIt.I<WorkoutDataCache>();
@@ -131,10 +128,10 @@ class ExerciseSetupController extends ChangeNotifier {
 
     _setLoading(true);
     try {
-      bool added_finished = false;
+      //bool added_finished = false;
       if (kDebugMode) print('🔧 Starting exercise save process...');
 
-      added_finished = await _addExercise(
+      await _addExercise(
         exerciseTitleController.text,
         _chosenDevice,
         _minRep.toInt(),
@@ -179,7 +176,7 @@ class ExerciseSetupController extends ChangeNotifier {
       final trainingSets = await GetIt.I<TrainingSetService>()
           .getTrainingSetsByExerciseID(exerciseId: exerciseId);
       for (var set in trainingSets) {
-        await GetIt.I<TrainingSetService>().deleteTrainingSet(set['id']);
+        await GetIt.I<TrainingSetService>().deleteTrainingSet(set.id!);
       }
       final workoutUnits =
           await GetIt.I<WorkoutUnitService>().getWorkoutUnits();
@@ -216,9 +213,10 @@ class ExerciseSetupController extends ChangeNotifier {
     for (var m in muscleGroupNames) {
       muscleIntensities.add(globals.muscle_val[m] ?? 0.0);
     }
-    if (kDebugMode)
+    if (kDebugMode) {
       print(
           '🔧 add_exercise: Muscle intensities collected: ${muscleIntensities.length}');
+    }
 
     // Pad or trim to match expected muscle groups (14 total)
     while (muscleIntensities.length < 14) {
@@ -236,9 +234,10 @@ class ExerciseSetupController extends ChangeNotifier {
     }
 
     if (existing != null && existing.id != null) {
-      if (kDebugMode)
+      if (kDebugMode) {
         print(
             '🔧 add_exercise: Updating existing exercise with ID: ${existing.id}');
+      }
       // Update existing exercise
       await exerciseService.updateExercise(existing.id!, {
         //'user_name': GetIt.I<AuthService>().userName,
@@ -264,9 +263,10 @@ class ExerciseSetupController extends ChangeNotifier {
       });
       if (kDebugMode) print('✅ add_exercise: Exercise updated successfully');
     } else {
-      if (kDebugMode)
+      if (kDebugMode) {
         print(
             '🔧 add_exercise: Creating new exercise (optimistic via cache)...');
+      }
       // Build a minimal ApiExercise locally and let the cache/outbox sync to the server.
       // Using fromJson to avoid depending on a specific constructor signature.
       final newExercise = Exercise.fromJson({
@@ -280,8 +280,9 @@ class ExerciseSetupController extends ChangeNotifier {
         'muscle_intensities': muscleIntensities,
       });
       await _cache.addExercise(newExercise);
-      if (kDebugMode)
+      if (kDebugMode) {
         print('✅ add_exercise: New exercise added to cache (sync enqueued)');
+      }
     }
     return true;
   }

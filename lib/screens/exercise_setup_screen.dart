@@ -185,8 +185,9 @@ class _ExerciseSetupScreenState extends State<ExerciseSetupScreen> {
         return;
       }
 
-      if (kDebugMode)
+      if (kDebugMode) {
         print('✅ Screen context is mounted, attempting navigation');
+      }
 
       try {
         if (context.canPop()) {
