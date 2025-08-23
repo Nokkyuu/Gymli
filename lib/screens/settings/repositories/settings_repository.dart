@@ -1,6 +1,7 @@
 /// Settings Repository - Data access layer for settings operations
 library;
 
+import 'package:Gymli/utils/models/data_models.dart';
 import 'package:get_it/get_it.dart';
 
 import 'package:flutter/foundation.dart';
@@ -157,9 +158,19 @@ class SettingsRepository {
   }
 
   /// Create foods in bulk
-  Future<void> createFoodsBulk(List<Map<String, dynamic>> foods) async {
+  Future<void> createFoodsBulk(List<Map<String, dynamic>> batch) async {
+    final foodItems = batch.map((data) {
+      return FoodItem(
+        name: data['name'],
+        kcalPer100g: data['kcal_per_100g'],
+        proteinPer100g: data['protein_per_100g'],
+        carbsPer100g: data['carbs_per_100g'],
+        fatPer100g: data['fat_per_100g'],
+        notes: data['notes'],
+      );
+    }).toList();
     try {
-      await GetIt.I<FoodService>().createFoodsBulk(foods: foods);
+      await GetIt.I<FoodService>().createFoodsBulk(foods: foodItems);
     } catch (e) {
       if (kDebugMode) print('Error creating foods bulk: $e');
       rethrow;

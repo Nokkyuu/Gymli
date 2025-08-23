@@ -55,12 +55,10 @@ class FoodDataController extends ChangeNotifier {
 
     try {
       // Load all data
-      final foodsData = await GetIt.I<FoodService>().getFoods();
-      final logsData = await GetIt.I<FoodService>().getFoodLogs();
+      final foods = await GetIt.I<FoodService>().getFoods();
+      final foodLogs = await GetIt.I<FoodService>().getFoodLogs();
       final statsData = await GetIt.I<FoodService>().getFoodLogStats();
 
-      foods = foodsData.map((data) => FoodItem.fromJson(data)).toList();
-      foodLogs = logsData.map((data) => FoodLog.fromJson(data)).toList();
       nutritionStats = statsData;
 
       // Set default selected food by name

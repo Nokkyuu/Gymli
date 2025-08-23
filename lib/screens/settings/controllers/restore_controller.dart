@@ -8,6 +8,7 @@ import '../services/csv_service.dart';
 import '../services/file_service.dart';
 import '../models/settings_data_type.dart';
 import '../models/settings_operation_result.dart';
+import 'package:Gymli/utils/models/data_models.dart';
 
 class RestoreController extends ChangeNotifier {
   final SettingsRepository _repository;
@@ -407,7 +408,18 @@ class RestoreController extends ChangeNotifier {
         );
 
         try {
-          await _repository.createFoodsBulk(batch);
+          final foodItems = batch.map((data) {
+            return FoodItem(
+              name: data['name'],
+              kcalPer100g: data['kcal_per_100g'],
+              proteinPer100g: data['protein_per_100g'],
+              carbsPer100g: data['carbs_per_100g'],
+              fatPer100g: data['fat_per_100g'],
+              notes: data['notes'],
+            );
+          }).toList();
+
+          await _repository.createFoodsBulk(foodItems);
           importedCount += batch.length;
           if (kDebugMode) {
             print('Successfully imported batch of ${batch.length} food items');
