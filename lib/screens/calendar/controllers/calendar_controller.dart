@@ -122,7 +122,6 @@ class CalendarController extends ChangeNotifier {
         final workout = CalendarWorkout.fromJson(w);
         _calendarWorkouts.add(CalendarWorkout(
           id: workout.id,
-          userName: workout.userName,
           date: normalize(workout.date),
           workout: workout.workout,
         ));
@@ -172,12 +171,11 @@ class CalendarController extends ChangeNotifier {
           _notes[normalizedDate] = existingNote.copyWith(note: note);
         } else {
           // Create new note - need to get current userName
-          final userName = 'current_user'; // TODO: Get from user service
+
           final createdNote = await GetIt.I<CalendarService>()
               .createCalendarNote(date: normalizedDate, note: note);
           _notes[normalizedDate] = CalendarNote(
             id: createdNote['id'],
-            userName: userName,
             date: normalizedDate,
             note: note,
           );
@@ -194,13 +192,11 @@ class CalendarController extends ChangeNotifier {
   // Workout operations - Updated for unified model
   Future<String?> addWorkout(DateTime date, String workoutName) async {
     try {
-      final userName = 'current_user'; // TODO: Get from user service
       final createdWorkout = await GetIt.I<CalendarService>()
           .createCalendarWorkout(date: date, workout: workoutName);
 
       _calendarWorkouts.add(CalendarWorkout(
         id: createdWorkout['id'],
-        userName: userName,
         date: normalize(date),
         workout: workoutName,
       ));
@@ -230,11 +226,8 @@ class CalendarController extends ChangeNotifier {
   // Period operations - Updated for unified model
   Future<String?> addPeriod(String type, DateTime start, DateTime end) async {
     try {
-      final userName = 'current_user'; // TODO: Get from user service
-
       // Check for overlap first
       final newPeriod = CalendarPeriod(
-        userName: userName,
         type: PeriodType.fromString(type),
         startDate: start,
         endDate: end,
@@ -250,7 +243,6 @@ class CalendarController extends ChangeNotifier {
 
       _periods.add(CalendarPeriod(
         id: createdPeriod['id'],
-        userName: userName,
         type: PeriodType.fromString(type),
         startDate: start,
         endDate: end,

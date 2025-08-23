@@ -26,7 +26,7 @@ final setTypeNames = ["Warm", "Work", "Drop"];
 
 class Exercise {
   final int? id;
-  final String userName;
+  //final String userName;
   final String name;
   final int type;
   final int defaultRepBase;
@@ -49,7 +49,7 @@ class Exercise {
 
   Exercise({
     this.id,
-    required this.userName,
+    //required this.userName,
     required this.name,
     required this.type,
     required this.defaultRepBase,
@@ -74,7 +74,7 @@ class Exercise {
   factory Exercise.fromJson(Map<String, dynamic> json) {
     return Exercise(
       id: json['id'],
-      userName: json['user_name'] ?? '',
+      //userName: json['user_name'] ?? '',
       name: json['name'] ?? '',
       type: json['type'] ?? 0,
       defaultRepBase: json['default_rep_base'] ?? 8,
@@ -100,7 +100,7 @@ class Exercise {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'user_name': userName,
+      //'user_name': userName,
       'name': name,
       'type': type,
       'default_rep_base': defaultRepBase,
@@ -182,7 +182,7 @@ class Exercise {
 /// weights, repetitions, and set types.
 class TrainingSet {
   final int? id;
-  final String userName;
+  //final String userName;
   final int exerciseId;
   final String exerciseName; // For compatibility
   final DateTime date;
@@ -198,7 +198,7 @@ class TrainingSet {
 
   TrainingSet({
     this.id,
-    required this.userName,
+    //required this.userName,
     required this.exerciseId,
     required this.exerciseName,
     required this.date,
@@ -216,7 +216,7 @@ class TrainingSet {
   factory TrainingSet.fromJson(Map<String, dynamic> json) {
     return TrainingSet(
         id: json['id'],
-        userName: json['user_name'] ?? '',
+        //userName: json['user_name'] ?? '',
         exerciseId: json['exercise_id'] ?? 0,
         exerciseName: json['exercise_name'] ?? '', // Fallback if not provided
         date: DateTime.parse(json['date'] ?? DateTime.now().toIso8601String()),
@@ -235,7 +235,7 @@ class TrainingSet {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'user_name': userName,
+      //'user_name': userName,
       'exercise_id': exerciseId,
       'date': date.toIso8601String(),
       'weight': weight,
@@ -276,7 +276,7 @@ class TrainingSet {
 /// work, and drop sets, as well as the type of the workout unit.
 class WorkoutUnit {
   final int? id;
-  final String userName;
+  //final String userName;
   final int workoutId;
   final int exerciseId;
   String exerciseName; // For compatibility
@@ -287,7 +287,7 @@ class WorkoutUnit {
 
   WorkoutUnit({
     this.id,
-    required this.userName,
+    //required this.userName,
     required this.workoutId,
     required this.exerciseId,
     required this.exerciseName,
@@ -300,7 +300,7 @@ class WorkoutUnit {
   factory WorkoutUnit.fromJson(Map<String, dynamic> json) {
     return WorkoutUnit(
       id: json['id'],
-      userName: json['user_name'] ?? '',
+      //userName: json['user_name'] ?? '',
       workoutId: json['workout_id'] ?? 0,
       exerciseId: json['exercise_id'] ?? 0,
       exerciseName: json['exercise_name'] ?? '',
@@ -314,7 +314,7 @@ class WorkoutUnit {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'user_name': userName,
+      //'user_name': userName,
       'workout_id': workoutId,
       'exercise_id': exerciseId,
       'warmups': warmups,
@@ -334,13 +334,13 @@ class WorkoutUnit {
 /// and the units (exercises) included in the workout.
 class Workout {
   final int? id;
-  final String userName;
+  //final String userName;
   final String name;
   List<WorkoutUnit> units;
 
   Workout({
     this.id,
-    required this.userName,
+    // required this.userName,
     required this.name,
     required this.units,
   });
@@ -348,7 +348,7 @@ class Workout {
   factory Workout.fromJson(Map<String, dynamic> json) {
     return Workout(
       id: json['id'],
-      userName: json['user_name'] ?? '',
+      // userName: json['user_name'] ?? '',
       name: json['name'] ?? '',
       units: (json['units'] as List<dynamic>? ?? [])
           .map((unit) => WorkoutUnit.fromJson(unit))
@@ -359,7 +359,7 @@ class Workout {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'user_name': userName,
+      //'user_name': userName,
       'name': name,
       'units': units.map((unit) => unit.toJson()).toList(),
     };
@@ -377,13 +377,13 @@ class Workout {
 
 class Activity {
   final int? id;
-  final String userName;
+  //final String userName;
   final String name;
   final double kcalPerHour;
 
   Activity({
     this.id,
-    required this.userName,
+    // required this.userName,
     required this.name,
     required this.kcalPerHour,
   });
@@ -391,7 +391,7 @@ class Activity {
   factory Activity.fromJson(Map<String, dynamic> json) {
     return Activity(
       id: json['id'],
-      userName: json['user_name'] ?? '',
+      // userName: json['user_name'] ?? '',
       name: json['name'] ?? '',
       kcalPerHour: (json['kcal_per_hour'] ?? 0.0).toDouble(),
     );
@@ -400,7 +400,7 @@ class Activity {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'user_name': userName,
+      //'user_name': userName,
       'name': name,
       'kcal_per_hour': kcalPerHour,
     };
@@ -412,7 +412,7 @@ class Activity {
 /// Contains details about an activity session including duration and calculated calories
 class ActivityLog {
   final int? id;
-  final String userName;
+  //final String userName;
   final String activityName;
   final DateTime date;
   final int durationMinutes;
@@ -421,7 +421,7 @@ class ActivityLog {
 
   ActivityLog({
     this.id,
-    required this.userName,
+    //required this.userName,
     required this.activityName,
     required this.date,
     required this.durationMinutes,
@@ -432,7 +432,7 @@ class ActivityLog {
   factory ActivityLog.fromJson(Map<String, dynamic> json) {
     return ActivityLog(
       id: json['id'],
-      userName: json['user_name'] ?? '',
+      // userName: json['user_name'] ?? '',
       activityName: json['activity_name'] ?? '',
       date: DateTime.parse(json['date'] ?? DateTime.now().toIso8601String()),
       durationMinutes: json['duration_minutes'] ?? 0,
@@ -444,7 +444,7 @@ class ActivityLog {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'user_name': userName,
+      //'user_name': userName,
       'activity_name': activityName,
       'date': date.toIso8601String(),
       'duration_minutes': durationMinutes,
@@ -466,7 +466,7 @@ class ActivityLog {
 
 class FoodItem {
   final int? id;
-  final String userName;
+  //final String userName;
   final String name;
   final double kcalPer100g;
   final double proteinPer100g;
@@ -476,7 +476,7 @@ class FoodItem {
 
   FoodItem({
     this.id,
-    required this.userName,
+    //required this.userName,
     required this.name,
     required this.kcalPer100g,
     required this.proteinPer100g,
@@ -488,7 +488,7 @@ class FoodItem {
   factory FoodItem.fromJson(Map<String, dynamic> json) {
     return FoodItem(
       id: json['id'],
-      userName: json['user_name'] ?? '',
+      // userName: json['user_name'] ?? '',
       name: json['name'] ?? '',
       kcalPer100g: (json['kcal_per_100g'] ?? 0.0).toDouble(),
       proteinPer100g: (json['protein_per_100g'] ?? 0.0).toDouble(),
@@ -501,7 +501,7 @@ class FoodItem {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'user_name': userName,
+      // 'user_name': userName,
       'name': name,
       'kcal_per_100g': kcalPer100g,
       'protein_per_100g': proteinPer100g,
@@ -525,7 +525,7 @@ class FoodItem {
 
 class FoodLog {
   final int? id;
-  final String userName;
+  //final String userName;
   final String foodName;
   final DateTime date;
   final double grams;
@@ -536,7 +536,7 @@ class FoodLog {
 
   FoodLog({
     this.id,
-    required this.userName,
+    //required this.userName,
     required this.foodName,
     required this.date,
     required this.grams,
@@ -549,7 +549,7 @@ class FoodLog {
   factory FoodLog.fromJson(Map<String, dynamic> json) {
     return FoodLog(
       id: json['id'],
-      userName: json['user_name'] ?? '',
+      // userName: json['user_name'] ?? '',
       foodName: json['food_name'] ?? '',
       date: DateTime.parse(json['date'] ?? DateTime.now().toIso8601String()),
       grams: (json['grams'] ?? 0.0).toDouble(),
@@ -563,7 +563,7 @@ class FoodLog {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'user_name': userName,
+      //'user_name': userName,
       'food_name': foodName,
       'date': date.toIso8601String(),
       'grams': grams,
@@ -603,14 +603,14 @@ enum PeriodType {
 
 class CalendarPeriod {
   final int? id;
-  final String userName;
+  //final String userName;
   final PeriodType type; // Changed from String to enum
   final DateTime startDate;
   final DateTime endDate;
 
   CalendarPeriod({
     this.id,
-    required this.userName,
+    // required this.userName,
     required this.type,
     required this.startDate,
     required this.endDate,
@@ -618,7 +618,7 @@ class CalendarPeriod {
 
   factory CalendarPeriod.fromJson(Map<String, dynamic> json) => CalendarPeriod(
         id: json['id'],
-        userName: json['user_name'],
+        //    userName: json['user_name'],
         type: PeriodType.fromString(json['type']),
         startDate: DateTime.parse(json['start_date']),
         endDate: DateTime.parse(json['end_date']),
@@ -626,7 +626,7 @@ class CalendarPeriod {
 
   Map<String, dynamic> toJson() => {
         'id': id,
-        'user_name': userName,
+        // 'user_name': userName,
         'type': type.value,
         'start_date': startDate.toIso8601String(),
         'end_date': endDate.toIso8601String(),
@@ -651,7 +651,7 @@ class CalendarPeriod {
   }) {
     return CalendarPeriod(
       id: id ?? this.id,
-      userName: userName ?? this.userName,
+      // userName: userName ?? this.userName,
       type: type ?? this.type,
       startDate: startDate ?? this.startDate,
       endDate: endDate ?? this.endDate,
@@ -667,7 +667,7 @@ class CalendarPeriod {
     if (identical(this, other)) return true;
     return other is CalendarPeriod &&
         other.id == id &&
-        other.userName == userName &&
+        // other.userName == userName &&
         other.type == type &&
         other.startDate == startDate &&
         other.endDate == endDate;
@@ -676,39 +676,39 @@ class CalendarPeriod {
   @override
   int get hashCode =>
       id.hashCode ^
-      userName.hashCode ^
+      //userName.hashCode ^
       type.hashCode ^
       startDate.hashCode ^
       endDate.hashCode;
 
   @override
   String toString() =>
-      'ApiPeriod(id: $id, userName: $userName, type: $type, startDate: $startDate, endDate: $endDate)';
+      'ApiPeriod(id: $id, type: $type, startDate: $startDate, endDate: $endDate)';
 }
 
 class CalendarNote {
   final int? id;
-  final String userName;
+  //final String userName;
   final DateTime date;
   final String note;
 
   CalendarNote({
     this.id,
-    required this.userName,
+    // required this.userName,
     required this.date,
     required this.note,
   });
 
   factory CalendarNote.fromJson(Map<String, dynamic> json) => CalendarNote(
         id: json['id'],
-        userName: json['user_name'],
+        //userName: json['user_name'],
         date: DateTime.parse(json['date']),
         note: json['note'],
       );
 
   Map<String, dynamic> toJson() => {
         'id': id,
-        'user_name': userName,
+        //'user_name': userName,
         'date': date.toIso8601String(),
         'note': note,
       };
@@ -722,7 +722,7 @@ class CalendarNote {
   }) {
     return CalendarNote(
       id: id ?? this.id,
-      userName: userName ?? this.userName,
+      // userName: userName ?? this.userName,
       date: date ?? this.date,
       note: note ?? this.note,
     );
@@ -733,29 +733,27 @@ class CalendarNote {
     if (identical(this, other)) return true;
     return other is CalendarNote &&
         other.id == id &&
-        other.userName == userName &&
+        //other.userName == userName &&
         other.date == date &&
         other.note == note;
   }
 
   @override
-  int get hashCode =>
-      id.hashCode ^ userName.hashCode ^ date.hashCode ^ note.hashCode;
+  int get hashCode => id.hashCode ^ date.hashCode ^ note.hashCode;
 
   @override
-  String toString() =>
-      'ApiCalendarNote(id: $id, userName: $userName, date: $date, note: $note)';
+  String toString() => 'ApiCalendarNote(id: $id, date: $date, note: $note)';
 }
 
 class CalendarWorkout {
   final int? id;
-  final String userName;
+  //final String userName;
   final DateTime date;
   final String workout;
 
   CalendarWorkout({
     this.id,
-    required this.userName,
+    //required this.userName,
     required this.date,
     required this.workout,
   });
@@ -763,14 +761,14 @@ class CalendarWorkout {
   factory CalendarWorkout.fromJson(Map<String, dynamic> json) =>
       CalendarWorkout(
         id: json['id'],
-        userName: json['user_name'],
+        //userName: json['user_name'],
         date: DateTime.parse(json['date']),
         workout: json['workout'],
       );
 
   Map<String, dynamic> toJson() => {
         'id': id,
-        'user_name': userName,
+        //'user_name': userName,
         'date': date.toIso8601String(),
         'workout': workout,
       };
@@ -778,13 +776,13 @@ class CalendarWorkout {
   // Add methods from CalendarWorkout
   CalendarWorkout copyWith({
     int? id,
-    String? userName,
+    // String? userName,
     DateTime? date,
     String? workout,
   }) {
     return CalendarWorkout(
       id: id ?? this.id,
-      userName: userName ?? this.userName,
+      //userName: userName ?? this.userName,
       date: date ?? this.date,
       workout: workout ?? this.workout,
     );
@@ -798,16 +796,15 @@ class CalendarWorkout {
     if (identical(this, other)) return true;
     return other is CalendarWorkout &&
         other.id == id &&
-        other.userName == userName &&
+        //other.userName == userName &&
         other.date == date &&
         other.workout == workout;
   }
 
   @override
-  int get hashCode =>
-      id.hashCode ^ userName.hashCode ^ date.hashCode ^ workout.hashCode;
+  int get hashCode => id.hashCode ^ date.hashCode ^ workout.hashCode;
 
   @override
   String toString() =>
-      'ApiCalendarWorkout(id: $id, userName: $userName, date: $date, workout: $workout)';
+      'ApiCalendarWorkout(id: $id, date: $date, workout: $workout)';
 }

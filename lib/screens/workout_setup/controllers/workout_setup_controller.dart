@@ -55,8 +55,7 @@ class WorkoutSetupController extends ChangeNotifier {
 
         _currentWorkout = workouts.firstWhere(
           (workout) => workout.name == _workoutName,
-          orElse: () => Workout(
-              id: 0, userName: "DefaultUser", name: _workoutName, units: []),
+          orElse: () => Workout(id: 0, name: _workoutName, units: []),
         );
 
         if (_currentWorkout != null) {
@@ -87,7 +86,7 @@ class WorkoutSetupController extends ChangeNotifier {
 
     _addedExercises.add(WorkoutUnit(
         id: 0,
-        userName: "DefaultUser",
+        //userName: "DefaultUser",
         workoutId: 0,
         exerciseId: exercise.id ?? 0,
         exerciseName: exercise.name,

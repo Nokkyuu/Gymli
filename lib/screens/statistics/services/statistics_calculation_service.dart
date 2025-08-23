@@ -321,7 +321,6 @@ class StatisticsCalculationService {
           setType: setData['set_type'] as int,
           exerciseId: setData['exercise_id'] as int,
           exerciseName: exerciseName,
-          userName: '',
         );
 
         double xValue = -latestDate.difference(date).inDays.toDouble();
@@ -503,7 +502,6 @@ class StatisticsCalculationService {
             setType: setData['set_type'] as int,
             exerciseId: setData['exercise_id'] as int,
             exerciseName: exerciseName,
-            userName: '',
           );
 
           double xValue = -latestDate.difference(date).inDays.toDouble();

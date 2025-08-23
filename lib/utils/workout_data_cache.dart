@@ -37,7 +37,7 @@ class WorkoutDataCache extends ChangeNotifier {
     final int tempId = _nextTempTrainingSetId--;
     final TrainingSet set = TrainingSet(
       id: tempId,
-      userName: userName,
+      // userName: userName,
       exerciseId: exerciseId,
       exerciseName: exerciseName,
       date: date,
@@ -88,7 +88,7 @@ class WorkoutDataCache extends ChangeNotifier {
     if (idx < 0) return false;
     final updated = TrainingSet(
       id: serverId,
-      userName: list[idx].userName,
+      //userName: list[idx].userName,
       exerciseId: list[idx].exerciseId,
       exerciseName: list[idx].exerciseName,
       date: list[idx].date,

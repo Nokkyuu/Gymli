@@ -127,7 +127,6 @@ class ActivityController extends ChangeNotifier {
           ? activities.first
           : Activity(
               id: 0,
-              userName: '',
               name: '',
               kcalPerHour: 0,
             ),
