@@ -36,7 +36,9 @@ class ApiConfig {
           throw Exception('API key not found. Please configure GYMLI_API_KEY');
         }
       } else {
-        print('API configuration initialized successfully');
+        if (kDebugMode) {
+          print('API configuration initialized successfully');
+        }
       }
     } catch (e) {
       if (kDebugMode) {

@@ -23,7 +23,7 @@ class WipeSectionWidget extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    Icon(
+                    const Icon(
                       Icons.delete_forever,
                       color: Colors.red,
                     ),

@@ -4,7 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import '../../config/api_config.dart';
-import '../api/api_export.dart';
+import '../api/api_base.dart';
 
 class AuthenticationService extends ChangeNotifier {
   // Auth0 Configuration
@@ -191,9 +191,10 @@ class AuthenticationService extends ChangeNotifier {
         user: user,
       );
 
-      if (kDebugMode)
+      if (kDebugMode) {
         print(
             'Auth state loaded from persistent storage for user: ${user.name}');
+      }
       return credentials;
     } catch (e) {
       if (kDebugMode) print('Error loading stored auth state: $e');

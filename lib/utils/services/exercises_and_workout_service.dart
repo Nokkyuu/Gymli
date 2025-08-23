@@ -7,7 +7,9 @@
 library;
 
 import 'dart:convert';
-import 'api_base.dart';
+import 'package:flutter/foundation.dart' show kDebugMode;
+
+import '../api/api_base.dart';
 import '../models/data_models.dart';
 import 'package:get_it/get_it.dart';
 //----------------- Workout Service -----------------//
@@ -74,6 +76,33 @@ class WorkoutService {
   Future<void> deleteWorkout(int id) async {
     return deleteData('workouts/$id');
   }
+
+  Future<void> clearWorkouts() async {
+    // Get all workouts for this user and delete them
+    //TODO: Integrate clearing of workout units before workouts?
+    final workouts =
+        await getWorkouts(); // Get raw workouts without enrichment for efficiency
+    int deletedCount = 0;
+    int errorCount = 0;
+
+    for (var workout in workouts) {
+      if (workout.id != null) {
+        try {
+          await deleteWorkout(workout.id!);
+          deletedCount++;
+        } catch (e) {
+          errorCount++;
+          if (kDebugMode) {
+            print('Warning: Failed to delete workout ${workout.id}: $e');
+          }
+          // Continue with other workouts instead of stopping
+        }
+      }
+    }
+    if (kDebugMode) {
+      print('Cleared workouts: $deletedCount deleted, $errorCount errors');
+    }
+  }
 }
 
 //----------------- Workout Unit Service -----------------//
@@ -83,7 +112,6 @@ class WorkoutUnitService {
     final raw = await getData<List<dynamic>>('workout_units');
     final wu = raw.map((e) => WorkoutUnit.fromJson(e)).toList();
     return await _enrichWorkoutUnitsWithExerciseNames(wu);
-    ;
   }
 
   Future<List<WorkoutUnit>> _enrichWorkoutUnitsWithExerciseNames(
@@ -98,7 +126,9 @@ class WorkoutUnitService {
         try {
           exerciseIdToName[exercise.id!] = exercise.name;
         } catch (e) {
-          print('Error parsing exercise data in workout units: $e');
+          if (kDebugMode) {
+            print('Error parsing exercise data in workout units: $e');
+          }
         }
       }
 
@@ -109,7 +139,9 @@ class WorkoutUnitService {
 
       return workoutUnits;
     } catch (e) {
-      print('Error in _enrichWorkoutUnitsWithExerciseNames: $e');
+      if (kDebugMode) {
+        print('Error in _enrichWorkoutUnitsWithExerciseNames: $e');
+      }
       // Return original workout units converted to proper Maps if enrichment completely fails
       return workoutUnits;
     }
@@ -169,5 +201,44 @@ class ExerciseService {
 
   Future<void> deleteExercise(int id) async {
     return deleteData('exercises/$id');
+  }
+
+  Future<int?> getExerciseIdByName(String exerciseName) async {
+    try {
+      final exercises = await getExercises();
+      final exerciseData =
+          exercises.firstWhere((item) => item.name == exerciseName);
+      return exerciseData.id;
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error resolving exercise name to ID: $e');
+      }
+      return null;
+    }
+  }
+
+  Future<void> clearExercises() async {
+    // Get all exercises for this user and delete them
+    final exercises = await getExercises();
+    int deletedCount = 0;
+    int errorCount = 0;
+
+    for (var exercise in exercises) {
+      if (exercise.id != null) {
+        try {
+          await deleteExercise(exercise.id!);
+          deletedCount++;
+        } catch (e) {
+          errorCount++;
+          if (kDebugMode) {
+            print('Warning: Failed to delete exercise ${exercise.id}: $e');
+          }
+          // Continue with other exercises instead of stopping
+        }
+      }
+    }
+    if (kDebugMode) {
+      print('Cleared exercises: $deletedCount deleted, $errorCount errors');
+    }
   }
 }

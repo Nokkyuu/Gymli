@@ -2,13 +2,12 @@
 library;
 
 import 'package:Gymli/utils/services/authentication_service.dart';
-import 'package:Gymli/utils/services/temp_service.dart';
 import 'package:flutter/foundation.dart';
 import '../models/landing_filter_state.dart';
 import 'landing_filter_controller.dart';
 import '../../../utils/models/data_models.dart';
 import 'package:get_it/get_it.dart';
-import 'package:Gymli/utils/api/api_export.dart';
+import 'package:Gymli/utils/services/service_export.dart';
 
 import 'package:Gymli/utils/workout_data_cache.dart';
 
@@ -47,8 +46,9 @@ class LandingController extends ChangeNotifier {
   /// Initialize the landing screen
   Future<void> initialize() async {
     if (_isInitialized) {
-      if (kDebugMode)
+      if (kDebugMode) {
         print('🔄 LandingController already initialized, skipping');
+      }
       return;
     }
 
@@ -56,9 +56,9 @@ class LandingController extends ChangeNotifier {
     _setLoading(true);
 
     try {
-      if (_cache != null && !_cache!.isInitialized) {
+      if (_cache != null && !_cache.isInitialized) {
         // <- !!!
-        await _cache!.init(); // <- !!!
+        await _cache.init(); // <- !!!
       }
       await _loadData();
       await showAllExercises();
@@ -78,14 +78,18 @@ class LandingController extends ChangeNotifier {
     // return exercises.map((e) => ApiExercise.fromJson(e)).toList();
     if (_cache != null) {
       // Bei Cache stets bevorzugen; nach obigem await init() sind Daten da       // <- !!!
-      print(
-          "Using cached data: ${_cache!.exercises.length} exercises and ${_cache!.workouts.length} workouts");
+      if (kDebugMode) {
+        print(
+            "Using cached data: ${_cache.exercises.length} exercises and ${_cache.workouts.length} workouts");
+      }
     } else {
       final ex = await GetIt.I<ExerciseService>().getExercises();
       final wo = await GetIt.I<WorkoutService>().getWorkouts();
 
-      print(
-          "Used fall back data: ${ex.length} exercises and ${wo.length} workouts");
+      if (kDebugMode) {
+        print(
+            "Used fall back data: ${ex.length} exercises and ${wo.length} workouts");
+      }
     }
   }
 
@@ -233,8 +237,9 @@ class LandingController extends ChangeNotifier {
       // Mark as disposed to prevent future operations
       _isInitialized = false;
     } catch (e) {
-      if (kDebugMode)
+      if (kDebugMode) {
         print('Warning: Error during LandingController disposal: $e');
+      }
     }
 
     super.dispose();
@@ -248,7 +253,7 @@ class LandingController extends ChangeNotifier {
       final filtered = getSortedExercises();
       final exerciseNames = filtered.map((ex) => ex.name).toList();
       // final lastTrainingDays = await _repository.getLastTrainingDaysForExercises(exerciseNames);
-      final lastTrainingDays = await GetIt.I<TempService>()
+      final lastTrainingDays = await GetIt.I<TrainingSetService>()
           .getLastTrainingDatesPerExercise(exerciseNames);
 
       for (var ex in filtered) {
@@ -301,7 +306,7 @@ class LandingController extends ChangeNotifier {
     try {
       final filtered = getSortedExercises();
       final exerciseNames = filtered.map((ex) => ex.name).toList();
-      final lastTrainingDays = await GetIt.I<TempService>()
+      final lastTrainingDays = await GetIt.I<TrainingSetService>()
           .getLastTrainingDatesPerExercise(exerciseNames);
 
       for (var ex in filtered) {

@@ -10,7 +10,7 @@ import 'package:Gymli/utils/themes/themes.dart' show setIcons;
 import '../utils/models/data_models.dart';
 import 'exercise_history/controller/history_list_controller.dart';
 
-final _setTypeIcons = setIcons;
+const _setTypeIcons = setIcons;
 
 class ExerciseListScreen extends StatefulWidget {
   final int exerciseId;

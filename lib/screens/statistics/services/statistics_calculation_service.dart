@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:time_machine/time_machine.dart';
@@ -18,7 +19,9 @@ class StatisticsCalculationService {
       return List.filled(14, 0.0);
     }
 
-    print("DEBUG _muscleHistoryScore $muscleHistoryScore");
+    if (kDebugMode) {
+      print("DEBUG _muscleHistoryScore $muscleHistoryScore");
+    }
     List<double> muscleHistoryScoreCum = [];
 
     for (int i = 0; i < muscleHistoryScore[0].length; i++) {
@@ -32,7 +35,9 @@ class StatisticsCalculationService {
     }
 
     if (muscleHistoryScoreCum.isNotEmpty) {
-      print("DEBUG muscleHistoryScoreCum $muscleHistoryScoreCum");
+      if (kDebugMode) {
+        print("DEBUG muscleHistoryScoreCum $muscleHistoryScoreCum");
+      }
       var highestValue = muscleHistoryScoreCum.reduce(max);
       return muscleHistoryScoreCum
           .map((score) => highestValue > 0 ? score / highestValue : 0.0)
@@ -90,7 +95,9 @@ class StatisticsCalculationService {
         bodyweight: bodyweightExercises.length,
       );
     } catch (e) {
-      print('Error calculating equipment usage: $e');
+      if (kDebugMode) {
+        print('Error calculating equipment usage: $e');
+      }
       return EquipmentUsage.empty();
     }
   }
@@ -549,7 +556,9 @@ class StatisticsCalculationService {
 
       return ExerciseGraphDataResult.empty();
     } catch (e) {
-      print('Error loading exercise graph data: $e');
+      if (kDebugMode) {
+        print('Error loading exercise graph data: $e');
+      }
       return ExerciseGraphDataResult.empty();
     }
   }
@@ -672,7 +681,9 @@ class StatisticsCalculationService {
         heatMapData: heatMapData,
       );
     } catch (e) {
-      print('Error calculating bar statistics: $e');
+      if (kDebugMode) {
+        print('Error calculating bar statistics: $e');
+      }
       return StatisticsCalculationResult.empty();
     }
   }

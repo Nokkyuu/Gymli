@@ -6,7 +6,7 @@
 library;
 
 import 'dart:convert';
-import 'api_base.dart';
+import '../api/api_base.dart';
 
 class TrainingSetService {
   /// Retrieves all training sets for a user
@@ -73,10 +73,33 @@ class TrainingSetService {
 
   /// Retrieves last training dates per exercise for a user (optimized for performance)
   /// Returns a map of exercise names to their last training dates
-  Future<Map<String, String>> getLastTrainingDatesPerExercise() async {
+  Future<Map<String, Map<String, dynamic>>> getLastTrainingDatesPerExercise(
+      List<String> exerciseNames) async {
     final response =
         await getData<Map<String, dynamic>>('training_sets/last_dates');
-    return response.map((key, value) => MapEntry(key, value.toString()));
+    final lastDates =
+        response.map((key, value) => MapEntry(key, value.toString()));
+    Map<String, Map<String, dynamic>> result = {};
+
+    for (String exerciseName in exerciseNames) {
+      final dateString = lastDates[exerciseName];
+      DateTime lastTrainingDate;
+
+      if (dateString != null) {
+        try {
+          lastTrainingDate = DateTime.parse(dateString);
+        } catch (e) {
+          lastTrainingDate = DateTime.now();
+        }
+      } else {
+        lastTrainingDate = DateTime.now();
+      }
+
+      result[exerciseName] = {
+        'lastTrainingDate': lastTrainingDate,
+      };
+    }
+    return result;
   }
 
   /// Deletes a training set record
@@ -99,4 +122,31 @@ class TrainingSetService {
           'Failed to clear training sets: ${response.statusCode} ${response.body}');
     }
   }
+
+//   Future<Map<String, Map<String, dynamic>>> getLastTrainingDatesPerExercise(
+//       List<String> exerciseNames) async {
+//     final lastDates = await getLastTrainingDatesPerExercise();
+
+//     Map<String, Map<String, dynamic>> result = {};
+
+//     for (String exerciseName in exerciseNames) {
+//       final dateString = lastDates[exerciseName];
+//       DateTime lastTrainingDate;
+
+//       if (dateString != null) {
+//         try {
+//           lastTrainingDate = DateTime.parse(dateString);
+//         } catch (e) {
+//           lastTrainingDate = DateTime.now();
+//         }
+//       } else {
+//         lastTrainingDate = DateTime.now();
+//       }
+
+//       result[exerciseName] = {
+//         'lastTrainingDate': lastTrainingDate,
+//       };
+//     }
+//     return result;
+//   }
 }

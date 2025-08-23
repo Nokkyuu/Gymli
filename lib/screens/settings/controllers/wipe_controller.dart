@@ -2,7 +2,6 @@
 library;
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import '../repositories/settings_repository.dart';
 import '../models/settings_data_type.dart';
 import '../models/settings_operation_result.dart';

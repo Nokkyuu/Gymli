@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:go_router/go_router.dart';
 import 'app_router.dart';
-import '../utils/services/temp_service.dart';
 import 'package:Gymli/utils/services/authentication_service.dart';
 import 'package:get_it/get_it.dart';
 
@@ -15,7 +14,6 @@ class LandingChoiceScreen extends StatefulWidget {
 }
 
 class _LandingChoiceScreenState extends State<LandingChoiceScreen> {
-  final _container = GetIt.I<TempService>();
   late AuthenticationService _authService;
   bool _loading = true;
   bool _isInitialized = false;
@@ -52,7 +50,9 @@ class _LandingChoiceScreenState extends State<LandingChoiceScreen> {
       if (_isTokenProperlySet()) {
         _proceedToMainApp();
       } else {
-        print('Warning: Credentials exist but token not set in ApiConfig');
+        if (kDebugMode) {
+          print('Warning: Credentials exist but token not set in ApiConfig');
+        }
       }
     }
   }
@@ -86,7 +86,9 @@ class _LandingChoiceScreenState extends State<LandingChoiceScreen> {
 
   Future<void> _login() async {
     if (!_isInitialized) {
-      print('Auth0 not initialized');
+      if (kDebugMode) {
+        print('Auth0 not initialized');
+      }
       return;
     }
 
@@ -101,7 +103,9 @@ class _LandingChoiceScreenState extends State<LandingChoiceScreen> {
       // The app will be redirected and reloaded, credentials handled by Auth0Service.onLoad
     } catch (e) {
       setState(() => _loading = false);
-      print('Login error: $e');
+      if (kDebugMode) {
+        print('Login error: $e');
+      }
     }
   }
 

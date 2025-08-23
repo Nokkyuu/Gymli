@@ -1,12 +1,11 @@
 import 'dart:async';
 import 'dart:collection';
 
-import 'package:Gymli/utils/services/temp_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:get_it/get_it.dart';
 
 import 'package:Gymli/utils/services/authentication_service.dart';
-import 'package:Gymli/utils/api/api_export.dart';
+import 'package:Gymli/utils/services/service_export.dart';
 import 'package:Gymli/utils/models/data_models.dart';
 import 'package:Gymli/utils/sync/sync_outbox.dart';
 

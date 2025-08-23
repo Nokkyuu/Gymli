@@ -5,10 +5,8 @@ enum ExercisePhase { normal, deload, power }
 
 class ExercisePhaseController extends ChangeNotifier {
   ExercisePhase _currentPhase = ExercisePhase.normal;
-  final void Function(Color)? _onPhaseColorChanged;
 
-  ExercisePhaseController({void Function(Color)? onPhaseColorChanged})
-      : _onPhaseColorChanged = onPhaseColorChanged;
+  ExercisePhaseController({void Function(Color)? onPhaseColorChanged});
 
   ExercisePhase get currentPhase => _currentPhase;
 
@@ -19,7 +17,6 @@ class ExercisePhaseController extends ChangeNotifier {
       case ExercisePhase.power:
         return ThemeColors().phaseColor['power']!;
       case ExercisePhase.normal:
-      default:
         return ThemeColors().phaseColor['normal']!;
     }
   }
@@ -31,7 +28,6 @@ class ExercisePhaseController extends ChangeNotifier {
       case ExercisePhase.power:
         return Icons.flash_on;
       case ExercisePhase.normal:
-      default:
         return Icons.trending_up;
     }
   }
@@ -43,7 +39,6 @@ class ExercisePhaseController extends ChangeNotifier {
       case ExercisePhase.power:
         return "Power";
       case ExercisePhase.normal:
-      default:
         return "Normal";
     }
   }

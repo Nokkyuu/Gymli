@@ -33,8 +33,8 @@ class StatisticsMainController extends ChangeNotifier {
   // Statistics data
   int _numberOfTrainingDays = 0;
   String _trainingDuration = "";
-  List<String> _trainingDates = [];
-  List<LineChartBarData> _trainingsPerWeekChart = [];
+  final List<String> _trainingDates = [];
+  final List<LineChartBarData> _trainingsPerWeekChart = [];
   List<BarChartGroupData> _barChartStatistics = [];
   List<double> _heatMapMulti = [];
   List<List<double>> _muscleHistoryScore = [];
@@ -594,10 +594,5 @@ class StatisticsMainController extends ChangeNotifier {
     } catch (e) {
       if (kDebugMode) print('Error loading exercises: $e');
     }
-  }
-
-  void _onDataChanged() {
-    _dataService.invalidateCache();
-    loadStatistics();
   }
 }

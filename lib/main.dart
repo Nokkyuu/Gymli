@@ -7,18 +7,16 @@ library;
 import 'package:Gymli/utils/workout_data_cache.dart';
 import 'package:Gymli/widgets/app_router.dart';
 import 'package:Gymli/utils/services/authentication_service.dart';
-import 'package:Gymli/utils/services/temp_service.dart';
 import 'package:Gymli/utils/workout_session_state.dart';
 import 'package:get_it/get_it.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'utils/api/api_export.dart';
+import 'utils/services/service_export.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:provider/provider.dart';
 import 'utils/services/app_initializer.dart';
 import 'utils/services/theme_service.dart';
 import 'utils/themes/themes.dart';
@@ -46,7 +44,9 @@ void main() async {
   final initResult = await AppInitializer.initialize();
 
   if (!initResult.success) {
-    print('Critical initialization failure: ${initResult.error}');
+    if (kDebugMode) {
+      print('Critical initialization failure: ${initResult.error}');
+    }
     if (!kDebugMode) {
       // In production, show error screen or exit
       runApp(_buildErrorApp(initResult.error!));
@@ -55,7 +55,9 @@ void main() async {
   }
 
   if (initResult.partial) {
-    print('Partial initialization failure: ${initResult.error}');
+    if (kDebugMode) {
+      print('Partial initialization failure: ${initResult.error}');
+    }
     // Continue with limited functionality
   }
 

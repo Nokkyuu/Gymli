@@ -1,8 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import '../../../utils/services/temp_service.dart';
 import '../../../utils/models/data_models.dart';
-import '../../../utils/api/api_export.dart';
+import '../../../utils/services/service_export.dart';
 import 'package:get_it/get_it.dart';
 
 /// Controller for food logging functionality

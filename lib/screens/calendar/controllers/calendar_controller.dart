@@ -1,10 +1,8 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
-import 'package:Gymli/utils/services/temp_service.dart';
 import 'package:Gymli/utils/models/data_models.dart';
 import '../constants/calendar_constants.dart';
 import 'package:get_it/get_it.dart';
-import 'package:Gymli/utils/api/api_export.dart';
+import 'package:Gymli/utils/services/service_export.dart';
 
 class CalendarController extends ChangeNotifier {
   // Calendar state
@@ -414,10 +412,5 @@ class CalendarController extends ChangeNotifier {
   // Getter for notes as a list (sorted by date)
   List<CalendarNote> get notesList {
     return _notes.values.toList()..sort((a, b) => a.date.compareTo(b.date));
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
   }
 }

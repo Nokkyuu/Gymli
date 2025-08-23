@@ -6,7 +6,7 @@
 library;
 
 import 'dart:convert';
-import 'api_base.dart';
+import '../api/api_base.dart';
 
 class ActivityService {
   /// Retrieves all activities for a user

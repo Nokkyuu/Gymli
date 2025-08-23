@@ -308,8 +308,9 @@ class ActivityManageTab extends StatelessWidget {
     final name = activityName.toLowerCase();
     if (name.contains('walk')) return FontAwesomeIcons.personWalking;
     if (name.contains('run')) return FontAwesomeIcons.personRunning;
-    if (name.contains('cycling') || name.contains('bike'))
+    if (name.contains('cycling') || name.contains('bike')) {
       return FontAwesomeIcons.bicycle;
+    }
     if (name.contains('swim')) return FontAwesomeIcons.personSwimming;
     if (name.contains('row')) return Icons.rowing;
     if (name.contains('yoga')) return FontAwesomeIcons.om;
