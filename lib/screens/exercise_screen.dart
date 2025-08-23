@@ -55,6 +55,7 @@ class _ExerciseScreenState extends State<ExerciseScreen>
     if (switchedExercise) {
       final cache = GetIt.I<WorkoutDataCache>();
       cache.markActiveExercise(widget.exerciseId);
+      print("A: caching?");
       final cached = cache.getCachedTrainingSets(widget.exerciseId);
       if (cached != null && cached.isNotEmpty) {
         _exerciseController.graphController.updateGraphFromTrainingSets(cached);

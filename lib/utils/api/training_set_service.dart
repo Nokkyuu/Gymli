@@ -12,11 +12,13 @@ class TrainingSetService {
   /// Retrieves all training sets for a user
   /// Returns a list of training set objects
   Future<List<dynamic>> getTrainingSets() async {
+    print("DEBUG: Fetching all training sets from API");
     return getData<List<dynamic>>('training_sets');
   }
 
   Future<List<dynamic>> getTrainingSetsByExerciseID(
       {required int exerciseId}) async {
+    print("DEBUG: Fetching all training sets from API");
     return getData<List<dynamic>>('training_sets/exercise/$exerciseId');
   }
 
@@ -24,6 +26,7 @@ class TrainingSetService {
   /// [id] - The unique identifier of the training set
   /// Returns a map containing training set details
   Future<Map<String, dynamic>> getTrainingSetById(int id) async {
+    print("DEBUG: Fetching all training sets from API");
     return getData<Map<String, dynamic>>('training_sets/$id');
   }
 
