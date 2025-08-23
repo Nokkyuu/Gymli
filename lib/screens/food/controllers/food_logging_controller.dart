@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../../../utils/models/data_models.dart';
@@ -41,18 +39,16 @@ class FoodLoggingController extends ChangeNotifier {
       orElse: () => foods.first,
     );
 
-    FoodLog foodLog = FoodLog.fromJson({
-      'food_name': selectedFoodName,
-      'date': selectedDate.toIso8601String(),
-      'grams': grams,
-      'kcal_per_100g': selectedFood.kcalPer100g,
-      'protein_per_100g': selectedFood.proteinPer100g,
-      'carbs_per_100g': selectedFood.carbsPer100g,
-      'fat_per_100g': selectedFood.fatPer100g,
-    });
-
     try {
-      await GetIt.I<FoodService>().createFoodLog(foodLog: foodLog);
+      await GetIt.I<FoodService>().createFoodLog(
+        foodName: selectedFoodName,
+        date: selectedDate,
+        grams: grams,
+        kcalPer100g: selectedFood.kcalPer100g,
+        proteinPer100g: selectedFood.proteinPer100g,
+        carbsPer100g: selectedFood.carbsPer100g,
+        fatPer100g: selectedFood.fatPer100g,
+      );
 
       // Clear form after successful logging
       gramsController.clear();

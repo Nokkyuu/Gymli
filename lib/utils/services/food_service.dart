@@ -20,15 +20,26 @@ class FoodService {
 
   /// Creates a new food item
   Future<FoodItem> createFood({
-    required FoodItem foodItem,
+    required String name,
+    required double kcalPer100g,
+    required double proteinPer100g,
+    required double carbsPer100g,
+    required double fatPer100g,
+    String? notes,
   }) async {
-    final responseBody = await createData('foods', foodItem.toJson());
-    return FoodItem.fromJson(json.decode(responseBody));
+    return FoodItem.fromJson(await createData('foods', {
+      'name': name,
+      'kcal_per_100g': kcalPer100g,
+      'protein_per_100g': proteinPer100g,
+      'carbs_per_100g': carbsPer100g,
+      'fat_per_100g': fatPer100g,
+      'notes': notes,
+    }));
   }
 
   /// Creates multiple food items in a single batch operation
   Future<List<FoodItem>> createFoodsBulk({
-    required List<FoodItem> foods,
+    required List<Map<String, dynamic>> foods,
   }) async {
     if (foods.isEmpty) {
       throw Exception('Food items list cannot be empty');
@@ -39,22 +50,21 @@ class FoodService {
           'Cannot create more than 1000 food items in a single request');
     }
 
-    final responseBody = await createData(
-        'foods/bulk', foods.map((item) => item.toJson()).toList());
-    final List<dynamic> decoded = json.decode(responseBody);
-    return decoded.map((item) => FoodItem.fromJson(item)).toList();
+    return (await createData('foods/bulk', foods))
+        .map((item) => FoodItem.fromJson(item))
+        .toList();
   }
 
   Future<Map<String, dynamic>> clearFoods() async {
     final response = await deleteData('foods/bulk_clear');
     if (response.statusCode == 200 || response.statusCode == 204) {
-      final result = response.body.isNotEmpty
-          ? json.decode(response.body)
+      final result = response.isNotEmpty
+          ? json.decode(response)
           : {'message': 'Food items cleared successfully'};
       return result;
     } else {
       throw Exception(
-          'Failed to clear food items: ${response.statusCode} ${response.body}');
+          'Failed to clear food items: ${response.statusCode} ${response}');
     }
   }
 
@@ -64,7 +74,7 @@ class FoodService {
   }) async {
     final response = await deleteData('foods/$foodId');
     if (response.statusCode != 200 && response.statusCode != 204) {
-      throw Exception('Failed to delete food: ${response.body}');
+      throw Exception('Failed to delete food: ${response}');
     }
   }
 
@@ -91,10 +101,23 @@ class FoodService {
 
   /// Creates a new food log entry
   Future<FoodLog> createFoodLog({
-    required FoodLog foodLog,
+    required String foodName,
+    required DateTime date,
+    required double grams,
+    required double kcalPer100g,
+    required double proteinPer100g,
+    required double carbsPer100g,
+    required double fatPer100g,
   }) async {
-    final responseBody = await createData('food_logs', foodLog.toJson());
-    return FoodLog.fromJson(json.decode(responseBody));
+    return FoodLog.fromJson(await createData('food_logs', {
+      'food_name': foodName,
+      'date': date.toIso8601String(),
+      'grams': grams,
+      'kcal_per_100g': kcalPer100g,
+      'protein_per_100g': proteinPer100g,
+      'carbs_per_100g': carbsPer100g,
+      'fat_per_100g': fatPer100g,
+    }));
   }
 
   /// Deletes a food log entry
@@ -103,7 +126,7 @@ class FoodService {
   }) async {
     final response = await deleteData('food_logs/$logId');
     if (response.statusCode != 200 && response.statusCode != 204) {
-      throw Exception('Failed to delete food log: ${response.body}');
+      throw Exception('Failed to delete food log: ${response}');
     }
   }
 

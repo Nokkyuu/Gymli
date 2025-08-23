@@ -176,7 +176,7 @@ class ExerciseSetupController extends ChangeNotifier {
       final trainingSets = await GetIt.I<TrainingSetService>()
           .getTrainingSetsByExerciseID(exerciseId: exerciseId);
       for (var set in trainingSets) {
-        await GetIt.I<TrainingSetService>().deleteTrainingSet(set['id']);
+        await GetIt.I<TrainingSetService>().deleteTrainingSet(set.id!);
       }
       final workoutUnits =
           await GetIt.I<WorkoutUnitService>().getWorkoutUnits();

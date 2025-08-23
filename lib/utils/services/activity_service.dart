@@ -5,29 +5,31 @@
 ///
 library;
 
-import 'dart:convert';
 import '../api/api_base.dart';
+import '../models/data_models.dart';
 
 class ActivityService {
   /// Retrieves all activities for a user
   /// Returns a list of activity objects
-  Future<List<dynamic>> getActivities() async {
-    return getData<List<dynamic>>('activities');
+  Future<List<Activity>> getActivities() async {
+    final data = await getData<List<dynamic>>('activities');
+    return data.map((item) => Activity.fromJson(item)).toList();
   }
 
   /// Creates a new custom activity for a user
-  Future<Map<String, dynamic>> createActivity({
+  Future<Activity> createActivity({
     required String name,
     required double kcalPerHour,
   }) async {
-    return json.decode(await createData('activities', {
+    final response = await createData('activities', {
       'name': name,
       'kcal_per_hour': kcalPerHour,
-    }));
+    });
+    return Activity.fromJson(response);
   }
 
   /// Updates an existing activity
-  Future<Map<String, dynamic>> updateActivity({
+  Future<Activity> updateActivity({
     required int activityId,
     required String name,
     required double kcalPerHour,
@@ -35,9 +37,9 @@ class ActivityService {
     final response = await updateData(
         'activities/$activityId', {'name': name, 'kcal_per_hour': kcalPerHour});
     if (response.statusCode == 200) {
-      return json.decode(response.body);
+      return Activity.fromJson(response);
     } else {
-      throw Exception('Failed to update activity: ${response.body}');
+      throw Exception('Failed to update activity: ${response}');
     }
   }
 
@@ -47,12 +49,12 @@ class ActivityService {
   }) async {
     final response = await deleteData('activities/$activityId');
     if (response.statusCode != 200 && response.statusCode != 204) {
-      throw Exception('Failed to delete activity: ${response.body}');
+      throw Exception('Failed to delete activity: ${response}');
     }
   }
 
   /// Retrieves activity logs with optional filtering
-  Future<List<dynamic>> getActivityLogs({
+  Future<List<ActivityLog>> getActivityLogs({
     String? activityName,
     DateTime? startDate,
     DateTime? endDate,
@@ -67,25 +69,28 @@ class ActivityService {
     if (endDate != null) {
       url += '&end_date=${endDate.toIso8601String()}';
     }
-    return getData<List<dynamic>>(url);
+    final data = await getData<List<dynamic>>(url);
+    return data.map((item) => ActivityLog.fromJson(item)).toList();
   }
 
   /// Creates a new activity log entry
-  Future<Map<String, dynamic>> createActivityLog({
+  Future<ActivityLog> createActivityLog({
     required String activityName,
     required DateTime date,
     required int durationMinutes,
     String? notes,
   }) async {
-    return json.decode(await createData('activity_logs', {
+    final response = await createData('activity_logs', {
       'activity_name': activityName,
       'date': date.toIso8601String(),
       'duration_minutes': durationMinutes,
       'notes': notes,
-    }));
+    });
+    return ActivityLog.fromJson(response);
   }
 
   /// Retrieves activity statistics for a user
+  /// TODO: what does the endpoint return again?
   Future<Map<String, dynamic>> getActivityStats({
     DateTime? startDate,
     DateTime? endDate,
@@ -106,7 +111,7 @@ class ActivityService {
   }) async {
     final response = await deleteData('activity_logs/$logId');
     if (response.statusCode != 200 && response.statusCode != 204) {
-      throw Exception('Failed to delete activity log: ${response.body}');
+      throw Exception('Failed to delete activity log: ${response}');
     }
   }
 }

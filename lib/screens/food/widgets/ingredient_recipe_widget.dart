@@ -84,15 +84,14 @@ class IngredientRecipeWidget extends StatelessWidget {
           final managementController =
               Provider.of<FoodManagementController>(context, listen: false);
 
-          FoodItem foodItem = FoodItem.fromJson({
-            'name': result['name'],
-            'kcal_per_100g': nutrition['kcal100']!,
-            'protein_per_100g': nutrition['protein100']!,
-            'carbs_per_100g': nutrition['carbs100']!,
-            'fat_per_100g': nutrition['fat100']!,
-            'notes': result['note'].isNotEmpty ? result['note'] : null,
-          });
-          await GetIt.I<FoodService>().createFood(foodItem: foodItem);
+          await GetIt.I<FoodService>().createFood(
+            name: result['name'],
+            kcalPer100g: nutrition['kcal100']!,
+            proteinPer100g: nutrition['protein100']!,
+            carbsPer100g: nutrition['carbs100']!,
+            fatPer100g: nutrition['fat100']!,
+            notes: result['note'].isNotEmpty ? result['note'] : null,
+          );
 
           await dataController.loadData();
           managementController.resetFoodComponents();

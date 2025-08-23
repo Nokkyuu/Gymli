@@ -197,7 +197,7 @@ Future<void> performWorkoutOp(SyncOp op) async {
       final clientId = (p['client_id'] as num?)?.toInt(); // temp id from client
       final exerciseId = p['exercise_id'] as int; // exercise id
       final serverId =
-          (res['id'] != null) ? (res['id'] as num).toInt() : null; // server id
+          (res.id != null) ? (res.id as num).toInt() : null; // server id
       if (clientId != null && serverId != null) {
         final hook = trainingSetReconcileHook; // injected reconcile
         if (hook != null) {

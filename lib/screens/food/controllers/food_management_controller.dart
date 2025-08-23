@@ -62,20 +62,19 @@ class FoodManagementController extends ChangeNotifier {
         fat < 0) {
       throw Exception('Please enter valid nutritional values');
     }
-    FoodItem foodItem = FoodItem.fromJson({
-      'name': customFoodNameController.text,
-      'kcal_per_100g': calories,
-      'protein_per_100g': protein,
-      'carbs_per_100g': carbs,
-      'fat_per_100g': fat,
-      'notes': customFoodNotesController.text.isNotEmpty
-          ? customFoodNotesController.text
-          : null,
-    });
+
     try {
-      if (kDebugMode) print('Calling FoodService.createFood...');
-      final result =
-          await GetIt.I<FoodService>().createFood(foodItem: foodItem);
+      if (kDebugMode) print('Calling FoodServce.createFood...');
+      final result = await GetIt.I<FoodService>().createFood(
+        name: customFoodNameController.text,
+        kcalPer100g: calories,
+        proteinPer100g: protein,
+        carbsPer100g: carbs,
+        fatPer100g: fat,
+        notes: customFoodNotesController.text.isNotEmpty
+            ? customFoodNotesController.text
+            : null,
+      );
 
       if (kDebugMode) print('Food created successfully: $result');
 

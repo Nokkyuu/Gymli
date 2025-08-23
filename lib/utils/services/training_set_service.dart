@@ -7,28 +7,30 @@ library;
 
 import 'dart:convert';
 import '../api/api_base.dart';
+import '../models/data_models.dart';
 
 class TrainingSetService {
   /// Retrieves all training sets for a user
   /// Returns a list of training set objects
-  Future<List<dynamic>> getTrainingSets() async {
-    return getData<List<dynamic>>('training_sets');
+  Future<List<TrainingSet>> getTrainingSets() async {
+    final data = await getData<List<dynamic>>('training_sets');
+    return data.map((item) => TrainingSet.fromJson(item)).toList();
   }
 
-  Future<List<dynamic>> getTrainingSetsByExerciseID(
+  Future<List<TrainingSet>> getTrainingSetsByExerciseID(
       {required int exerciseId}) async {
-    return getData<List<dynamic>>('training_sets/exercise/$exerciseId');
+    final data =
+        await getData<List<dynamic>>('training_sets/exercise/$exerciseId');
+    return data.map((item) => TrainingSet.fromJson(item)).toList();
   }
 
-  /// Retrieves a specific training set by its ID
-  /// [id] - The unique identifier of the training set
-  /// Returns a map containing training set details
-  Future<Map<String, dynamic>> getTrainingSetById(int id) async {
-    return getData<Map<String, dynamic>>('training_sets/$id');
+  Future<TrainingSet?> getTrainingSetById(int id) async {
+    final data = await getData<Map<String, dynamic>>('training_sets/$id');
+    return data != null ? TrainingSet.fromJson(data) : null;
   }
 
   /// Creates a new training set record
-  Future<Map<String, dynamic>> createTrainingSet({
+  Future<TrainingSet> createTrainingSet({
     required int exerciseId,
     required String date,
     required double weight,
@@ -37,7 +39,7 @@ class TrainingSetService {
     String? phase,
     bool? myoreps,
   }) async {
-    return json.decode(await createData('training_sets', {
+    return TrainingSet.fromJson(await createData('training_sets', {
       'exercise_id': exerciseId,
       'date': date,
       'weight': weight,
@@ -49,7 +51,7 @@ class TrainingSetService {
   }
 
   /// Creates multiple training sets in a single batch operation
-  Future<List<Map<String, dynamic>>> createTrainingSetsBulk({
+  Future<List<TrainingSet>> createTrainingSetsBulk({
     required List<Map<String, dynamic>> trainingSets,
   }) async {
     if (trainingSets.isEmpty) {
@@ -61,14 +63,15 @@ class TrainingSetService {
     }
 
     final response = await createData('training_sets/bulk', trainingSets);
-    return json.decode(response).cast<Map<String, dynamic>>();
+    return (response as List)
+        .map((item) => TrainingSet.fromJson(item))
+        .toList();
   }
 
-  /// Updates an existing training set record
-  /// [id] - The unique identifier of the training set to update
-  /// [data] - Map containing the fields to update
-  Future<void> updateTrainingSet(int id, Map<String, dynamic> data) async {
-    updateData('training_sets/$id', data);
+  Future<TrainingSet> updateTrainingSet(
+      int id, Map<String, dynamic> data) async {
+    final response = await updateData('training_sets/$id', data);
+    return TrainingSet.fromJson(response);
   }
 
   /// Retrieves last training dates per exercise for a user (optimized for performance)
@@ -102,8 +105,7 @@ class TrainingSetService {
     return result;
   }
 
-  /// Deletes a training set record
-  /// [id] - The unique identifier of the training set to delete
+//TODO: success response?
   Future<void> deleteTrainingSet(int id) async {
     deleteData('training_sets/$id');
   }
@@ -113,40 +115,13 @@ class TrainingSetService {
   Future<Map<String, dynamic>> clearTrainingSets() async {
     final response = await deleteData('training_sets/bulk_clear');
     if (response.statusCode == 200 || response.statusCode == 204) {
-      final result = response.body.isNotEmpty
-          ? json.decode(response.body)
+      final result = response.isNotEmpty
+          ? json.decode(response)
           : {'message': 'Training sets cleared successfully'};
       return result;
     } else {
       throw Exception(
-          'Failed to clear training sets: ${response.statusCode} ${response.body}');
+          'Failed to clear training sets: ${response.statusCode} ${response}');
     }
   }
-
-//   Future<Map<String, Map<String, dynamic>>> getLastTrainingDatesPerExercise(
-//       List<String> exerciseNames) async {
-//     final lastDates = await getLastTrainingDatesPerExercise();
-
-//     Map<String, Map<String, dynamic>> result = {};
-
-//     for (String exerciseName in exerciseNames) {
-//       final dateString = lastDates[exerciseName];
-//       DateTime lastTrainingDate;
-
-//       if (dateString != null) {
-//         try {
-//           lastTrainingDate = DateTime.parse(dateString);
-//         } catch (e) {
-//           lastTrainingDate = DateTime.now();
-//         }
-//       } else {
-//         lastTrainingDate = DateTime.now();
-//       }
-
-//       result[exerciseName] = {
-//         'lastTrainingDate': lastTrainingDate,
-//       };
-//     }
-//     return result;
-//   }
 }

@@ -3,12 +3,13 @@ library;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:get_it/get_it.dart';
 import '../repositories/settings_repository.dart';
 import '../services/csv_service.dart';
 import '../services/file_service.dart';
 import '../models/settings_data_type.dart';
 import '../models/settings_operation_result.dart';
-import 'package:Gymli/utils/models/data_models.dart';
+import 'package:Gymli/utils/services/service_export.dart';
 
 class RestoreController extends ChangeNotifier {
   final SettingsRepository _repository;
@@ -329,7 +330,8 @@ class RestoreController extends ChangeNotifier {
           }
 
           if (units.isNotEmpty) {
-            await _repository.createWorkout(name: workoutName, units: units);
+            await GetIt.I<WorkoutService>()
+                .createWorkout(name: workoutName, units: units);
             importedCount++;
             if (kDebugMode) {
               print('Successfully imported workout: $workoutName');
@@ -408,18 +410,7 @@ class RestoreController extends ChangeNotifier {
         );
 
         try {
-          final foodItems = batch.map((data) {
-            return FoodItem(
-              name: data['name'],
-              kcalPer100g: data['kcal_per_100g'],
-              proteinPer100g: data['protein_per_100g'],
-              carbsPer100g: data['carbs_per_100g'],
-              fatPer100g: data['fat_per_100g'],
-              notes: data['notes'],
-            );
-          }).toList();
-
-          await _repository.createFoodsBulk(foodItems);
+          await _repository.createFoodsBulk(batch);
           importedCount += batch.length;
           if (kDebugMode) {
             print('Successfully imported batch of ${batch.length} food items');

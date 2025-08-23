@@ -44,14 +44,12 @@ class WorkoutService {
     return getData<Map<String, dynamic>>('workouts/$id');
   }
 
-  Future<Map<String, dynamic>> createWorkout({
-    //TODO: auf models umstellen
+  Future<Workout> createWorkout({
     required String name,
     required List<Map<String, dynamic>> units,
   }) async {
     // Create the workout first and get its data (including ID)
-    final workoutData =
-        json.decode(await createData('workouts', {'name': name}));
+    final workoutData = await createData('workouts', {'name': name});
     final workoutId = workoutData['id'] as int;
 
     // Now create all the workout units
@@ -66,14 +64,17 @@ class WorkoutService {
       );
     }
 
-    return workoutData;
+    return Workout.fromJson(workoutData);
   }
 
-  Future<void> updateWorkout(int id, Map<String, dynamic> data) async {
-    updateData('workouts/$id', data);
+  Future<Workout> updateWorkout(int id, Map<String, dynamic> data) async {
+    final workoutData = await updateData('workouts/$id', data);
+    //TODO: Proper implementation of updating Workout Units
+    return Workout.fromJson(workoutData);
   }
 
   Future<void> deleteWorkout(int id) async {
+    //TODO: implement success reponse?
     return deleteData('workouts/$id');
   }
 
@@ -147,12 +148,13 @@ class WorkoutUnitService {
     }
   }
 
-  Future<Map<String, dynamic>> getWorkoutUnitById(int id) async {
-    return getData<Map<String, dynamic>>('workout_units/$id');
+  Future<WorkoutUnit> getWorkoutUnitById(int id) async {
+    final data = await getData<Map<String, dynamic>>('workout_units/$id');
+    return WorkoutUnit.fromJson(data);
   }
 
   /// Creates a new workout unit record
-  Future<void> createWorkoutUnit({
+  Future<WorkoutUnit> createWorkoutUnit({
     required int workoutId,
     required int exerciseId,
     required int warmups,
@@ -160,7 +162,7 @@ class WorkoutUnitService {
     required int dropsets,
     required int type,
   }) async {
-    createData('workout_units', {
+    final data = await createData('workout_units', {
       'workout_id': workoutId,
       'exercise_id': exerciseId,
       'warmups': warmups,
@@ -168,13 +170,17 @@ class WorkoutUnitService {
       'dropsets': dropsets,
       'type': type,
     });
+    return WorkoutUnit.fromJson(data);
   }
 
-  Future<void> updateWorkoutUnit(int id, Map<String, dynamic> data) async {
-    updateData('workout_units/$id', data);
+  Future<WorkoutUnit> updateWorkoutUnit(
+      int id, Map<String, dynamic> data) async {
+    final updatedData = await updateData('workout_units/$id', data);
+    return WorkoutUnit.fromJson(updatedData);
   }
 
   Future<void> deleteWorkoutUnit(int id) async {
+    //TODO: success response?
     return deleteData('workout_units/$id');
   }
 }
@@ -191,15 +197,18 @@ class ExerciseService {
   }
 
   /// Creates a new exercise record
-  Future<void> createExercise(Map<String, dynamic> data) async {
-    createData('exercises', data);
+  Future<Exercise> createExercise(Map<String, dynamic> data) async {
+    final createdData = await createData('exercises', data);
+    return Exercise.fromJson(createdData);
   }
 
-  Future<void> updateExercise(int id, Map<String, dynamic> data) async {
-    updateData('exercises/$id', data);
+  Future<Exercise> updateExercise(int id, Map<String, dynamic> data) async {
+    final updatedData = await updateData('exercises/$id', data);
+    return Exercise.fromJson(updatedData);
   }
 
   Future<void> deleteExercise(int id) async {
+    //TODO: succcess response?
     return deleteData('exercises/$id');
   }
 
