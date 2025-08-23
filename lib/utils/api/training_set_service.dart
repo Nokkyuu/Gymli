@@ -18,7 +18,7 @@ class TrainingSetService {
 
   Future<List<dynamic>> getTrainingSetsByExerciseID(
       {required int exerciseId}) async {
-    print("DEBUG: Fetching all training sets from API");
+    print("DEBUG: Fetching all training sets from API for exercise $exerciseId");
     return getData<List<dynamic>>('training_sets/exercise/$exerciseId');
   }
 

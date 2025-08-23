@@ -43,10 +43,9 @@ class ExerciseController extends ChangeNotifier {
 
   // Getters
   Exercise? get currentExercise => _currentExercise;
-  List<TrainingSet> get todaysTrainingSets {
+  List<TrainingSet> get todaysTrainingSets  {
     if (_currentExercise?.id == null) return const [];
-    final all = _cache.getCachedTrainingSets(_currentExercise!.id!) ??
-        const <TrainingSet>[];
+    final all = _cache.getCachedTrainingSetsSync(_currentExercise!.id!);
     final now = DateTime.now();
     return all.where((s) => _isSameDay(s.date, now)).toList();
   }
@@ -149,10 +148,8 @@ class ExerciseController extends ChangeNotifier {
       _lastActivity = DateTime.now();
       final graphUpdated = _graphController.updateGraphWithNewSet(newSet);
       if (!graphUpdated) {
-        final allTrainingSets =
-            _cache.getCachedTrainingSets(_currentExercise!.id!) ??
-                const <TrainingSet>[];
-        _graphController.updateGraphFromTrainingSets(allTrainingSets);
+        final cached = await _cache.getCachedTrainingSets(_currentExercise!.id!);
+        _graphController.updateGraphFromTrainingSets(cached);
       }
       _updateWorkoutCounts();
       notifyListeners();
@@ -174,10 +171,8 @@ class ExerciseController extends ChangeNotifier {
         exerciseId: _currentExercise!.id!,
         setId: trainingSet.id!,
       );
-      final allTrainingSets =
-          _cache.getCachedTrainingSets(_currentExercise!.id!) ??
-              const <TrainingSet>[];
-      _graphController.updateGraphFromTrainingSets(allTrainingSets);
+      final cached = await _cache.getCachedTrainingSets(_currentExercise!.id!);
+      _graphController.updateGraphFromTrainingSets(cached);
       _updateWorkoutCounts();
       notifyListeners();
       return true;
@@ -232,20 +227,8 @@ class ExerciseController extends ChangeNotifier {
       if (ex?.id == null) return;
       final exerciseId = ex!.id!;
       // Cache-first
-      final cached = _cache.getCachedTrainingSets(exerciseId);
-      if (cached != null && cached.isNotEmpty) {
-        _graphController.updateGraphFromTrainingSets(cached);
-        return;
-      }
-      // Cache miss: fetch from server, populate cache, then update graph
-      final raw = await _trainingSetService.getTrainingSetsByExerciseID(
-          exerciseId: exerciseId);
-      final sets = raw
-          .whereType<Map<String, dynamic>>()
-          .map((m) => TrainingSet.fromJson(m))
-          .toList();
-      _cache.setExerciseTrainingSets(exerciseId, sets);
-      _graphController.updateGraphFromTrainingSets(sets);
+      final cached = await _cache.getCachedTrainingSets(exerciseId);
+      _graphController.updateGraphFromTrainingSets(cached);
     } catch (e) {
       print('Error refreshing graph data: $e');
     }
@@ -337,10 +320,13 @@ class ExerciseController extends ChangeNotifier {
 
   void _updateWorkoutTiming() {
     final today = todaysTrainingSets;
-    if (today.isNotEmpty) {
-      _workoutStartTime = today.first.date;
-      _lastActivity = today.last.date;
+    if (today.isEmpty) {
+      _workoutStartTime = DateTime.now();
+      _lastActivity = DateTime.now();
+      return;
     }
+    _workoutStartTime = today.first.date;
+    _lastActivity = today.last.date;
   }
 
   /// Set initial weight and reps - now async to get recent values if needed
@@ -353,40 +339,37 @@ class ExerciseController extends ChangeNotifier {
     // First, try to get values from today's sets
     bool foundValuesFromToday = false;
 
-    if (todaysTrainingSets.isNotEmpty) {
-      if (_selectedType.first == ExerciseType.warmup) {
-        // For warmup: Look for the most recent warmup set
-        final warmupSets =
-            todaysTrainingSets.where((set) => set.setType == 0).toList();
+    if (_selectedType.first == ExerciseType.warmup) {
+      // For warmup: Look for the most recent warmup set
 
-        if (warmupSets.isNotEmpty) {
-          final lastWarmupSet = warmupSets.last;
-          weight = lastWarmupSet.weight;
-          reps = lastWarmupSet.repetitions;
-          foundValuesFromToday = true;
+      final warmupSets = todaysTrainingSets.where((set) => set.setType == 0).toList();
+
+      if (warmupSets.isNotEmpty) {
+        final lastWarmupSet = warmupSets.last;
+        weight = lastWarmupSet.weight;
+        reps = lastWarmupSet.repetitions;
+        foundValuesFromToday = true;
+      }
+    } else {
+      // For work sets: Find the best set from today's sessions
+      final workSets = todaysTrainingSets.where((set) => set.setType > 0).toList();
+
+      if (workSets.isNotEmpty) {
+        // Find the best set (highest weight, then most reps)
+        TrainingSet? bestSet;
+        for (var set in workSets) {
+          if (bestSet == null ||
+              set.weight > bestSet.weight ||
+              (set.weight == bestSet.weight &&
+                  set.repetitions > bestSet.repetitions)) {
+            bestSet = set;
+          }
         }
-      } else {
-        // For work sets: Find the best set from today's sessions
-        final workSets =
-            todaysTrainingSets.where((set) => set.setType > 0).toList();
 
-        if (workSets.isNotEmpty) {
-          // Find the best set (highest weight, then most reps)
-          TrainingSet? bestSet;
-          for (var set in workSets) {
-            if (bestSet == null ||
-                set.weight > bestSet.weight ||
-                (set.weight == bestSet.weight &&
-                    set.repetitions > bestSet.repetitions)) {
-              bestSet = set;
-            }
-          }
-
-          if (bestSet != null) {
-            weight = bestSet.weight;
-            reps = bestSet.repetitions;
-            foundValuesFromToday = true;
-          }
+        if (bestSet != null) {
+          weight = bestSet.weight;
+          reps = bestSet.repetitions;
+          foundValuesFromToday = true;
         }
       }
     }
@@ -405,10 +388,10 @@ class ExerciseController extends ChangeNotifier {
     _repetitions = reps;
   }
 
-  void _updateWorkoutCounts() {
+  void _updateWorkoutCounts() async {
     final originalWarmUps = _numWarmUps;
     final originalWorkSets = _numWorkSets;
-    final today = todaysTrainingSets;
+    final today = await todaysTrainingSets;
     final warmDone = today.where((s) => s.setType == 0).length;
     final workDone = today.where((s) => s.setType > 0).length;
     _numWarmUps = (originalWarmUps - warmDone).clamp(0, originalWarmUps);
@@ -417,13 +400,11 @@ class ExerciseController extends ChangeNotifier {
 
   /// Load recent training values for weight and reps based on exercise type
   Future<Map<String, dynamic>?> _loadRecentTrainingValues() async {
-    if (_currentExercise == null) return null;
+    // if (_currentExercise == null) return null;
+    // there has to be a current exercise to call this
 
     try {
-      final sets = _currentExercise?.id != null
-          ? (_cache.getCachedTrainingSets(_currentExercise!.id!) ??
-              const <TrainingSet>[])
-          : const <TrainingSet>[];
+      final sets = await _cache.getCachedTrainingSets(_currentExercise!.id!);
       if (sets.isEmpty) return null;
 
       final sortedSets = List<TrainingSet>.from(sets)

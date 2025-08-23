@@ -9,7 +9,9 @@ import '../../../utils/workout_data_cache.dart';
 class HistoryListController {
   final String exercise;
   final int exerciseId;
-  final TempService container = GetIt.I<TempService>();
+
+  WorkoutDataCache get _cache => GetIt.I<WorkoutDataCache>();
+
 
   final ValueNotifier<List<ListEntry>> entries = ValueNotifier([]);
   final ValueNotifier<bool> isLoading = ValueNotifier(false);
@@ -22,22 +24,22 @@ class HistoryListController {
   Future<void> loadTrainingSets() async {
     isLoading.value = true;
     try {
-      final cache = GetIt.I<WorkoutDataCache>();
+      // final cache = GetIt.I<WorkoutDataCache>();
       // Cache-first
-      List<TrainingSet>? fromCache = cache.getCachedTrainingSets(exerciseId);
-      List<TrainingSet> trainingSets;
-      if (fromCache != null && fromCache.isNotEmpty) {
-        trainingSets = List<TrainingSet>.from(fromCache);
-      } else {
-        // Fetch from server and seed cache
-        final data = await GetIt.I<TrainingSetService>()
-            .getTrainingSetsByExerciseID(exerciseId: exerciseId);
-        trainingSets = data
-            .whereType<Map<String, dynamic>>()
-            .map(TrainingSet.fromJson)
-            .toList();
-        cache.setExerciseTrainingSets(exerciseId, trainingSets);
-      }
+      final trainingSets = _cache.getCachedTrainingSetsSync(exerciseId);
+      // List<TrainingSet> trainingSets;
+      // if (fromCache != null && fromCache.isNotEmpty) {
+      //   trainingSets = List<TrainingSet>.from(fromCache);
+      // } else {
+      //   // Fetch from server and seed cache
+      //   final data = await GetIt.I<TrainingSetService>()
+      //       .getTrainingSetsByExerciseID(exerciseId: exerciseId);
+      //   trainingSets = data
+      //       .whereType<Map<String, dynamic>>()
+      //       .map(TrainingSet.fromJson)
+      //       .toList();
+      //   cache.setExerciseTrainingSets(exerciseId, trainingSets);
+      // }
       // Sort desc by date
       trainingSets.sort((a, b) => b.date.compareTo(a.date));
       // Build grouped entries by date (YYYY-MM-DD)

@@ -34,8 +34,30 @@ class WorkoutDataCache extends ChangeNotifier {
   final LinkedHashMap<int, List<TrainingSet>> _trainingSetBuffers =
       LinkedHashMap<int, List<TrainingSet>>();
 
-  List<TrainingSet>? getCachedTrainingSets(int exerciseId) =>
-      _trainingSetBuffers[exerciseId];
+  // List<TrainingSet>? getCachedTrainingSets(int exerciseId) =>
+  //     _trainingSetBuffers[exerciseId];
+
+  List<TrainingSet> getCachedTrainingSetsSync(int exerciseId) {
+    return _trainingSetBuffers[exerciseId] ?? const <TrainingSet>[];
+  }
+
+  Future<List<TrainingSet>> getCachedTrainingSets(int exerciseId) async {
+    final cached = _trainingSetBuffers[exerciseId];
+    if (cached != null) {
+      return cached; // sofort aus dem Cache
+    }
+
+    // Noch nichts im Cache: vom Server holen, in den Cache legen, zurückgeben
+    final raw = await GetIt.I<TrainingSetService>().getTrainingSetsByExerciseID(exerciseId: exerciseId);
+    final sets = raw.whereType<Map<String, dynamic>>().map((m) => TrainingSet.fromJson(m)).toList();
+
+    // optional: als MRU markieren, dann cachen
+    markActiveExercise(exerciseId);
+    setExerciseTrainingSets(exerciseId, sets);
+
+    return sets;
+  }
+
 
   /// Should be called when a screen for a given exercise becomes visible/active.
   /// Ensures the exercise is present and becomes MRU in the LRU buffer.

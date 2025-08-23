@@ -39,6 +39,8 @@ class _ExerciseScreenState extends State<ExerciseScreen>
   late ExerciseTimerController _timerController;
   late ExercisePhaseController _phaseController;
   late ExerciseAnimationController _animationController;
+  final _cache = GetIt.I<WorkoutDataCache>();
+
 
   bool _isInitialized = false;
 
@@ -49,20 +51,14 @@ class _ExerciseScreenState extends State<ExerciseScreen>
   }
 
   @override
-  void didUpdateWidget(covariant ExerciseScreen oldWidget) {
+  void didUpdateWidget(covariant ExerciseScreen oldWidget) async {
     super.didUpdateWidget(oldWidget);
     final switchedExercise = oldWidget.exerciseId != widget.exerciseId || oldWidget.exerciseName != widget.exerciseName;
     if (switchedExercise) {
-      final cache = GetIt.I<WorkoutDataCache>();
-      cache.markActiveExercise(widget.exerciseId);
-      print("A: caching?");
-      final cached = cache.getCachedTrainingSets(widget.exerciseId);
-      if (cached != null && cached.isNotEmpty) {
-        _exerciseController.graphController.updateGraphFromTrainingSets(cached);
-      } else {
-        // Fall back to controller refresh which will fetch & populate cache
-        _exerciseController.refreshGraphData(widget.exerciseName);
-      }
+      // _cache.markActiveExercise(widget.exerciseId);
+      final cached = await _cache.getCachedTrainingSets(widget.exerciseId);
+      _exerciseController.graphController.updateGraphFromTrainingSets(cached);
+        // _exerciseController.refreshGraphData(widget.exerciseName);
     }
   }
 
@@ -76,13 +72,9 @@ class _ExerciseScreenState extends State<ExerciseScreen>
     _animationController = ExerciseAnimationController();
 
     // Mark this exercise as active in the LRU cache and try to render graph from cache
-    final cache = GetIt.I<WorkoutDataCache>();
-    cache.markActiveExercise(widget.exerciseId);
-    final cached = cache.getCachedTrainingSets(widget.exerciseId);
-    if (cached != null && cached.isNotEmpty) {
-      // GraphController is ready after ExerciseController construction
-      _exerciseController.graphController.updateGraphFromTrainingSets(cached);
-    }
+    // _cache.markActiveExercise(widget.exerciseId);
+    final cached = await _cache.getCachedTrainingSets(widget.exerciseId);
+    _exerciseController.graphController.updateGraphFromTrainingSets(cached);
 
     // Initialize animation controller
     _animationController.initialize(this);
