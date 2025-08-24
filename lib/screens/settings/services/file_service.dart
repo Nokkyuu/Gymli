@@ -12,7 +12,7 @@ import 'web_download_service.dart';
 
 class FileService {
   /// Save CSV data to file
-  static Future<SettingsOperationResult> saveCSVFile({
+  static Future<SettingsOperationResult> saveJsonFile({
     required String csvData,
     required String fileName,
     required String dataType,
@@ -32,14 +32,14 @@ class FileService {
   }
 
   /// Pick and read CSV file
-  static Future<SettingsOperationResult> pickAndReadCSVFile({
+  static Future<SettingsOperationResult> pickAndReadJsonFile({
     required String dataType,
   }) async {
     try {
       // Use file_picker for cross-platform file picking (including web)
       FilePickerResult? result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
-        allowedExtensions: ['csv'],
+        allowedExtensions: ['json'],
         allowMultiple: false,
       );
 
@@ -48,13 +48,13 @@ class FileService {
       }
 
       // Read the file content - handle both web and mobile platforms
-      String csvContent;
+      String JsonContent;
       if (result.files.first.bytes != null) {
         // Web platform - file content is available as bytes
-        csvContent = String.fromCharCodes(result.files.first.bytes!);
+        JsonContent = String.fromCharCodes(result.files.first.bytes!);
       } else if (result.files.first.path != null) {
         // Mobile platforms - file content is available via file path
-        csvContent = await File(result.files.first.path!).readAsString();
+        JsonContent = await File(result.files.first.path!).readAsString();
       } else {
         return SettingsOperationResult.error(
           message: 'Unable to read file content',
@@ -62,7 +62,7 @@ class FileService {
       }
 
       return SettingsOperationResult.success(
-        message: csvContent,
+        message: JsonContent,
         // Don't set filePath to avoid web issues
       );
     } catch (e) {

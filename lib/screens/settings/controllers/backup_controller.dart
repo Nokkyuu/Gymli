@@ -108,7 +108,7 @@ class BackupController extends ChangeNotifier {
       _setExporting(true, 'Saving file...');
 
       // Save file (reuse CSV saver to write JSON payload)
-      final result = await FileService.saveCSVFile(
+      final result = await FileService.saveJsonFile(
         csvData: jsonString,
         fileName: fileName,
         dataType: dataType.displayName,

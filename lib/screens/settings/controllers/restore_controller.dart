@@ -61,7 +61,7 @@ class RestoreController extends ChangeNotifier {
     try {
       // Pick and read file
       _setImporting(true, 'Selecting file...', 0.1);
-      final fileResult = await FileService.pickAndReadCSVFile(
+      final fileResult = await FileService.pickAndReadJsonFile(
         dataType: dataType.displayName,
       );
 
