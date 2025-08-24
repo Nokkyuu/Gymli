@@ -134,19 +134,15 @@ class RestoreController extends ChangeNotifier {
   }
 
   /// Clear existing data before import
-  Future<void> _clearExistingData(SettingsDataType dataType) async {
+  Future<void> _clearExistingData(SettingsDataType dataType) async { // TODO: This is redundant with Wipe
     final clearer = _clearHandlers()[dataType];
     if (clearer != null) {
       await clearer();
     }
   }
-String _normalizeName(String s) {
-  return s
-      .replaceAll('\u00A0', ' ')      // NBSP -> Space
-      .trim()
-      .replaceAll(RegExp(r'\s+'), ' ')// Mehrfach-Whitespace auf 1 Space
-      .toLowerCase();                 // Case-insensitive
-}
+  String _normalizeName(String s) {
+    return s.replaceAll('\u00A0', ' ').trim().replaceAll(RegExp(r'\s+'), ' ').toLowerCase();
+  }
   /// Import training sets
   Future<SettingsOperationResult> _importTrainingSets(List<dynamic> items) async {
     _setImporting(true, 'Resolving exercise IDs...', 0.4);
@@ -161,11 +157,12 @@ String _normalizeName(String s) {
     final Set<int> unresolvedIds = <int>{};
 
     _setImporting(true, 'Preparing training sets...', 0.5);
-    List<Map<String, dynamic>> trainingSetsToCreate = [];
     int skippedCount = 0;
-
-    for (final item in items) {
+    int importedCount = 0;
+    for (int idx = 0; idx < items.length; idx++) {
+      final item = items[idx];
       try {
+        _setImporting(true, 'Importing training set ${idx + 1} of ${items.length}...', 0.5 + ((idx + 1) / items.length) * 0.4);
         if (item is! Map) { skippedCount++; continue; }
         final map = item as Map;
 
@@ -205,47 +202,40 @@ String _normalizeName(String s) {
 
         if (weight == null || reps == null || setType == null) { skippedCount++; continue; }
 
-        final trainingSetData = {
-          'exerciseId': exerciseId,
-          'date': DateTime.parse(dateStr).toIso8601String(),
-          'weight': weight,
-          'repetitions': reps,
-          'setType': setType,
-          if (phase != null && phase.isNotEmpty) 'phase': phase,
-          if (myoreps != null) 'myoreps': myoreps,
-        };
-        trainingSetsToCreate.add(trainingSetData);
+        // Resolve exercise object for optimistic creation
+        Exercise? e;
+        for (final ex in exercises) {
+          if (ex.id == exerciseId) { e = ex; break; }
+        }
+        if (e == null) {
+          unresolvedIds.add(exerciseId ?? -1);
+          skippedCount++;
+          continue;
+        }
+
+        final date = DateTime.tryParse(dateStr) ?? DateTime.now();
+        try {
+          await GetIt.I<WorkoutDataCache>().createTrainingSetOptimistic(
+            exerciseId: e.id!,
+            exerciseName: e.name,
+            date: date,
+            weight: weight,
+            repetitions: reps,
+            setType: setType,
+            phase: phase,
+            myoreps: myoreps,
+          );
+          importedCount++;
+        } catch (_) {
+          skippedCount++;
+        }
       } catch (_) {
         skippedCount++;
       }
     }
+    _setImporting(true, 'Finalizing import...', 0.9);
 
-    if (trainingSetsToCreate.isNotEmpty) {
-      const batchSize = 1000;
-      final totalBatches = (trainingSetsToCreate.length / batchSize).ceil();
-      int importedCount = 0;
-
-      for (int i = 0; i < trainingSetsToCreate.length; i += batchSize) {
-        final endIndex = (i + batchSize < trainingSetsToCreate.length) ? i + batchSize : trainingSetsToCreate.length;
-        final batch = trainingSetsToCreate.sublist(i, endIndex);
-        final currentBatch = (i / batchSize).floor() + 1;
-
-        _setImporting(true, 'Importing batch $currentBatch of $totalBatches', 0.5 + (currentBatch / totalBatches) * 0.4);
-
-      
-        // TODO: this should be Batch
-        try {
-          final response = await GetIt.I<TrainingSetService>().createTrainingSetsBulk(trainingSets: batch);
-          importedCount += batch.length;
-        } catch (_) {
-          skippedCount += batch.length;
-        }
-      }
-
-      final buffer = StringBuffer('Training sets import completed');
-      if (unresolvedIds.isNotEmpty || unresolvedNames.isNotEmpty) {
-        buffer.write(' (with warnings)');
-      }
+    if (importedCount == 0) {
       final details = <String>[];
       if (unresolvedIds.isNotEmpty) {
         details.add('unzuordenbare exercise_id(s): ${unresolvedIds.take(20).join(', ')}${unresolvedIds.length > 20 ? ' …' : ''}');
@@ -253,15 +243,28 @@ String _normalizeName(String s) {
       if (unresolvedNames.isNotEmpty) {
         details.add('unzuordenbare exercise_name(s): ${unresolvedNames.take(20).join(', ')}${unresolvedNames.length > 20 ? ' …' : ''}');
       }
-
-      return SettingsOperationResult.success(
-        message: details.isEmpty ? buffer.toString() : '${buffer.toString()}\n${details.join('\n')}',
-        importedCount: importedCount,
-        skippedCount: skippedCount,
+      return SettingsOperationResult.error(
+        message: details.isEmpty ? 'No valid training sets found to import' : details.join('\n'),
       );
-    } else {
-      return SettingsOperationResult.error(message: 'No valid training sets found to import');
     }
+
+    final buffer = StringBuffer('Training sets import completed');
+    if (unresolvedIds.isNotEmpty || unresolvedNames.isNotEmpty) {
+      buffer.write(' (with warnings)');
+    }
+    final details = <String>[];
+    if (unresolvedIds.isNotEmpty) {
+      details.add('unzuordenbare exercise_id(s): ${unresolvedIds.take(20).join(', ')}${unresolvedIds.length > 20 ? ' …' : ''}');
+    }
+    if (unresolvedNames.isNotEmpty) {
+      details.add('unzuordenbare exercise_name(s): ${unresolvedNames.take(20).join(', ')}${unresolvedNames.length > 20 ? ' …' : ''}');
+    }
+
+    return SettingsOperationResult.success(
+      message: details.isEmpty ? buffer.toString() : '${buffer.toString()}\n${details.join('\n')}',
+      importedCount: importedCount,
+      skippedCount: skippedCount,
+    );
   }
 
   ///  ---------------------- Exercise Handlers -----------------//
