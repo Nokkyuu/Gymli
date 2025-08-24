@@ -126,6 +126,8 @@ class WipeController extends ChangeNotifier {
       final trainingSets = await _trainingSetService.getTrainingSets();
       final count = trainingSets.length;
 
+      GetIt.I<WorkoutDataCache>().clearAllTrainingSets();
+
       await _trainingSetService.clearTrainingSets();
 
       if (kDebugMode) print('Cleared $count training sets');

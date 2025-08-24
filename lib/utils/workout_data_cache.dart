@@ -135,6 +135,11 @@ class WorkoutDataCache extends ChangeNotifier {
     notifyListeners();
   }
 
+  void clearAllTrainingSets() {
+    _trainingSetBuffers.clear();
+    notifyListeners();
+  }
+
   /// Clears the buffer for a specific exercise, if needed (optional helper).
   void clearTrainingSetCacheForExercise(int exerciseId) {
     if (_trainingSetBuffers.remove(exerciseId) != null) {

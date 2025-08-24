@@ -116,10 +116,7 @@ class TrainingSetService {
   Future<Map<String, dynamic>> clearTrainingSets() async {
     final response = await deleteData('training_sets/bulk_clear');
     if (response.statusCode == 200 || response.statusCode == 204) {
-      final result = response.isNotEmpty
-          ? json.decode(response)
-          : {'message': 'Training sets cleared successfully'};
-      return result;
+      return {'message': 'Training sets cleared successfully'};
     } else {
       throw Exception(
           'Failed to clear training sets: ${response.statusCode} ${response}');

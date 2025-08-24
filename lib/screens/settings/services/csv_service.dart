@@ -27,8 +27,7 @@ class CsvService {
 
     for (var ts in trainingSets) {
       try {
-        final apiTrainingSet = TrainingSet.fromJson(ts);
-        datalist.add(apiTrainingSet.toCSVString());
+        datalist.add(ts.toCSVString());
       } catch (e) {
         if (kDebugMode) print('Error converting training set to CSV: $e');
       }
@@ -58,8 +57,7 @@ class CsvService {
 
     for (var wo in workouts) {
       try {
-        final apiWorkout = Workout.fromJson(wo);
-        datalist.add(apiWorkout.toCSVString());
+        datalist.add(wo.toCSVString());
       } catch (e) {
         if (kDebugMode) print('Error converting workout to CSV: $e');
       }
@@ -74,8 +72,7 @@ class CsvService {
 
     for (var food in foods) {
       try {
-        final apiFood = FoodItem.fromJson(food);
-        datalist.add(apiFood.toCSVString());
+        datalist.add(food.toCSVString());
       } catch (e) {
         if (kDebugMode) print('Error converting food to CSV: $e');
       }
