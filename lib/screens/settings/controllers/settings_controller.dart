@@ -1,6 +1,7 @@
 /// Settings Controller - Main orchestrator for settings operations
 library;
 
+import 'package:Gymli/utils/models/data_models.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../models/settings_data_type.dart';
@@ -115,18 +116,16 @@ class SettingsController extends ChangeNotifier {
   Future<Map<SettingsDataType, int>> getDataCounts() async {
     try {
       final results = await Future.wait([
-        //TODO: CACHE
-        _trainingSetService.getTrainingSets(),
         _exerciseService.getExercises(),
         _workoutService.getWorkouts(),
         _foodService.getFoods(),
       ]);
-
+      final numTrainings = await GetIt.I<TrainingSetService>().getTrainingSetsCount();
       return {
-        SettingsDataType.trainingSets: results[0].length,
-        SettingsDataType.exercises: results[1].length,
-        SettingsDataType.workouts: results[2].length,
-        SettingsDataType.foods: results[3].length,
+        SettingsDataType.trainingSets: numTrainings,
+        SettingsDataType.exercises: results[0].length,
+        SettingsDataType.workouts: results[1].length,
+        SettingsDataType.foods: results[2].length,
       };
     } catch (e) {
       if (kDebugMode) print('Error getting data counts: $e');
