@@ -82,7 +82,7 @@ class RestoreController extends ChangeNotifier {
       }
 
       // Clear existing data first
-      _setImporting(true, 'Clearing existing data...', 0.3);
+      // _setImporting(true, 'Clearing existing data...', 0.3);
       await _clearExistingData(dataType);
 
       // Import based on data type (via handler registry)
@@ -284,8 +284,11 @@ class RestoreController extends ChangeNotifier {
         };
         final cache = GetIt.I<WorkoutDataCache>();
         if (kDebugMode) (exerciseData);
+
+        print(exerciseData);
         final exercise = Exercise.fromJson(exerciseData);
         cache.addExercise(exercise);
+        if (kDebugMode) (cache.exercises);
         importedCount++;
         if (kDebugMode) print('Successfully imported exercise: ${row[0]}');
       } catch (e) {
