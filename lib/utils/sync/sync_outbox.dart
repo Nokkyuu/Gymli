@@ -113,7 +113,7 @@ class WorkoutOpType {
 }
 
 // ----------- Builders (cache uses these to enqueue ops) ----------- //
-SyncOp buildCreateExerciseOp(Exercise e) {
+SyncOp buildCreateExerciseOp(Exercise e) { // TODO: What is happening with type?
   final Map<String, dynamic> map = (e as dynamic).toJson?.call() ??
       {
         'name': e.name,

@@ -129,6 +129,12 @@ class WorkoutDataCache extends ChangeNotifier {
     return false;
   }
 
+  Future<void> clearExercises() async{
+    _exercises = [];
+    notifyListeners();
+    GetIt.I<ExerciseService>().clearExercises();
+  }
+
   /// Clears the buffer for a specific exercise, if needed (optional helper).
   void clearTrainingSetCacheForExercise(int exerciseId) {
     if (_trainingSetBuffers.remove(exerciseId) != null) {

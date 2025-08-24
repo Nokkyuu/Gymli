@@ -266,27 +266,29 @@ class ExerciseService {
   }
 
   Future<void> clearExercises() async {
-    // Get all exercises for this user and delete them
-    final exercises = await getExercises();
-    int deletedCount = 0;
-    int errorCount = 0;
+    return clearData('exercises/clear');
 
-    for (var exercise in exercises) {
-      if (exercise.id != null) {
-        try {
-          await deleteExercise(exercise.id!);
-          deletedCount++;
-        } catch (e) {
-          errorCount++;
-          if (kDebugMode) {
-            print('Warning: Failed to delete exercise ${exercise.id}: $e');
-          }
-          // Continue with other exercises instead of stopping
-        }
-      }
-    }
-    if (kDebugMode) {
-      print('Cleared exercises: $deletedCount deleted, $errorCount errors');
-    }
+    // // Get all exercises for this user and delete them
+    // final exercises = await getExercises();
+    // int deletedCount = 0;
+    // int errorCount = 0;
+
+    // for (var exercise in exercises) {
+    //   if (exercise.id != null) {
+    //     try {
+    //       await deleteExercise(exercise.id!);
+    //       deletedCount++;
+    //     } catch (e) {
+    //       errorCount++;
+    //       if (kDebugMode) {
+    //         print('Warning: Failed to delete exercise ${exercise.id}: $e');
+    //       }
+    //       // Continue with other exercises instead of stopping
+    //     }
+    //   }
+    // }
+    // if (kDebugMode) {
+    //   print('Cleared exercises: $deletedCount deleted, $errorCount errors');
+    // }
   }
 }

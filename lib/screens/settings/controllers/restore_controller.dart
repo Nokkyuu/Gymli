@@ -60,13 +60,9 @@ class RestoreController extends ChangeNotifier {
     try {
       // Pick and read file
       _setImporting(true, 'Selecting file...', 0.1);
-      final fileResult = await FileService.pickAndReadCSVFile(
-        dataType: dataType.displayName,
-      );
+      final fileResult = await FileService.pickAndReadCSVFile(dataType: dataType.displayName,);
 
-      if (!fileResult.isSuccess) {
-        return fileResult;
-      }
+      if (!fileResult.isSuccess) return fileResult;
 
       final csvData = fileResult.message!;
 
@@ -74,11 +70,8 @@ class RestoreController extends ChangeNotifier {
       _setImporting(true, 'Parsing CSV data...', 0.2);
       final csvTable = CsvService.parseCSV(csvData);
 
-      if (csvTable.isEmpty) {
-        return SettingsOperationResult.error(
-          message: 'No data found in CSV file',
-        );
-      }
+      if (csvTable.isEmpty) return SettingsOperationResult.error(message: 'No data found in CSV file',);
+      
 
       // Clear existing data first
       // _setImporting(true, 'Clearing existing data...', 0.3);
@@ -234,10 +227,7 @@ class RestoreController extends ChangeNotifier {
 
   ///  ---------------------- Exercise Handlers -----------------//
   Future<void> clearExercises() async {
-    final cache = GetIt.I<WorkoutDataCache>();
-    for (var exercise in await GetIt.I<ExerciseService>().getExercises()) {
-      cache.removeExerciseById(exercise.id!.toString()); // Clear cache
-    }
+    return await GetIt.I<WorkoutDataCache>().clearExercises();
   }
 
   Future<SettingsOperationResult> _importExercises(
@@ -256,11 +246,6 @@ class RestoreController extends ChangeNotifier {
 
       try {
         final muscleIntensities = CsvService.parseCSVMuscleIntensities(row[2]);
-
-        // Ensure we have exactly 14 values
-        while (muscleIntensities.length < 14) {
-          muscleIntensities.add(0.0);
-        }
 
         final exerciseData = {
           'name': row[0],
@@ -288,6 +273,7 @@ class RestoreController extends ChangeNotifier {
 
         print(exerciseData);
         final exercise = Exercise.fromJson(exerciseData);
+        print(exercise);
         cache.addExercise(exercise);
         if (kDebugMode) (cache.exercises);
         importedCount++;

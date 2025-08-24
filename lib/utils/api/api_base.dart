@@ -64,6 +64,14 @@ Future<dynamic> _parseJsonInIsolate(String jsonString) async {
   }
 }
 
+Future clearData(String url) async{
+  final response = await http.delete(Uri.parse('$baseUrl/$url'), headers: defaultHeaders,);
+  if (kDebugMode) print("Clearing data at $url, response: ${response.statusCode}");
+  if (response.statusCode != 200 && response.statusCode != 204) throw Exception('Failed to delete');
+  if (useCache) invalidateCacheForMutation(url);
+  return response;
+}
+
 Future deleteData(String url) async {
   final response = await http.delete(
     Uri.parse('$baseUrl/$url'),
