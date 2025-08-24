@@ -75,7 +75,7 @@ class ExerciseFormMobileWidget extends StatelessWidget {
             const Text("Weight Increase Increments"),
             SizedBox(height: boxSpace),
             Slider(
-              value: controller.weightInc,
+              value: controller.weightInc == 0 ? 1 : controller.weightInc,
               min: 1,
               max: 10,
               divisions: 18,
