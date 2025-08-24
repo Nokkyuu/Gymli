@@ -239,7 +239,7 @@ class RestoreController extends ChangeNotifier {
     }
   } 
 
-  Future<SettingsOperationResult> _importExercises(
+  Future<SettingsOperationResult> _importExercises( 
       List<List<String>> csvTable) async {
     int importedCount = 0;
     int skippedCount = 0;
