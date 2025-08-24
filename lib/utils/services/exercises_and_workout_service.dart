@@ -270,6 +270,5 @@ class ExerciseService {
 
   Future<void> clearExercises() async {
     return await deleteData('exercises/clear');
-    ;
   }
 }

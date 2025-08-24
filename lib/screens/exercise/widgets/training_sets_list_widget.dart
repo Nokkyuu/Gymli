@@ -11,10 +11,13 @@ class TrainingSetsListWidget extends StatefulWidget {
   final ExerciseController controller;
   final bool showTitle;
 
+  final List<TrainingSet> lastSessionSets;
+
   const TrainingSetsListWidget({
     super.key,
     required this.controller,
     this.showTitle = false,
+    this.lastSessionSets = const [],
   });
 
   @override
@@ -72,67 +75,67 @@ class _TrainingSetsListWidgetState extends State<TrainingSetsListWidget> {
     return AnimatedBuilder(
       animation: widget.controller,
       builder: (context, child) {
-        // Watermark layer + content layer stacked
-        return Stack(
-          children: [
-            // Watermark background (doesn't block interaction)
-            IgnorePointer(
-              child: Opacity(
-                opacity: 0.04,
-                child: SizedBox.expand(
-                  child: Center(
-                    child: Transform.rotate(
-                      angle: -0.35, // slight tilt
-                      child: const Text(
-                        "today's sets",
-                        style: TextStyle(
-                            fontSize: 52,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
+        final today = widget.controller.todaysTrainingSets;
+        final last = widget.lastSessionSets;
 
-            // Foreground content (loading / empty / list)
-            if (widget.controller.isLoading)
-              const Center(child: CircularProgressIndicator())
-            else 
-              ListView.builder(
+        final todayWarmups = today.where((s) => s.setType == 0).toList();
+        final todayWork = today.where((s) => s.setType > 0).toList();
+        final lastWork = last.where((s) => s.setType > 0).toList()
+          ..sort((a, b) => a.date.compareTo(b.date));
+
+        final ghostSets = <TrainingSet>[];
+        for (int i = 0; i < lastWork.length; i++) {
+          if (i >= todayWork.length) {
+            ghostSets.add(lastWork[i]);
+          }
+        }
+
+        final combined = [...todayWarmups, ...ghostSets, ...todayWork];
+
+        return widget.controller.isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : ListView.builder(
                 controller: _scrollController,
-                itemCount: widget.controller.todaysTrainingSets.length,
+                itemCount: combined.length,
                 itemBuilder: (context, index) {
-                  final trainingSet =
-                      widget.controller.todaysTrainingSets[index];
-                  return _buildTrainingSetItem(trainingSet);
+                  final set = combined[index];
+                  final isGhost = ghostSets.contains(set);
+                  return _buildTrainingSetItem(set, isGhost);
                 },
-              ),
-          ],
-        );
+              );
       },
     );
   }
 
-  Widget _buildTrainingSetItem(TrainingSet trainingSet) {
-    return ListTile(
-      leading: CircleAvatar(
-        radius: 17.5,
-        child: FaIcon(
-          trainingSet.setType < _SetTypeIcons.length
-              ? _SetTypeIcons[trainingSet.setType]
-              : FontAwesomeIcons.question,
+  Widget _buildTrainingSetItem(TrainingSet trainingSet, [bool isGhost = false]) {
+    return Opacity(
+      opacity: isGhost ? 0.4 : 1.0,
+      child: ListTile(
+        leading: CircleAvatar(
+          radius: 17.5,
+          backgroundColor: isGhost ? Colors.grey.shade300 : null,
+          child: isGhost
+              ? const Icon(Icons.history, size: 18, color: Colors.black45)
+              : FaIcon(
+                  trainingSet.setType < _SetTypeIcons.length
+                      ? _SetTypeIcons[trainingSet.setType]
+                      : FontAwesomeIcons.question,
+                ),
         ),
-      ),
-      dense: true,
-      visualDensity: const VisualDensity(vertical: -3),
-      title:
-          Text("${trainingSet.weight}kg for ${trainingSet.repetitions} reps"),
-      subtitle: Text(_formatTime(trainingSet.date)),
-      trailing: IconButton(
-        icon: const Icon(Icons.delete),
-        onPressed: () => _confirmDelete(trainingSet),
+        dense: true,
+        visualDensity: const VisualDensity(vertical: -3),
+        title: Text("${trainingSet.weight}kg for ${trainingSet.repetitions} reps"),
+        subtitle: Text(
+          isGhost
+              ? "${_formatTime(trainingSet.date)} @ ${_daysAgo(trainingSet.date)}"
+              : _formatTime(trainingSet.date),
+        ),
+        trailing: isGhost
+            ? null
+            : IconButton(
+                icon: const Icon(Icons.delete),
+                onPressed: () => _confirmDelete(trainingSet),
+              ),
       ),
     );
   }
@@ -192,3 +195,13 @@ class _TrainingSetsListWidgetState extends State<TrainingSetsListWidget> {
     }
   }
 }
+
+  String _daysAgo(DateTime date) {
+    final now = DateTime.now();
+    final diff = now.difference(date).inDays;
+    return diff == 0
+        ? "today"
+        : diff == 1
+            ? "1 day ago"
+            : "$diff days ago";
+  }

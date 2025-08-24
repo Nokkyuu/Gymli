@@ -196,6 +196,7 @@ class _ExerciseScreenState extends State<ExerciseScreen>
                         child: TrainingSetsListWidget(
                           controller: exerciseController,
                           showTitle: false,
+                          lastSessionSets: exerciseController.lastSessionSets,
                         ),
                       ),
                     ],
@@ -249,6 +250,7 @@ class _ExerciseScreenState extends State<ExerciseScreen>
                 child: TrainingSetsListWidget(
                   controller: exerciseController,
                   showTitle: true,
+                  lastSessionSets: exerciseController.lastSessionSets,
                 ),
               ),
             ),

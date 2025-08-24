@@ -31,6 +31,9 @@ class ExerciseController extends ChangeNotifier {
   DateTime _lastActivity = DateTime.now();
   DateTime _workoutStartTime = DateTime.now();
 
+  List<TrainingSet> _lastSessionSets = [];
+  List<TrainingSet> get lastSessionSets => _lastSessionSets;
+
   // Color mapping for reps
   final Map<int, Color> _colorMap = {};
 
@@ -102,20 +105,25 @@ class ExerciseController extends ChangeNotifier {
     } finally {
       _setLoading(false);
     }
+    _lastSessionSets = await _loadLastSessionSets();
   }
 
-  /// Add a new training set (optimistic, local-first)
-  String _currentUserName() {
-    try {
-      final auth = GetIt.I<AuthenticationService>();
-      // Try common fields without binding to a specific auth model
-      return (auth as dynamic).userName ??
-          (auth as dynamic).currentUserName ??
-          (auth as dynamic).currentUser?.userName ??
-          '';
-    } catch (_) {
-      return '';
-    }
+  Future<List<TrainingSet>> _loadLastSessionSets() async {
+    if (_currentExercise?.id == null) return [];
+
+    final allSets = await _cache.getCachedTrainingSets(_currentExercise!.id!);
+    final today = DateTime.now();
+    final previous = allSets.where((s) => !_isSameDay(s.date, today)).toList();
+    if (previous.isEmpty) return [];
+
+    previous.sort((a, b) => b.date.compareTo(a.date));
+    final lastDate = previous.first.date;
+    final lastDay = DateTime(lastDate.year, lastDate.month, lastDate.day);
+
+    return previous.where((s) =>
+      s.date.year == lastDay.year &&
+      s.date.month == lastDay.month &&
+      s.date.day == lastDay.day).toList();
   }
 
   Future<bool> addTrainingSet(
