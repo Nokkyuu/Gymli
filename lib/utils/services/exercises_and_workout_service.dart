@@ -197,9 +197,49 @@ class ExerciseService {
   }
 
   /// Creates a new exercise record
-  Future<Exercise> createExercise(Map<String, dynamic> data) async {
-    final createdData = await createData('exercises', data);
-    return Exercise.fromJson(createdData);
+  Future<Exercise> createExercise({
+    required String name,
+    required int type,
+    required int defaultRepBase,
+    required int defaultRepMax,
+    required double defaultIncrement,
+    required double pectoralisMajor,
+    required double trapezius,
+    required double biceps,
+    required double abdominals,
+    required double frontDelts,
+    required double deltoids,
+    required double backDelts,
+    required double latissimusDorsi,
+    required double triceps,
+    required double gluteusMaximus,
+    required double hamstrings,
+    required double quadriceps,
+    required double forearms,
+    required double calves,
+  }) async {
+    final data = await createData('exercises', {
+      'name': name,
+      'type': type,
+      'default_rep_base': defaultRepBase,
+      'default_rep_max': defaultRepMax,
+      'default_increment': defaultIncrement,
+      'pectoralis_major': pectoralisMajor,
+      'trapezius': trapezius,
+      'biceps': biceps,
+      'abdominals': abdominals,
+      'front_delts': frontDelts,
+      'deltoids': deltoids,
+      'back_delts': backDelts,
+      'latissimus_dorsi': latissimusDorsi,
+      'triceps': triceps,
+      'gluteus_maximus': gluteusMaximus,
+      'hamstrings': hamstrings,
+      'quadriceps': quadriceps,
+      'forearms': forearms,
+      'calves': calves,
+    });
+    return Exercise.fromJson(data);
   }
 
   Future<Exercise> updateExercise(int id, Map<String, dynamic> data) async {
