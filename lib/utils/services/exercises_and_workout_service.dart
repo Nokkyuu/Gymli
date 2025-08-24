@@ -224,20 +224,22 @@ class ExerciseService {
       'default_rep_base': defaultRepBase,
       'default_rep_max': defaultRepMax,
       'default_increment': defaultIncrement,
-      'pectoralis_major': pectoralisMajor,
-      'trapezius': trapezius,
-      'biceps': biceps,
-      'abdominals': abdominals,
-      'front_delts': frontDelts,
-      'deltoids': deltoids,
-      'back_delts': backDelts,
-      'latissimus_dorsi': latissimusDorsi,
-      'triceps': triceps,
-      'gluteus_maximus': gluteusMaximus,
-      'hamstrings': hamstrings,
-      'quadriceps': quadriceps,
-      'forearms': forearms,
-      'calves': calves,
+      'muscle_groups': {
+        'pectoralis_major': pectoralisMajor,
+        'trapezius': trapezius,
+        'biceps': biceps,
+        'abdominals': abdominals,
+        'front_delts': frontDelts,
+        'deltoids': deltoids,
+        'back_delts': backDelts,
+        'latissimus_dorsi': latissimusDorsi,
+        'triceps': triceps,
+        'gluteus_maximus': gluteusMaximus,
+        'hamstrings': hamstrings,
+        'quadriceps': quadriceps,
+        'forearms': forearms,
+        'calves': calves,
+      }
     });
     return Exercise.fromJson(data);
   }
@@ -266,6 +268,7 @@ class ExerciseService {
   }
 
   Future<void> clearExercises() async {
-    return await deleteData('exercises/clear');;
+    return await deleteData('exercises/clear');
+    ;
   }
 }

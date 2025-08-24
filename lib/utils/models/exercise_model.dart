@@ -50,20 +50,20 @@ class MuscleGroup {
 
   factory MuscleGroup.fromJson(Map<String, dynamic> json) {
     return MuscleGroup(
-      pectoralisMajor: (json['pectoralis_major'] ?? 0.0).toDouble(),
-      trapezius: (json['trapezius'] ?? 0.0).toDouble(),
-      biceps: (json['biceps'] ?? 0.0).toDouble(),
-      abdominals: (json['abdominals'] ?? 0.0).toDouble(),
-      frontDelts: (json['front_delts'] ?? 0.0).toDouble(),
-      deltoids: (json['deltoids'] ?? 0.0).toDouble(),
-      backDelts: (json['back_delts'] ?? 0.0).toDouble(),
-      latissimusDorsi: (json['latissimus_dorsi'] ?? 0.0).toDouble(),
-      triceps: (json['triceps'] ?? 0.0).toDouble(),
-      gluteusMaximus: (json['gluteus_maximus'] ?? 0.0).toDouble(),
-      hamstrings: (json['hamstrings'] ?? 0.0).toDouble(),
-      quadriceps: (json['quadriceps'] ?? 0.0).toDouble(),
-      forearms: (json['forearms'] ?? 0.0).toDouble(),
-      calves: (json['calves'] ?? 0.0).toDouble(),
+      pectoralisMajor: (json['pectoralis_major'] as num? ?? 0.0).toDouble(),
+      trapezius: (json['trapezius'] as num? ?? 0.0).toDouble(),
+      biceps: (json['biceps'] as num? ?? 0.0).toDouble(),
+      abdominals: (json['abdominals'] as num? ?? 0.0).toDouble(),
+      frontDelts: (json['front_delts'] as num? ?? 0.0).toDouble(),
+      deltoids: (json['deltoids'] as num? ?? 0.0).toDouble(),
+      backDelts: (json['back_delts'] as num? ?? 0.0).toDouble(),
+      latissimusDorsi: (json['latissimus_dorsi'] as num? ?? 0.0).toDouble(),
+      triceps: (json['triceps'] as num? ?? 0.0).toDouble(),
+      gluteusMaximus: (json['gluteus_maximus'] as num? ?? 0.0).toDouble(),
+      hamstrings: (json['hamstrings'] as num? ?? 0.0).toDouble(),
+      quadriceps: (json['quadriceps'] as num? ?? 0.0).toDouble(),
+      forearms: (json['forearms'] as num? ?? 0.0).toDouble(),
+      calves: (json['calves'] as num? ?? 0.0).toDouble(),
     );
   }
 
@@ -143,7 +143,7 @@ class Exercise {
   final int defaultRepBase;
   final int defaultRepMax;
   final double defaultIncrement;
-  final MuscleGroup muscleGroup;
+  final MuscleGroup muscleGroups;
 
   Exercise({
     this.id,
@@ -152,18 +152,19 @@ class Exercise {
     required this.defaultRepBase,
     required this.defaultRepMax,
     required this.defaultIncrement,
-    required this.muscleGroup,
+    required this.muscleGroups,
   });
 
   factory Exercise.fromJson(Map<String, dynamic> json) {
     return Exercise(
-      id: json['id'],
-      name: json['name'] ?? '',
-      type: json['type'] ?? 0,
-      defaultRepBase: json['default_rep_base'] ?? 8,
-      defaultRepMax: json['default_rep_max'] ?? 12,
-      defaultIncrement: (json['default_increment'] ?? 0.0).toDouble(),
-      muscleGroup: MuscleGroup.fromJson(json['muscle_groups'] ?? {}),
+      id: json['id'] as int?,
+      name: json['name'] as String? ?? '',
+      type: json['type'] as int? ?? 0,
+      defaultRepBase: json['default_rep_base'] as int? ?? 8,
+      defaultRepMax: json['default_rep_max'] as int? ?? 12,
+      defaultIncrement: (json['default_increment'] as num? ?? 0.0).toDouble(),
+      muscleGroups: MuscleGroup.fromJson(
+          json['muscle_groups'] as Map<String, dynamic>? ?? {}),
     );
   }
 
@@ -175,30 +176,30 @@ class Exercise {
       'default_rep_base': defaultRepBase,
       'default_rep_max': defaultRepMax,
       'default_increment': defaultIncrement,
-      'muscle_groups': muscleGroup.toJson(),
+      'muscle_groups': muscleGroups.toJson(),
     };
   }
 
   // Helper getters for backward compatibility
-  List<String> get muscleGroups => muscleGroup.activeMuscleGroups;
-  List<double> get muscleIntensities => muscleGroup.intensities;
-  List<String> get primaryMuscleGroups => muscleGroup.getPrimaryMuscleGroups();
+  List<String> get activeMuscleGroups => muscleGroups.activeMuscleGroups;
+  List<double> get muscleIntensities => muscleGroups.intensities;
+  List<String> get primaryMuscleGroups => muscleGroups.getPrimaryMuscleGroups();
 
   // Individual muscle group getters for backward compatibility
-  double get pectoralisMajor => muscleGroup.pectoralisMajor;
-  double get trapezius => muscleGroup.trapezius;
-  double get biceps => muscleGroup.biceps;
-  double get abdominals => muscleGroup.abdominals;
-  double get frontDelts => muscleGroup.frontDelts;
-  double get deltoids => muscleGroup.deltoids;
-  double get backDelts => muscleGroup.backDelts;
-  double get latissimusDorsi => muscleGroup.latissimusDorsi;
-  double get triceps => muscleGroup.triceps;
-  double get gluteusMaximus => muscleGroup.gluteusMaximus;
-  double get hamstrings => muscleGroup.hamstrings;
-  double get quadriceps => muscleGroup.quadriceps;
-  double get forearms => muscleGroup.forearms;
-  double get calves => muscleGroup.calves;
+  double get pectoralisMajor => muscleGroups.pectoralisMajor;
+  double get trapezius => muscleGroups.trapezius;
+  double get biceps => muscleGroups.biceps;
+  double get abdominals => muscleGroups.abdominals;
+  double get frontDelts => muscleGroups.frontDelts;
+  double get deltoids => muscleGroups.deltoids;
+  double get backDelts => muscleGroups.backDelts;
+  double get latissimusDorsi => muscleGroups.latissimusDorsi;
+  double get triceps => muscleGroups.triceps;
+  double get gluteusMaximus => muscleGroups.gluteusMaximus;
+  double get hamstrings => muscleGroups.hamstrings;
+  double get quadriceps => muscleGroups.quadriceps;
+  double get forearms => muscleGroups.forearms;
+  double get calves => muscleGroups.calves;
 
   List<String> toCSVString() {
     return [
@@ -207,7 +208,7 @@ class Exercise {
       "$defaultRepBase",
       "$defaultRepMax",
       "$defaultIncrement",
-      muscleGroup.intensitiesAsString
+      muscleGroups.intensitiesAsString
     ];
   }
 }
