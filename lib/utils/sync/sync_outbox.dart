@@ -113,7 +113,8 @@ class WorkoutOpType {
 }
 
 // ----------- Builders (cache uses these to enqueue ops) ----------- //
-SyncOp buildCreateExerciseOp(Exercise e) { // TODO: What is happening with type?
+SyncOp buildCreateExerciseOp(Exercise e) {
+  // TODO: What is happening with type?
   final Map<String, dynamic> map = (e as dynamic).toJson?.call() ??
       {
         'name': e.name,
@@ -159,26 +160,33 @@ Future<void> performWorkoutOp(SyncOp op) async {
   final Map<String, Future<void> Function(SyncOp)> handlers = {
     WorkoutOpType.createExercise: (o) async {
       final payload = o.payload as Map<String, dynamic>;
+      if (kDebugMode) {
+        print(
+            'OUTBOX DEBUG: sending create_exercise payload=${jsonEncode(payload)}');
+      }
       await svc.ex.createExercise(
         name: payload['name'] as String,
         type: payload['type'] as int,
         defaultRepBase: payload['default_rep_base'] as int,
         defaultRepMax: payload['default_rep_max'] as int,
         defaultIncrement: (payload['default_increment'] as num).toDouble(),
-        pectoralisMajor: (payload['pectoralis_major'] as num).toDouble(),
-        trapezius: (payload['trapezius'] as num).toDouble(),
-        biceps: (payload['biceps'] as num).toDouble(),
-        abdominals: (payload['abdominals'] as num).toDouble(),
-        frontDelts: (payload['front_delts'] as num).toDouble(),
-        deltoids: (payload['deltoids'] as num).toDouble(),
-        backDelts: (payload['back_delts'] as num).toDouble(),
-        latissimusDorsi: (payload['latissimus_dorsi'] as num).toDouble(),
-        triceps: (payload['triceps'] as num).toDouble(),
-        gluteusMaximus: (payload['gluteus_maximus'] as num).toDouble(),
-        hamstrings: (payload['hamstrings'] as num).toDouble(),
-        quadriceps: (payload['quadriceps'] as num).toDouble(),
-        forearms: (payload['forearms'] as num).toDouble(),
-        calves: (payload['calves'] as num).toDouble(),
+        pectoralisMajor:
+            (payload['muscle_groups']['pectoralis_major'] as num).toDouble(),
+        trapezius: (payload['muscle_groups']['trapezius'] as num).toDouble(),
+        biceps: (payload['muscle_groups']['biceps'] as num).toDouble(),
+        abdominals: (payload['muscle_groups']['abdominals'] as num).toDouble(),
+        frontDelts: (payload['muscle_groups']['front_delts'] as num).toDouble(),
+        deltoids: (payload['muscle_groups']['deltoids'] as num).toDouble(),
+        backDelts: (payload['muscle_groups']['back_delts'] as num).toDouble(),
+        latissimusDorsi:
+            (payload['muscle_groups']['latissimus_dorsi'] as num).toDouble(),
+        triceps: (payload['muscle_groups']['triceps'] as num).toDouble(),
+        gluteusMaximus:
+            (payload['muscle_groups']['gluteus_maximus'] as num).toDouble(),
+        hamstrings: (payload['muscle_groups']['hamstrings'] as num).toDouble(),
+        quadriceps: (payload['muscle_groups']['quadriceps'] as num).toDouble(),
+        forearms: (payload['muscle_groups']['forearms'] as num).toDouble(),
+        calves: (payload['muscle_groups']['calves'] as num).toDouble(),
       );
     },
     WorkoutOpType.deleteExercise: (o) async {

@@ -267,7 +267,22 @@ class ExerciseSetupController extends ChangeNotifier {
         'default_rep_max': maxRep,
         'default_increment': weightInc,
         // Persist intensities so the UI can immediately reflect them
-        'muscle_intensities': muscleIntensities,
+        'muscle_groups': {
+          'pectoralis_major': muscleIntensities[0],
+          'trapezius': muscleIntensities[1],
+          'biceps': muscleIntensities[2],
+          'abdominals': muscleIntensities[3],
+          'front_delts': muscleIntensities[4],
+          'deltoids': muscleIntensities[5],
+          'back_delts': muscleIntensities[6],
+          'latissimus_dorsi': muscleIntensities[7],
+          'triceps': muscleIntensities[8],
+          'gluteus_maximus': muscleIntensities[9],
+          'hamstrings': muscleIntensities[10],
+          'quadriceps': muscleIntensities[11],
+          'forearms': muscleIntensities[12],
+          'calves': muscleIntensities[13],
+        }
       });
       await _cache.addExercise(newExercise);
       if (kDebugMode) {

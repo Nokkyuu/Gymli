@@ -130,8 +130,8 @@ class StatisticsCalculationService {
     Map<String, List<Tuple2<int, double>>> exerciseMapping = {};
     for (var e in exercises) {
       List<Tuple2<int, double>> intermediateMap = [];
-      for (int i = 0; i < e.muscleGroups.length; ++i) {
-        String which = e.muscleGroups[i];
+      for (int i = 0; i < e.activeMuscleGroups.length; ++i) {
+        String which = e.activeMuscleGroups[i];
         var val = muscleMapping[which];
         if (val != null) {
           double intensity =
@@ -612,8 +612,8 @@ class StatisticsCalculationService {
       Map<String, List<Tuple2<int, double>>> exerciseMapping = {};
       for (var exercise in exercises) {
         List<Tuple2<int, double>> intermediateMap = [];
-        for (int i = 0; i < exercise.muscleGroups.length; ++i) {
-          String muscleName = exercise.muscleGroups[i];
+        for (int i = 0; i < exercise.activeMuscleGroups.length; ++i) {
+          String muscleName = exercise.activeMuscleGroups[i];
           var muscleIndex = muscleMapping[muscleName];
           if (muscleIndex != null) {
             double intensity = muscleIndex < exercise.muscleIntensities.length
