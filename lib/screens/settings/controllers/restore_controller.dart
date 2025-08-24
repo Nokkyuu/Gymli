@@ -5,7 +5,6 @@ import 'package:Gymli/utils/workout_data_cache.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
-import '../repositories/settings_repository.dart';
 import '../services/csv_service.dart';
 import '../services/file_service.dart';
 import '../models/settings_data_type.dart';
@@ -13,7 +12,8 @@ import '../models/settings_operation_result.dart';
 import 'package:Gymli/utils/services/service_export.dart';
 import 'package:Gymli/utils/models/exercise_model.dart';
 
-typedef _Importer = Future<SettingsOperationResult> Function(List<List<String>> csvTable);
+typedef _Importer = Future<SettingsOperationResult> Function(
+    List<List<String>> csvTable);
 typedef _Clearer = Future<void> Function();
 
 class RestoreController extends ChangeNotifier {
@@ -25,29 +25,28 @@ class RestoreController extends ChangeNotifier {
 
   RestoreController();
 
-  
-
   Map<SettingsDataType, _Importer> _importHandlers() => {
-    SettingsDataType.trainingSets: _importTrainingSets,
-    SettingsDataType.exercises: _importExercises,
-    SettingsDataType.workouts: _importWorkouts,
-    SettingsDataType.foods: _importFoods,
-  };
-
+        SettingsDataType.trainingSets: _importTrainingSets,
+        SettingsDataType.exercises: _importExercises,
+        SettingsDataType.workouts: _importWorkouts,
+        SettingsDataType.foods: _importFoods,
+      };
 
   Map<SettingsDataType, _Clearer> _clearHandlers() => {
-    SettingsDataType.trainingSets: () => GetIt.I<TrainingSetService>().clearTrainingSets(),
-    SettingsDataType.exercises: () => clearExercises(),
-    SettingsDataType.workouts: () => GetIt.I<WorkoutService>().clearWorkouts(),
-    SettingsDataType.foods: () async {
-      try {
-        final dynamic foodService = GetIt.I<FoodService>();
-        if (foodService != null && foodService.clearFoods != null) {
-          await foodService.clearFoods();
-        }
-      } catch (_) {}
-    },
-  };
+        SettingsDataType.trainingSets: () =>
+            GetIt.I<TrainingSetService>().clearTrainingSets(),
+        SettingsDataType.exercises: () => clearExercises(),
+        SettingsDataType.workouts: () =>
+            GetIt.I<WorkoutService>().clearWorkouts(),
+        SettingsDataType.foods: () async {
+          try {
+            final dynamic foodService = GetIt.I<FoodService>();
+            if (foodService != null && foodService.clearFoods != null) {
+              await foodService.clearFoods();
+            }
+          } catch (_) {}
+        },
+      };
 
   bool get isImporting => _isImporting;
   String? get currentOperation => _currentOperation;
@@ -88,7 +87,8 @@ class RestoreController extends ChangeNotifier {
       // Import based on data type (via handler registry)
       final importer = _importHandlers()[dataType];
       if (importer == null) {
-        return SettingsOperationResult.error(message: 'No importer registered for ${dataType.displayName}');
+        return SettingsOperationResult.error(
+            message: 'No importer registered for ${dataType.displayName}');
       }
       final result = await importer(csvTable);
 
@@ -207,7 +207,8 @@ class RestoreController extends ChangeNotifier {
         );
 
         try {
-          await GetIt.I<TrainingSetService>().createTrainingSetsBulk(trainingSets: batch);
+          await GetIt.I<TrainingSetService>()
+              .createTrainingSetsBulk(trainingSets: batch);
           importedCount += batch.length;
           if (kDebugMode) {
             print(
@@ -235,11 +236,11 @@ class RestoreController extends ChangeNotifier {
   Future<void> clearExercises() async {
     final cache = GetIt.I<WorkoutDataCache>();
     for (var exercise in await GetIt.I<ExerciseService>().getExercises()) {
-      cache.removeExerciseById(exercise.id!.toString()); // Clear cache 
+      cache.removeExerciseById(exercise.id!.toString()); // Clear cache
     }
-  } 
+  }
 
-  Future<SettingsOperationResult> _importExercises( 
+  Future<SettingsOperationResult> _importExercises(
       List<List<String>> csvTable) async {
     int importedCount = 0;
     int skippedCount = 0;
@@ -327,8 +328,8 @@ class RestoreController extends ChangeNotifier {
           for (int i = 1; i < row.length; i++) {
             final unitStr = row[i].split(", ");
             if (unitStr.length >= 5) {
-              final exerciseId =
-                  await GetIt.I<ExerciseService>().getExerciseIdByName(unitStr[0]);
+              final exerciseId = await GetIt.I<ExerciseService>()
+                  .getExerciseIdByName(unitStr[0]);
               if (exerciseId != null) {
                 units.add({
                   'exercise_id': exerciseId,

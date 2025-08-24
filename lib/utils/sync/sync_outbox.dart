@@ -158,8 +158,28 @@ Future<void> performWorkoutOp(SyncOp op) async {
   // Handler registry keeps perform logic compact and readable
   final Map<String, Future<void> Function(SyncOp)> handlers = {
     WorkoutOpType.createExercise: (o) async {
-      await svc.ex
-          .createExercise(o.payload as Map<String, dynamic>); // create exercise
+      final payload = o.payload as Map<String, dynamic>;
+      await svc.ex.createExercise(
+        name: payload['name'] as String,
+        type: payload['type'] as int,
+        defaultRepBase: payload['default_rep_base'] as int,
+        defaultRepMax: payload['default_rep_max'] as int,
+        defaultIncrement: (payload['default_increment'] as num).toDouble(),
+        pectoralisMajor: (payload['pectoralis_major'] as num).toDouble(),
+        trapezius: (payload['trapezius'] as num).toDouble(),
+        biceps: (payload['biceps'] as num).toDouble(),
+        abdominals: (payload['abdominals'] as num).toDouble(),
+        frontDelts: (payload['front_delts'] as num).toDouble(),
+        deltoids: (payload['deltoids'] as num).toDouble(),
+        backDelts: (payload['back_delts'] as num).toDouble(),
+        latissimusDorsi: (payload['latissimus_dorsi'] as num).toDouble(),
+        triceps: (payload['triceps'] as num).toDouble(),
+        gluteusMaximus: (payload['gluteus_maximus'] as num).toDouble(),
+        hamstrings: (payload['hamstrings'] as num).toDouble(),
+        quadriceps: (payload['quadriceps'] as num).toDouble(),
+        forearms: (payload['forearms'] as num).toDouble(),
+        calves: (payload['calves'] as num).toDouble(),
+      );
     },
     WorkoutOpType.deleteExercise: (o) async {
       await svc.ex.deleteExercise(_toInt(o.payload)); // delete exercise by id

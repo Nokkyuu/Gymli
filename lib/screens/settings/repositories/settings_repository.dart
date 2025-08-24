@@ -66,9 +66,9 @@ class SettingsRepository {
   /// Clear exercises (also clears dependent data)
   Future<void> clearExercises() async {
     try {
-      await GetIt.I<WorkoutService>().clearWorkouts();
-      await GetIt.I<TrainingSetService>().clearTrainingSets();
-      await GetIt.I<ExerciseService>().clearExercises();
+      // await GetIt.I<WorkoutService>().clearWorkouts();
+      // await GetIt.I<TrainingSetService>().clearTrainingSets();
+      // await GetIt.I<ExerciseService>().clearExercises();
       // GetIt.I<AuthService>().notifyAuthStateChanged();
     } catch (e) {
       if (kDebugMode) print('Error clearing exercises: $e');
@@ -113,27 +113,26 @@ class SettingsRepository {
   /// Create exercise
   Future<void> createExercise(Map<String, dynamic> exerciseData) async {
     try {
-      await exerciseService.createExercise({
-        'name': exerciseData['name'],
-        'type': exerciseData['type'],
-        'defaultRepBase': exerciseData['defaultRepBase'],
-        'defaultRepMax': exerciseData['defaultRepMax'],
-        'defaultIncrement': exerciseData['defaultIncrement'],
-        'pectoralisMajor': exerciseData['pectoralisMajor'],
-        'trapezius': exerciseData['trapezius'],
-        'biceps': exerciseData['biceps'],
-        'abdominals': exerciseData['abdominals'],
-        'frontDelts': exerciseData['frontDelts'],
-        'deltoids': exerciseData['deltoids'],
-        'backDelts': exerciseData['backDelts'],
-        'latissimusDorsi': exerciseData['latissimusDorsi'],
-        'triceps': exerciseData['triceps'],
-        'gluteusMaximus': exerciseData['gluteusMaximus'],
-        'hamstrings': exerciseData['hamstrings'],
-        'quadriceps': exerciseData['quadriceps'],
-        'forearms': exerciseData['forearms'],
-        'calves': exerciseData['calves']
-      });
+      await exerciseService.createExercise(
+          name: exerciseData['name'],
+          type: exerciseData['type'],
+          defaultRepBase: exerciseData['defaultRepBase'],
+          defaultRepMax: exerciseData['defaultRepMax'],
+          defaultIncrement: exerciseData['defaultIncrement'],
+          pectoralisMajor: exerciseData['pectoralisMajor'],
+          trapezius: exerciseData['trapezius'],
+          biceps: exerciseData['biceps'],
+          abdominals: exerciseData['abdominals'],
+          frontDelts: exerciseData['frontDelts'],
+          deltoids: exerciseData['deltoids'],
+          backDelts: exerciseData['backDelts'],
+          latissimusDorsi: exerciseData['latissimusDorsi'],
+          triceps: exerciseData['triceps'],
+          gluteusMaximus: exerciseData['gluteusMaximus'],
+          hamstrings: exerciseData['hamstrings'],
+          quadriceps: exerciseData['quadriceps'],
+          forearms: exerciseData['forearms'],
+          calves: exerciseData['calves']);
     } catch (e) {
       if (kDebugMode) print('Error creating exercise: $e');
       rethrow;
