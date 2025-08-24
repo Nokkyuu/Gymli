@@ -9,59 +9,81 @@ on:
     branches:
       - main
 
+concurrency:                          # <!-- CHANGE: verhindert parallele, veraltete Runs -->
+  group: swa-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build_and_deploy_job:
     if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
     runs-on: ubuntu-latest
     name: Build and Deploy Job
     steps:
-    - uses: actions/checkout@v3
-      with:
-        submodules: true
-        lfs: false
-    
-    - name: Cache Flutter SDK
-      uses: actions/cache@v3
-      with:
-        path: ~/.flutter
-        key: ${{ runner.os }}-flutter-${{ hashFiles('**/pubspec.yaml') }}
-        restore-keys: |
-          ${{ runner.os }}-flutter-${{ hashFiles('**/pubspec.yaml') }}
+      - uses: actions/checkout@v4       # <!-- CHANGE: v4 statt v3 -->
+        with:
+          submodules: true
+          lfs: false
 
-    - name: Install Flutter
-      uses: subosito/flutter-action@v2
-      with:
-        flutter-version: '3.29.3'
-        cache: true
-    
-    - name: Cache Pub Dependencies
-      uses: actions/cache@v3
-      with:
-        path: |
-          ~/.pub-cache
-        key: ${{ runner.os }}-pub-${{ hashFiles('**/pubspec.lock') }}
-        restore-keys: |
-          ${{ runner.os }}-pub-
+      # <!-- CHANGE: Flutter SDK Cache via Action (eigener Cache-Step unnötig) -->
+      - name: Install Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.29.3'
+          cache: true                  # cached SDK + pub-cache automatisch
 
-    - name: Replace build timestamp
-      run: |
-        BUILD_TIMESTAMP=$(date +%s)
-        sed -i "s/{{BUILD_TIMESTAMP}}/$BUILD_TIMESTAMP/g" web/index.html
-        echo "Build timestamp: $BUILD_TIMESTAMP"
+      # <!-- CHANGE: Pub Cache zusätzlich absichern über pubspec.lock -->
+      - name: Cache Pub Dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.pub-cache
+          key: ${{ runner.os }}-pub-${{ hashFiles('**/pubspec.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pub-
 
-    - name: Build Flutter Web
-      run:  flutter build web --dart-define=GYMLI_API_KEY=${{ secrets.GYMLI_API_KEY }}
+      - name: Flutter pub get          # <!-- CHANGE: explizites Resolve vor Build -->
+        run: flutter pub get
 
-    - name: Build And Deploy
-      id: builddeploy
-      uses: Azure/static-web-apps-deploy@v1
-      with:
-        azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_ICY_GROUND_0E9EF4303 }}
-        repo_token: ${{ secrets.GITHUB_TOKEN }}
-        action: "upload"
-        app_location: "/"
-        api_location: ""
-        output_location: "build/web/"
+      # <!-- OPTIONAL: Build-Cache (beschleunigt Wiederholungsbuilds).
+      #      Achtung: abhängig vom Runner; sicher bei Ubuntu-latest. -->
+      - name: Cache Flutter build artifacts
+        uses: actions/cache@v3
+        with:
+          path: |
+            build
+            .dart_tool/flutter_build
+          key: ${{ runner.os }}-flutter-build-${{ hashFiles('**/pubspec.lock') }}-${{ hashFiles('**/lib/**', '**/web/**') }}
+          restore-keys: |
+            ${{ runner.os }}-flutter-build-${{ hashFiles('**/pubspec.lock') }}-
+
+      - name: Replace build timestamp
+        run: |
+          BUILD_TIMESTAMP=$(date +%s)
+          sed -i "s/{{BUILD_TIMESTAMP}}/$BUILD_TIMESTAMP/g" web/index.html
+          echo "Build timestamp: $BUILD_TIMESTAMP"
+
+      # <!-- CHANGE: Wir bauen die Web-App selbst (Release), inkl. Dart-Define -->
+      - name: Build Flutter Web (release)
+        run: |
+          flutter --version
+          flutter build web \
+            --release \
+            --dart-define=GYMLI_API_KEY=${{ secrets.GYMLI_API_KEY }}
+            # --web-renderer canvaskit   # <!-- OPTIONAL: oft schneller/konsistenter -->
+
+      # <!-- CHANGE: SWA-Deploy soll NICHT nochmal bauen.
+      #      app_location zeigt direkt auf das fertige Build-Verzeichnis,
+      #      output_location bleibt leer, damit kein Oryx- oder Node-Build getriggert wird. -->
+      - name: Build And Deploy
+        id: builddeploy
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_ICY_GROUND_0E9EF4303 }}
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          action: upload
+          app_location: build/web           # <!-- CHANGE -->
+          api_location: ""                  # keine API
+          output_location: ""               # <!-- CHANGE: leer = nichts mehr zu bauen -->
 
   close_pull_request_job:
     if: github.event_name == 'pull_request' && github.event.action == 'closed'
@@ -74,4 +96,4 @@ jobs:
         with:
           app_location: "/"
           azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_ICY_GROUND_0E9EF4303 }}
-          action: "close"
+          action: close
