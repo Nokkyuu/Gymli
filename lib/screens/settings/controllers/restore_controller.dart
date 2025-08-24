@@ -244,15 +244,15 @@ class RestoreController extends ChangeNotifier {
         0.4 + (index / csvTable.length) * 0.5,
       );
 
-      try {
-        final muscleIntensities = CsvService.parseCSVMuscleIntensities(row[2]);
+      // try {
+        final muscleIntensities = CsvService.parseCSVMuscleIntensities(row[5]);
 
         final exerciseData = {
           'name': row[0],
           'type': int.parse(row[1]),
-          'defaultRepBase': int.parse(row[3]),
-          'defaultRepMax': int.parse(row[4]),
-          'defaultIncrement': double.parse(row[5]),
+          'defaultRepBase': int.parse(row[2]),
+          'defaultRepMax': int.parse(row[3]),
+          'defaultIncrement': double.parse(row[4]),
           'pectoralisMajor': muscleIntensities[0],
           'trapezius': muscleIntensities[1],
           'biceps': muscleIntensities[2],
@@ -278,10 +278,10 @@ class RestoreController extends ChangeNotifier {
         if (kDebugMode) (cache.exercises);
         importedCount++;
         if (kDebugMode) print('Successfully imported exercise: ${row[0]}');
-      } catch (e) {
-        if (kDebugMode) print('Error importing exercise "${row[0]}": $e');
-        skippedCount++;
-      }
+      // } catch (e) {
+      //   if (kDebugMode) print('Error importing exercise "${row[0]}": $e');
+      //   skippedCount++;
+      // }
     }
 
     return SettingsOperationResult.success(

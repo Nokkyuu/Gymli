@@ -139,15 +139,15 @@ class Exercise {
 
   List<String> toCSVString() {
     // Remove muscle group names entirely - just export the 14 intensity values as comma-separated
-    String intensitiesString = muscleIntensities.join(',');
+    String intensitiesString = muscleIntensities.join(';');
 
     return [
       name,
       "$type",
-      intensitiesString, // Only the intensity values, no names needed
       "$defaultRepBase",
       "$defaultRepMax",
-      "$defaultIncrement"
+      "$defaultIncrement",
+      intensitiesString // Only the intensity values, no names needed
     ];
   }
 

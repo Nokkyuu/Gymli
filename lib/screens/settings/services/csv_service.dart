@@ -43,8 +43,7 @@ class CsvService {
 
     for (var ex in exercises) {
       try {
-        final apiExercise = Exercise.fromJson(ex);
-        datalist.add(apiExercise.toCSVString());
+        datalist.add(ex.toCSVString());
       } catch (e) {
         if (kDebugMode) print('Error converting exercise to CSV: $e');
       }
@@ -133,13 +132,13 @@ class CsvService {
       return <double>[];
     }
 
-    String cleaned = input.replaceAll('[', '').replaceAll(']', '').trim();
+    String cleaned = input.replaceAll('\"', ' ').trim();
     if (cleaned.isEmpty) {
       return <double>[];
     }
 
     return cleaned
-        .split(',')
+        .split(';')
         .map((e) => e.trim())
         .where((e) => e.isNotEmpty)
         .map((e) => double.tryParse(e) ?? 0.0)

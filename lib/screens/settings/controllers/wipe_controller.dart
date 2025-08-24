@@ -145,28 +145,9 @@ class WipeController extends ChangeNotifier {
   /// Clear exercises
   Future<SettingsOperationResult> _clearExercises() async {
     try {
-      // _setClearing(true, 'Clearing exercises...', 0.5);
-
-      // // Get count before clearing
-      // //TODO: CACHE
-      // final exercises = await _exerciseService.getExercises();
-      // final count = exercises.length;
-
-      // await _exerciseService.clearExercises();
-
       await GetIt.I<WorkoutDataCache>().clearExercises();
-
-      // if (kDebugMode) print('Cleared $count exercises');
-      // return SettingsOperationResult.success(
-      //   message: 'Exercises cleared',
-      //   deletedCount: count,
-      // );
     } catch (e) {
       if (kDebugMode) print('Error clearing exercises: $e');
-      // return SettingsOperationResult.error(
-      //   message: 'Failed to clear exercises: $e',
-      //   error: e is Exception ? e : Exception(e.toString()),
-      // );
     }
     return SettingsOperationResult.error(
         message: 'Test',

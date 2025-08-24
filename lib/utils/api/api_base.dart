@@ -73,7 +73,6 @@ Future deleteData(String url) async {
   if (response.statusCode != 200 && response.statusCode != 204) {
     throw Exception('Failed to delete');
   }
-
   // Invalidate related cache entries
   if (useCache) invalidateCacheForMutation(url);
 

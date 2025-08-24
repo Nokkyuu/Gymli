@@ -1,6 +1,7 @@
 /// Backup Controller - Handles data export operations
 library;
 
+import 'package:Gymli/utils/workout_data_cache.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -38,10 +39,10 @@ class BackupController extends ChangeNotifier {
           data = await _trainingSetService.getTrainingSets();
           break;
         case SettingsDataType.exercises:
-          data = await _exerciseService.getExercises();
+          data = GetIt.I<WorkoutDataCache>().exercises;
           break;
         case SettingsDataType.workouts:
-          data = await _workoutService.getWorkouts();
+          data = GetIt.I<WorkoutDataCache>().workouts;
           break;
         case SettingsDataType.foods:
           data = await _foodService.getFoods();
