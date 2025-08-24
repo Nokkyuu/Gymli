@@ -218,10 +218,10 @@ class ExerciseSetupController extends ChangeNotifier {
           '🔧 add_exercise: Muscle intensities collected: ${muscleIntensities.length}');
     }
 
-    // Pad or trim to match expected muscle groups (14 total)
-    while (muscleIntensities.length < 14) {
-      muscleIntensities.add(0.0);
-    }
+    // // Pad or trim to match expected muscle groups (14 total)
+    // while (muscleIntensities.length < 14) {
+    //   muscleIntensities.add(0.0);
+    // }
 
     if (kDebugMode) print('🔧 add_exercise: Getting existing exercises...');
     // Check if exercise exists
