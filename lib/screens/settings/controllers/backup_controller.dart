@@ -5,16 +5,14 @@ import 'package:Gymli/utils/workout_data_cache.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../services/csv_service.dart';
 import '../services/file_service.dart';
 import '../models/settings_data_type.dart';
 import '../models/settings_operation_result.dart';
 import 'package:Gymli/utils/services/service_export.dart';
 import 'package:get_it/get_it.dart';
+import 'dart:convert';
 
 class BackupController extends ChangeNotifier {
-  final ExerciseService _exerciseService = GetIt.I<ExerciseService>();
-  final WorkoutService _workoutService = GetIt.I<WorkoutService>();
   final TrainingSetService _trainingSetService = GetIt.I<TrainingSetService>();
   final FoodService _foodService = GetIt.I<FoodService>();
   bool _isExporting = false;
@@ -22,6 +20,36 @@ class BackupController extends ChangeNotifier {
 
   bool get isExporting => _isExporting;
   String? get currentOperation => _currentOperation;
+
+  // Convert a list of domain objects or maps to a JSON-friendly List
+  List<dynamic> _encodeList(List<dynamic> data) {
+    return data.map((item) {
+      // Already a primitive or Map/List
+      if (item == null ||
+          item is num ||
+          item is String ||
+          item is bool ||
+          item is Map ||
+          item is List) {
+        return item;
+      }
+      // Try common toJson()/oJson() conventions
+      try {
+        final dyn = item as dynamic;
+        if (dyn.toJson is Function) {
+          return dyn.toJson();
+        }
+      } catch (_) {}
+      try {
+        final dyn = item as dynamic;
+        if (dyn.oJson is Function) {
+          return dyn.oJson();
+        }
+      } catch (_) {}
+      // Fallback: best-effort string
+      return item.toString();
+    }).toList();
+  }
 
   /// Export data of specified type
   Future<SettingsOperationResult> exportData(
@@ -57,40 +85,31 @@ class BackupController extends ChangeNotifier {
         );
       }
 
-      // Generate CSV data
-      _setExporting(true, 'Converting ${data.length} items to CSV...');
-      String csvData;
-      switch (dataType) {
-        case SettingsDataType.trainingSets:
-          csvData = CsvService.generateTrainingSetsCSV(data);
-          break;
-        case SettingsDataType.exercises:
-          csvData = CsvService.generateExercisesCSV(data);
-          break;
-        case SettingsDataType.workouts:
-          csvData = CsvService.generateWorkoutsCSV(data);
-          break;
-        case SettingsDataType.foods:
-          csvData = CsvService.generateFoodsCSV(data);
-          break;
-      }
+      // Build root JSON object with one subtree per data type key
+      _setExporting(true, 'Converting ${data.length} items to JSON...');
+      final Map<String, dynamic> root = {
+        // always use a stable key naming; we keep SettingsDataType.value as key
+        dataType.value: _encodeList(data),
+      };
 
-      if (csvData.isEmpty) {
+      final jsonString = const JsonEncoder.withIndent('  ').convert(root);
+
+      if (jsonString.isEmpty) {
         return SettingsOperationResult.error(
-          message: 'Failed to generate CSV data for ${dataType.displayName}',
+          message: 'Failed to generate JSON data for ${dataType.displayName}',
         );
       }
 
       // Generate filename
       final fileName =
-          "${dataType.value}_${DateFormat('yyyy-MM-dd_HH-mm-ss').format(DateTime.now())}.csv";
+          "${dataType.value}_${DateFormat('yyyy-MM-dd_HH-mm-ss').format(DateTime.now())}.json";
 
       if (kDebugMode) print('Starting file save process...');
       _setExporting(true, 'Saving file...');
 
-      // Save file
+      // Save file (reuse CSV saver to write JSON payload)
       final result = await FileService.saveCSVFile(
-        csvData: csvData,
+        csvData: jsonString,
         fileName: fileName,
         dataType: dataType.displayName,
       );

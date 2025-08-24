@@ -1,19 +1,20 @@
 /// Restore Controller - Handles data import operations
 library;
 
+import 'dart:convert';
+
+import 'package:Gymli/utils/models/workout_models.dart';
 import 'package:Gymli/utils/workout_data_cache.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
-import '../services/csv_service.dart';
 import '../services/file_service.dart';
 import '../models/settings_data_type.dart';
 import '../models/settings_operation_result.dart';
 import 'package:Gymli/utils/services/service_export.dart';
 import 'package:Gymli/utils/models/exercise_model.dart';
 
-typedef _Importer = Future<SettingsOperationResult> Function(
-    List<List<String>> csvTable);
+typedef _Importer = Future<SettingsOperationResult> Function(List<dynamic> items);
 typedef _Clearer = Future<void> Function();
 
 class RestoreController extends ChangeNotifier {
@@ -60,18 +61,50 @@ class RestoreController extends ChangeNotifier {
     try {
       // Pick and read file
       _setImporting(true, 'Selecting file...', 0.1);
-      final fileResult = await FileService.pickAndReadCSVFile(dataType: dataType.displayName,);
+      final fileResult = await FileService.pickAndReadCSVFile(
+        dataType: dataType.displayName,
+      );
 
       if (!fileResult.isSuccess) return fileResult;
 
-      final csvData = fileResult.message!;
+      final raw = fileResult.message!;
 
-      // Parse CSV data
-      _setImporting(true, 'Parsing CSV data...', 0.2);
-      final csvTable = CsvService.parseCSV(csvData);
+      // Parse JSON data
+      _setImporting(true, 'Parsing JSON data...', 0.2);
+      dynamic decoded;
+      try {
+        decoded = jsonDecode(raw);
+      } catch (e) {
+        return SettingsOperationResult.error(
+          message: 'Invalid JSON file: ${e.toString()}',
+        );
+      }
 
-      if (csvTable.isEmpty) return SettingsOperationResult.error(message: 'No data found in CSV file',);
-      
+      // Build a root JSON with a subtree per key. Accept either
+      // an object with the target key or a raw list for backwards-compat.
+      List<dynamic> items;
+      if (decoded is Map<String, dynamic>) {
+        final key = dataType.value;
+        if (!decoded.containsKey(key)) {
+          return SettingsOperationResult.error(
+            message: 'JSON root must contain the key "$key"',
+          );
+        }
+        final subtree = decoded[key];
+        if (subtree is List) {
+          items = subtree;
+        } else {
+          return SettingsOperationResult.error(
+            message: 'JSON "$key" must be an array',
+          );
+        }
+      } else if (decoded is List) {
+        items = decoded;
+      } else {
+        return SettingsOperationResult.error(
+          message: 'Unsupported JSON root. Expected object or array.',
+        );
+      }
 
       // Clear existing data first
       // _setImporting(true, 'Clearing existing data...', 0.3);
@@ -83,7 +116,7 @@ class RestoreController extends ChangeNotifier {
         return SettingsOperationResult.error(
             message: 'No importer registered for ${dataType.displayName}');
       }
-      final result = await importer(csvTable);
+      final result = await importer(items);
 
       // Notify data changed
       //_repository.notifyDataChanged();
@@ -109,106 +142,78 @@ class RestoreController extends ChangeNotifier {
   }
 
   /// Import training sets
-  Future<SettingsOperationResult> _importTrainingSets(
-      List<List<String>> csvTable) async {
-    _setImporting(true, 'Fetching exercises for ID resolution...', 0.4);
+  Future<SettingsOperationResult> _importTrainingSets(List<dynamic> items) async {
+    _setImporting(true, 'Resolving exercise IDs...', 0.4);
 
-    // Get exercise lookup map
-    final exercises = await GetIt.I<ExerciseService>().getExercises();
-    final Map<String, int> exerciseNameToIdMap = {};
-    for (var exercise in exercises) {
-      exerciseNameToIdMap[exercise.name] = exercise.id!;
-    }
+    final exercises = GetIt.I<WorkoutDataCache>().exercises;
+    final Map<String, int> exerciseNameToIdMap = {
+      for (var e in exercises) e.name: e.id!,
+    };
 
-    if (kDebugMode)
-      print(
-          'Created exercise lookup map with ${exerciseNameToIdMap.length} exercises');
-
-    // Prepare training sets
     _setImporting(true, 'Preparing training sets...', 0.5);
     List<Map<String, dynamic>> trainingSetsToCreate = [];
     int skippedCount = 0;
 
-    for (List<String> row in csvTable) {
-      // Remove trailing empty columns
-      while (row.isNotEmpty && row.last.trim().isEmpty) {
-        row.removeLast();
-      }
+    for (final item in items) {
+      try {
+        if (item is! Map) { skippedCount++; continue; }
+        final map = item as Map;
 
-      // Handle both old (5 columns) and new (7 columns) CSV formats
-      if (row.length >= 5) {
-        try {
-          final exerciseId = exerciseNameToIdMap[row[0].trim()];
-          if (exerciseId != null) {
-            final trainingSetData = {
-              'exerciseId': exerciseId,
-              'date': DateTime.parse(row[1]).toIso8601String(),
-              'weight': double.parse(row[2]),
-              'repetitions': int.parse(row[3]),
-              'setType': int.parse(row[4]),
-            };
-
-            // Handle new format with phase and myoreps columns
-            if (row.length >= 7) {
-              // Add phase if present and not empty
-              if (row.length > 5 && row[5].trim().isNotEmpty) {
-                trainingSetData['phase'] = row[5].trim();
-              }
-              // Add myoreps if present and not empty
-              if (row.length > 6 && row[6].trim().isNotEmpty) {
-                trainingSetData['myoreps'] =
-                    row[6].trim().toLowerCase() == 'true';
-              }
-            }
-
-            trainingSetsToCreate.add(trainingSetData);
-          } else {
-            if (kDebugMode)
-              print(
-                  'Warning: Exercise "${row[0]}" not found, skipping training set');
-            skippedCount++;
+        int? exerciseId;
+        // prefer explicit id
+        if (map['exercise_id'] is int) exerciseId = map['exercise_id'] as int;
+        if (exerciseId == null && map['exerciseId'] is int) exerciseId = map['exerciseId'] as int;
+        // resolve by name if provided
+        if (exerciseId == null) {
+          final name = (map['exercise_name'] ?? map['exercise'] ?? map['exerciseName'])?.toString();
+          if (name != null && exerciseNameToIdMap.containsKey(name)) {
+            exerciseId = exerciseNameToIdMap[name];
           }
-        } catch (e) {
-          if (kDebugMode) {
-            print('Error preparing training set for exercise "${row[0]}": $e');
-          }
-          skippedCount++;
         }
-      } else {
-        if (kDebugMode) print('Skipping row with wrong data: $row');
+        if (exerciseId == null) { skippedCount++; continue; }
+
+        final dateStr = (map['date'] ?? map['timestamp'])?.toString();
+        if (dateStr == null) { skippedCount++; continue; }
+
+        final double? weight = (map['weight'] is num) ? (map['weight'] as num).toDouble() : double.tryParse(map['weight']?.toString() ?? '');
+        final int? reps = (map['repetitions'] is num) ? (map['repetitions'] as num).toInt() : int.tryParse(map['repetitions']?.toString() ?? '');
+        final int? setType = (map['set_type'] is num) ? (map['set_type'] as num).toInt() : (map['setType'] is num) ? (map['setType'] as num).toInt() : int.tryParse(map['setType']?.toString() ?? map['set_type']?.toString() ?? '');
+        final String? phase = (map['phase'] ?? map['phase_name'])?.toString();
+        final bool? myoreps = (map['myoreps'] is bool) ? map['myoreps'] as bool : (map['myo']?.toString().toLowerCase() == 'true');
+
+        if (weight == null || reps == null || setType == null) { skippedCount++; continue; }
+
+        final trainingSetData = {
+          'exerciseId': exerciseId,
+          'date': DateTime.parse(dateStr).toIso8601String(),
+          'weight': weight,
+          'repetitions': reps,
+          'setType': setType,
+          if (phase != null && phase.isNotEmpty) 'phase': phase,
+          if (myoreps != null) 'myoreps': myoreps,
+        };
+        trainingSetsToCreate.add(trainingSetData);
+      } catch (_) {
         skippedCount++;
       }
     }
 
-    // Import in batches
     if (trainingSetsToCreate.isNotEmpty) {
       const batchSize = 1000;
       final totalBatches = (trainingSetsToCreate.length / batchSize).ceil();
       int importedCount = 0;
 
       for (int i = 0; i < trainingSetsToCreate.length; i += batchSize) {
-        final endIndex = (i + batchSize < trainingSetsToCreate.length)
-            ? i + batchSize
-            : trainingSetsToCreate.length;
+        final endIndex = (i + batchSize < trainingSetsToCreate.length) ? i + batchSize : trainingSetsToCreate.length;
         final batch = trainingSetsToCreate.sublist(i, endIndex);
         final currentBatch = (i / batchSize).floor() + 1;
 
-        _setImporting(
-          true,
-          'Importing batch $currentBatch of $totalBatches',
-          0.5 + (currentBatch / totalBatches) * 0.4,
-        );
+        _setImporting(true, 'Importing batch $currentBatch of $totalBatches', 0.5 + (currentBatch / totalBatches) * 0.4);
 
         try {
-          await GetIt.I<TrainingSetService>()
-              .createTrainingSetsBulk(trainingSets: batch);
+          await GetIt.I<TrainingSetService>().createTrainingSetsBulk(trainingSets: batch);
           importedCount += batch.length;
-          if (kDebugMode) {
-            print(
-                'Successfully imported batch of ${batch.length} training sets');
-          }
-        } catch (e) {
-          if (kDebugMode) print('Error importing batch: $e');
+        } catch (_) {
           skippedCount += batch.length;
         }
       }
@@ -219,9 +224,7 @@ class RestoreController extends ChangeNotifier {
         skippedCount: skippedCount,
       );
     } else {
-      return SettingsOperationResult.error(
-        message: 'No valid training sets found to import',
-      );
+      return SettingsOperationResult.error(message: 'No valid training sets found to import');
     }
   }
 
@@ -230,58 +233,24 @@ class RestoreController extends ChangeNotifier {
     return await GetIt.I<WorkoutDataCache>().clearExercises();
   }
 
-  Future<SettingsOperationResult> _importExercises(
-      List<List<String>> csvTable) async {
+  Future<SettingsOperationResult> _importExercises(List<dynamic> items) async {
     int importedCount = 0;
     int skippedCount = 0;
 
-    for (int index = 0; index < csvTable.length; index++) {
-      final row = csvTable[index].map((e) => e.trim()).toList();
+    final cache = GetIt.I<WorkoutDataCache>();
 
-      _setImporting(
-        true,
-        'Importing exercises...',
-        0.4 + (index / csvTable.length) * 0.5,
-      );
-
-      // try {
-        final muscleIntensities = CsvService.parseCSVMuscleIntensities(row[5]);
-
-        final exerciseData = {
-          'name': row[0],
-          'type': int.parse(row[1]),
-          'defaultRepBase': int.parse(row[2]),
-          'defaultRepMax': int.parse(row[3]),
-          'defaultIncrement': double.parse(row[4]),
-          'pectoralisMajor': muscleIntensities[0],
-          'trapezius': muscleIntensities[1],
-          'biceps': muscleIntensities[2],
-          'abdominals': muscleIntensities[3],
-          'frontDelts': muscleIntensities[4],
-          'deltoids': muscleIntensities[5],
-          'backDelts': muscleIntensities[6],
-          'latissimusDorsi': muscleIntensities[7],
-          'triceps': muscleIntensities[8],
-          'gluteusMaximus': muscleIntensities[9],
-          'hamstrings': muscleIntensities[10],
-          'quadriceps': muscleIntensities[11],
-          'forearms': muscleIntensities[12],
-          'calves': muscleIntensities[13],
-        };
-        final cache = GetIt.I<WorkoutDataCache>();
-        if (kDebugMode) (exerciseData);
-
-        print(exerciseData);
-        final exercise = Exercise.fromJson(exerciseData);
-        print(exercise);
+    for (int index = 0; index < items.length; index++) {
+      _setImporting(true, 'Importing exercises...', 0.4 + (index / items.length) * 0.5);
+      final item = items[index];
+      try {
+        if (item is! Map) { skippedCount++; continue; }
+        final map = Map<String, dynamic>.from(item as Map);
+        final exercise = Exercise.fromJson(map);
         cache.addExercise(exercise);
-        if (kDebugMode) (cache.exercises);
         importedCount++;
-        if (kDebugMode) print('Successfully imported exercise: ${row[0]}');
-      // } catch (e) {
-      //   if (kDebugMode) print('Error importing exercise "${row[0]}": $e');
-      //   skippedCount++;
-      // }
+      } catch (_) {
+        skippedCount++;
+      }
     }
 
     return SettingsOperationResult.success(
@@ -292,64 +261,47 @@ class RestoreController extends ChangeNotifier {
   }
 
   /// Import workouts
-  Future<SettingsOperationResult> _importWorkouts(
-      List<List<String>> csvTable) async {
+  Future<SettingsOperationResult> _importWorkouts(List<dynamic> items) async {
     int importedCount = 0;
     int skippedCount = 0;
 
-    for (int index = 0; index < csvTable.length; index++) {
-      final row = csvTable[index].map((e) => e.trim()).toList();
+    for (int index = 0; index < items.length; index++) {
+      _setImporting(true, 'Importing workouts...', 0.4 + (index / items.length) * 0.5);
+      final item = items[index];
+      try {
+        if (item is! Map) { skippedCount++; continue; }
+        final map = item as Map;
+        final name = map['name']?.toString();
+        final unitsDyn = map['units'];
+        if (name == null || unitsDyn is! List) { skippedCount++; continue; }
 
-      _setImporting(
-        true,
-        'Importing workouts...',
-        0.4 + (index / csvTable.length) * 0.5,
-      );
-
-      if (row.isNotEmpty) {
-        try {
-          final workoutName = row[0];
-          List<Map<String, dynamic>> units = [];
-
-          for (int i = 1; i < row.length; i++) {
-            final unitStr = row[i].split(", ");
-            if (unitStr.length >= 5) {
-              final exerciseId = await GetIt.I<ExerciseService>()
-                  .getExerciseIdByName(unitStr[0]);
-              if (exerciseId != null) {
-                units.add({
-                  'exercise_id': exerciseId,
-                  'warmups': int.parse(unitStr[1]),
-                  'worksets': int.parse(unitStr[2]),
-                  'dropsets': int.parse(unitStr[3]),
-                  'type': int.parse(unitStr[4]),
-                });
-              } else {
-                if (kDebugMode) {
-                  print('Warning: Exercise "${unitStr[0]}" not found');
-                }
-                skippedCount++;
-              }
-            }
+        List<Map<String, dynamic>> units = [];
+        for (final u in unitsDyn) {
+          if (u is! Map) continue;
+          final um = u as Map;
+          int? exerciseId = (um['exercise_id'] is num) ? (um['exercise_id'] as num).toInt() : (um['exerciseId'] is num) ? (um['exerciseId'] as num).toInt() : null;
+          if (exerciseId == null && um['exerciseName'] != null) {
+            final id = await GetIt.I<ExerciseService>().getExerciseIdByName(um['exerciseName'].toString());
+            exerciseId = id;
           }
+          if (exerciseId == null) continue;
+          units.add({
+            'exercise_id': exerciseId,
+            'warmups': (um['warmups'] is num) ? (um['warmups'] as num).toInt() : int.tryParse(um['warmups']?.toString() ?? '0') ?? 0,
+            'worksets': (um['worksets'] is num) ? (um['worksets'] as num).toInt() : int.tryParse(um['worksets']?.toString() ?? '0') ?? 0,
+            'dropsets': (um['dropsets'] is num) ? (um['dropsets'] as num).toInt() : int.tryParse(um['dropsets']?.toString() ?? '0') ?? 0,
+            'type': (um['type'] is num) ? (um['type'] as num).toInt() : int.tryParse(um['type']?.toString() ?? '0') ?? 0,
+          });
+        }
 
-          if (units.isNotEmpty) {
-            await GetIt.I<WorkoutService>()
-                .createWorkout(name: workoutName, units: units);
-            importedCount++;
-            if (kDebugMode) {
-              print('Successfully imported workout: $workoutName');
-            }
-          } else {
-            if (kDebugMode) {
-              print('Warning: No valid units found for workout: $workoutName');
-            }
-            skippedCount++;
-          }
-        } catch (e) {
-          if (kDebugMode) print('Error importing workout "${row[0]}": $e');
+        if (units.isNotEmpty) {
+          await GetIt.I<WorkoutService>().createWorkout(name: name, units: units);
+          importedCount++;
+        } else {
           skippedCount++;
         }
+      } catch (_) {
+        skippedCount++;
       }
     }
 
@@ -361,66 +313,55 @@ class RestoreController extends ChangeNotifier {
   }
 
   /// Import foods
-  Future<SettingsOperationResult> _importFoods(
-      List<List<String>> csvTable) async {
+  Future<SettingsOperationResult> _importFoods(List<dynamic> items) async {
     _setImporting(true, 'Preparing food items...', 0.4);
 
     List<Map<String, dynamic>> foodsToCreate = [];
     int skippedCount = 0;
 
-    for (final row in csvTable) {
-      final cleanRow = row.map((e) => e.trim()).toList();
+    for (final item in items) {
+      try {
+        if (item is! Map) { skippedCount++; continue; }
+        final m = item as Map;
+        final name = m['name']?.toString();
+        if (name == null || name.isEmpty) { skippedCount++; continue; }
+        double? kcal = (m['kcalPer100g'] is num) ? (m['kcalPer100g'] as num).toDouble() : (m['kcal_per_100g'] is num) ? (m['kcal_per_100g'] as num).toDouble() : double.tryParse(m['kcalPer100g']?.toString() ?? m['kcal_per_100g']?.toString() ?? '');
+        double? prot = (m['proteinPer100g'] is num) ? (m['proteinPer100g'] as num).toDouble() : (m['protein_per_100g'] is num) ? (m['protein_per_100g'] as num).toDouble() : double.tryParse(m['proteinPer100g']?.toString() ?? m['protein_per_100g']?.toString() ?? '');
+        double? carbs = (m['carbsPer100g'] is num) ? (m['carbsPer100g'] as num).toDouble() : (m['carbs_per_100g'] is num) ? (m['carbs_per_100g'] as num).toDouble() : double.tryParse(m['carbsPer100g']?.toString() ?? m['carbs_per_100g']?.toString() ?? '');
+        double? fat = (m['fatPer100g'] is num) ? (m['fatPer100g'] as num).toDouble() : (m['fat_per_100g'] is num) ? (m['fat_per_100g'] as num).toDouble() : double.tryParse(m['fatPer100g']?.toString() ?? m['fat_per_100g']?.toString() ?? '');
+        final notes = m['notes']?.toString();
 
-      if (cleanRow.length >= 5) {
-        try {
-          foodsToCreate.add({
-            'name': cleanRow[0],
-            'kcalPer100g': double.parse(cleanRow[1]),
-            'proteinPer100g': double.parse(cleanRow[2]),
-            'carbsPer100g': double.parse(cleanRow[3]),
-            'fatPer100g': double.parse(cleanRow[4]),
-            'notes': cleanRow.length > 5 ? cleanRow[5] : null,
-          });
-          if (kDebugMode) print('Prepared food item: ${cleanRow[0]}');
-        } catch (e) {
-          if (kDebugMode) {
-            print('Error preparing food item "${cleanRow[0]}": $e');
-          }
-          skippedCount++;
-        }
-      } else {
-        if (kDebugMode) print('Skipping row with insufficient data: $cleanRow');
+        if (kcal == null || prot == null || carbs == null || fat == null) { skippedCount++; continue; }
+
+        foodsToCreate.add({
+          'name': name,
+          'kcalPer100g': kcal,
+          'proteinPer100g': prot,
+          'carbsPer100g': carbs,
+          'fatPer100g': fat,
+          if (notes != null) 'notes': notes,
+        });
+      } catch (_) {
         skippedCount++;
       }
     }
 
-    // Import in batches
     if (foodsToCreate.isNotEmpty) {
       const batchSize = 1000;
       final totalBatches = (foodsToCreate.length / batchSize).ceil();
       int importedCount = 0;
 
       for (int i = 0; i < foodsToCreate.length; i += batchSize) {
-        final endIndex = (i + batchSize < foodsToCreate.length)
-            ? i + batchSize
-            : foodsToCreate.length;
+        final endIndex = (i + batchSize < foodsToCreate.length) ? i + batchSize : foodsToCreate.length;
         final batch = foodsToCreate.sublist(i, endIndex);
         final currentBatch = (i / batchSize).floor() + 1;
 
-        _setImporting(
-          true,
-          'Importing batch $currentBatch of $totalBatches',
-          0.5 + (currentBatch / totalBatches) * 0.4,
-        );
+        _setImporting(true, 'Importing batch $currentBatch of $totalBatches', 0.5 + (currentBatch / totalBatches) * 0.4);
 
         try {
           await GetIt.I<FoodService>().createFoodsBulk(foods: batch);
           importedCount += batch.length;
-          if (kDebugMode) {
-            print('Successfully imported batch of ${batch.length} food items');
-          }
-        } catch (e) {
-          if (kDebugMode) print('Error importing batch: $e');
+        } catch (_) {
           skippedCount += batch.length;
         }
       }
@@ -431,9 +372,7 @@ class RestoreController extends ChangeNotifier {
         skippedCount: skippedCount,
       );
     } else {
-      return SettingsOperationResult.error(
-        message: 'No valid food items found to import',
-      );
+      return SettingsOperationResult.error(message: 'No valid food items found to import');
     }
   }
 
