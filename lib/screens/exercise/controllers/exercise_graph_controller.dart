@@ -66,10 +66,10 @@ class ExerciseGraphController extends ChangeNotifier {
   Future<void> loadNoteDates() async {
     final notes = await GetIt.I<CalendarService>().getCalendarNotes();
     _noteDates =
-        notes.map<String>((n) => (n.date as String).substring(0, 10)).toSet();
+        notes.map<String>((n) => (n.date.toString()).substring(0, 10)).toSet();
     _notesByDate = {
       for (var n in notes)
-        (n.date as String).substring(0, 10): (n.note as String? ?? '')
+        (n.date.toString()).substring(0, 10): (n.note as String? ?? '')
     };
   }
 
@@ -122,14 +122,14 @@ class ExerciseGraphController extends ChangeNotifier {
 
       for (var period in periods) {
         final type = period.type as String? ?? 'maintenance';
-        final startDateStr = period.startDate as String?;
-        final endDateStr = period.endDate as String?;
+        final startDateStr = period.startDate;
+        final endDateStr = period.endDate;
 
         if (startDateStr == null || endDateStr == null) continue;
 
         try {
-          final startDate = DateTime.parse(startDateStr);
-          final endDate = DateTime.parse(endDateStr);
+          final startDate = startDateStr;
+          final endDate = endDateStr;
 
           // Convert dates to x-coordinates
           final startX =
