@@ -15,6 +15,7 @@ class ExerciseSetupController extends ChangeNotifier {
   final WorkoutDataCache _cache = GetIt.I<WorkoutDataCache>();
 
   // Exercise data
+  int _exerciseId = 0;
   String _exerciseName = '';
   ExerciseDevice _chosenDevice = ExerciseDevice.free;
   double _minRep = 10;
@@ -40,27 +41,26 @@ class ExerciseSetupController extends ChangeNotifier {
   Exercise? get currentExercise => _currentExercise;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
+  int? get exerciseId => _exerciseId;
 
-  // Initialize with exercise name
-  void initialize(String exerciseName) {
-    _exerciseName = exerciseName;
-    exerciseTitleController.text = exerciseName;
-    if (exerciseName.isNotEmpty) {
+  // Initialize with exercise ID
+  void initialize(int exerciseId) {
+    _exerciseId = exerciseId;
+    if (exerciseId != 0) {
       _loadExerciseData();
     }
   }
 
   // Load existing exercise data
   Future<void> _loadExerciseData() async {
-    if (_exerciseName.isEmpty) return;
+    if (_exerciseId == 0) return;
 
     _setLoading(true);
     try {
       final List<Exercise> exercises = await exerciseService.getExercises();
       Exercise? exerciseData;
       try {
-        exerciseData =
-            exercises.firstWhere((item) => item.name == _exerciseName);
+        exerciseData = exercises.firstWhere((item) => item.id == _exerciseId);
       } catch (e) {
         exerciseData = null;
       }
@@ -75,6 +75,7 @@ class ExerciseSetupController extends ChangeNotifier {
         _weightInc = exerciseData.defaultIncrement;
 
         // Reset all muscle values
+        //TODO: we need to get rd of the global muscle group nonsense, its not needed anymore.
         for (var m in muscleGroupNames) {
           globals.muscle_val[m] = 0.0;
         }
@@ -132,6 +133,7 @@ class ExerciseSetupController extends ChangeNotifier {
       if (kDebugMode) print('🔧 Starting exercise save process...');
 
       await _addExercise(
+        _exerciseId,
         exerciseTitleController.text,
         _chosenDevice,
         _minRep.toInt(),
@@ -191,8 +193,13 @@ class ExerciseSetupController extends ChangeNotifier {
   }
 
   // Helper methods
-  Future _addExercise(String exerciseName, ExerciseDevice chosenDevice,
-      int minRep, int maxRep, double weightInc) async {
+  Future _addExercise(
+      int exerciseId,
+      String exerciseName,
+      ExerciseDevice chosenDevice,
+      int minRep,
+      int maxRep,
+      double weightInc) async {
     if (kDebugMode) print('🔧 add_exercise: Starting with name: $exerciseName');
 
     int exerciseType = chosenDevice.index;
@@ -218,7 +225,7 @@ class ExerciseSetupController extends ChangeNotifier {
     final exercises = await exerciseService.getExercises();
     Exercise? existing;
     try {
-      existing = exercises.firstWhere((e) => e.name == exerciseName);
+      existing = exercises.firstWhere((e) => e.id == exerciseId);
     } catch (e) {
       existing = null;
     }
@@ -229,28 +236,32 @@ class ExerciseSetupController extends ChangeNotifier {
             '🔧 add_exercise: Updating existing exercise with ID: ${existing.id}');
       }
       // Update existing exercise
-      await exerciseService.updateExercise(existing.id!, {
-        //'user_name': GetIt.I<AuthService>().userName,
+      Exercise updatedExercise = Exercise.fromJson({
+        'id': existing.id,
         'name': exerciseName,
         'type': exerciseType,
         'default_rep_base': minRep,
         'default_rep_max': maxRep,
         'default_increment': weightInc,
-        'pectoralis_major': muscleIntensities[0],
-        'trapezius': muscleIntensities[1],
-        'biceps': muscleIntensities[2],
-        'abdominals': muscleIntensities[3],
-        'front_delts': muscleIntensities[4],
-        'deltoids': muscleIntensities[5],
-        'back_delts': muscleIntensities[6],
-        'latissimus_dorsi': muscleIntensities[7],
-        'triceps': muscleIntensities[8],
-        'gluteus_maximus': muscleIntensities[9],
-        'hamstrings': muscleIntensities[10],
-        'quadriceps': muscleIntensities[11],
-        'forearms': muscleIntensities[12],
-        'calves': muscleIntensities[13],
+        // Persist intensities so the UI can immediately reflect them
+        'muscle_groups': {
+          'pectoralis_major': muscleIntensities[0],
+          'trapezius': muscleIntensities[1],
+          'biceps': muscleIntensities[2],
+          'abdominals': muscleIntensities[3],
+          'front_delts': muscleIntensities[4],
+          'deltoids': muscleIntensities[5],
+          'back_delts': muscleIntensities[6],
+          'latissimus_dorsi': muscleIntensities[7],
+          'triceps': muscleIntensities[8],
+          'gluteus_maximus': muscleIntensities[9],
+          'hamstrings': muscleIntensities[10],
+          'quadriceps': muscleIntensities[11],
+          'forearms': muscleIntensities[12],
+          'calves': muscleIntensities[13],
+        }
       });
+      await exerciseService.updateExercise(updatedExercise);
       if (kDebugMode) print('✅ add_exercise: Exercise updated successfully');
     } else {
       if (kDebugMode) {

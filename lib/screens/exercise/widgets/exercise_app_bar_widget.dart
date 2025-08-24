@@ -116,7 +116,7 @@ class ExerciseAppBarWidget extends StatelessWidget
     return IconButton(
       onPressed: () {
         context.go(
-            '${AppRouter.exerciseSetup}?type=${Uri.encodeComponent(exerciseName)}');
+            '${AppRouter.exerciseSetup}?id=${Uri.encodeComponent(exerciseId.toString())}');
       },
       icon: const Icon(Icons.edit),
     );

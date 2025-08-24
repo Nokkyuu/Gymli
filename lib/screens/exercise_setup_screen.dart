@@ -12,9 +12,9 @@ import 'package:Gymli/widgets/app_router.dart';
 import '../utils/info_dialogues.dart';
 
 class ExerciseSetupScreen extends StatefulWidget {
-  final String exerciseName;
+  final int exerciseId;
 
-  const ExerciseSetupScreen(this.exerciseName, {super.key});
+  const ExerciseSetupScreen(this.exerciseId, {super.key});
 
   @override
   State<ExerciseSetupScreen> createState() => _ExerciseSetupScreenState();
@@ -28,9 +28,9 @@ class _ExerciseSetupScreenState extends State<ExerciseSetupScreen> {
     super.initState();
     _exerciseController = ExerciseSetupController();
 
-    // Initialize with the provided exercise name
+    // Initialize with the provided exercise ID
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _exerciseController.initialize(widget.exerciseName);
+      _exerciseController.initialize(widget.exerciseId);
     });
   }
 
@@ -41,7 +41,7 @@ class _ExerciseSetupScreenState extends State<ExerciseSetupScreen> {
   }
 
   AppBar _buildAppBar(BuildContext context) {
-    final isEditMode = widget.exerciseName.isNotEmpty;
+    final isEditMode = widget.exerciseId != 0;
 
     return AppBar(
       title: const Text('Exercise Setup'),
@@ -143,7 +143,7 @@ class _ExerciseSetupScreenState extends State<ExerciseSetupScreen> {
                     const SizedBox(height: 16),
                     ElevatedButton(
                       onPressed: () {
-                        controller.initialize(widget.exerciseName);
+                        controller.initialize(widget.exerciseId);
                       },
                       child: const Text('Retry'),
                     ),
