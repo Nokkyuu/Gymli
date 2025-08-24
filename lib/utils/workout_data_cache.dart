@@ -130,9 +130,9 @@ class WorkoutDataCache extends ChangeNotifier {
   }
 
   Future<void> clearExercises() async{
+    await GetIt.I<ExerciseService>().clearExercises();
     _exercises = [];
     notifyListeners();
-    GetIt.I<ExerciseService>().clearExercises();
   }
 
   /// Clears the buffer for a specific exercise, if needed (optional helper).

@@ -5,6 +5,8 @@ import 'package:flutter/foundation.dart';
 import '../repositories/settings_repository.dart';
 import '../models/settings_data_type.dart';
 import '../models/settings_operation_result.dart';
+import 'package:get_it/get_it.dart';
+import 'package:Gymli/utils/workout_data_cache.dart';
 
 class WipeController extends ChangeNotifier {
   final SettingsRepository _repository;
@@ -60,7 +62,7 @@ class WipeController extends ChangeNotifier {
   /// Clear all application data
   Future<SettingsOperationResult> clearAllData() async {
     try {
-      _setClearing(true, 'Preparing to clear all data...', 0.1);
+      // _setClearing(true, 'Preparing to clear all data...', 0.1);
 
       final clearOperations = [
         () => _clearTrainingSets(),
@@ -87,7 +89,7 @@ class WipeController extends ChangeNotifier {
         }
       }
 
-      _setClearing(true, 'Finalizing...', 0.9);
+      // _setClearing(true, 'Finalizing...', 0.9);
       //_repository.notifyDataChanged();
 
       if (errors.isEmpty) {
@@ -142,26 +144,30 @@ class WipeController extends ChangeNotifier {
   /// Clear exercises
   Future<SettingsOperationResult> _clearExercises() async {
     try {
-      _setClearing(true, 'Clearing exercises...', 0.5);
+      // _setClearing(true, 'Clearing exercises...', 0.5);
 
       // Get count before clearing
-      final exercises = await _repository.getExercises();
-      final count = exercises.length;
+      // final exercises = await _repository.getExercises();
+      // final count = exercises.length;
 
-      await _repository.clearExercises();
 
-      if (kDebugMode) print('Cleared $count exercises');
-      return SettingsOperationResult.success(
-        message: 'Exercises cleared',
-        deletedCount: count,
-      );
+      await GetIt.I<WorkoutDataCache>().clearExercises();
+
+      // if (kDebugMode) print('Cleared $count exercises');
+      // return SettingsOperationResult.success(
+      //   message: 'Exercises cleared',
+      //   deletedCount: count,
+      // );
     } catch (e) {
       if (kDebugMode) print('Error clearing exercises: $e');
-      return SettingsOperationResult.error(
-        message: 'Failed to clear exercises: $e',
-        error: e is Exception ? e : Exception(e.toString()),
-      );
+      // return SettingsOperationResult.error(
+      //   message: 'Failed to clear exercises: $e',
+      //   error: e is Exception ? e : Exception(e.toString()),
+      // );
     }
+    return SettingsOperationResult.error(
+        message: 'Test',
+        error: Exception("none")      );
   }
 
   /// Clear workouts
