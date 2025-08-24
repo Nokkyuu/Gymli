@@ -8,7 +8,7 @@ import 'package:http/http.dart' as http;
 import '../../config/api_config.dart';
 import 'api_cache.dart';
 
-const bool useCache = false; // Set to false to disable caching
+const bool useCache = true; // Set to false to disable caching
 // Main API base URL - Azure hosted backend service
 const String baseUrl = kDebugMode
     //? 'http://127.0.0.1:8000'
@@ -63,7 +63,6 @@ Future<dynamic> _parseJsonInIsolate(String jsonString) async {
     return json.decode(jsonString);
   }
 }
-
 
 Future deleteData(String url) async {
   final response = await http.delete(
