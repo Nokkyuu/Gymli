@@ -4,22 +4,24 @@
 ///
 library;
 
-import 'dart:convert';
 import '../api/api_base.dart';
+import '../models/data_models.dart';
 
 class CalendarService {
-  Future<List<dynamic>> getCalendarNotes() async {
-    return getData<List<dynamic>>('calendar_notes');
+  Future<List<CalendarNote>> getCalendarNotes() async {
+    final data = await getData<List<dynamic>>('calendar_notes');
+    return data.map((item) => CalendarNote.fromJson(item)).toList();
   }
 
-  Future<Map<String, dynamic>> createCalendarNote({
+  Future<CalendarNote> createCalendarNote({
     required DateTime date,
     required String note,
   }) async {
-    return json.decode(await createData('calendar_notes', {
+    final response = await createData('calendar_notes', {
       'date': date.toIso8601String(),
       'note': note,
-    }));
+    });
+    return CalendarNote.fromJson(response);
   }
 
   Future<void> deleteCalendarNote(int id) async {
@@ -29,7 +31,7 @@ class CalendarService {
     }
   }
 
-  Future<Map<String, dynamic>> updateCalendarNote({
+  Future<CalendarNote> updateCalendarNote({
     required int id,
     required DateTime date,
     required String note,
@@ -37,24 +39,26 @@ class CalendarService {
     final response = await updateData(
         'calendar_notes/$id', {'date': date.toIso8601String(), 'note': note});
     if (response.statusCode == 200) {
-      return json.decode(response.body);
+      return CalendarNote.fromJson(response);
     } else {
       throw Exception('Failed to update calendar note');
     }
   }
 
-  Future<List<dynamic>> getCalendarWorkouts() async {
-    return getData<List<dynamic>>('calendar_workouts');
+  Future<List<CalendarWorkout>> getCalendarWorkouts() async {
+    final data = await getData<List<dynamic>>('calendar_workouts');
+    return data.map((item) => CalendarWorkout.fromJson(item)).toList();
   }
 
-  Future<Map<String, dynamic>> createCalendarWorkout({
+  Future<CalendarWorkout> createCalendarWorkout({
     required DateTime date,
     required String workout,
   }) async {
-    return json.decode(await createData('calendar_workouts', {
+    final response = await createData('calendar_workouts', {
       'date': date.toIso8601String(),
       'workout': workout,
-    }));
+    });
+    return CalendarWorkout.fromJson(response);
   }
 
   Future<void> deleteCalendarWorkout(int id) async {
@@ -64,20 +68,22 @@ class CalendarService {
     }
   }
 
-  Future<List<dynamic>> getCalendarPeriods() async {
-    return getData<List<dynamic>>('periods');
+  Future<List<CalendarPeriod>> getCalendarPeriods() async {
+    final data = await getData<List<dynamic>>('periods');
+    return data.map((item) => CalendarPeriod.fromJson(item)).toList();
   }
 
-  Future<Map<String, dynamic>> createCalendarPeriod({
+  Future<CalendarPeriod> createCalendarPeriod({
     required String type,
     required DateTime start_date,
     required DateTime end_date,
   }) async {
-    return json.decode(await createData('periods', {
+    final response = await createData('periods', {
       'type': type,
       'start_date': start_date.toIso8601String(),
       'end_date': end_date.toIso8601String(),
-    }));
+    });
+    return CalendarPeriod.fromJson(response);
   }
 
   Future<void> deleteCalendarPeriod(int id) async {
@@ -86,78 +92,4 @@ class CalendarService {
       throw Exception('Failed to delete calendar period');
     }
   }
-
-  // Future<Map<String, dynamic>> getCalendarDataForRange({
-  //   //TODO: create specialized endpoints or use cache?
-  //   required DateTime startDate,
-  //   required DateTime endDate,
-  // }) async {
-  //   final notes = await getCalendarNotes();
-  //   final workouts = await getCalendarWorkouts();
-  //   final periods = await getCalendarPeriods();
-
-  //   // Filter by date range
-  //   final notesInRange = notes.where((note) {
-  //     final noteDate = DateTime.parse(note['date']);
-  //     return noteDate.isAfter(startDate.subtract(const Duration(days: 1))) &&
-  //         noteDate.isBefore(endDate.add(const Duration(days: 1)));
-  //   }).toList();
-
-  //   final workoutsInRange = workouts.where((workout) {
-  //     final workoutDate = DateTime.parse(workout['date']);
-  //     return workoutDate.isAfter(startDate.subtract(const Duration(days: 1))) &&
-  //         workoutDate.isBefore(endDate.add(const Duration(days: 1)));
-  //   }).toList();
-
-  //   final periodsInRange = periods.where((period) {
-  //     final periodStartDate = DateTime.parse(period['start_date']);
-  //     final periodEndDate = DateTime.parse(period['end_date']);
-  //     // Include periods that overlap with the range
-  //     return periodStartDate.isBefore(endDate.add(const Duration(days: 1))) &&
-  //         periodEndDate.isAfter(startDate.subtract(const Duration(days: 1)));
-  //   }).toList();
-
-  //   return {
-  //     'notes': notesInRange,
-  //     'workouts': workoutsInRange,
-  //     'periods': periodsInRange,
-  //   };
-  // }
-
-  // Calendar convenience methods
-  // Future<Map<String, dynamic>> getCalendarDataForDate(DateTime date) async {
-  //   //TODO: create specialized endpoints or use cache?
-  //   final dateString =
-  //       date.toIso8601String().split('T')[0]; // Get YYYY-MM-DD format
-
-  //   final notes = await getCalendarNotes();
-  //   final workouts = await getCalendarWorkouts();
-  //   final periods = await getCalendarPeriods();
-
-  //   // Filter by date
-  //   final notesForDate = notes.where((note) {
-  //     final noteDate =
-  //         DateTime.parse(note['date']).toIso8601String().split('T')[0];
-  //     return noteDate == dateString;
-  //   }).toList();
-
-  //   final workoutsForDate = workouts.where((workout) {
-  //     final workoutDate =
-  //         DateTime.parse(workout['date']).toIso8601String().split('T')[0];
-  //     return workoutDate == dateString;
-  //   }).toList();
-
-  //   final periodsForDate = periods.where((period) {
-  //     final startDate = DateTime.parse(period['start_date']);
-  //     final endDate = DateTime.parse(period['end_date']);
-  //     return date.isAfter(startDate.subtract(const Duration(days: 1))) &&
-  //         date.isBefore(endDate.add(const Duration(days: 1)));
-  //   }).toList();
-
-  //   return {
-  //     'notes': notesForDate,
-  //     'workouts': workoutsForDate,
-  //     'periods': periodsForDate,
-  //   };
-  // }
 }

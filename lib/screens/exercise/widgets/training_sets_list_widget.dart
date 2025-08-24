@@ -3,6 +3,8 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../controllers/exercise_controller.dart';
 import '../../../utils/models/data_models.dart';
 import 'package:Gymli/utils/themes/themes.dart' show setIcons;
+import 'package:get_it/get_it.dart';
+import '../../../utils/workout_data_cache.dart';
 
 /// Widget for displaying the list of training sets
 class TrainingSetsListWidget extends StatefulWidget {
@@ -23,6 +25,7 @@ class _TrainingSetsListWidgetState extends State<TrainingSetsListWidget> {
   final ScrollController _scrollController = ScrollController();
 
   static const List<IconData> _SetTypeIcons = setIcons;
+  WorkoutDataCache get _cache => GetIt.I<WorkoutDataCache>();
 
   @override
   void initState() {
@@ -96,14 +99,7 @@ class _TrainingSetsListWidgetState extends State<TrainingSetsListWidget> {
             // Foreground content (loading / empty / list)
             if (widget.controller.isLoading)
               const Center(child: CircularProgressIndicator())
-            else if (widget.controller.todaysTrainingSets.isEmpty)
-              ListView(
-                controller: _scrollController,
-                children: const [
-                  ListTile(title: Text("No Training yet.")),
-                ],
-              )
-            else
+            else 
               ListView.builder(
                 controller: _scrollController,
                 itemCount: widget.controller.todaysTrainingSets.length,

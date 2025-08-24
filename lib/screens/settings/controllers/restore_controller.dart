@@ -1,23 +1,52 @@
 /// Restore Controller - Handles data import operations
 library;
 
+import 'package:Gymli/utils/workout_data_cache.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import '../repositories/settings_repository.dart';
+import 'package:get_it/get_it.dart';
 import '../services/csv_service.dart';
 import '../services/file_service.dart';
 import '../models/settings_data_type.dart';
 import '../models/settings_operation_result.dart';
+import 'package:Gymli/utils/services/service_export.dart';
+import 'package:Gymli/utils/models/exercise_model.dart';
+
+typedef _Importer = Future<SettingsOperationResult> Function(
+    List<List<String>> csvTable);
+typedef _Clearer = Future<void> Function();
 
 class RestoreController extends ChangeNotifier {
-  final SettingsRepository _repository;
+  // final SettingsRepository _repository;
 
   bool _isImporting = false;
   String? _currentOperation;
   double _progress = 0.0;
 
-  RestoreController({SettingsRepository? repository})
-      : _repository = repository ?? SettingsRepository();
+  RestoreController();
+
+  Map<SettingsDataType, _Importer> _importHandlers() => {
+        SettingsDataType.trainingSets: _importTrainingSets,
+        SettingsDataType.exercises: _importExercises,
+        SettingsDataType.workouts: _importWorkouts,
+        SettingsDataType.foods: _importFoods,
+      };
+
+  Map<SettingsDataType, _Clearer> _clearHandlers() => {
+        SettingsDataType.trainingSets: () =>
+            GetIt.I<TrainingSetService>().clearTrainingSets(),
+        SettingsDataType.exercises: () => clearExercises(),
+        SettingsDataType.workouts: () =>
+            GetIt.I<WorkoutService>().clearWorkouts(),
+        SettingsDataType.foods: () async {
+          try {
+            final dynamic foodService = GetIt.I<FoodService>();
+            if (foodService != null && foodService.clearFoods != null) {
+              await foodService.clearFoods();
+            }
+          } catch (_) {}
+        },
+      };
 
   bool get isImporting => _isImporting;
   String? get currentOperation => _currentOperation;
@@ -31,13 +60,9 @@ class RestoreController extends ChangeNotifier {
     try {
       // Pick and read file
       _setImporting(true, 'Selecting file...', 0.1);
-      final fileResult = await FileService.pickAndReadCSVFile(
-        dataType: dataType.displayName,
-      );
+      final fileResult = await FileService.pickAndReadCSVFile(dataType: dataType.displayName,);
 
-      if (!fileResult.isSuccess) {
-        return fileResult;
-      }
+      if (!fileResult.isSuccess) return fileResult;
 
       final csvData = fileResult.message!;
 
@@ -45,32 +70,20 @@ class RestoreController extends ChangeNotifier {
       _setImporting(true, 'Parsing CSV data...', 0.2);
       final csvTable = CsvService.parseCSV(csvData);
 
-      if (csvTable.isEmpty) {
-        return SettingsOperationResult.error(
-          message: 'No data found in CSV file',
-        );
-      }
+      if (csvTable.isEmpty) return SettingsOperationResult.error(message: 'No data found in CSV file',);
+      
 
       // Clear existing data first
-      _setImporting(true, 'Clearing existing data...', 0.3);
+      // _setImporting(true, 'Clearing existing data...', 0.3);
       await _clearExistingData(dataType);
 
-      // Import based on data type
-      late SettingsOperationResult result;
-      switch (dataType) {
-        case SettingsDataType.trainingSets:
-          result = await _importTrainingSets(csvTable);
-          break;
-        case SettingsDataType.exercises:
-          result = await _importExercises(csvTable);
-          break;
-        case SettingsDataType.workouts:
-          result = await _importWorkouts(csvTable);
-          break;
-        case SettingsDataType.foods:
-          result = await _importFoods(csvTable);
-          break;
+      // Import based on data type (via handler registry)
+      final importer = _importHandlers()[dataType];
+      if (importer == null) {
+        return SettingsOperationResult.error(
+            message: 'No importer registered for ${dataType.displayName}');
       }
+      final result = await importer(csvTable);
 
       // Notify data changed
       //_repository.notifyDataChanged();
@@ -89,19 +102,9 @@ class RestoreController extends ChangeNotifier {
 
   /// Clear existing data before import
   Future<void> _clearExistingData(SettingsDataType dataType) async {
-    switch (dataType) {
-      case SettingsDataType.trainingSets:
-        await _repository.clearTrainingSets();
-        break;
-      case SettingsDataType.exercises:
-        await _repository.clearExercises();
-        break;
-      case SettingsDataType.workouts:
-        await _repository.clearWorkouts();
-        break;
-      case SettingsDataType.foods:
-        await _repository.clearFoods();
-        break;
+    final clearer = _clearHandlers()[dataType];
+    if (clearer != null) {
+      await clearer();
     }
   }
 
@@ -111,10 +114,10 @@ class RestoreController extends ChangeNotifier {
     _setImporting(true, 'Fetching exercises for ID resolution...', 0.4);
 
     // Get exercise lookup map
-    final exercises = await _repository.getExercises();
+    final exercises = await GetIt.I<ExerciseService>().getExercises();
     final Map<String, int> exerciseNameToIdMap = {};
     for (var exercise in exercises) {
-      exerciseNameToIdMap[exercise.name] = exercise.id;
+      exerciseNameToIdMap[exercise.name] = exercise.id!;
     }
 
     if (kDebugMode)
@@ -197,7 +200,8 @@ class RestoreController extends ChangeNotifier {
         );
 
         try {
-          await _repository.createTrainingSetsBulk(batch);
+          await GetIt.I<TrainingSetService>()
+              .createTrainingSetsBulk(trainingSets: batch);
           importedCount += batch.length;
           if (kDebugMode) {
             print(
@@ -221,7 +225,11 @@ class RestoreController extends ChangeNotifier {
     }
   }
 
-  /// Import exercises
+  ///  ---------------------- Exercise Handlers -----------------//
+  Future<void> clearExercises() async {
+    return await GetIt.I<WorkoutDataCache>().clearExercises();
+  }
+
   Future<SettingsOperationResult> _importExercises(
       List<List<String>> csvTable) async {
     int importedCount = 0;
@@ -236,46 +244,44 @@ class RestoreController extends ChangeNotifier {
         0.4 + (index / csvTable.length) * 0.5,
       );
 
-      if (row.length >= 6) {
-        try {
-          final muscleIntensities =
-              CsvService.parseCSVMuscleIntensities(row[2]);
+      // try {
+        final muscleIntensities = CsvService.parseCSVMuscleIntensities(row[5]);
 
-          // Ensure we have exactly 14 values
-          while (muscleIntensities.length < 14) {
-            muscleIntensities.add(0.0);
-          }
+        final exerciseData = {
+          'name': row[0],
+          'type': int.parse(row[1]),
+          'defaultRepBase': int.parse(row[2]),
+          'defaultRepMax': int.parse(row[3]),
+          'defaultIncrement': double.parse(row[4]),
+          'pectoralisMajor': muscleIntensities[0],
+          'trapezius': muscleIntensities[1],
+          'biceps': muscleIntensities[2],
+          'abdominals': muscleIntensities[3],
+          'frontDelts': muscleIntensities[4],
+          'deltoids': muscleIntensities[5],
+          'backDelts': muscleIntensities[6],
+          'latissimusDorsi': muscleIntensities[7],
+          'triceps': muscleIntensities[8],
+          'gluteusMaximus': muscleIntensities[9],
+          'hamstrings': muscleIntensities[10],
+          'quadriceps': muscleIntensities[11],
+          'forearms': muscleIntensities[12],
+          'calves': muscleIntensities[13],
+        };
+        final cache = GetIt.I<WorkoutDataCache>();
+        if (kDebugMode) (exerciseData);
 
-          final exerciseData = {
-            'name': row[0],
-            'type': int.parse(row[1]),
-            'defaultRepBase': int.parse(row[3]),
-            'defaultRepMax': int.parse(row[4]),
-            'defaultIncrement': double.parse(row[5]),
-            'pectoralisMajor': muscleIntensities[0],
-            'trapezius': muscleIntensities[1],
-            'biceps': muscleIntensities[2],
-            'abdominals': muscleIntensities[3],
-            'frontDelts': muscleIntensities[4],
-            'deltoids': muscleIntensities[5],
-            'backDelts': muscleIntensities[6],
-            'latissimusDorsi': muscleIntensities[7],
-            'triceps': muscleIntensities[8],
-            'gluteusMaximus': muscleIntensities[9],
-            'hamstrings': muscleIntensities[10],
-            'quadriceps': muscleIntensities[11],
-            'forearms': muscleIntensities[12],
-            'calves': muscleIntensities[13],
-          };
-
-          await _repository.createExercise(exerciseData);
-          importedCount++;
-          if (kDebugMode) print('Successfully imported exercise: ${row[0]}');
-        } catch (e) {
-          if (kDebugMode) print('Error importing exercise "${row[0]}": $e');
-          skippedCount++;
-        }
-      }
+        print(exerciseData);
+        final exercise = Exercise.fromJson(exerciseData);
+        print(exercise);
+        cache.addExercise(exercise);
+        if (kDebugMode) (cache.exercises);
+        importedCount++;
+        if (kDebugMode) print('Successfully imported exercise: ${row[0]}');
+      // } catch (e) {
+      //   if (kDebugMode) print('Error importing exercise "${row[0]}": $e');
+      //   skippedCount++;
+      // }
     }
 
     return SettingsOperationResult.success(
@@ -308,8 +314,8 @@ class RestoreController extends ChangeNotifier {
           for (int i = 1; i < row.length; i++) {
             final unitStr = row[i].split(", ");
             if (unitStr.length >= 5) {
-              final exerciseId =
-                  await _repository.getExerciseIdByName(unitStr[0]);
+              final exerciseId = await GetIt.I<ExerciseService>()
+                  .getExerciseIdByName(unitStr[0]);
               if (exerciseId != null) {
                 units.add({
                   'exercise_id': exerciseId,
@@ -328,7 +334,8 @@ class RestoreController extends ChangeNotifier {
           }
 
           if (units.isNotEmpty) {
-            await _repository.createWorkout(name: workoutName, units: units);
+            await GetIt.I<WorkoutService>()
+                .createWorkout(name: workoutName, units: units);
             importedCount++;
             if (kDebugMode) {
               print('Successfully imported workout: $workoutName');
@@ -407,7 +414,7 @@ class RestoreController extends ChangeNotifier {
         );
 
         try {
-          await _repository.createFoodsBulk(batch);
+          await GetIt.I<FoodService>().createFoodsBulk(foods: batch);
           importedCount += batch.length;
           if (kDebugMode) {
             print('Successfully imported batch of ${batch.length} food items');

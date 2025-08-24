@@ -1,23 +1,24 @@
 /// Backup Controller - Handles data export operations
 library;
 
+import 'package:Gymli/utils/workout_data_cache.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../repositories/settings_repository.dart';
 import '../services/csv_service.dart';
 import '../services/file_service.dart';
 import '../models/settings_data_type.dart';
 import '../models/settings_operation_result.dart';
+import 'package:Gymli/utils/services/service_export.dart';
+import 'package:get_it/get_it.dart';
 
 class BackupController extends ChangeNotifier {
-  final SettingsRepository _repository;
-
+  final ExerciseService _exerciseService = GetIt.I<ExerciseService>();
+  final WorkoutService _workoutService = GetIt.I<WorkoutService>();
+  final TrainingSetService _trainingSetService = GetIt.I<TrainingSetService>();
+  final FoodService _foodService = GetIt.I<FoodService>();
   bool _isExporting = false;
   String? _currentOperation;
-
-  BackupController({SettingsRepository? repository})
-      : _repository = repository ?? SettingsRepository();
 
   bool get isExporting => _isExporting;
   String? get currentOperation => _currentOperation;
@@ -33,17 +34,18 @@ class BackupController extends ChangeNotifier {
       // Get data from repository
       List<dynamic> data;
       switch (dataType) {
+        //TODO: CACHE
         case SettingsDataType.trainingSets:
-          data = await _repository.getTrainingSets();
+          data = await _trainingSetService.getTrainingSets();
           break;
         case SettingsDataType.exercises:
-          data = await _repository.getExercises();
+          data = GetIt.I<WorkoutDataCache>().exercises;
           break;
         case SettingsDataType.workouts:
-          data = await _repository.getWorkouts();
+          data = GetIt.I<WorkoutDataCache>().workouts;
           break;
         case SettingsDataType.foods:
-          data = await _repository.getFoods();
+          data = await _foodService.getFoods();
           break;
       }
 

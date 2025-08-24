@@ -119,8 +119,7 @@ class StatisticsDataService {
       if (kDebugMode) print('Activity logs count: ${logsData.length}');
 
       // Convert logs to ApiActivityLog objects and sort by date
-      final activityLogs =
-          logsData.map((data) => ActivityLog.fromJson(data)).toList();
+      final activityLogs = logsData;
       activityLogs.sort((a, b) => a.date.compareTo(b.date));
 
       // Apply date filtering (same logic as other statistics)

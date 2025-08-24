@@ -65,12 +65,11 @@ class ExerciseGraphController extends ChangeNotifier {
 // 2. Methode zum Laden der Notizdaten
   Future<void> loadNoteDates() async {
     final notes = await GetIt.I<CalendarService>().getCalendarNotes();
-    _noteDates = notes
-        .map<String>((n) => (n['date'] as String).substring(0, 10))
-        .toSet();
+    _noteDates =
+        notes.map<String>((n) => (n.date as String).substring(0, 10)).toSet();
     _notesByDate = {
       for (var n in notes)
-        (n['date'] as String).substring(0, 10): (n['note'] as String? ?? '')
+        (n.date as String).substring(0, 10): (n.note as String? ?? '')
     };
   }
 
@@ -122,9 +121,9 @@ class ExerciseGraphController extends ChangeNotifier {
       if (_mostRecentTrainingDate == null) return;
 
       for (var period in periods) {
-        final type = period['type'] as String? ?? 'maintenance';
-        final startDateStr = period['start_date'] as String?;
-        final endDateStr = period['end_date'] as String?;
+        final type = period.type as String? ?? 'maintenance';
+        final startDateStr = period.startDate as String?;
+        final endDateStr = period.endDate as String?;
 
         if (startDateStr == null || endDateStr == null) continue;
 

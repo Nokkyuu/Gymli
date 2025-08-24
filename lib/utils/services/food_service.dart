@@ -7,16 +7,19 @@ library;
 
 import 'dart:convert';
 import '../api/api_base.dart';
+import '../models/data_models.dart';
 
 class FoodService {
   /// Retrieves all food items for a user
   /// Returns a list of food item objects
-  Future<List<dynamic>> getFoods() async {
-    return getData<List<dynamic>>('foods');
+  Future<List<FoodItem>> getFoods() async {
+    final raw = await getData<List<dynamic>>('foods');
+    final foodItems = raw.map((item) => FoodItem.fromJson(item)).toList();
+    return foodItems;
   }
 
   /// Creates a new food item
-  Future<Map<String, dynamic>> createFood({
+  Future<FoodItem> createFood({
     required String name,
     required double kcalPer100g,
     required double proteinPer100g,
@@ -24,7 +27,7 @@ class FoodService {
     required double fatPer100g,
     String? notes,
   }) async {
-    return json.decode(await createData('foods', {
+    return FoodItem.fromJson(await createData('foods', {
       'name': name,
       'kcal_per_100g': kcalPer100g,
       'protein_per_100g': proteinPer100g,
@@ -35,7 +38,7 @@ class FoodService {
   }
 
   /// Creates multiple food items in a single batch operation
-  Future<List<Map<String, dynamic>>> createFoodsBulk({
+  Future<List<FoodItem>> createFoodsBulk({
     required List<Map<String, dynamic>> foods,
   }) async {
     if (foods.isEmpty) {
@@ -47,19 +50,21 @@ class FoodService {
           'Cannot create more than 1000 food items in a single request');
     }
 
-    return json.decode(await createData('foods/bulk', foods));
+    return (await createData('foods/bulk', foods))
+        .map((item) => FoodItem.fromJson(item))
+        .toList();
   }
 
   Future<Map<String, dynamic>> clearFoods() async {
     final response = await deleteData('foods/bulk_clear');
     if (response.statusCode == 200 || response.statusCode == 204) {
-      final result = response.body.isNotEmpty
-          ? json.decode(response.body)
+      final result = response.isNotEmpty
+          ? json.decode(response)
           : {'message': 'Food items cleared successfully'};
       return result;
     } else {
       throw Exception(
-          'Failed to clear food items: ${response.statusCode} ${response.body}');
+          'Failed to clear food items: ${response.statusCode} ${response}');
     }
   }
 
@@ -69,12 +74,12 @@ class FoodService {
   }) async {
     final response = await deleteData('foods/$foodId');
     if (response.statusCode != 200 && response.statusCode != 204) {
-      throw Exception('Failed to delete food: ${response.body}');
+      throw Exception('Failed to delete food: ${response}');
     }
   }
 
   /// Retrieves food logs with optional filtering
-  Future<List<dynamic>> getFoodLogs({
+  Future<List<FoodLog>> getFoodLogs({
     String? foodName,
     DateTime? startDate,
     DateTime? endDate,
@@ -90,12 +95,12 @@ class FoodService {
     if (endDate != null) {
       url += '&end_date=${endDate.toIso8601String()}';
     }
-
-    return getData<List<dynamic>>(url);
+    final raw = await getData<List<dynamic>>(url);
+    return raw.map((item) => FoodLog.fromJson(item)).toList();
   }
 
   /// Creates a new food log entry
-  Future<Map<String, dynamic>> createFoodLog({
+  Future<FoodLog> createFoodLog({
     required String foodName,
     required DateTime date,
     required double grams,
@@ -104,7 +109,7 @@ class FoodService {
     required double carbsPer100g,
     required double fatPer100g,
   }) async {
-    return json.decode(await createData('food_logs', {
+    return FoodLog.fromJson(await createData('food_logs', {
       'food_name': foodName,
       'date': date.toIso8601String(),
       'grams': grams,
@@ -121,7 +126,7 @@ class FoodService {
   }) async {
     final response = await deleteData('food_logs/$logId');
     if (response.statusCode != 200 && response.statusCode != 204) {
-      throw Exception('Failed to delete food log: ${response.body}');
+      throw Exception('Failed to delete food log: ${response}');
     }
   }
 
@@ -138,16 +143,16 @@ class FoodService {
     Map<String, Map<String, double>> dailyStats = {};
 
     for (var log in logs) {
-      final dateString = log['date'] as String;
+      final dateString = log.date as String;
       final date = DateTime.parse(dateString);
       final dateKey =
           '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
 
-      final grams = (log['grams'] as num).toDouble();
-      final kcalPer100g = (log['kcal_per_100g'] as num).toDouble();
-      final proteinPer100g = (log['protein_per_100g'] as num).toDouble();
-      final carbsPer100g = (log['carbs_per_100g'] as num).toDouble();
-      final fatPer100g = (log['fat_per_100g'] as num).toDouble();
+      final grams = (log.grams as num).toDouble();
+      final kcalPer100g = (log.kcalPer100g as num).toDouble();
+      final proteinPer100g = (log.proteinPer100g as num).toDouble();
+      final carbsPer100g = (log.carbsPer100g as num).toDouble();
+      final fatPer100g = (log.fatPer100g as num).toDouble();
 
       final multiplier = grams / 100.0;
       final calories = kcalPer100g * multiplier;
@@ -225,11 +230,11 @@ class FoodService {
     double totalFat = 0.0;
 
     for (var log in logs) {
-      final grams = (log['grams'] as num).toDouble();
-      final kcalPer100g = (log['kcal_per_100g'] as num).toDouble();
-      final proteinPer100g = (log['protein_per_100g'] as num).toDouble();
-      final carbsPer100g = (log['carbs_per_100g'] as num).toDouble();
-      final fatPer100g = (log['fat_per_100g'] as num).toDouble();
+      final grams = (log.grams as num).toDouble();
+      final kcalPer100g = (log.kcalPer100g as num).toDouble();
+      final proteinPer100g = (log.proteinPer100g as num).toDouble();
+      final carbsPer100g = (log.carbsPer100g as num).toDouble();
+      final fatPer100g = (log.fatPer100g as num).toDouble();
 
       final multiplier = grams / 100.0;
       totalCalories += kcalPer100g * multiplier;

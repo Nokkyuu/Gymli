@@ -3,28 +3,30 @@ library;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import '../repositories/settings_repository.dart';
 import '../models/settings_data_type.dart';
 import '../models/settings_operation_result.dart';
 import 'backup_controller.dart';
 import 'restore_controller.dart';
 import 'wipe_controller.dart';
+import 'package:Gymli/utils/services/service_export.dart';
+import 'package:get_it/get_it.dart';
 
 class SettingsController extends ChangeNotifier {
-  final SettingsRepository _repository;
   final BackupController _backupController;
   final RestoreController _restoreController;
   final WipeController _wipeController;
+  final ExerciseService _exerciseService = GetIt.I<ExerciseService>();
+  final WorkoutService _workoutService = GetIt.I<WorkoutService>();
+  final TrainingSetService _trainingSetService = GetIt.I<TrainingSetService>();
+  final FoodService _foodService = GetIt.I<FoodService>();
 
   bool _isAnyOperationInProgress = false;
 
   SettingsController({
-    SettingsRepository? repository,
     BackupController? backupController,
     RestoreController? restoreController,
     WipeController? wipeController,
-  })  : _repository = repository ?? SettingsRepository(),
-        _backupController = backupController ?? BackupController(),
+  })  : _backupController = backupController ?? BackupController(),
         _restoreController = restoreController ?? RestoreController(),
         _wipeController = wipeController ?? WipeController() {
     // Listen to child controllers
@@ -37,7 +39,6 @@ class SettingsController extends ChangeNotifier {
   BackupController get backupController => _backupController;
   RestoreController get restoreController => _restoreController;
   WipeController get wipeController => _wipeController;
-  SettingsRepository get repository => _repository;
 
   // Operation status
   bool get isAnyOperationInProgress => _isAnyOperationInProgress;
@@ -114,10 +115,11 @@ class SettingsController extends ChangeNotifier {
   Future<Map<SettingsDataType, int>> getDataCounts() async {
     try {
       final results = await Future.wait([
-        _repository.getTrainingSets(),
-        _repository.getExercises(),
-        _repository.getWorkouts(),
-        _repository.getFoods(),
+        //TODO: CACHE
+        _trainingSetService.getTrainingSets(),
+        _exerciseService.getExercises(),
+        _workoutService.getWorkouts(),
+        _foodService.getFoods(),
       ]);
 
       return {
@@ -143,16 +145,16 @@ class SettingsController extends ChangeNotifier {
       late List<dynamic> data;
       switch (dataType) {
         case SettingsDataType.trainingSets:
-          data = await _repository.getTrainingSets();
+          data = await _trainingSetService.getTrainingSets();
           break;
         case SettingsDataType.exercises:
-          data = await _repository.getExercises();
+          data = await _exerciseService.getExercises();
           break;
         case SettingsDataType.workouts:
-          data = await _repository.getWorkouts();
+          data = await _workoutService.getWorkouts();
           break;
         case SettingsDataType.foods:
-          data = await _repository.getFoods();
+          data = await _foodService.getFoods();
           break;
       }
       return data.isNotEmpty;

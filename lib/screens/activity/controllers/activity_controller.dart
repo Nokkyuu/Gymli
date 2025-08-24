@@ -33,10 +33,8 @@ class ActivityController extends ChangeNotifier {
       final logsData = await GetIt.I<ActivityService>().getActivityLogs();
       //final statsData = await container.activityService.getActivityStats();
 
-      activities =
-          activitiesData.map((data) => Activity.fromJson(data)).toList();
-      activityLogs =
-          logsData.map((data) => ActivityLog.fromJson(data)).toList();
+      activities = activitiesData;
+      activityLogs = logsData;
       // activityStats = statsData;
 
       _isInitialized = true;

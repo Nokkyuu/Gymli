@@ -220,12 +220,12 @@ class _CalorieBalanceScreenState extends State<CalorieBalanceScreen> {
       Map<String, double> dailyActivityCalories = {};
 
       for (var log in activityLogs) {
-        final dateString = log['date'] as String;
+        final dateString = log.activityName;
         final date = DateTime.parse(dateString);
         final dateKey =
             '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
 
-        final calories = (log['calories_burned'] as num).toDouble();
+        final calories = (log.caloriesBurned as num).toDouble();
         dailyActivityCalories[dateKey] =
             (dailyActivityCalories[dateKey] ?? 0.0) + calories;
       }

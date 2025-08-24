@@ -8,7 +8,7 @@ import 'package:http/http.dart' as http;
 import '../../config/api_config.dart';
 import 'api_cache.dart';
 
-const bool useCache = true; // Set to false to disable caching
+const bool useCache = false; // Set to false to disable caching
 // Main API base URL - Azure hosted backend service
 const String baseUrl = kDebugMode
     //? 'http://127.0.0.1:8000'
@@ -64,6 +64,7 @@ Future<dynamic> _parseJsonInIsolate(String jsonString) async {
   }
 }
 
+
 Future deleteData(String url) async {
   final response = await http.delete(
     Uri.parse('$baseUrl/$url'),
@@ -72,9 +73,8 @@ Future deleteData(String url) async {
   if (response.statusCode != 200 && response.statusCode != 204) {
     throw Exception('Failed to delete');
   }
-
   // Invalidate related cache entries
-  invalidateCacheForMutation(url);
+  if (useCache) invalidateCacheForMutation(url);
 
   return response;
 }
@@ -87,9 +87,11 @@ Future updateData<T>(String url, T data) async {
   }
 
   // Invalidate related cache entries
-  invalidateCacheForMutation(url);
+  if (useCache) invalidateCacheForMutation(url);
+  final decoded = await _parseJsonInIsolate(response.body);
 
-  return response;
+  return decoded;
+  //TODO: JSON DECODE?
 }
 
 Future createData<T>(String url, T data) async {
@@ -100,9 +102,10 @@ Future createData<T>(String url, T data) async {
   }
 
   // Invalidate related cache entries
-  invalidateCacheForMutation(url);
-
-  return response.body;
+  if (useCache) invalidateCacheForMutation(url);
+  final decoded = await _parseJsonInIsolate(response.body);
+  return decoded;
+  //TODO: JSON DECODE?
 }
 
 void invalidateCacheForMutation(String url) {
