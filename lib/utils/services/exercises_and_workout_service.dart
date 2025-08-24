@@ -248,7 +248,6 @@ class ExerciseService {
   }
 
   Future<void> deleteExercise(int id) async {
-    //TODO: succcess response?
     return deleteData('exercises/$id');
   }
 
