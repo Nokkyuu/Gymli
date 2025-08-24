@@ -42,27 +42,20 @@ class ExerciseConfirmButtonWidget extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
               Icon(
-                globals.exerciseList
-                        .contains(controller.exerciseTitleController.text)
-                    ? Icons.edit
-                    : Icons.add_circle,
+                controller.exerciseId != 0 ? Icons.edit : Icons.add_circle,
                 size: 48,
-                color: globals.exerciseList
-                        .contains(controller.exerciseTitleController.text)
-                    ? Colors.orange
-                    : Colors.green,
+                color:
+                    controller.exerciseId != 0 ? Colors.orange : Colors.green,
               ),
               const SizedBox(height: 16),
               Text(
-                globals.exerciseList
-                        .contains(controller.exerciseTitleController.text)
+                controller.exerciseId != 0
                     ? 'Update Exercise'
                     : 'Create New Exercise',
                 style: Theme.of(context).textTheme.titleLarge,
               ),
               const SizedBox(height: 8),
-              if (globals.exerciseList
-                  .contains(controller.exerciseTitleController.text))
+              if (controller.exerciseId != 0)
                 const Text(
                   'This will update the existing exercise configuration.',
                   textAlign: TextAlign.center,
@@ -164,8 +157,7 @@ class ExerciseConfirmButtonWidget extends StatelessWidget {
                       }
                     },
                     child: Text(
-                      globals.exerciseList
-                              .contains(controller.exerciseTitleController.text)
+                      controller.exerciseId != 0
                           ? 'Update Exercise'
                           : 'Create Exercise',
                     ),

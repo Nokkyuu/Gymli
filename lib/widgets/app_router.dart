@@ -109,8 +109,9 @@ class AppRouter {
           path: exerciseSetup,
           name: 'exercise-setup',
           builder: (context, state) {
-            final exerciseType = state.uri.queryParameters['type'] ?? '';
-            return ExerciseSetupScreen(exerciseType);
+            final exerciseId =
+                int.tryParse(state.uri.queryParameters['id'] ?? '0') ?? 0;
+            return ExerciseSetupScreen(exerciseId);
           },
         ),
 

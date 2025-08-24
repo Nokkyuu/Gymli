@@ -244,8 +244,9 @@ class ExerciseService {
     return Exercise.fromJson(data);
   }
 
-  Future<Exercise> updateExercise(int id, Map<String, dynamic> data) async {
-    final updatedData = await updateData('exercises/$id', data);
+  Future<Exercise> updateExercise(Exercise exercise) async {
+    final updatedData =
+        await updateData('exercises/${exercise.id}', exercise.toJson());
     return Exercise.fromJson(updatedData);
   }
 
