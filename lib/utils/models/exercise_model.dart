@@ -163,7 +163,7 @@ class Exercise {
       defaultRepBase: json['default_rep_base'] ?? 8,
       defaultRepMax: json['default_rep_max'] ?? 12,
       defaultIncrement: (json['default_increment'] ?? 0.0).toDouble(),
-      muscleGroup: MuscleGroup.fromJson(json),
+      muscleGroup: MuscleGroup.fromJson(json['muscle_groups'] ?? {}),
     );
   }
 
@@ -175,7 +175,7 @@ class Exercise {
       'default_rep_base': defaultRepBase,
       'default_rep_max': defaultRepMax,
       'default_increment': defaultIncrement,
-      ...muscleGroup.toJson(),
+      'muscle_groups': muscleGroup.toJson(),
     };
   }
 
