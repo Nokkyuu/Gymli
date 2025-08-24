@@ -51,6 +51,29 @@ class BackupController extends ChangeNotifier {
     }).toList();
   }
 
+  // Convert a single domain object to a JSON-friendly Map
+  Map<String, dynamic> _encodeObject(dynamic item) {
+    if (item is Map) return Map<String, dynamic>.from(item as Map);
+    try {
+      final dyn = item as dynamic;
+      if (dyn.toJson is Function) {
+        final m = dyn.toJson();
+        if (m is Map<String, dynamic>) return m;
+        if (m is Map) return Map<String, dynamic>.from(m);
+      }
+    } catch (_) {}
+    try {
+      final dyn = item as dynamic;
+      if (dyn.oJson is Function) {
+        final m = dyn.oJson();
+        if (m is Map<String, dynamic>) return m;
+        if (m is Map) return Map<String, dynamic>.from(m);
+      }
+    } catch (_) {}
+    // Fallback: wrap as string for traceability
+    return {'_raw': item.toString()};
+  }
+
   /// Export data of specified type
   Future<SettingsOperationResult> exportData(
     SettingsDataType dataType,
@@ -79,6 +102,30 @@ class BackupController extends ChangeNotifier {
 
       if (kDebugMode) print('Retrieved ${data.length} ${dataType.displayName}');
 
+      // Prepare export payload (special handling for trainingSets -> replace exercise_id with exercise_name)
+      List<dynamic> payload;
+      if (dataType == SettingsDataType.trainingSets) {
+        final exercises = GetIt.I<WorkoutDataCache>().exercises;
+        final Map<int, String> idToName = {
+          for (var e in exercises)
+            if (e.id != null) e.id!: e.name,
+        };
+        payload = data.map((item) {
+          final map = _encodeObject(item);
+          final exId = map['exercise_id'] ?? map['exerciseId'];
+          if (exId is int && idToName.containsKey(exId)) {
+            map['exercise_name'] = idToName[exId];
+          } else if (exId != null) {
+            map['exercise_name'] = '#$exId';
+          }
+          map.remove('exercise_id');
+          map.remove('exerciseId');
+          return map;
+        }).toList();
+      } else {
+        payload = _encodeList(data);
+      }
+
       if (data.isEmpty) {
         return SettingsOperationResult.error(
           message: 'No ${dataType.displayName} data to export',
@@ -89,7 +136,7 @@ class BackupController extends ChangeNotifier {
       _setExporting(true, 'Converting ${data.length} items to JSON...');
       final Map<String, dynamic> root = {
         // always use a stable key naming; we keep SettingsDataType.value as key
-        dataType.value: _encodeList(data),
+        dataType.value: payload,
       };
 
       final jsonString = const JsonEncoder.withIndent('  ').convert(root);
@@ -109,7 +156,7 @@ class BackupController extends ChangeNotifier {
 
       // Save file (reuse CSV saver to write JSON payload)
       final result = await FileService.saveJsonFile(
-        csvData: jsonString,
+        jsonData: jsonString,
         fileName: fileName,
         dataType: dataType.displayName,
       );

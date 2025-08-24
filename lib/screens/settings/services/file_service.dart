@@ -1,4 +1,4 @@
-/// File Service - Handles file operations for import/export
+/// File Service - JSON-only import/export helpers
 library;
 
 import 'dart:io';
@@ -11,17 +11,26 @@ import '../models/settings_operation_result.dart';
 import 'web_download_service.dart';
 
 class FileService {
-  /// Save CSV data to file
-  static Future<SettingsOperationResult> saveJsonFile({
+  // Deprecated CSV-named wrapper for backward compatibility
+  static Future<SettingsOperationResult> saveCSVFile({
     required String csvData,
+    required String fileName,
+    required String dataType,
+  }) async {
+    return saveJsonFile(jsonData: csvData, fileName: fileName, dataType: dataType);
+  }
+
+  /// Save JSON data to file
+  static Future<SettingsOperationResult> saveJsonFile({
+    required String jsonData,
     required String fileName,
     required String dataType,
   }) async {
     try {
       if (kIsWeb) {
-        return await _saveWebFile(csvData, fileName, dataType);
+        return await _saveWebFile(jsonData, fileName, dataType);
       } else {
-        return await _saveMobileFile(csvData, fileName, dataType);
+        return await _saveMobileFile(jsonData, fileName, dataType);
       }
     } catch (e) {
       return SettingsOperationResult.error(
@@ -31,7 +40,14 @@ class FileService {
     }
   }
 
-  /// Pick and read CSV file
+  // Deprecated CSV-named wrapper for backward compatibility
+  static Future<SettingsOperationResult> pickAndReadCSVFile({
+    required String dataType,
+  }) async {
+    return pickAndReadJsonFile(dataType: dataType);
+  }
+
+  /// Pick and read JSON file
   static Future<SettingsOperationResult> pickAndReadJsonFile({
     required String dataType,
   }) async {
@@ -48,13 +64,13 @@ class FileService {
       }
 
       // Read the file content - handle both web and mobile platforms
-      String JsonContent;
+      String jsonContent;
       if (result.files.first.bytes != null) {
         // Web platform - file content is available as bytes
-        JsonContent = String.fromCharCodes(result.files.first.bytes!);
+        jsonContent = String.fromCharCodes(result.files.first.bytes!);
       } else if (result.files.first.path != null) {
         // Mobile platforms - file content is available via file path
-        JsonContent = await File(result.files.first.path!).readAsString();
+        jsonContent = await File(result.files.first.path!).readAsString();
       } else {
         return SettingsOperationResult.error(
           message: 'Unable to read file content',
@@ -62,7 +78,7 @@ class FileService {
       }
 
       return SettingsOperationResult.success(
-        message: JsonContent,
+        message: jsonContent,
         // Don't set filePath to avoid web issues
       );
     } catch (e) {
@@ -75,21 +91,21 @@ class FileService {
 
   /// Save file on web platform
   static Future<SettingsOperationResult> _saveWebFile(
-    String csvData,
+    String jsonData,
     String fileName,
     String dataType,
   ) async {
     try {
-      final bytes = utf8.encode(csvData);
+      final bytes = utf8.encode(jsonData);
 
       final params = SaveFileDialogParams(
         data: bytes,
         fileName: fileName,
-        mimeTypesFilter: ['text/csv'],
+        mimeTypesFilter: ['application/json'],
       );
 
       // Use web download service for fallback
-      WebDownloadService.downloadCsv(csvData, fileName);
+      WebDownloadService.downloadCsv(jsonData, fileName);
 
       final result = await FlutterFileDialog.saveFile(params: params);
 
@@ -104,7 +120,7 @@ class FileService {
     } catch (e) {
       // Fallback to showing data in dialog
       return SettingsOperationResult.success(
-        message: csvData, // Return CSV data for display
+        message: jsonData, // Return JSON data for display
         filePath: 'web_fallback',
       );
     }
@@ -112,7 +128,7 @@ class FileService {
 
   /// Save file on mobile platform
   static Future<SettingsOperationResult> _saveMobileFile(
-    String csvData,
+    String jsonData,
     String fileName,
     String dataType,
   ) async {
@@ -121,12 +137,12 @@ class FileService {
       final path = "$directory/$fileName";
 
       final File file = File(path);
-      await file.writeAsString(csvData, encoding: utf8);
+      await file.writeAsString(jsonData, encoding: utf8);
 
       final params = SaveFileDialogParams(
         sourceFilePath: path,
         fileName: fileName,
-        mimeTypesFilter: ['text/csv'],
+        mimeTypesFilter: ['application/json'],
       );
 
       final result = await FlutterFileDialog.saveFile(params: params);

@@ -140,15 +140,25 @@ class RestoreController extends ChangeNotifier {
       await clearer();
     }
   }
-
+String _normalizeName(String s) {
+  return s
+      .replaceAll('\u00A0', ' ')      // NBSP -> Space
+      .trim()
+      .replaceAll(RegExp(r'\s+'), ' ')// Mehrfach-Whitespace auf 1 Space
+      .toLowerCase();                 // Case-insensitive
+}
   /// Import training sets
   Future<SettingsOperationResult> _importTrainingSets(List<dynamic> items) async {
     _setImporting(true, 'Resolving exercise IDs...', 0.4);
 
     final exercises = GetIt.I<WorkoutDataCache>().exercises;
-    final Map<String, int> exerciseNameToIdMap = {
-      for (var e in exercises) e.name: e.id!,
+
+    final Map<String, int> exerciseNameToIdMapNorm = {
+      for (var e in exercises) _normalizeName(e.name): e.id!,
     };
+    final Set<int> knownExerciseIds = exerciseNameToIdMapNorm.values.toSet();
+    final Set<String> unresolvedNames = <String>{};
+    final Set<int> unresolvedIds = <int>{};
 
     _setImporting(true, 'Preparing training sets...', 0.5);
     List<Map<String, dynamic>> trainingSetsToCreate = [];
@@ -160,17 +170,29 @@ class RestoreController extends ChangeNotifier {
         final map = item as Map;
 
         int? exerciseId;
-        // prefer explicit id
+        // Prefer explicit id, but ensure it belongs to current catalog
         if (map['exercise_id'] is int) exerciseId = map['exercise_id'] as int;
         if (exerciseId == null && map['exerciseId'] is int) exerciseId = map['exerciseId'] as int;
-        // resolve by name if provided
+        if (exerciseId != null && !knownExerciseIds.contains(exerciseId)) {
+          unresolvedIds.add(exerciseId!);
+          skippedCount++;
+          continue;
+        }
+
+        // Resolve by name if no valid id provided
         if (exerciseId == null) {
           final name = (map['exercise_name'] ?? map['exercise'] ?? map['exerciseName'])?.toString();
-          if (name != null && exerciseNameToIdMap.containsKey(name)) {
-            exerciseId = exerciseNameToIdMap[name];
+          final normalizedName = _normalizeName(name!);
+          if (normalizedName != null && exerciseNameToIdMapNorm.containsKey(normalizedName)) {
+            exerciseId = exerciseNameToIdMapNorm[normalizedName];
+          } else {
+            if (name != null && name.isNotEmpty) {
+              unresolvedNames.add(name);
+            }
+            skippedCount++;
+            continue;
           }
         }
-        if (exerciseId == null) { skippedCount++; continue; }
 
         final dateStr = (map['date'] ?? map['timestamp'])?.toString();
         if (dateStr == null) { skippedCount++; continue; }
@@ -210,16 +232,30 @@ class RestoreController extends ChangeNotifier {
 
         _setImporting(true, 'Importing batch $currentBatch of $totalBatches', 0.5 + (currentBatch / totalBatches) * 0.4);
 
+      
+        // TODO: this should be Batch
         try {
-          await GetIt.I<TrainingSetService>().createTrainingSetsBulk(trainingSets: batch);
+          final response = await GetIt.I<TrainingSetService>().createTrainingSetsBulk(trainingSets: batch);
           importedCount += batch.length;
         } catch (_) {
           skippedCount += batch.length;
         }
       }
 
+      final buffer = StringBuffer('Training sets import completed');
+      if (unresolvedIds.isNotEmpty || unresolvedNames.isNotEmpty) {
+        buffer.write(' (with warnings)');
+      }
+      final details = <String>[];
+      if (unresolvedIds.isNotEmpty) {
+        details.add('unzuordenbare exercise_id(s): ${unresolvedIds.take(20).join(', ')}${unresolvedIds.length > 20 ? ' …' : ''}');
+      }
+      if (unresolvedNames.isNotEmpty) {
+        details.add('unzuordenbare exercise_name(s): ${unresolvedNames.take(20).join(', ')}${unresolvedNames.length > 20 ? ' …' : ''}');
+      }
+
       return SettingsOperationResult.success(
-        message: 'Training sets import completed',
+        message: details.isEmpty ? buffer.toString() : '${buffer.toString()}\n${details.join('\n')}',
         importedCount: importedCount,
         skippedCount: skippedCount,
       );

@@ -181,7 +181,6 @@ class WorkoutDataCache extends ChangeNotifier {
 
 
   TrainingSet createTrainingSetOptimistic({
-    required String userName,
     required int exerciseId,
     required String exerciseName,
     required DateTime date,
@@ -194,7 +193,6 @@ class WorkoutDataCache extends ChangeNotifier {
     final int tempId = _nextTempTrainingSetId--;
     final TrainingSet set = TrainingSet(
       id: tempId,
-      // userName: userName,
       exerciseId: exerciseId,
       exerciseName: exerciseName,
       date: date,

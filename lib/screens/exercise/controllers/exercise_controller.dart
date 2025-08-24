@@ -133,9 +133,8 @@ class ExerciseController extends ChangeNotifier {
     }
 
     try {
-      final userName = _currentUserName();
+      // final userName = _currentUserName();
       final TrainingSet newSet = _cache.createTrainingSetOptimistic(
-        userName: userName,
         exerciseId: _currentExercise!.id!,
         exerciseName: _currentExercise!.name,
         date: DateTime.tryParse(when) ?? DateTime.now(),
