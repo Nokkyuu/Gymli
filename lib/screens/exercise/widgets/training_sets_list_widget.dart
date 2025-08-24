@@ -147,51 +147,40 @@ class _TrainingSetsListWidgetState extends State<TrainingSetsListWidget> {
   }
 
   Future<void> _confirmDelete(TrainingSet trainingSet) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Delete Training Set'),
-          content: Text(
-            'Are you sure you want to delete this training set?\n'
-            '${trainingSet.weight}kg for ${trainingSet.repetitions} reps',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              style: TextButton.styleFrom(foregroundColor: Colors.red),
-              child: const Text('Delete'),
-            ),
-          ],
-        );
-      },
-    );
+    final success = await widget.controller.deleteTrainingSet(trainingSet);
 
-    if (confirmed == true && mounted) {
-      final success = await widget.controller.deleteTrainingSet(trainingSet);
+    if (!mounted) return;
 
-      if (success && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Training set deleted successfully'),
-            backgroundColor: Colors.green,
-            duration: Duration(seconds: 1),
+    if (success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Training set deleted'),
+          duration: const Duration(seconds: 4),
+          action: SnackBarAction(
+            label: 'Undo',
+            onPressed: () async {
+              await widget.controller.addTrainingSet(
+                widget.controller.currentExercise?.name ?? '',
+                trainingSet.weight,
+                trainingSet.repetitions,
+                trainingSet.setType,
+                trainingSet.date.toIso8601String(),
+                trainingSet.phase,
+                trainingSet.myoreps,
+              );
+            },
           ),
-        );
-      } else if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(widget.controller.errorMessage ??
-                'Failed to delete training set'),
-            backgroundColor: Colors.red,
-            duration: const Duration(seconds: 3),
-          ),
-        );
-      }
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(widget.controller.errorMessage ??
+              'Failed to delete training set'),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 3),
+        ),
+      );
     }
   }
 }
