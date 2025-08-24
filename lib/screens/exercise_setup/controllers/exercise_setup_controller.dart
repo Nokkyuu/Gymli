@@ -25,7 +25,7 @@ class ExerciseSetupController extends ChangeNotifier {
 
   // Form controller
   final TextEditingController exerciseTitleController = TextEditingController();
-
+  List<String> muscleGroupNames = MuscleGroup.names;
   // Loading state
   bool _isLoading = false;
   String? _errorMessage;
