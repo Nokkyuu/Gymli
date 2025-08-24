@@ -27,6 +27,13 @@ class TrainingSetService {
     return data.map((item) => TrainingSet.fromJson(item)).toList();
   }
 
+  Future<int> getTrainingSetsCount() async {
+    final data = await getData<dynamic>('training_sets/count');
+    if (kDebugMode) print("DEBUG: Fetching num of sets $data training sets");
+    return data['count'] as int;
+  }
+
+
   Future<TrainingSet?> getTrainingSetById(int id) async {
     final data = await getData<Map<String, dynamic>>('training_sets/$id');
     return TrainingSet.fromJson(data);
