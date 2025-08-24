@@ -25,7 +25,7 @@ class ExerciseSetupController extends ChangeNotifier {
 
   // Form controller
   final TextEditingController exerciseTitleController = TextEditingController();
-
+  List<String> muscleGroupNames = MuscleGroup.names;
   // Loading state
   bool _isLoading = false;
   String? _errorMessage;
@@ -141,16 +141,6 @@ class ExerciseSetupController extends ChangeNotifier {
 
       if (kDebugMode) print('🔧 Calling get_exercise_list...');
       await _getExerciseList();
-
-      //if (kDebugMode) print('🔧 Notifying data service...');
-      //GetIt.I<AuthService>().notifyAuthStateChanged();
-
-      // // Wait for cache invalidation to complete by forcing a fresh fetch
-      // if (kDebugMode) print('🔧 Ensuring cache is refreshed...');
-      // await exerciseService.getExercises();
-
-      await Future.delayed(const Duration(milliseconds: 1500));
-      //TODO: workaround to wait for cache invalidation, there must be a better solution
 
       if (kDebugMode) print('✅ All operations completed successfully');
       _clearError();

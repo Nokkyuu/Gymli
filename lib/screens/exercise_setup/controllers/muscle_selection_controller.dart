@@ -3,6 +3,7 @@ import '../../../utils/globals.dart' as globals;
 import '../../../utils/models/data_models.dart';
 
 class MuscleSelectionController extends ChangeNotifier {
+  List<String> muscleGroupNames = MuscleGroup.names;
   // Muscle data
   final List<List<String>> frontImages = [
     ['images/muscles/Front_biceps.png', 'Biceps'],
