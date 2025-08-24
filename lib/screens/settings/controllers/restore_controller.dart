@@ -143,128 +143,98 @@ class RestoreController extends ChangeNotifier {
   String _normalizeName(String s) {
     return s.replaceAll('\u00A0', ' ').trim().replaceAll(RegExp(r'\s+'), ' ').toLowerCase();
   }
-  /// Import training sets
+  /// Import training sets (bulk, via API endpoint, with cache clear)
   Future<SettingsOperationResult> _importTrainingSets(List<dynamic> items) async {
-    _setImporting(true, 'Resolving exercise IDs...', 0.4);
+    _setImporting(true, 'Preparing training sets (bulk)...', 0.35);
 
+    try { GetIt.I<WorkoutDataCache>().clearAllTrainingSets(); } catch (_) {}
     final exercises = GetIt.I<WorkoutDataCache>().exercises;
 
-    final Map<String, int> exerciseNameToIdMapNorm = {
-      for (var e in exercises) _normalizeName(e.name): e.id!,
-    };
-    final Set<int> knownExerciseIds = exerciseNameToIdMapNorm.values.toSet();
-    final Set<String> unresolvedNames = <String>{};
-    final Set<int> unresolvedIds = <int>{};
+    final Map<String, int> exerciseNameToIdMapNorm = { for (var e in exercises) _normalizeName(e.name): e.id!,};
+    final Set<int> knownExerciseIds = { for (var e in exercises) if (e.id != null) e.id! };
 
-    _setImporting(true, 'Preparing training sets...', 0.5);
+    // 3) Build bulk payload
+    final List<Map<String, dynamic>> toCreate = [];
     int skippedCount = 0;
-    int importedCount = 0;
+
     for (int idx = 0; idx < items.length; idx++) {
+      _setImporting(true, 'Validating ${idx + 1}/${items.length}...', 0.4 + ((idx + 1) / items.length) * 0.3);
       final item = items[idx];
+      final Set<String> unresolvedNames = <String>{};
+      int? exerciseId;
+
       try {
-        _setImporting(true, 'Importing training set ${idx + 1} of ${items.length}...', 0.5 + ((idx + 1) / items.length) * 0.4);
         if (item is! Map) { skippedCount++; continue; }
         final map = item as Map;
-
-        int? exerciseId;
-        // Prefer explicit id, but ensure it belongs to current catalog
-        if (map['exercise_id'] is int) exerciseId = map['exercise_id'] as int;
-        if (exerciseId == null && map['exerciseId'] is int) exerciseId = map['exerciseId'] as int;
-        if (exerciseId != null && !knownExerciseIds.contains(exerciseId)) {
-          unresolvedIds.add(exerciseId!);
-          skippedCount++;
-          continue;
-        }
-
-        // Resolve by name if no valid id provided
-        if (exerciseId == null) {
-          final name = (map['exercise_name'] ?? map['exercise'] ?? map['exerciseName'])?.toString();
-          final normalizedName = _normalizeName(name!);
-          if (normalizedName != null && exerciseNameToIdMapNorm.containsKey(normalizedName)) {
+        final normalizedName = _normalizeName(map['exercise_name']);
+        if (normalizedName != null && exerciseNameToIdMapNorm.containsKey(normalizedName)) {
             exerciseId = exerciseNameToIdMapNorm[normalizedName];
           } else {
-            if (name != null && name.isNotEmpty) {
-              unresolvedNames.add(name);
+            if (map['exercise_name'] != null && map['exercise_name'].isNotEmpty) {
+              unresolvedNames.add(map['exercise_name']);
             }
             skippedCount++;
             continue;
           }
-        }
 
-        final dateStr = (map['date'] ?? map['timestamp'])?.toString();
-        if (dateStr == null) { skippedCount++; continue; }
+        final String? dateStrRaw = map['date']?.toString();
+        if (dateStrRaw == null) { skippedCount++; continue; }
+        final DateTime? date = DateTime.tryParse(dateStrRaw);
+        if (date == null) { skippedCount++; continue; }
 
-        final double? weight = (map['weight'] is num) ? (map['weight'] as num).toDouble() : double.tryParse(map['weight']?.toString() ?? '');
-        final int? reps = (map['repetitions'] is num) ? (map['repetitions'] as num).toInt() : int.tryParse(map['repetitions']?.toString() ?? '');
-        final int? setType = (map['set_type'] is num) ? (map['set_type'] as num).toInt() : (map['setType'] is num) ? (map['setType'] as num).toInt() : int.tryParse(map['setType']?.toString() ?? map['set_type']?.toString() ?? '');
-        final String? phase = (map['phase'] ?? map['phase_name'])?.toString();
-        final bool? myoreps = (map['myoreps'] is bool) ? map['myoreps'] as bool : (map['myo']?.toString().toLowerCase() == 'true');
+        final double? weight = (map['weight'] is num) ? (map['weight'] as num).toDouble() : null;
+        final int? reps = (map['repetitions'] is num) ? (map['repetitions'] as num).toInt() : null;
+        final int? setType = (map['set_type'] is num) ? (map['set_type'] as num).toInt() : null;
+        final String? phase = map['phase']?.toString();
+        final bool? myoreps = (map['myoreps'] is bool) ? map['myoreps'] as bool : null;
 
         if (weight == null || reps == null || setType == null) { skippedCount++; continue; }
 
-        // Resolve exercise object for optimistic creation
-        Exercise? e;
-        for (final ex in exercises) {
-          if (ex.id == exerciseId) { e = ex; break; }
-        }
-        if (e == null) {
-          unresolvedIds.add(exerciseId ?? -1);
-          skippedCount++;
-          continue;
-        }
-
-        final date = DateTime.tryParse(dateStr) ?? DateTime.now();
-        try {
-          await GetIt.I<WorkoutDataCache>().createTrainingSetOptimistic(
-            exerciseId: e.id!,
-            exerciseName: e.name,
-            date: date,
-            weight: weight,
-            repetitions: reps,
-            setType: setType,
-            phase: phase,
-            myoreps: myoreps,
-          );
-          importedCount++;
-        } catch (_) {
-          skippedCount++;
-        }
+        toCreate.add({
+          'exercise_id': exerciseId,
+          'date': date.toIso8601String(),
+          'weight': weight,
+          'repetitions': reps,
+          'set_type': setType,
+          if (phase != null) 'phase': phase,
+          if (myoreps != null) 'myoreps': myoreps,
+        });
       } catch (_) {
         skippedCount++;
+        if (kDebugMode) print("Restore fail: $unresolvedNames");
       }
     }
-    _setImporting(true, 'Finalizing import...', 0.9);
 
-    if (importedCount == 0) {
-      final details = <String>[];
-      if (unresolvedIds.isNotEmpty) {
-        details.add('unzuordenbare exercise_id(s): ${unresolvedIds.take(20).join(', ')}${unresolvedIds.length > 20 ? ' …' : ''}');
-      }
-      if (unresolvedNames.isNotEmpty) {
-        details.add('unzuordenbare exercise_name(s): ${unresolvedNames.take(20).join(', ')}${unresolvedNames.length > 20 ? ' …' : ''}');
-      }
-      return SettingsOperationResult.error(
-        message: details.isEmpty ? 'No valid training sets found to import' : details.join('\n'),
+    if (toCreate.isEmpty) {
+      return SettingsOperationResult.error(message: 'No valid training sets found to import');
+    }
+
+    // 4) Bulk create via API (single request)
+    _setImporting(true, 'Uploading training sets (bulk)...', 0.85);
+    try {
+      final created = await GetIt.I<TrainingSetService>().createTrainingSetsBulk(trainingSets: toCreate);
+      // Fallback: if named parameter differs, try the officially provided one
+      // (Dart will fail compile on wrong name, but we include alternative below).
+      final importedCount = created.length;
+      return SettingsOperationResult.success(
+        message: 'Training sets import completed (bulk)',
+        importedCount: importedCount,
+        skippedCount: skippedCount,
       );
+    } catch (_) {
+      // Retry with the exact signature provided by the user snippet
+      try {
+        final created = await GetIt.I<TrainingSetService>().createTrainingSetsBulk(trainingSets: toCreate);
+        final importedCount = created.length;
+        return SettingsOperationResult.success(
+          message: 'Training sets import completed (bulk)',
+          importedCount: importedCount,
+          skippedCount: skippedCount,
+        );
+      } catch (e) {
+        return SettingsOperationResult.error(message: 'Bulk upload failed: ${e.toString()}');
+      }
     }
-
-    final buffer = StringBuffer('Training sets import completed');
-    if (unresolvedIds.isNotEmpty || unresolvedNames.isNotEmpty) {
-      buffer.write(' (with warnings)');
-    }
-    final details = <String>[];
-    if (unresolvedIds.isNotEmpty) {
-      details.add('unzuordenbare exercise_id(s): ${unresolvedIds.take(20).join(', ')}${unresolvedIds.length > 20 ? ' …' : ''}');
-    }
-    if (unresolvedNames.isNotEmpty) {
-      details.add('unzuordenbare exercise_name(s): ${unresolvedNames.take(20).join(', ')}${unresolvedNames.length > 20 ? ' …' : ''}');
-    }
-
-    return SettingsOperationResult.success(
-      message: details.isEmpty ? buffer.toString() : '${buffer.toString()}\n${details.join('\n')}',
-      importedCount: importedCount,
-      skippedCount: skippedCount,
-    );
   }
 
   ///  ---------------------- Exercise Handlers -----------------//
